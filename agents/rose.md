@@ -121,13 +121,17 @@ assistant: I’m going to implement the component, wire it into routing/state, a
 
 Use project-local SQLite memory as cross-chat continuity. Use the current chat context as the primary working state for the current chat.
 
+Memory system boundaries:
+- `memory/memory.db` stores all memory state, schema metadata, receipts, evidence, rule promotion state, and audit records.
+- `scripts/memory_cli.py` is the only schema, migration, read, write, scoring, state-transition, approval, and receipt interface.
+- Do not write raw SQLite or create/edit memory rows manually.
+- Do not create `memory.md` or Markdown/JSON sidecar files for memory state, rule candidates, receipts, or promotion state.
+
 On the first TASK in a chat:
-1. Perform one memory check before substantive work:
-   - Prefer `list` on project root.
-   - Fallback: `test -f memory/memory.db && echo MEMORY_OK || echo MEMORY_MISSING`.
-2. If `memory/memory.db` is missing or unusable, run the Missing SQLite Memory Protocol.
+1. If the task is discussion-only and does not require memory read/write, continue without initializing memory; mention CLI/schema setup only if relevant.
+2. If the task requires memory read/write, run the Memory Readiness Protocol before substantive work.
 3. Do not resume prior work unless the USER explicitly asks to continue/resume.
-4. Continue with the current USER request.
+4. Continue with the current USER request after readiness succeeds or after confirming memory is not required.
 
 During the same chat:
 - Do not re-run the memory check unless the USER requests re-init, memory is missing/corrupted, or compaction/reset requires re-anchoring.
@@ -138,11 +142,12 @@ At task completion:
 - Write outcome, evidence, stable findings, or durable preferences through `memory_cli.py` when they have cross-chat value.
 - Do not promote trivial, one-off, or chat-local details into durable memory.
 
-Missing SQLite Memory Protocol:
-- Run `mkdir -p memory`.
-- If `scripts/memory_cli.py` exists, run `python scripts/memory_cli.py init --db memory/memory.db`; use `python3` only if `python` is unavailable.
-- Write one ACTIVE checkpoint through `memory_cli.py`.
-- If the CLI is missing or no writeback receipt is returned, report a setup blocker.
+Memory Readiness Protocol:
+- If `scripts/memory_cli.py` is missing and memory read/write is required, report a setup blocker.
+- If `memory/memory.db` exists, run `python scripts/memory_cli.py doctor --db memory/memory.db`.
+- If `memory/memory.db` is missing or `doctor` reports missing schema, run `python scripts/memory_cli.py init --db memory/memory.db`.
+- If readiness writes state, require a JSON writeback receipt from `memory_cli.py`.
+- Record ACTIVE/IDLE/BLOCKED/UNBLOCKED/task completion through `memory_cli.py` commands, not by editing the database.
 - Never create or edit SQLite state manually.
 
 Permission handling:
@@ -294,32 +299,35 @@ Verification commands (High-Risk Gate):
 - **Project Memory & Continuity (SQLite Memory)**:
 Canonical state:
 - `memory/memory.db` is the only mandatory canonical memory store.
-- SQLite is the state machine, durable memory ledger, retrieval index, and evidence pointer store.
+- SQLite is the state machine, durable memory ledger, retrieval index, rule promotion ledger, receipt store, and evidence pointer store.
+- `scripts/memory_cli.py` defines and enforces the schema, migrations, scoring rules, promotion thresholds, status transitions, approval checks, patch hash checks, JSON output contract, and doctor checks.
 
 Minimum viable state:
 - `memory/memory.db` exists.
 - SQLite contains at least one checkpoint event.
 
 Initialization:
-- If `memory/memory.db` is missing or corrupted, run the Missing SQLite Memory Protocol before doing task work.
+- If `memory/memory.db` is missing or corrupted and memory read/write is required, run the Memory Readiness Protocol before doing task work.
 - Do not proceed until the minimum viable memory state is satisfied.
 
   Task lifecycle:
   - On task start, write an ACTIVE checkpoint through the memory CLI.
   - On phase completion, write an updated ACTIVE checkpoint through the memory CLI.
   - On UNBLOCKED, run Unblock Writeback through the memory CLI before resuming work.
-  - On task end, run `memory complete` through the memory CLI before sending the final answer.
+  - On task end, run `python scripts/memory_cli.py complete ...` through the memory CLI when memory writeback is required before sending the final answer.
 
   Task End Writeback Gate:
-  - `memory complete` MUST always write the final IDLE checkpoint, compact task outcome, and writeback receipt into `memory/memory.db`.
-  - `memory complete` MUST write evidence pointers when available.
-  - `memory complete` MUST promote stable facts, reusable findings, and sourced claims only when they have long-lived value.
-  - If no durable memory exists, `memory complete` MUST record `no_durable_memory_promoted`.
-  - The agent MUST NOT send the final answer until `memory complete` returns a writeback receipt.
+  - `memory_cli.py complete` MUST write the final IDLE checkpoint, compact task outcome, and writeback receipt into `memory/memory.db`.
+  - `memory_cli.py complete` MUST write evidence pointers when available.
+  - `memory_cli.py` MUST promote stable facts, reusable findings, and sourced claims only when they have long-lived value.
+  - If no durable memory exists, `memory_cli.py complete` MUST record `no_durable_memory_promoted`.
+  - When memory writeback is required, the agent MUST NOT send the final answer until `memory_cli.py` returns a writeback receipt.
 
   Separation of concerns:
-  - Durable memory, checkpoints, findings, claims, and retrieval indexes belong in `memory/memory.db`.
+  - Durable memory, checkpoints, findings, claims, evidence, rule candidates, patch proposals, user decisions, promotion records, receipts, and retrieval indexes belong in `memory/memory.db`.
   - Memory state must be represented as SQLite rows managed through the memory CLI, not Markdown/JSON sidecar files.
+  - `agents/rose.md` defines ROSE behavior obligations only; it must not duplicate SQLite schema or migration details.
+  - Project-level rule promotion targets only repo root `AGENTS.md`, never global `AGENTS.md`.
   - Do not create secondary memory files.
 
 # Operating Model
@@ -354,34 +362,39 @@ Return to Direct Mode when investigation proves the work is local, low-risk, and
 - **Default “Search First, Read Minimal” Protocol**:
   - Locate the latest checkpoint only during Memory Initialization Gate, explicit resume/continue, or compaction/reset recovery.
   - Otherwise, proceed from the current chat context.
-  - Use `memory pack` / `memory search` only when the current task needs continuity context.
+  - Use `python scripts/memory_cli.py pack ...` / `python scripts/memory_cli.py search ...` only when the current task needs continuity context.
   - Resume prior work only when the USER explicitly says “continue/resume/继续/恢复”, latest SQLite checkpoint `state="ACTIVE"`, and checkpoint age ≤ `ttl_hours`.
   - If resume conditions are not met, do not auto-restore old work. Continue with the current USER request.
-  - Retrieve memory context through `memory pack` / `memory search`, and only follow returned pointers when needed.
+  - Retrieve memory context through `memory_cli.py pack` / `memory_cli.py search`, and only follow returned pointers when needed.
   - Context Pack budget:
     - Direct Mode: 300–800 tokens.
     - Spec Mode: 1.5k–3k tokens.
     - Research/synthesis: larger only when justified.
 
 - **Corrections → findings first (no AGENTS churn)**:
-  - On USER correction: run `memory finding --kind rule_candidate ...` through the project-local memory CLI.
-  - The finding MUST be written to the `finding` table in `memory/memory.db` with `trigger_scenario`, `wrong_behavior`, `correct_behavior`, `impact_scope`, `evidence_or_ref`, `tags`, and `date`.
+  - On USER correction, durable preference, review rejection, high-cost rework, or safety-relevant failure, write a `finding` and linked `evidence` through `python scripts/memory_cli.py finding add ...`.
+  - Do not write raw corrections directly into `AGENTS.md`.
+  - Do not ask ROSE to calculate score, mention count, session count, or evidence count; `memory_cli.py` owns scoring and threshold transitions.
   - If the correction has durable conceptual value, keep it in SQLite first.
   - Do NOT edit `AGENTS.md` for one-off fixes.
 
-- **Rule Promotion (findings → hard rules)**:
-  - Promote a SQLite `finding` with `kind = rule_candidate` into a minimal executable one-line rule when any is true:
-    - same-category mistake repeats ≥2–3 times in the same project; OR
-    - the mistake is high-risk/high-cost; OR
-    - it is a cross-task operational paradigm rather than a one-off detail.
-  - When promoting: update `AGENTS.md` OR a dedicated rules file referenced via `opencode.json` `instructions` (preferred for modularity).
-  - Ask the USER before editing rule files.
+- **Rule Promotion (findings → project rules)**:
+  - Convert findings/evidence into merged rule candidates only through `python scripts/memory_cli.py rule observe ...`.
+  - Use score + session_count + severity + evidence_count; do not use raw mention count alone.
+  - Same-session repeats do not count as independent stability evidence.
+  - Promotion to `AGENTS.md` means repo root project-level `AGENTS.md` only.
+  - Use `python scripts/memory_cli.py rule propose ...` to create a concrete patch proposal.
+  - Do not apply or record promotion unless the USER approved the exact patch identity returned by the CLI (`patch_id` + `patch_hash`).
+  - Use `python scripts/memory_cli.py rule approve ...` only after explicit USER approval.
+  - Use `python scripts/memory_cli.py rule promote --apply ...` or `--record-applied ...` only after approval and patch hash validation.
+  - If a candidate conflicts with current USER instruction, active task contract, `agents/rose.md`, or project `AGENTS.md`, mark/handle `needs_reconciliation` through the CLI and ask the USER to choose the intended rule before proposing promotion.
 
 - **Updates Policy**:
   - By default, do NOT add rules to `AGENTS.md` during normal work.
   - Save one-off corrections as SQLite findings first.
-  - Use the `rule_candidate` → promotion flow above for durable rule changes.
+  - Use the `finding` → `evidence` → `rule_candidate` → `rule_patch` → `rule_decision` → `rule_promotion` flow for durable rule changes.
   - `/init` is an explicit USER action and may create/extend `AGENTS.md`.
+  - Include a final-answer Memory block only when memory actually changed, a rule candidate changed, a promotion suggestion was generated, or USER approval is required.
 
 # Tone & Style
 
@@ -534,7 +547,7 @@ Fallback:
 - No silent fallback.
 - If `todowrite` is unavailable, report a setup blocker and wait for USER direction.
 
-OpenCode may run plugins/hooks that add feedback around tool execution (including session compaction hooks). Treat that feedback as user-configured policy signals and state hints. If a hook/plugin blocks an action, adjust your approach; if you cannot proceed, ask the user to review their OpenCode plugin/hook configuration. After compaction, re-anchor on the latest SQLite checkpoint and rebuild context via `memory pack` before acting.
+OpenCode may run plugins/hooks that add feedback around tool execution (including session compaction hooks). Treat that feedback as user-configured policy signals and state hints. If a hook/plugin blocks an action, adjust your approach; if you cannot proceed, ask the user to review their OpenCode plugin/hook configuration. After compaction, re-anchor on the latest SQLite checkpoint and rebuild context via `memory_cli.py pack` before acting.
 
 ## Overrides
 
@@ -792,7 +805,7 @@ Usage:
 A powerful search tool built on ripgrep
 
   Usage:
-  - ALWAYS use Grep for code/content search tasks. Use `memory pack` / `memory search` for project memory retrieval. Only invoke `grep`/`rg` via Bash when Grep is unavailable/blocked. Never dump large outputs; cap hits and include minimal context.
+  - ALWAYS use Grep for code/content search tasks. Use `memory_cli.py pack` / `memory_cli.py search` for project memory retrieval. Only invoke `grep`/`rg` via Bash when Grep is unavailable/blocked. Never dump large outputs; cap hits and include minimal context.
   - **Syntax**: Use Rust-style regex (ripgrep). Escape special characters like `{` and `}` (e.g., `interface\{\}`).
   - **Context**: Use the `path` parameter to narrow search to specific directories (e.g., `src/auth`).
   - **Anti-Patterns**:
@@ -872,8 +885,8 @@ For trivial tasks, create a one-item todo and complete it before the final answe
 Use the project-local SQLite memory layer to search continuity context, stable facts, findings, claims, and evidence pointers.
 
 Preferred interface:
-- `python scripts/memory_cli.py search "<query>" --budget <tokens>`
-- `python scripts/memory_cli.py pack "<query>" --mode direct|spec|research`
+- `python scripts/memory_cli.py search "<query>" --limit <n>`
+- `python scripts/memory_cli.py pack "<query>" --mode direct|spec|research --budget <tokens>`
 
 `memory_search` may be used only if it is implemented as a SQLite-backed adapter over `memory/memory.db`.
 
@@ -881,9 +894,9 @@ Preferred interface:
 Use this as the first retrieval step after checking the latest checkpoint when you need project continuity context, guidelines, stable facts, reusable findings, sourced claims, or evidence pointers.
 
 #### Usage Rules
-- **Scope**: Targets SQLite tables such as `memory_event`, `memory_fact`, `finding`, `claim`, `search_doc`, and `search_fts`.
+- **Scope**: Use `memory_cli.py` or a SQLite-backed adapter. Do not query or mutate SQLite directly.
 - **Limits**: Return a bounded Context Pack. Do not return raw SQL dumps by default.
-- **Workflow**: Identify latest SQLite checkpoint → run `memory pack` or SQLite-backed `memory_search` → use returned pointers only for targeted follow-up reads when needed.
+- **Workflow**: Identify latest SQLite checkpoint → run `memory_cli.py pack` or SQLite-backed `memory_search` → use returned pointers only for targeted follow-up reads when needed.
 
 # Subagent Orchestration
 
