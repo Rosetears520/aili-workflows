@@ -116,5 +116,5 @@ When analyzing test coverage:
 ## Composition
 
 - **Invoke directly when:** the user asks for test design, coverage analysis, test writing, test execution, or a Prove-It test for a specific bug.
-- **Invoke via:** `/test` (TDD workflow) or `/ship` (parallel fan-out for coverage gap analysis alongside `code-reviewer` and `security-auditor`).
-- **Do not invoke from another persona.** Recommendations for implementation, review, or security work belong in your report; MainAgent or a slash command decides when to act.
+- **Orchestration:** Invoke directly for TDD or coverage analysis, or include in a MainAgent-managed parallel fan-out with `code-reviewer` and `security-auditor`.
+- **Do not invoke from another persona.** Recommendations for implementation, review, or security work belong in your report; MainAgent decides when to act.

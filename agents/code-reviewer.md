@@ -113,5 +113,5 @@ Categorize every finding:
 ## Composition
 
 - **Invoke directly when:** the user asks for a review of a specific change, file, diff, or PR.
-- **Invoke via:** `/review` for a single-perspective review, or `/ship` for parallel fan-out with `security-auditor` and `test-engineer`.
-- **Do not invoke from another persona.** If you find yourself wanting to delegate to `security-auditor` or `test-engineer`, surface that as a recommendation in your report instead — orchestration belongs to MainAgent or slash commands, not personas.
+- **Orchestration:** Invoke directly for a single-perspective review, or include in a MainAgent-managed parallel fan-out with `security-auditor` and `test-engineer`.
+- **Do not invoke from another persona.** If you find yourself wanting to delegate to `security-auditor` or `test-engineer`, surface that as a recommendation in your report instead — orchestration belongs to MainAgent, not personas.

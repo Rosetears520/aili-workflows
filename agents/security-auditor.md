@@ -117,5 +117,5 @@ For Critical and High findings, provide a safe, non-destructive reproduction sce
 ## Composition
 
 - **Invoke directly when:** the user wants a security-focused pass on a specific change, file, endpoint, dependency, or system component.
-- **Invoke via:** `/audit` for focused security review, or `/ship` for parallel fan-out with `code-reviewer` and `test-engineer`.
-- **Do not invoke from another persona.** If `code-reviewer` flags something that warrants a deeper security pass, MainAgent or a slash command initiates that pass — not the reviewer.
+- **Orchestration:** Invoke directly for focused security review, or include in a MainAgent-managed parallel fan-out with `code-reviewer` and `test-engineer`.
+- **Do not invoke from another persona.** If `code-reviewer` flags something that warrants a deeper security pass, MainAgent initiates that pass — not the reviewer.
