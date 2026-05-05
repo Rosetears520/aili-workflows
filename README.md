@@ -1,6 +1,6 @@
 # aili-workflows
 
-`aili-workflows` 是 [Rosetears](https://rosetears.cn/) 的个人 OpenCode 工作流仓库，用来沉淀常用的 agent、skill、执行规范和辅助脚本。
+`aili-workflows` 是 [Rosetears](https://rosetears.cn/) 的个人 OpenCode 工作流仓库，用来沉淀常用的 agent、skill、执行规范和辅助工具。
 
 这个仓库不是上游项目的官方发布版，而是面向个人 OpenCode 使用习惯整理的工作流集合。仓库内包含原创编排内容，也包含来自开源项目的 agent/skill 内容。第三方内容的来源和许可在下方单独标明。
 
@@ -15,8 +15,8 @@ aili-workflows/
 │   ├── code-reviewer.md         # 代码审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
 │   └── test-engineer.md         # 测试与覆盖率 subagent
-├── scripts/
-│   └── memory_cli.py            # 项目本地记忆状态管理脚本
+├── docs/
+│   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
 ├── skills/
 │   ├── android-native-dev/
 │   ├── api-and-interface-design/
@@ -43,6 +43,7 @@ aili-workflows/
 │   ├── planning-and-task-breakdown/
 │   ├── pptx-generator/
 │   ├── react-native-dev/
+│   ├── rose-memory/             # ROSE project-local SQLite memory skill
 │   ├── security-and-hardening/
 │   ├── shader-dev/
 │   ├── shipping-and-launch/
@@ -120,6 +121,12 @@ aili-workflows/
 
 这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill，而不是依赖 slash command 文件。
 
+### OpenCode 设置
+
+安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它根据当前环境和你的需求选择复制哪些 agents、skills 或可选第三方集成。
+
+默认目标是 OpenCode 全局配置目录：Linux/macOS 为 `~/.config/opencode/`，Windows 为 `%USERPROFILE%\.config\opencode\`。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+
 典型使用方式：
 
 ```text
@@ -128,6 +135,8 @@ aili-workflows/
 3. 让 OpenCode 发现 `skills/` 中的 SKILL.md 工作流。
 4. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
 ```
+
+`rose-memory` 是随 `skills/rose-memory/` 分发的全局 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
 
 `frontend-dev` 可用于纯前端设计、实现和动画工作；只有主动使用其中的媒体生成能力时才可能需要额外 MiniMax API key、CLI 或运行时依赖。使用前请阅读对应 skill 目录内的 `SKILL.md`、`README.md`、`scripts/` 或 `references/`。
 

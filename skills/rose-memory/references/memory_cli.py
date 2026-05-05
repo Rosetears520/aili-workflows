@@ -546,13 +546,13 @@ def require_schema(conn: sqlite3.Connection) -> None:
         raise CliError(
             "SCHEMA_MISSING",
             "memory database is missing the required schema version",
-            "run: python scripts/memory_cli.py init --db memory/memory.db",
+            "run: rose-memory init --db memory/memory.db",
         )
     if row["checksum"] != schema_checksum():
         raise CliError(
             "SCHEMA_CHECKSUM_MISMATCH",
-            "schema checksum does not match this memory_cli.py version",
-            "run: python scripts/memory_cli.py migrate --db memory/memory.db",
+            "schema checksum does not match this rose-memory CLI version",
+            "run: rose-memory migrate --db memory/memory.db",
         )
 
 
