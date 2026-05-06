@@ -18,7 +18,10 @@ aili-workflows/
 │   └── test-engineer.md         # 测试与覆盖率 subagent
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
+├── scripts/
+│   └── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
 ├── skills/
+│   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
 │   ├── android-native-dev/
 │   ├── api-and-interface-design/
 │   ├── browser-testing-with-devtools/
@@ -52,6 +55,8 @@ aili-workflows/
 │   ├── spec-driven-development/
 │   ├── test-driven-development/
 │   └── using-agent-skills/
+├── templates/
+│   └── AGENTS.md                # 项目 AGENTS.md 的唯一模板源
 ├── tests/
 └── README.md
 ```
@@ -69,6 +74,13 @@ aili-workflows/
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
 ## Skill 来源
+
+### Rosetears 原创 workflow skills
+
+| Skill | 说明 |
+|---|---|
+| `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
+| `rose-memory` | ROSE project-local SQLite memory 工作流 |
 
 ### 来自 addyosmani/agent-skills
 
@@ -118,9 +130,9 @@ aili-workflows/
 
 未纳入 `vision-analysis`、`gif-sticker-maker`、`minimax-multimodal-toolkit`、`minimax-music-gen`、`minimax-music-playlist`、`buddy-sings`，因为它们更偏 MiniMax API key 驱动的视觉、多模态或音乐娱乐工作流，不属于当前默认个人 OpenCode 工作流范围。
 
-### 概念性改编来源
+### 思想来源
 
-- `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应许可声明。
+- `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
 
 ## 使用说明
 
@@ -128,9 +140,11 @@ aili-workflows/
 
 ### OpenCode 设置
 
-安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它根据当前环境和你的需求选择复制哪些 agents、skills 或可选第三方集成。
+安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它根据当前环境和你的需求选择软链接哪些 agents、skills 或可选第三方集成；复制仅作为软链接不可用或明确要求时的 fallback。
 
 默认目标是 OpenCode 全局配置目录：Linux/macOS 为 `~/.config/opencode/`，Windows 为 `%USERPROFILE%\.config\opencode\`。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+
+项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
 典型使用方式：
 
@@ -145,9 +159,9 @@ aili-workflows/
 
 `frontend-dev` 可用于纯前端设计、实现和动画工作；只有主动使用其中的媒体生成能力时才可能需要额外 MiniMax API key、CLI 或运行时依赖。使用前请阅读对应 skill 目录内的 `SKILL.md`、`README.md`、`scripts/` 或 `references/`。
 
-## 许可与第三方声明
+## 第三方声明
 
-本仓库整体以 MIT License 发布，详见 [`LICENSE`](LICENSE)。其中 Rosetears 个人编排内容和第三方开源内容应分开理解，第三方内容保留原始版权声明。
+本仓库包含 Rosetears 个人编排内容，也包含来自第三方开源项目的 agent/skill 内容；第三方内容保留其原始版权和许可归属。仓库许可证详见根目录 [`LICENSE`](LICENSE)。
 
 第三方内容来源：
 
@@ -155,33 +169,7 @@ aili-workflows/
 |---|---|---|---|
 | Addy Osmani | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT License | Copyright (c) 2025 Addy Osmani |
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
+| Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |
 | Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
-
-根目录 [`LICENSE`](LICENSE) 已包含 Rosetears 原创内容和已纳入的第三方 MIT 内容（Addy Osmani、MiniMax）的版权声明。第三方 MIT License 许可文本如下，用于随本仓库中再分发的对应第三方内容一并保留：
-
-```text
-MIT License
-
-Copyright (c) 2025 Addy Osmani
-Copyright (c) 2026 MiniMax
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
 
 如果继续从上游同步 agent 或 skill，请同步更新本 README 的来源表和许可说明。

@@ -411,6 +411,7 @@ Return to Direct Mode when investigation proves the work is local, low-risk, and
   - Save one-off corrections as SQLite findings first.
   - Use the `finding` → `evidence` → `rule_candidate` → `rule_patch` → `rule_decision` → `rule_promotion` flow for durable rule changes.
   - `/init` is an explicit USER action and may create/extend `AGENTS.md`.
+  - When initializing a project `AGENTS.md`, use the `agents-md-initialization` skill and shared `templates/AGENTS.md`; do not create project `AGENTS.md` from scratch.
   - Include a final-answer Memory block only when memory actually changed, a rule candidate changed, a promotion suggestion was generated, or USER approval is required.
 
 # Tone & Style
