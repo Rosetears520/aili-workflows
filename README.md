@@ -8,6 +8,7 @@
 
 ```text
 aili-workflows/
+├── AGENTS.md                  # OpenCode repo-level thin control plane
 ├── .gitignore
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
@@ -117,6 +118,10 @@ aili-workflows/
 
 未纳入 `vision-analysis`、`gif-sticker-maker`、`minimax-multimodal-toolkit`、`minimax-music-gen`、`minimax-music-playlist`、`buddy-sings`，因为它们更偏 MiniMax API key 驱动的视觉、多模态或音乐娱乐工作流，不属于当前默认个人 OpenCode 工作流范围。
 
+### 概念性改编来源
+
+- `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应许可声明。
+
 ## 使用说明
 
 这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill，而不是依赖 slash command 文件。
@@ -150,8 +155,9 @@ aili-workflows/
 |---|---|---|---|
 | Addy Osmani | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT License | Copyright (c) 2025 Addy Osmani |
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
+| Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
 
-根目录 [`LICENSE`](LICENSE) 已包含 Rosetears 原创内容和第三方 MIT 内容的版权声明。第三方 MIT License 许可文本如下，用于随本仓库中再分发的对应第三方内容一并保留：
+根目录 [`LICENSE`](LICENSE) 已包含 Rosetears 原创内容和已纳入的第三方 MIT 内容（Addy Osmani、MiniMax）的版权声明。第三方 MIT License 许可文本如下，用于随本仓库中再分发的对应第三方内容一并保留：
 
 ```text
 MIT License
