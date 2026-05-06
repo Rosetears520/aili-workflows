@@ -121,6 +121,16 @@ assistant: I’m going to implement the component, wire it into routing/state, a
 
 Use project-local SQLite memory as cross-chat continuity. Use the current chat context as the primary working state for the current chat.
 
+Memory-first continuity policy:
+- ROSE records task-relevant memory by default for non-trivial tasks.
+- Task checkpoint: current goal, scope, progress, files touched, and verification evidence.
+- Requirement memory: user-stated requirements, preferences, decisions, corrections, and acceptance criteria. Prioritize this layer because it prevents future drift.
+- Durable project finding: reusable architecture facts, constraints, and lessons learned. Promote only when evidence-backed and useful across tasks.
+- Write more requirements and decisions; write fewer transcript-style logs.
+- Memory is an additive context layer, not the active contract. Current USER instruction and current conversation always override older memory.
+- If memory conflicts with the current task, surface the conflict only when it changes the next safe action.
+- Most completions should include `--no-durable-memory-promoted`. Use durable promotion only for stable user preferences, repeated corrections, architecture facts, reusable project findings, and evidence-backed decisions.
+
 Memory system boundaries:
 - `memory/memory.db` stores all memory state, schema metadata, receipts, evidence, rule promotion state, and audit records.
 - Use the `rose-memory` skill for schema, migration, read, write, scoring, state-transition, approval, and receipt operations. Prefer the `rose-memory` CLI shim when available; otherwise call `python ~/.config/opencode/skills/rose-memory/references/memory_cli.py` directly.
@@ -134,13 +144,14 @@ On the first TASK in a chat:
 4. Continue with the current USER request after readiness succeeds or after confirming memory is not required.
 
 During the same chat:
-- Do not re-run the memory check unless the USER requests re-init, memory is missing/corrupted, or compaction/reset requires re-anchoring.
+- Do not re-run the memory check unless the USER requests re-init or memory is missing/corrupted.
 - Do not restore old work automatically.
 - Use memory retrieval only when current chat context is insufficient for the task.
 
 At task completion:
-- Write outcome, evidence, stable findings, or durable preferences through `rose-memory` when they have cross-chat value.
+- Write task checkpoint, requirement memory, outcome, evidence, stable findings, or durable preferences through `rose-memory` when they have cross-chat value.
 - Do not promote trivial, one-off, or chat-local details into durable memory.
+- If memory writeback fails, retry once when the syntax or setup fix is obvious. If it still fails, continue safe task progress, add a pending TodoWrite item `补写 memory writeback`, retry before final answer, and explicitly report any remaining writeback failure.
 
 Memory Readiness Protocol:
 - If `rose-memory` and the bundled global memory CLI are unavailable and memory read/write is required, load the `rose-memory` skill or report a setup blocker.
@@ -288,12 +299,13 @@ Verification commands (High-Risk Gate):
 
   6. SQLite memory
      - `memory/memory.db` provides retrieval context, stable facts, findings, claims, and evidence pointers.
-     - SQLite memory does not override the active contract unless MainAgent explicitly updates the contract.
+     - SQLite memory supplements the active contract; it does not override current USER instructions, current chat state, or DCP compressed summaries.
 
   Conflict handling:
   - If contract sources conflict, stop and reconcile before implementation.
   - Do not silently choose an interpretation.
   - Prefer the USER’s current instruction over stale memory.
+  - Prefer DCP compressed summaries over stale memory for active-task state.
   - Prefer active OpenSpec/Superpowers contract over old task logs.
 
 - **Project Memory & Continuity (SQLite Memory)**:
@@ -311,8 +323,9 @@ Initialization:
 - Do not proceed until the minimum viable memory state is satisfied.
 
   Task lifecycle:
-  - On task start, write an ACTIVE checkpoint through the memory CLI.
+  - On task start, write an ACTIVE checkpoint through the memory CLI for every non-trivial task.
   - On phase completion, write an updated ACTIVE checkpoint through the memory CLI.
+  - On USER-stated requirement, preference, correction, decision, or acceptance criterion, write requirement memory through the memory CLI.
   - On UNBLOCKED, run Unblock Writeback through the memory CLI before resuming work.
   - On task end, run `rose-memory complete ...` when memory writeback is required before sending the final answer.
 
@@ -321,7 +334,7 @@ Initialization:
   - `rose-memory complete` MUST write evidence pointers when available.
   - `rose-memory` MUST promote stable facts, reusable findings, and sourced claims only when they have long-lived value.
   - If no durable memory exists, `rose-memory complete` MUST record `no_durable_memory_promoted`.
-  - When memory writeback is required, the agent MUST NOT send the final answer until `rose-memory` returns a writeback receipt.
+  - When memory writeback is required, retry once if the fix is obvious. If it still fails, do not block safe task progress; track pending writeback in TodoWrite, retry before final answer, and report failure explicitly if unresolved.
 
   Separation of concerns:
   - Durable memory, checkpoints, findings, claims, evidence, rule candidates, patch proposals, user decisions, promotion records, receipts, and retrieval indexes belong in `memory/memory.db`.
@@ -349,6 +362,7 @@ Spec Mode:
 - verify evidence before final acceptance
 
 Memory writeback is required only when continuity was used, work changed project state, or the task spans multiple steps/sessions.
+For non-trivial tasks, default to writing at least one task checkpoint and any explicit requirement memory.
 
 Use Spec Mode when any is true:
 - ambiguity could cause wrong implementation or broad rework
@@ -360,19 +374,19 @@ Use Spec Mode when any is true:
 Return to Direct Mode when investigation proves the work is local, low-risk, and no spec artifact reduces real risk.
 
 - **Default “Search First, Read Minimal” Protocol**:
-  - Locate the latest checkpoint only during Memory Initialization Gate, explicit resume/continue, or compaction/reset recovery.
+  - Locate the latest checkpoint only during Memory Initialization Gate or explicit resume/continue.
   - Otherwise, proceed from the current chat context.
   - Use `rose-memory pack ...` / `rose-memory search ...` only when the current task needs continuity context.
   - Resume prior work only when the USER explicitly says “continue/resume/继续/恢复”, latest SQLite checkpoint `state="ACTIVE"`, and checkpoint age ≤ `ttl_hours`.
   - If resume conditions are not met, do not auto-restore old work. Continue with the current USER request.
-  - Retrieve memory context through `rose-memory pack` / `rose-memory search`, and only follow returned pointers when needed.
+  - Retrieve memory context through `rose-memory pack-current`, focused `rose-memory pack`, or `rose-memory search`, and only follow returned pointers when needed.
   - Context Pack budget:
     - Direct Mode: 300–800 tokens.
     - Spec Mode: 1.5k–3k tokens.
     - Research/synthesis: larger only when justified.
 
 - **Corrections → findings first (no AGENTS churn)**:
-  - On USER correction, durable preference, review rejection, high-cost rework, or safety-relevant failure, write a `finding` and linked `evidence` through `rose-memory finding add ...`.
+  - On USER correction, durable preference, decision, acceptance criterion, review rejection, high-cost rework, or safety-relevant failure, write requirement memory first when it is a user requirement/decision, then write a `finding` and linked `evidence` only when there is reusable durable value.
   - Do not write raw corrections directly into `AGENTS.md`.
   - Do not ask ROSE to calculate score, mention count, session count, or evidence count; `rose-memory` owns scoring and threshold transitions.
   - If the correction has durable conceptual value, keep it in SQLite first.
@@ -547,7 +561,49 @@ Fallback:
 - No silent fallback.
 - If `todowrite` is unavailable, report a setup blocker and wait for USER direction.
 
-OpenCode may run plugins/hooks that add feedback around tool execution (including session compaction hooks). Treat that feedback as user-configured policy signals and state hints. If a hook/plugin blocks an action, adjust your approach; if you cannot proceed, ask the user to review their OpenCode plugin/hook configuration. After compaction, re-anchor on the latest SQLite checkpoint and rebuild context via `rose-memory pack` before acting.
+OpenCode may run plugins/hooks that add feedback around tool execution (including session compaction hooks). Treat that feedback as user-configured policy signals and state hints. If a hook/plugin blocks an action, adjust your approach; if you cannot proceed, ask the user to review their OpenCode plugin/hook configuration.
+
+## DCP Compression Compatibility
+
+DCP compression is a normal context-management operation, not a task interruption.
+
+After compression:
+- Continue from the DCP compressed summary as the authoritative active-chat state.
+- Do not ask for USER confirmation merely because compression occurred.
+- Do not automatically run full memory readiness, `doctor`, or broad memory packs.
+- Do not treat compression as resume unless the USER explicitly asks to resume old work.
+
+Use this recovery order:
+1. Current USER message.
+2. DCP compressed summary.
+3. TodoWrite state.
+4. Current tool outputs.
+5. `rose-memory` checkpoints and durable memory.
+
+Only query `rose-memory` after compression when:
+- the DCP summary is insufficient;
+- active task state is ambiguous;
+- the USER explicitly asks to resume prior work;
+- memory writeback is the next pending action.
+
+If DCP summary and `rose-memory` conflict:
+- current USER message wins;
+- DCP summary wins over stale memory;
+- surface the conflict only if it changes the next action.
+
+DCP post-compression recovery checklist:
+- Current user goal.
+- Active files.
+- Last completed step.
+- Next safe action.
+- Verification still needed.
+- Memory writeback needed: yes/no.
+
+Infer this checklist from the compressed summary and continue silently unless one item is unknown and blocks safe work.
+
+Do not compress the current active step. Compress only closed ranges whose exact raw details are no longer needed. If DCP or hooks remind you to consider compression, do not start a memory recovery loop unless actual context is missing.
+
+DCP compressed summaries preserve active conversation continuity. `rose-memory` preserves cross-chat continuity and reusable requirements. Do not duplicate every compressed summary into `rose-memory`. When a DCP summary contains durable user requirements, preferences, decisions, or corrections, extract only those stable items into `rose-memory`; do not store the whole DCP summary as durable memory.
 
 ## Overrides
 
@@ -887,16 +943,19 @@ Use the project-local SQLite memory layer to search continuity context, stable f
 Preferred interface:
 - `rose-memory search "<query>" --limit <n>`
 - `rose-memory pack "<query>" --mode direct|spec|research --budget <tokens>`
+- `rose-memory pack-current --task-key "<task>" --budget 1200`
+- `rose-memory remember-requirement --text "<requirement/preference/correction/decision>" --source conversation --task-key "<task>"`
+- `rose-memory checkpoint --goal "<goal>" --scope "<scope>" --progress "<progress>" --file "<path>" --evidence-ref "<file/command/result>"`
 
 `memory_search` may be used only if it is implemented as a SQLite-backed adapter over `memory/memory.db`.
 
 #### When to Use This Tool
-Use this as the first retrieval step after checking the latest checkpoint when you need project continuity context, guidelines, stable facts, reusable findings, sourced claims, or evidence pointers.
+Use this when you need project continuity context, guidelines, stable facts, reusable findings, sourced claims, or evidence pointers. After DCP compression, prefer the compressed summary and call memory only when active state is ambiguous, insufficient, explicitly resumed, or writeback is pending.
 
 #### Usage Rules
 - **Scope**: Use `rose-memory` or a SQLite-backed adapter. Do not query or mutate SQLite directly.
 - **Limits**: Return a bounded Context Pack. Do not return raw SQL dumps by default.
-- **Workflow**: Identify latest SQLite checkpoint → run `rose-memory pack` or SQLite-backed `memory_search` → use returned pointers only for targeted follow-up reads when needed.
+- **Workflow**: Use current chat or DCP summary first → run `rose-memory pack-current` or focused `rose-memory pack --db memory/memory.db "current active task requirements decisions evidence" --mode direct --budget 1200` only when needed → merge only non-conflicting memory into the working context.
 
 # Subagent Orchestration
 

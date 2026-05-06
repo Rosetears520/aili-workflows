@@ -1,6 +1,6 @@
 ---
 name: rose-memory
-description: Use the ROSE project-local SQLite memory system through the bundled memory_cli.py. Use this for task checkpoints, durable findings, state transitions, retrieval packs, and writeback receipts.
+description: Use the ROSE project-local SQLite memory system through the bundled memory_cli.py. Use this for task checkpoints, requirement memory, durable findings, focused retrieval packs, and writeback receipts.
 license: MIT
 compatibility: opencode
 metadata:
@@ -31,8 +31,9 @@ Use this skill when:
 - starting or resuming a ROSE task
 - checking current ROSE memory status
 - recording task checkpoints or completion receipts
+- recording user-stated requirements, preferences, decisions, corrections, or acceptance criteria
 - recording durable project facts, findings, claims, or evidence
-- retrieving project memory context after compaction or explicit resume
+- retrieving focused project memory context after compaction or explicit resume
 - recovering from interrupted work
 
 ## Rules
@@ -42,7 +43,31 @@ Use this skill when:
 - Never store project state under `~/.config/opencode/`.
 - Always use the `rose-memory` shim when available, otherwise use the bundled `memory_cli.py` directly.
 - Durable memory must have evidence or an explicit no-promotion receipt.
+- Memory is additive context, not the active task contract. Current user instructions and current conversation override older memory.
+- Record memory by default for non-trivial tasks, but classify it into task checkpoints, requirement memory, and durable project findings.
+- Prefer writing user requirements and decisions over task transcript logs. Promote durable findings only when they are reusable and evidence-backed.
+- DCP compression is normal context management. Use compressed summaries as the authoritative active-chat state; query memory only when the summary is insufficient, the active task is ambiguous, the user explicitly resumes prior work, or memory writeback is pending.
+- If memory writeback fails, retry once when the fix is obvious. If it still fails, continue safe task progress, keep a pending TodoWrite item for memory writeback, retry before final handoff, and report any remaining failure.
 - If the current directory is not inside a project, stop and report `SETUP_BLOCKED_NO_PROJECT_ROOT`.
+
+## Memory Layers
+
+Task checkpoint:
+- Goal, scope, progress, files touched, and verification evidence.
+- Write for every non-trivial task and meaningful phase transition.
+
+Requirement memory:
+- User-stated requirements, preferences, corrections, decisions, and acceptance criteria.
+- Prioritize this layer because it reduces future drift.
+
+Durable project finding:
+- Reusable architecture facts, project constraints, and evidence-backed lessons learned.
+- Do not promote ordinary task notes or raw DCP summaries into durable memory.
+
+Conflict rule:
+- Current user message wins over current chat history, DCP summaries, and memory.
+- DCP compressed summary wins over stale memory for active-task state.
+- If memory suggests a conflict that changes the next action, surface it before acting.
 
 ## Command
 
@@ -99,6 +124,28 @@ Record an event checkpoint:
 rose-memory event add --db memory/memory.db --event-type CHECKPOINT --state ACTIVE --summary "<summary>"
 ```
 
+Record a structured task checkpoint:
+
+```bash
+rose-memory checkpoint \
+  --db memory/memory.db \
+  --goal "<goal>" \
+  --scope "<scope>" \
+  --progress "<progress>" \
+  --file "<path>" \
+  --evidence-ref "<file/command/result>"
+```
+
+Record requirement memory:
+
+```bash
+rose-memory remember-requirement \
+  --db memory/memory.db \
+  --text "<user requirement/preference/correction/decision>" \
+  --source "conversation" \
+  --task-key "<task>"
+```
+
 Retrieve memory context:
 
 ```bash
@@ -106,11 +153,29 @@ rose-memory pack --db memory/memory.db "<query>" --mode direct --budget 800
 rose-memory search --db memory/memory.db "<query>" --limit 10
 ```
 
+Retrieve the focused current-task pack:
+
+```bash
+rose-memory pack-current --db memory/memory.db --task-key "<task>" --budget 1200
+```
+
+After DCP compaction, prefer the compressed summary. Use `pack-current` or this focused fallback only when memory is actually needed:
+
+```bash
+rose-memory pack \
+  --db memory/memory.db \
+  "current active task requirements decisions evidence" \
+  --mode direct \
+  --budget 1200
+```
+
 Complete a task with no durable memory promoted:
 
 ```bash
 rose-memory complete --db memory/memory.db --summary "<completion summary>" --no-durable-memory-promoted
 ```
+
+Most completions should include `--no-durable-memory-promoted`. Use durable promotion only for stable user preferences, repeated corrections, architecture facts, reusable project findings, or evidence-backed decisions.
 
 ## Success Signal
 

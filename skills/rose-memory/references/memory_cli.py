@@ -1914,6 +1914,181 @@ def command_complete(args: argparse.Namespace) -> None:
     write_command(args, "complete", handler)
 
 
+def command_remember_requirement(args: argparse.Namespace) -> None:
+    def handler(conn: sqlite3.Connection) -> dict[str, Any]:
+        session = require_session(conn, args.session_key) if args.session_key else None
+        task = optional_task(conn, args.task_key)
+        if args.task_key and not task:
+            raise CliError("TASK_NOT_FOUND", f"task {args.task_key!r} does not exist")
+        fact_key = args.fact_key or normalize_rule_key(args.text)
+        now = utc_now()
+        metadata = {
+            "source": args.source,
+            "task_key": args.task_key or "",
+            "memory_layer": "requirement",
+        }
+        conn.execute(
+            """
+            INSERT INTO memory_fact (
+              session_id, project, agent, fact_key, fact_text, category, confidence, status,
+              sensitive, indexable, first_seen_at, last_seen_at, metadata_json
+            ) VALUES (?, ?, ?, ?, ?, 'requirement', ?, 'active', 0, 1, ?, ?, ?)
+            ON CONFLICT(project, agent, fact_key) DO UPDATE SET
+              fact_text = excluded.fact_text,
+              category = excluded.category,
+              confidence = excluded.confidence,
+              last_seen_at = excluded.last_seen_at,
+              metadata_json = excluded.metadata_json
+            """,
+            (
+                session["id"] if session else None,
+                args.project,
+                args.agent,
+                fact_key,
+                args.text,
+                args.confidence,
+                now,
+                now,
+                json_dump(metadata),
+            ),
+        )
+        fact = conn.execute(
+            "SELECT * FROM memory_fact WHERE project = ? AND agent = ? AND fact_key = ?",
+            (args.project, args.agent, fact_key),
+        ).fetchone()
+        index_search_doc(
+            conn,
+            args.project,
+            args.agent,
+            "memory_fact",
+            "memory_fact",
+            fact["id"],
+            fact_key,
+            args.text,
+            args.text[:240],
+            0,
+            1,
+            metadata,
+        )
+        return {"fact_id": fact["id"], "fact_key": fact_key, "task_key": args.task_key or ""}
+
+    write_command(args, "remember-requirement", handler)
+
+
+def command_checkpoint(args: argparse.Namespace) -> None:
+    def handler(conn: sqlite3.Connection) -> dict[str, Any]:
+        session = require_session(conn, args.session_key) if args.session_key else None
+        task = optional_task(conn, args.task_key)
+        if args.task_key and not task:
+            raise CliError("TASK_NOT_FOUND", f"task {args.task_key!r} does not exist")
+        summary_parts = [
+            f"Goal: {args.goal}",
+            f"Scope: {args.scope}",
+            f"Progress: {args.progress}",
+        ]
+        if args.evidence_ref:
+            summary_parts.append("Evidence: " + "; ".join(args.evidence_ref))
+        payload = {
+            "goal": args.goal,
+            "scope": args.scope,
+            "progress": args.progress,
+            "files_touched": args.file or [],
+            "evidence_refs": args.evidence_ref or [],
+            "memory_layer": "task_checkpoint",
+        }
+        cursor = conn.execute(
+            """
+            INSERT INTO memory_event (session_id, task_id, event_type, state, summary, payload_json, created_at)
+            VALUES (?, ?, 'CHECKPOINT', 'ACTIVE', ?, ?, ?)
+            """,
+            (
+                session["id"] if session else (task["session_id"] if task else None),
+                task["id"] if task else None,
+                " | ".join(summary_parts),
+                json_dump(payload),
+                utc_now(),
+            ),
+        )
+        return {"event_id": int(cursor.lastrowid), "state": "ACTIVE", "task_key": args.task_key or ""}
+
+    write_command(args, "checkpoint", handler)
+
+
+def command_pack_current(args: argparse.Namespace) -> None:
+    def handler(conn: sqlite3.Connection) -> dict[str, Any]:
+        task = optional_task(conn, args.task_key)
+        if args.task_key and not task:
+            raise CliError("TASK_NOT_FOUND", f"task {args.task_key!r} does not exist")
+        if not task:
+            task = conn.execute(
+                """
+                SELECT * FROM task
+                WHERE project = ? AND agent = ? AND status = 'active'
+                ORDER BY started_at DESC, id DESC
+                LIMIT 1
+                """,
+                (args.project, args.agent),
+            ).fetchone()
+        checkpoint_sql = """
+            SELECT e.id, e.event_type, e.state, e.summary, e.payload_json, e.created_at,
+                   t.task_key, t.title AS task_title
+            FROM memory_event e
+            LEFT JOIN task t ON t.id = e.task_id
+            WHERE e.event_type = 'CHECKPOINT'
+              AND e.state = 'ACTIVE'
+        """
+        checkpoint_values: list[Any] = []
+        if task:
+            checkpoint_sql += " AND e.task_id = ?"
+            checkpoint_values.append(task["id"])
+        checkpoint_sql += " ORDER BY e.created_at DESC, e.id DESC LIMIT 3"
+        checkpoints = conn.execute(checkpoint_sql, checkpoint_values).fetchall()
+        requirements = conn.execute(
+            """
+            SELECT id, fact_key, fact_text, category, confidence, last_seen_at, metadata_json
+            FROM memory_fact
+            WHERE project = ? AND agent = ? AND status = 'active' AND sensitive = 0
+              AND category IN ('requirement', 'preference', 'decision')
+            ORDER BY last_seen_at DESC, id DESC
+            LIMIT 8
+            """,
+            (args.project, args.agent),
+        ).fetchall()
+        findings = conn.execute(
+            """
+            SELECT id, kind, category, severity, summary, correct_behavior, raw_ref, created_at
+            FROM finding
+            WHERE project = ? AND agent = ? AND sensitive = 0
+              AND kind IN ('correction', 'failure', 'preference', 'risk', 'observation')
+            ORDER BY created_at DESC, id DESC
+            LIMIT 6
+            """,
+            (args.project, args.agent),
+        ).fetchall()
+        evidence = conn.execute(
+            """
+            SELECT id, source_type, evidence_key, evidence_text, weight, created_at
+            FROM evidence
+            WHERE project = ? AND agent = ? AND sensitive = 0
+              AND source_type IN ('file', 'diff', 'test', 'user_confirmation')
+            ORDER BY created_at DESC, id DESC
+            LIMIT 6
+            """,
+            (args.project, args.agent),
+        ).fetchall()
+        return {
+            "budget": args.budget,
+            "query": "current active task requirements decisions evidence",
+            "active_task": row_to_dict(task),
+            "active_checkpoints": [row_to_dict(row) for row in checkpoints],
+            "recent_requirement_decisions": [row_to_dict(row) for row in requirements],
+            "relevant_durable_findings": [row_to_dict(row) for row in findings],
+            "recent_evidence": [row_to_dict(row) for row in evidence],
+        }
+
+    read_command(args, handler)
+
+
 def add_db_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--db", default=DEFAULT_DB, help="SQLite memory DB path")
 
@@ -2166,6 +2341,35 @@ def build_parser() -> argparse.ArgumentParser:
     complete.add_argument("--evidence-ref", action="append")
     complete.add_argument("--no-durable-memory-promoted", action="store_true")
     complete.set_defaults(func=command_complete)
+
+    remember_requirement = sub.add_parser("remember-requirement")
+    add_db_arg(remember_requirement)
+    add_project_agent_args(remember_requirement)
+    remember_requirement.add_argument("--session-key")
+    remember_requirement.add_argument("--task-key")
+    remember_requirement.add_argument("--fact-key")
+    remember_requirement.add_argument("--text", required=True)
+    remember_requirement.add_argument("--source", default="conversation")
+    remember_requirement.add_argument("--confidence", choices=["low", "medium", "high"], default="high")
+    remember_requirement.set_defaults(func=command_remember_requirement)
+
+    checkpoint = sub.add_parser("checkpoint")
+    add_db_arg(checkpoint)
+    checkpoint.add_argument("--session-key")
+    checkpoint.add_argument("--task-key")
+    checkpoint.add_argument("--goal", required=True)
+    checkpoint.add_argument("--scope", required=True)
+    checkpoint.add_argument("--progress", required=True)
+    checkpoint.add_argument("--file", action="append")
+    checkpoint.add_argument("--evidence-ref", action="append")
+    checkpoint.set_defaults(func=command_checkpoint)
+
+    pack_current = sub.add_parser("pack-current")
+    add_db_arg(pack_current)
+    add_project_agent_args(pack_current)
+    pack_current.add_argument("--task-key")
+    pack_current.add_argument("--budget", type=int, default=1200)
+    pack_current.set_defaults(func=command_pack_current)
 
     return parser
 
