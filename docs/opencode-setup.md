@@ -69,7 +69,7 @@ Use a stable code directory instead.
 WSL/Linux default:
 
 ```bash
-$HOME/code/ai/aili-workflows
+$AILI_HOME
 ```
 
 For Rosetears' WSL Ubuntu environment this resolves to:
@@ -103,7 +103,7 @@ Do not treat this as the Windows native install path.
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
 | WSL Ubuntu | `/home/rosetears/code/ai/aili-workflows` | `/home/rosetears/.config/opencode` | selective symlinks inside `agents/` and `skills/` |
-| Linux/macOS | `$HOME/code/ai/aili-workflows` | `$HOME/.config/opencode` | selective symlinks inside `agents/` and `skills/` |
+| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` | selective symlinks inside `agents/` and `skills/` |
 | Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` | selective symlinks or junctions inside `agents\` and `skills\` |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
@@ -184,7 +184,7 @@ scripts/install_opencode.sh --mode selective
 Equivalent WSL/Linux logic:
 
 ```bash
-AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
+: "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 
 mkdir -p "$(dirname "$AILI_HOME")"
@@ -221,13 +221,13 @@ Result examples:
 ```text
 ~/.config/opencode/agents/
   rose_old.md
-  rose.md -> /home/rosetears/code/ai/aili-workflows/agents/rose.md
-  implementer.md -> /home/rosetears/code/ai/aili-workflows/agents/implementer.md
+  rose.md -> $AILI_HOME/agents/rose.md
+  implementer.md -> $AILI_HOME/agents/implementer.md
 
 ~/.config/opencode/skills/
   caveman/
   caveman-commit/
-  rose-memory -> /home/rosetears/code/ai/aili-workflows/skills/rose-memory
+  rose-memory -> $AILI_HOME/skills/rose-memory
 ```
 
 ### Mode B: Managed Directory Symlink Setup (Exclusive / Advanced)
@@ -245,7 +245,7 @@ CONFIRM_MANAGED_DIRECTORY=yes scripts/install_opencode.sh --mode managed-directo
 Manual logic, only after explicit approval:
 
 ```bash
-AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
+: "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 
 mkdir -p "$(dirname "$AILI_HOME")" "$OPENCODE_HOME"
@@ -278,7 +278,7 @@ scripts/install_opencode.sh --mode copy
 Manual logic:
 
 ```bash
-AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
+: "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 
 mkdir -p "$(dirname "$AILI_HOME")"
@@ -410,11 +410,13 @@ Use symlinks for reusable global ROSE agents and skills. Use project-local gener
 Use the `agents-md-initialization` skill for this flow. The skill should call the script instead of writing `AGENTS.md` by hand:
 
 ```bash
-AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
+AILI_HOME="/absolute/path/to/aili-workflows"
 
 python "$AILI_HOME/scripts/agents_md.py" init --project .
 python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
+
+Set `AILI_HOME` to the clone that matches the runtime where OpenCode is running; do not default to a fixed home-directory path.
 
 If a target project already has `AGENTS.md`, do not overwrite it silently. Use managed-block update or explicitly back up before overwrite:
 
@@ -426,7 +428,7 @@ python "$AILI_HOME/scripts/agents_md.py" init --project . --strategy backup-over
 Recommended target-project CI/pre-commit gate:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
+python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
 
 ## Optional Third-Party Setup
@@ -488,7 +490,9 @@ After symlinking or copying files, verify only the pieces that were installed.
 WSL/Linux selective symlink setup:
 
 ```bash
-test -d "$HOME/code/ai/aili-workflows"
+: "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
+
+test -d "$AILI_HOME"
 test -d "$HOME/.config/opencode/agents"
 test -d "$HOME/.config/opencode/skills"
 test ! -L "$HOME/.config/opencode/agents"
@@ -532,7 +536,9 @@ Required checks for third-party setup:
 For symlink setup, update the cloned repository:
 
 ```bash
-git -C "$HOME/code/ai/aili-workflows" pull --ff-only
+: "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
+
+git -C "$AILI_HOME" pull --ff-only
 ```
 
 No reinstall is needed unless new optional third-party integrations were added or the user wants to change installation mode.

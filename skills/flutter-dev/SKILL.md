@@ -1,21 +1,16 @@
 ---
 name: flutter-dev
 description: |
-  Flutter cross-platform development guide covering widget patterns, Riverpod/Bloc state management, GoRouter navigation, performance optimization, and platform-specific implementations. Includes const optimization, responsive layouts, testing strategies, and DevTools profiling.
-  Use when: building Flutter apps, implementing state management (Riverpod/Bloc), setting up GoRouter navigation, creating custom widgets, optimizing performance, writing widget tests, cross-platform development.
-license: MIT
-metadata:
-  version: "1.0.0"
-  category: mobile
-  sources:
-    - Flutter Documentation
-    - Riverpod Documentation
-    - Bloc Library Documentation
+  Build Flutter/Dart cross-platform apps with widgets, state management, navigation, tests, and performance patterns.
 ---
 
 # Flutter Development Guide
 
 A practical guide for building cross-platform applications with Flutter 3 and Dart. Focuses on proven patterns, state management, and performance optimization.
+
+## Routing Boundary
+
+Use this skill for Flutter/Dart apps, widgets, Riverpod/Bloc, GoRouter, Flutter performance, and Flutter tests. Use `android-native-dev` for native Android/Kotlin, `ios-application-dev` for native iOS/Swift, `react-native-dev` for React Native/Expo, and web frontend skills for browser React/Next/Vue work.
 
 ## Quick Reference
 

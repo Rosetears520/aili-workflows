@@ -1,26 +1,7 @@
 ---
 name: fullstack-dev
 description: |
-  Full-stack backend architecture and frontend-backend integration guide.
-  TRIGGER when: building a full-stack app, creating REST API with frontend, scaffolding backend service,
-  building todo app, building CRUD app, building real-time app, building chat app,
-  Express + React, Next.js API, Node.js backend, Python backend, Go backend,
-  designing service layers, implementing error handling, managing config/auth,
-  setting up API clients, implementing auth flows, handling file uploads,
-  adding real-time features (SSE/WebSocket), hardening for production.
-  DO NOT TRIGGER when: pure frontend UI work, pure CSS/styling, database schema only.
-license: MIT
-metadata:
-  category: full-stack
-  version: "1.0.0"
-  sources:
-    - The Twelve-Factor App (12factor.net)
-    - Clean Architecture (Robert C. Martin)
-    - Domain-Driven Design (Eric Evans)
-    - Patterns of Enterprise Application Architecture (Martin Fowler)
-    - Martin Fowler (Testing Pyramid, Contract Tests)
-    - Google SRE Handbook (Release Engineering)
-    - ThoughtWorks Technology Radar
+  Build full-stack apps, backend services, API clients, auth flows, file uploads, and realtime integrations.
 ---
 
 # Full-Stack Development Practices
@@ -112,6 +93,27 @@ Provide a brief summary to the user:
 **NOT for:**
 - Pure frontend/UI concerns (use your frontend framework's docs)
 - Pure database schema design without backend context
+
+## Routing Boundaries
+
+| Request | Prefer | Boundary |
+|---|---|---|
+| Backend + frontend integration, API client wiring, auth flow, file upload, realtime app | `fullstack-dev` | End-to-end service/application implementation |
+| Interface contract only, REST/GraphQL shape, type boundary design | `api-and-interface-design` | Design the public contract before implementation |
+| Existing app UI components/layout/state only | `frontend-ui-engineering` | No backend/service integration needed |
+| Marketing page, cinematic animation, AI media, persuasive copy | `frontend-dev` | Rich visual frontend experience, not app architecture |
+| Threat modeling, auth hardening, untrusted input risk | `security-and-hardening` | Security review or hardening focus |
+| CI, deployment pipeline, automated gates | `ci-cd-and-automation` | Automation infrastructure focus |
+| Writing tests or proving behavior | `test-driven-development` | Test workflow, often paired with this skill |
+
+### Trigger Validation
+
+| User says | Trigger? | Reason |
+|---|---:|---|
+| "Build an Express + React CRUD app with auth" | Yes | Backend + frontend + auth integration |
+| "Create a REST API and connect the frontend" | Yes | Full-stack boundary crossing |
+| "Design the API response schema only" | No | Use `api-and-interface-design` |
+| "Polish this button component" | No | Use `frontend-ui-engineering` |
 
 ---
 

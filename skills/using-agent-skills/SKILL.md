@@ -21,12 +21,21 @@ Task arrives
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
-    │   ├── UI work? ─────────────────→ frontend-ui-engineering
+    │   ├── Full-stack/backend+frontend? → fullstack-dev
+    │   ├── Production app UI? ───────→ frontend-ui-engineering
+    │   ├── Marketing/media frontend? ─→ frontend-dev
     │   ├── API work? ────────────────→ api-and-interface-design
+    │   ├── Mobile native/cross-platform? → android-native-dev / ios-application-dev / flutter-dev / react-native-dev
+    │   ├── GLSL/shader effects? ─────→ shader-dev
     │   ├── Need better context? ─────→ context-engineering
     │   └── Need doc-verified code? ───→ source-driven-development
     ├── Writing/running tests? ────────→ test-driven-development
     │   └── Browser-based? ───────────→ browser-testing-with-devtools
+    ├── Creating editable Word/DOCX? ──→ minimax-docx
+    ├── Creating print-ready PDF? ─────→ minimax-pdf
+    ├── Spreadsheet/workbook/table? ───→ minimax-xlsx
+    ├── Slides/deck/presentation? ─────→ pptx-generator
+    ├── Need project memory? ──────────→ rose-memory
     ├── Something broke? ──────────────→ debugging-and-error-recovery
     ├── Multiple independent work packages? → parallel-subagent-dispatch
     ├── Reviewing code? ───────────────→ code-review-and-quality
@@ -50,6 +59,37 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 - **Surgical changes**: touch only the files needed for the task, preserve existing names/APIs/patterns, and report unrelated findings rather than fixing them opportunistically.
 - **Goal-driven execution**: keep progress tied to the user’s requested outcome; push back on clearly harmful approaches with concrete tradeoffs, then respect an informed decision.
 - **Verify, don’t assume**: every skill ends with evidence such as targeted tests, build/lint output, diff inspection, or a clear manual verification path.
+
+## Domain and File-Output Routing
+
+Use these boundaries before defaulting to generic implementation skills:
+
+### Document Output Routing
+
+- Use `minimax-docx` only when the user explicitly requests Word, DOCX, `.docx`, an editable Office document, or a DOCX template workflow.
+- Use `minimax-pdf` when the user requests PDF, print-ready output, PDF form filling, visual page fidelity, or a final non-editable deliverable.
+- Use `minimax-xlsx` when the user requests Excel, XLSX, CSV, spreadsheet formulas, financial tables, tabular modeling, or workbook formatting.
+- Use `pptx-generator` when the user requests slides, decks, PowerPoint, PPTX, presentation generation, or slide editing.
+
+| User intent / output | Primary skill | Boundary |
+|---|---|---|
+| Explicit Word, `.docx`, editable Office document, or DOCX template workflow | `minimax-docx` | Use only when the output or input workflow is Word/DOCX/editable Office. Do not route generic “report” requests here unless the user wants DOCX/editability/template editing. |
+| PDF, print-ready/final non-editable deliverable, PDF form filling, or visual page fidelity | `minimax-pdf` | Use when the artifact is a PDF or page appearance is the deliverable. If the user needs editable Word output, use `minimax-docx`. |
+| Excel, `.xlsx`, `.xlsm`, `.csv`, spreadsheet formulas, financial tables, tabular modeling, or workbook formatting | `minimax-xlsx` | Use for workbook/data-table artifacts and formula-preserving edits. Do not use for prose documents or slides. |
+| Slides, deck, PowerPoint, `.pptx`, or presentation generation/editing | `pptx-generator` | Use for presentation artifacts. Use `parallel-subagent-dispatch` only for independent slide groups. |
+| Backend + frontend integration, service layers, auth, file uploads, realtime, API clients | `fullstack-dev` | Use for end-to-end app/service work. For interface-only contracts use `api-and-interface-design`; for UI-only work use frontend skills. |
+| Rich marketing pages, cinematic motion, AI media assets, persuasive copy, generative art | `frontend-dev` | Use for high-impact standalone frontend experiences. For production UI inside an existing app use `frontend-ui-engineering`. |
+| Production UI components, layouts, state, accessibility in an app | `frontend-ui-engineering` | Use for app UI engineering without the media/cinematic stack. |
+| Android native Kotlin/Compose or Android platform APIs | `android-native-dev` | Use for native Android only, not React Native/Flutter/web React. |
+| iOS native UIKit/SwiftUI/SnapKit or Apple platform APIs | `ios-application-dev` | Use for native iOS only, not React Native/Flutter/web React. |
+| Flutter/Dart cross-platform apps | `flutter-dev` | Use for Flutter projects and widgets, not web React or native-only Android/iOS. |
+| React Native or Expo mobile apps | `react-native-dev` | Use for mobile RN/Expo, not browser React. |
+| GLSL, shader code, ShaderToy/WebGL shader effects, SDF/ray marching/procedural visuals | `shader-dev` | Use only for shader/procedural visual-effect work, not generic CSS/JS animation. |
+| Durable project memory or focused retrieval/writeback | `rose-memory` | Use when a task needs ROSE project-local SQLite memory. |
+| Create/update/validate Agent Skills | `skill-authoring-and-validation` | Use for skill authoring and package validation work. |
+| Independent work packages for subagents | `parallel-subagent-dispatch` | Use when work can safely run in parallel and then be merged. |
+| About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
+| Clarifying or writing back change drafts | `change-interviewer` | Use when requirements need interview-style refinement. |
 
 ## Failure Modes to Avoid
 
@@ -108,11 +148,23 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | incremental-implementation | Thin vertical slices, test each before expanding |
 | Build | source-driven-development | Verify against official docs before implementing |
 | Build | context-engineering | Right context at the right time |
+| Build | fullstack-dev | Backend + frontend integration and production service patterns |
+| Build | frontend-dev | Rich marketing/media/cinematic frontend experiences |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
+| Build | android-native-dev | Native Android, Kotlin, Compose, Material 3 |
+| Build | ios-application-dev | Native iOS, UIKit, SwiftUI, Apple HIG |
+| Build | flutter-dev | Flutter/Dart cross-platform applications |
+| Build | react-native-dev | React Native and Expo mobile applications |
+| Build | shader-dev | GLSL shaders and procedural visual effects |
+| Build | minimax-docx | Editable Word/DOCX document workflows |
+| Build | minimax-pdf | Print-ready PDF generation, styling, and form filling |
+| Build | minimax-xlsx | Excel/CSV/spreadsheet formulas and workbook formatting |
+| Build | pptx-generator | PowerPoint slides, decks, and presentations |
 | Build | parallel-subagent-dispatch | Split independent work packages across subagents |
+| Build | rose-memory | Project-local SQLite memory retrieval/writeback |
 | Verify | test-driven-development | Failing test first, then make it pass |
-| Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
+| Verify | browser-testing-with-devtools | OpenCode Playwright browser tools for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Verify | verification-before-completion | Fresh evidence before completion claims |
 | Review | code-review-and-quality | Five-axis review with quality gates |

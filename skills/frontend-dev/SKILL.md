@@ -1,37 +1,27 @@
 ---
 name: frontend-dev
 description: |
-  Full-stack frontend development combining premium UI design, cinematic animations,
-  AI-generated media assets, persuasive copywriting, and visual art. Builds complete,
-  visually striking web pages with real media, advanced motion, and compelling copy.
-  Use when: building landing pages, marketing sites, product pages, dashboards,
-  generating media assets (image/video/audio/music), writing conversion copy,
-  creating generative art, or implementing cinematic scroll animations.
-license: MIT
-metadata:
-  version: "1.0.0"
-  category: frontend
-  sources:
-    - Framer Motion documentation
-    - GSAP / GreenSock documentation
-    - Three.js documentation
-    - Tailwind CSS documentation
-    - React / Next.js documentation
-    - AIDA Framework (Elmo Lewis)
-    - p5.js documentation
+  Build rich marketing/media frontend experiences with cinematic motion, AI assets, copy, and generative art.
 ---
 
 # Frontend Studio
 
 Build complete, production-ready frontend pages by orchestrating 5 specialized capabilities: design engineering, motion systems, AI-generated assets, persuasive copy, and generative art.
 
-## Invocation
+## Natural-Language Usage
 
-```
-/frontend-dev <request>
-```
+Use this OpenCode skill when the user asks for a rich visual frontend experience in natural language, such as "build a landing page for a music streaming app".
 
-The user provides their request as natural language (e.g. "build a landing page for a music streaming app").
+## Routing Boundary
+
+Use this skill for standalone or campaign-like frontend work where the deliverable depends on premium visual design, cinematic scroll/motion, persuasive copy, AI-generated media assets, or generative art. For production UI components inside an existing app, use `frontend-ui-engineering`. For backend + frontend integration, use `fullstack-dev`. For GLSL/procedural shader effects, use `shader-dev`.
+
+| Trigger | Use this skill? | Why |
+|---|---:|---|
+| "Build a cinematic product landing page with hero video" | Yes | Rich marketing/media frontend |
+| "Generate imagery and copy for a campaign page" | Yes | AI assets + persuasive copy |
+| "Fix this dashboard form state" | No | Route to `frontend-ui-engineering` |
+| "Add an API and database behind this UI" | No | Route to `fullstack-dev` |
 
 ## Skill Structure
 

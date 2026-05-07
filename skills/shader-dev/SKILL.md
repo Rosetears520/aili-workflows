@@ -1,23 +1,19 @@
 ---
 name: shader-dev
-description: Comprehensive GLSL shader techniques for creating stunning visual effects — ray marching, SDF modeling, fluid simulation, particle systems, procedural generation, lighting, post-processing, and more.
-license: MIT
-metadata:
-  version: "1.0"
-  category: graphics
+description: Build GLSL/WebGL/ShaderToy shaders and procedural visual effects such as SDF, ray marching, particles, and fluids.
 ---
 
 # Shader Craft
 
 A unified skill covering 36 GLSL shader techniques (ShaderToy-compatible) for real-time visual effects.
 
-## Invocation
+## Natural-Language Usage
 
-```
-/shader-dev <request>
-```
+Use this OpenCode skill when the user asks for shader work in natural language, such as "create a raymarched SDF scene with soft shadows".
 
-`$ARGUMENTS` contains the user's request (e.g. "create a raymarched SDF scene with soft shadows").
+## Routing Boundary
+
+Use this skill only for GLSL, WebGL shader code, ShaderToy-compatible effects, SDF/ray marching, procedural noise, particles, fluid/physics simulations, and shader post-processing. Do not use it for generic frontend animation, CSS transitions, Lottie, canvas UI, or motion design unless shader code is explicitly required; route those to `frontend-dev` or `frontend-ui-engineering` as appropriate.
 
 ## Skill Structure
 

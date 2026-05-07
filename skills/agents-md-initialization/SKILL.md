@@ -1,6 +1,6 @@
 ---
 name: agents-md-initialization
-description: Create, update, or validate a project-local AGENTS.md from the shared AILI template. Use when initializing project rules, running OpenCode /init-style setup, or checking AGENTS.md compliance.
+description: Create, update, or validate a project-local AGENTS.md from the shared AILI template when initializing or checking repository agent rules.
 ---
 
 # AGENTS.md Initialization
@@ -14,29 +14,29 @@ Do not write a project `AGENTS.md` from scratch.
 Use the bundled script:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py init --project .
+python "$AILI_HOME/scripts/agents_md.py" init --project .
 ```
 
-If this repository is installed somewhere else, use that clone path instead of `~/code/ai/aili-workflows`.
+Define `AILI_HOME` as the absolute path to the local `aili-workflows` clone. If `AILI_HOME` is unset, ask the user for the clone path or infer it safely from the current repository context; do not assume a fixed home-directory location.
 
 ## Commands
 
 Initialize a project-local `AGENTS.md`:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py init --project .
+python "$AILI_HOME/scripts/agents_md.py" init --project .
 ```
 
 Update only AILI managed blocks:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py update --project .
+python "$AILI_HOME/scripts/agents_md.py" update --project .
 ```
 
 Check template compliance:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
+python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
 
 ## Workflow
@@ -56,21 +56,21 @@ python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
 Target projects should add a lightweight check when practical:
 
 ```bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
+python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
 
 For `Makefile` projects:
 
 ```makefile
 check-agents:
-	python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
+	python "$(AILI_HOME)/scripts/agents_md.py" check --project .
 ```
 
 For pre-commit hooks:
 
 ```bash
 #!/usr/bin/env bash
-python ~/code/ai/aili-workflows/scripts/agents_md.py check --project .
+python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
 
 ## Verification

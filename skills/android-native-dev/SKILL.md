@@ -1,18 +1,13 @@
 ---
 name: android-native-dev
-description: Android native application development and UI design guide. Covers Material Design 3, Kotlin/Compose development, project configuration, accessibility, and build troubleshooting. Read this before Android native application development.
-license: MIT
-metadata:
-  version: "1.0.0"
-  category: mobile
-  sources:
-    - Material Design 3 Guidelines (material.io)
-    - Android Developer Documentation (developer.android.com)
-    - Google Play Quality Guidelines
-    - WCAG Accessibility Guidelines
+description: Android native Kotlin/Compose app development, Material 3 UI, accessibility, and Gradle builds.
 ---
 
 ## 1. Project Scenario Assessment
+
+## Routing Boundary
+
+Use this skill for native Android apps, Kotlin, Jetpack Compose, Android Views, Gradle/Android Studio, Material 3, Android permissions, and Google Play quality. Use `ios-application-dev` for native iOS, `flutter-dev` for Flutter/Dart, `react-native-dev` for React Native/Expo, and `frontend-ui-engineering` or `frontend-dev` for browser React/web UI.
 
 Before starting development, assess the current project state:
 

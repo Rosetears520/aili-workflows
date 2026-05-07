@@ -1,40 +1,23 @@
 ---
 name: minimax-docx
-license: MIT
-metadata:
-  version: "1.0.0"
-  category: document-processing
-  author: MiniMaxAI
-  sources:
-    - "ECMA-376 Office Open XML File Formats"
-    - "GB/T 9704-2012 Layout Standard for Official Documents"
-    - "IEEE / ACM / APA / MLA / Chicago / Turabian Style Guides"
-    - "Springer LNCS / Nature / HBR Document Templates"
 description: >
-  Professional DOCX document creation, editing, and formatting using OpenXML SDK (.NET).
-  Three pipelines: (A) create new documents from scratch, (B) fill/edit content in existing
-  documents, (C) apply template formatting with XSD validation gate-check.
-  MUST use this skill whenever the user wants to produce, modify, or format a Word document —
-  including when they say "write a report", "draft a proposal", "make a contract",
-  "fill in this form", "reformat to match this template", or any task whose final output
-  is a .docx file. Even if the user doesn't mention "docx" explicitly, if the task
-  implies a printable/formal document, use this skill.
-triggers:
-  - Word
-  - docx
-  - document
-  - 文档
-  - Word文档
-  - 报告
-  - 合同
-  - 公文
-  - 排版
-  - 套模板
+  Create, edit, fill, or template-format editable Word/DOCX documents with OpenXML SDK.
 ---
 
 # minimax-docx
 
 Create, edit, and format DOCX documents via CLI tools or direct C# scripts built on OpenXML SDK (.NET).
+
+## Routing Boundary
+
+Use this skill only when the workflow explicitly needs Word/DOCX or an editable Office document: `.docx` output, Word template application, DOCX content edits, form-like DOCX filling, or OpenXML structure work. For final print-ready or non-editable page output use `minimax-pdf`; for spreadsheets/tables/formulas use `minimax-xlsx`; for slides use `pptx-generator`.
+
+| Trigger | Use this skill? | Why |
+|---|---:|---|
+| "Edit this Word template and keep it editable" | Yes | DOCX/template workflow |
+| "Create a final polished PDF proposal" | No | Route to `minimax-pdf` |
+| "Build a financial model workbook" | No | Route to `minimax-xlsx` |
+| "Make presentation slides" | No | Route to `pptx-generator` |
 
 ## Setup
 
@@ -163,6 +146,7 @@ Also diff to verify content preservation: `$CLI diff --before source.docx --afte
 ## Validation pipeline
 
 Run after every write operation. For Scenario C the full pipeline is **mandatory**; for A/B it is **recommended** (skip only if the operation was trivially simple).
+Use `verification-before-completion` before claiming the document is complete, fixed, passing, or verified; include fresh validation/preview evidence in the response.
 
 ```bash
 $CLI merge-runs --input doc.docx                                    # 1. consolidate runs

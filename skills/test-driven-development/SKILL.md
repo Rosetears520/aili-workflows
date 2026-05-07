@@ -19,7 +19,7 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 **When NOT to use:** Pure configuration changes, documentation updates, or static content changes that have no behavioral impact.
 
-**Related:** For browser-based changes, combine TDD with runtime verification using Chrome DevTools MCP — see the Browser Testing section below.
+**Related:** For browser-based changes, combine TDD with runtime verification using OpenCode browser tools. In Claude Code, Chrome DevTools MCP can provide equivalent browser evidence.
 
 ## The TDD Cycle
 
@@ -295,11 +295,11 @@ describe('TaskService', () => {
 | No test isolation | Tests pass individually but fail together | Each test sets up and tears down its own state |
 | Mocking everything | Tests pass but production breaks | Prefer real implementations > fakes > stubs > mocks. Mock only at boundaries where real deps are slow or non-deterministic |
 
-## Browser Testing with DevTools
+## Browser Runtime Testing
 
-For anything that runs in a browser, unit tests alone aren't enough — you need runtime verification. Use Chrome DevTools MCP to give your agent eyes into the browser: DOM inspection, console logs, network requests, performance traces, and screenshots.
+For anything that runs in a browser, unit tests alone aren't enough — you need runtime verification. In OpenCode, use browser tools for screenshots, accessibility snapshots, console logs, network requests, interactions, and bounded JavaScript inspection. If running in Claude Code, Chrome DevTools MCP can provide equivalent browser evidence.
 
-### The DevTools Debugging Workflow
+### Browser Debugging Workflow
 
 ```
 1. REPRODUCE: Navigate to the page, trigger the bug, screenshot

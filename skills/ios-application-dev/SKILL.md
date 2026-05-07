@@ -1,21 +1,16 @@
 ---
 name: ios-application-dev
 description: |
-  iOS application development guide covering UIKit, SnapKit, and SwiftUI. Includes touch targets, safe areas, navigation patterns, Dynamic Type, Dark Mode, accessibility, collection views, common UI components, and SwiftUI design guidelines. For detailed references on specific topics, see the reference files.
-  Use when: developing iOS apps, implementing UI, reviewing iOS code, working with UIKit/SnapKit/SwiftUI layouts, building iPhone interfaces, Swift mobile development, Apple HIG compliance, iOS accessibility implementation.
-license: MIT
-metadata:
-  author: MiniMax-OpenSource
-  version: "1.0.0"
-  category: mobile
-  sources:
-    - Apple Human Interface Guidelines
-    - Apple Developer Documentation
+  Build native iOS apps with SwiftUI, UIKit, SnapKit, Apple HIG, accessibility, and platform UI patterns.
 ---
 
 # iOS Application Development Guide
 
 A practical guide for building iOS applications using UIKit, SnapKit, and SwiftUI. Focuses on proven patterns and Apple platform conventions.
+
+## Routing Boundary
+
+Use this skill for native iOS/iPadOS apps, Swift, SwiftUI, UIKit, SnapKit, Apple platform APIs, App Store UI expectations, and iOS accessibility. Use `android-native-dev` for native Android, `flutter-dev` for Flutter/Dart, `react-native-dev` for React Native/Expo, and frontend web skills for browser React/Next/Vue UI.
 
 ## Quick Reference
 

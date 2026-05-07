@@ -1,18 +1,22 @@
 ---
 name: minimax-xlsx
-description: "Open, create, read, analyze, edit, or validate Excel/spreadsheet files (.xlsx, .xlsm, .csv, .tsv). Use when the user asks to create, build, modify, analyze, read, validate, or format any Excel spreadsheet, financial model, pivot table, or tabular data file. Covers: creating new xlsx from scratch, reading and analyzing existing files, editing existing xlsx with zero format loss, formula recalculation and validation, and applying professional financial formatting standards. Triggers on 'spreadsheet', 'Excel', '.xlsx', '.csv', 'pivot table', 'financial model', 'formula', or any request to produce tabular data in Excel format."
-license: MIT
-metadata:
-  version: "1.0"
-  category: productivity
-  sources:
-    - ECMA-376 Office Open XML File Formats
-    - Microsoft Open XML SDK documentation
+description: "Create, edit, analyze, format, or validate Excel/XLSX/CSV spreadsheets, formulas, and workbooks."
 ---
 
 # MiniMax XLSX Skill
 
 Handle the request directly. Do NOT spawn sub-agents. Always write the output file the user requests.
+
+## Routing Boundary
+
+Use this skill for Excel, `.xlsx`, `.xlsm`, `.csv`, `.tsv`, spreadsheets, formulas, pivot-like tables, financial models, tabular modeling, workbook formatting, or zero-format-loss workbook edits. Use `minimax-docx` for editable Word documents, `minimax-pdf` for final PDF/page-fidelity output, and `pptx-generator` for slides.
+
+| Trigger | Use this skill? | Why |
+|---|---:|---|
+| "Add formulas to this workbook" | Yes | Spreadsheet formula edit |
+| "Analyze this CSV and produce an XLSX" | Yes | Tabular workbook workflow |
+| "Draft a Word report" | No | Route to `minimax-docx` |
+| "Make a slide deck" | No | Route to `pptx-generator` |
 
 ## Task Routing
 
@@ -123,6 +127,7 @@ Run `formula_check.py` for static validation. Use `libreoffice_recalc.py` for dy
 3. **EDIT → XML**: Never openpyxl round-trip. Use unpack/edit/pack scripts
 4. **Always produce the output file** — this is the #1 priority
 5. **Validate before delivery**: `formula_check.py` exit code 0 = safe
+6. **Fresh evidence**: use `verification-before-completion` before claiming the workbook is complete, fixed, passing, or verified; cite formula/readback validation evidence.
 
 ## Utility Scripts
 

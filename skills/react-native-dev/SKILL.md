@@ -1,25 +1,16 @@
 ---
 name: react-native-dev
 description: |
-  React Native and Expo development guide covering components, styling, animations, navigation,
-  state management, forms, networking, performance optimization, testing, native capabilities,
-  and engineering (project structure, deployment, SDK upgrades, CI/CD).
-  Use when: building React Native or Expo apps, implementing animations or native UI, managing
-  state, fetching data, writing tests, optimizing performance, deploying to App Store/Play Store,
-  setting up CI/CD, upgrading Expo SDK, or configuring Tailwind/NativeWind.
-license: MIT
-metadata:
-  version: "1.0.0"
-  category: mobile
-  sources:
-    - Expo documentation (docs.expo.dev)
-    - React Native documentation (reactnative.dev)
-    - EAS (Expo Application Services) documentation
+  Build React Native/Expo mobile apps with navigation, native UI, state, networking, tests, and release workflows.
 ---
 
 # React Native & Expo Development Guide
 
 A practical guide for building production-ready React Native and Expo applications. Covers UI, animations, state, testing, performance, and deployment.
+
+## Routing Boundary
+
+Use this skill for React Native or Expo mobile apps, Expo Router, native mobile components, mobile permissions, EAS, and App Store/Play Store release work. Use `frontend-ui-engineering` or `frontend-dev` for browser React/web UI, `android-native-dev` for Kotlin/Compose Android, `ios-application-dev` for Swift/UIKit/SwiftUI iOS, and `flutter-dev` for Flutter/Dart.
 
 ## References
 

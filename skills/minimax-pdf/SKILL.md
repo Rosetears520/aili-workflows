@@ -1,26 +1,23 @@
 ---
 name: minimax-pdf
 description: >
-  Use this skill when visual quality and design identity matter for a PDF.
-  CREATE (generate from scratch): "make a PDF", "generate a report", "write a proposal",
-  "create a resume", "beautiful PDF", "professional document", "cover page",
-  "polished PDF", "client-ready document".
-  FILL (complete form fields): "fill in the form", "fill out this PDF",
-  "complete the form fields", "write values into PDF", "what fields does this PDF have".
-  REFORMAT (apply design to an existing doc): "reformat this document", "apply our style",
-  "convert this Markdown/text to PDF", "make this doc look good", "re-style this PDF".
-  This skill uses a token-based design system: color, typography, and spacing are derived
-  from the document type and flow through every page. The output is print-ready.
-  Prefer this skill when appearance matters, not just when any PDF output is needed.
-license: MIT
-metadata:
-  version: "1.0"
-  category: document-generation
+  Create, fill, or reformat print-ready PDFs with strong visual page fidelity.
 ---
 
 # minimax-pdf
 
 Three tasks. One skill.
+
+## Routing Boundary
+
+Use this skill for PDF output, final non-editable deliverables, PDF form filling, print-ready documents, or tasks where visual page fidelity is the deliverable. Use `minimax-docx` when the user needs editable Word/DOCX output, `minimax-xlsx` for spreadsheets/formulas/workbooks, and `pptx-generator` for slides.
+
+| Trigger | Use this skill? | Why |
+|---|---:|---|
+| "Make a polished client-ready PDF" | Yes | Final PDF/page design |
+| "Fill this PDF form" | Yes | PDF field workflow |
+| "Create an editable Word contract" | No | Route to `minimax-docx` |
+| "Format an Excel workbook" | No | Route to `minimax-xlsx` |
 
 ## Read `design/design.md` before any CREATE or REFORMAT work.
 
@@ -190,3 +187,5 @@ bash scripts/make.sh demo    # build a sample PDF
 | `pypdf` | fill, merge, reformat | `pip install pypdf` |
 | Node.js 18+ | `render_cover.js` | system |
 | `playwright` + Chromium | `render_cover.js` | `npm install -g playwright && npx playwright install chromium` |
+
+Before claiming the PDF is complete, fixed, passing, or verified, use `verification-before-completion` and cite fresh build/form/visual verification evidence.

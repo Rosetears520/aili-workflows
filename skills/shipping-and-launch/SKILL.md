@@ -291,6 +291,8 @@ Every deployment needs a rollback plan before it happens:
 
 ## Verification
 
+Use `verification-before-completion` before claiming a launch, rollout, rollback, or post-launch check is complete, passing, verified, or ready; cite fresh deploy, monitoring, health-check, or rollback evidence.
+
 Before deploying:
 
 - [ ] Pre-launch checklist completed (all sections green)

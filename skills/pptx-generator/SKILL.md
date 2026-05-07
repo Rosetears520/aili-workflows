@@ -1,13 +1,6 @@
 ---
 name: pptx-generator
-description: "Generate, edit, and read PowerPoint presentations. Create from scratch with PptxGenJS (cover, TOC, content, section divider, summary slides), edit existing PPTX via XML workflows, or extract text with markitdown. Triggers: PPT, PPTX, PowerPoint, presentation, slide, deck, slides."
-license: MIT
-metadata:
-  version: "1.0"
-  category: productivity
-  sources:
-    - https://gitbrent.github.io/PptxGenJS/
-    - https://github.com/microsoft/markitdown
+description: "Generate, edit, read, and verify PowerPoint/PPTX presentations and slide decks."
 ---
 
 # PPTX Generator & Editor
@@ -15,6 +8,17 @@ metadata:
 ## Overview
 
 This skill handles all PowerPoint tasks: reading/analyzing existing presentations, editing template-based decks via XML manipulation, and creating presentations from scratch using PptxGenJS. It includes a complete design system (color palettes, fonts, style recipes) and detailed guidance for every slide type.
+
+## Routing Boundary
+
+Use this skill for PowerPoint, PPTX, presentation, deck, or slide generation/editing/reading. Use `minimax-docx` for editable Word documents, `minimax-pdf` for final PDF output, and `minimax-xlsx` for spreadsheet/workbook artifacts.
+
+| Trigger | Use this skill? | Why |
+|---|---:|---|
+| "Build a 12-slide investor deck" | Yes | Slide deck output |
+| "Edit this PPTX template" | Yes | PPTX edit workflow |
+| "Create a printable PDF report" | No | Route to `minimax-pdf` |
+| "Build an Excel model" | No | Route to `minimax-xlsx` |
 
 ## Quick Reference
 
@@ -78,9 +82,9 @@ Classify **every slide** as exactly one of the [5 page types](references/slide-t
 
 ### Step 5: Generate Slide JS Files
 
-Create one JS file per slide in `slides/` directory. Each file must export a synchronous `createSlide(pres, theme)` function. Follow the [Slide Output Format](#slide-output-format) and the type-specific guidance in [slide-types.md](references/slide-types.md). Generate up to 5 slides concurrently using subagents if available.
+Create one JS file per slide in `slides/` directory. Each file must export a synchronous `createSlide(pres, theme)` function. Follow the [Slide Output Format](#slide-output-format) and the type-specific guidance in [slide-types.md](references/slide-types.md). For independent slide groups, use `parallel-subagent-dispatch` rather than an ad hoc slide protocol.
 
-**Tell each subagent:**
+**When using `parallel-subagent-dispatch`, include these work package constraints:**
 1. File naming: `slides/slide-01.js`, `slides/slide-02.js`, etc.
 2. Images go in: `slides/imgs/`
 3. Final PPTX goes in: `slides/output/`
@@ -122,6 +126,7 @@ Run with: `cd slides && node compile.js`
 ### Step 7: QA (Required)
 
 See [QA Process](references/pitfalls.md#qa-process).
+Use `verification-before-completion` before claiming the deck/slides are complete, fixed, passing, or verified; cite fresh compile and QA evidence.
 
 ### Output Structure
 
