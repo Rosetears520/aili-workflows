@@ -28,6 +28,7 @@ Task arrives
     │   ├── Mobile native/cross-platform? → android-native-dev / ios-application-dev / flutter-dev / react-native-dev
     │   ├── GLSL/shader effects? ─────→ shader-dev
     │   ├── Need better context? ─────→ context-engineering
+    │   ├── Library/API docs or setup? → source-driven-development
     │   └── Need doc-verified code? ───→ source-driven-development
     ├── Writing/running tests? ────────→ test-driven-development
     │   └── Browser-based? ───────────→ browser-testing-with-devtools
@@ -78,6 +79,7 @@ Use these boundaries before defaulting to generic implementation skills:
 | Excel, `.xlsx`, `.xlsm`, `.csv`, spreadsheet formulas, financial tables, tabular modeling, or workbook formatting | `minimax-xlsx` | Use for workbook/data-table artifacts and formula-preserving edits. Do not use for prose documents or slides. |
 | Slides, deck, PowerPoint, `.pptx`, or presentation generation/editing | `pptx-generator` | Use for presentation artifacts. Use `parallel-subagent-dispatch` only for independent slide groups. |
 | Backend + frontend integration, service layers, auth, file uploads, realtime, API clients | `fullstack-dev` | Use for end-to-end app/service work. For interface-only contracts use `api-and-interface-design`; for UI-only work use frontend skills. |
+| Library/API docs, setup commands, framework examples, or version-sensitive implementation | `source-driven-development` | If Context7 was installed by `npx ctx7 setup --opencode`, prefer the installed Context7 CLI or MCP capability. If unavailable, use official documentation sources. Do not route directly to a core `context7` workflow skill. |
 | Rich marketing pages, cinematic motion, AI media assets, persuasive copy, generative art | `frontend-dev` | Use for high-impact standalone frontend experiences. For production UI inside an existing app use `frontend-ui-engineering`. |
 | Production UI components, layouts, state, accessibility in an app | `frontend-ui-engineering` | Use for app UI engineering without the media/cinematic stack. |
 | Android native Kotlin/Compose or Android platform APIs | `android-native-dev` | Use for native Android only, not React Native/Flutter/web React. |

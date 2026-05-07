@@ -152,7 +152,7 @@ Do not rename, delete, replace, or convert these paths into directory symlinks u
 - `~/.config/opencode/agents`
 - `~/.config/opencode/skills`
 - `~/.config/opencode/AGENTS.md`
-- `~/.config/opencode/opencode.json`
+- OpenCode runtime configuration files
 
 Back up individual conflicting entries only.
 
@@ -431,18 +431,55 @@ Recommended target-project CI/pre-commit gate:
 python "$AILI_HOME/scripts/agents_md.py" check --project .
 ```
 
-## Optional Third-Party Setup
+## Recommended OpenCode Runtime Add-ons
 
-Only install third-party tools if the user asks for them or if they are clearly required by the task.
+Recommended default runtime add-ons are DCP plugin, Playwright MCP, and Context7 integration. Install them through their official commands or interactive setup only; do not vendor third-party source into this repository. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
 
-Available optional integrations:
+### DCP Plugin
 
-- OpenCode DCP plugin: install globally from `@tarquinen/opencode-dcp@latest`.
-- OpenCode shell strategy: clone `https://github.com/JRedeker/opencode-shell-strategy.git` into a stable local path and reference it from OpenCode config.
-- Playwright MCP: register `npx @playwright/mcp@latest`, disabled by default unless the user asks to enable it.
-- Context7: run its OpenCode setup or register Context7 MCP, disabled by default unless the user asks to enable it.
+```bash
+opencode plugin @tarquinen/opencode-dcp@latest --global
+```
 
-Do not vendor third-party plugin source into this repository unless the user explicitly decides to vendor it.
+Verify after restart by running `/dcp` in OpenCode.
+
+### Playwright MCP
+
+Start interactive setup:
+
+```bash
+opencode mcp add
+```
+
+Use these answers/details:
+
+- name: `playwright`
+- type: `local`
+- command: `npx -y @playwright/mcp@latest --caps=testing,storage`
+- default caps: `testing,storage`
+
+Optional profiles:
+
+- trace/debug: `npx -y @playwright/mcp@latest --caps=devtools`
+- full automation only when explicitly needed: `npx -y @playwright/mcp@latest --caps=network,storage,testing,vision,pdf,devtools`
+
+Verify after restart with `opencode mcp list`, then ask `test-engineer` or `browser-testing-with-devtools` to use Playwright for a simple local page check.
+
+### Context7 Integration
+
+```bash
+npx ctx7 setup --opencode
+```
+
+Choose CLI mode or MCP mode based on the environment. Do not vendor a Context7 skill; official setup installs or configures an external capability used by `source-driven-development`. The recommended default is the installed Context7 CLI unless a project explicitly needs MCP tools.
+
+Verify after restart by asking ROSE or `source-driven-development` to use Context7 for a library documentation lookup.
+
+### Optional Add-ons
+
+Install these only if the user asks or the project clearly needs them: notifier/notificator, vibeguard, Sentry MCP, Grep by Vercel/`gh_grep`, `opencode-worktree`, and `opencode-pty`/shell-strategy.
+
+Not recommended as default add-ons: GitHub MCP, Filesystem MCP, Puppeteer/Chrome DevTools MCP, Memory MCP/Supermemory, and Sequential Thinking MCP.
 
 ## OpenCode Behavior
 
@@ -525,11 +562,12 @@ test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
 python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
 ```
 
-Required checks for third-party setup:
+Required checks for runtime add-on setup:
 
-- Existing `opencode.json` was backed up before edits.
-- New config was merged, not overwritten.
-- Playwright MCP and Context7 MCP are disabled by default unless the user asked otherwise.
+- OpenCode was fully restarted after installation or runtime configuration changes.
+- `/dcp` is available after installing the DCP plugin.
+- `opencode mcp list` shows the expected Playwright MCP entry.
+- Context7 can answer a library documentation lookup through the installed CLI or MCP capability.
 
 ## Update
 

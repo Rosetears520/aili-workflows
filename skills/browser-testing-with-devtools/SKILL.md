@@ -25,6 +25,8 @@ Use OpenCode's Playwright browser tools to give your agent eyes into the browser
 
 Use the built-in Playwright browser tools first: navigate to the app, capture accessibility snapshots, inspect console and network data, take screenshots, interact with elements, and run focused browser checks.
 
+Playwright MCP is also a recommended OpenCode runtime add-on when MCP tools are installed. Use the default command `npx -y @playwright/mcp@latest --caps=testing,storage`. Add `--caps=devtools` for trace/debug work, or use `--caps=network,storage,testing,vision,pdf,devtools` only when full automation is explicitly needed.
+
 ### Available Capabilities
 
 | Tool | What It Does | When to Use |
@@ -40,7 +42,7 @@ Use the built-in Playwright browser tools first: navigate to the app, capture ac
 
 ## Compatibility Notes: Claude Code / Chrome DevTools MCP
 
-If running in Claude Code with Chrome DevTools MCP instead of OpenCode Playwright tools, use the equivalent DevTools MCP actions for screenshots, DOM inspection, console logs, network monitor, performance inspection, styles, accessibility tree, and JavaScript execution. Treat this as a compatibility fallback, not the primary OpenCode path.
+If running in Claude Code with Chrome DevTools MCP instead of OpenCode Playwright tools or Playwright MCP, use the equivalent DevTools MCP actions for screenshots, DOM inspection, console logs, network monitor, performance inspection, styles, accessibility tree, and JavaScript execution. Treat Chrome DevTools MCP as a compatibility fallback only, not the primary OpenCode path.
 
 ## Security Boundaries
 

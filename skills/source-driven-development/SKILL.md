@@ -64,6 +64,8 @@ If versions are missing or ambiguous, **ask the user**. Don't guess — the vers
 
 Fetch the specific documentation page for the feature you're implementing. Not the homepage, not the full docs — the relevant page.
 
+For library/API documentation, setup commands, framework examples, or version-sensitive code, prefer Context7 when it is installed in the current OpenCode environment. Do not require the user to manually say "use context7" each time. Do not assume Context7 is installed; if it is unavailable, fall back to official docs, package documentation, and source references. Do not add or rely on a repository-local Context7 skill.
+
 **Source hierarchy (in order of authority):**
 
 | Priority | Source | Example |
