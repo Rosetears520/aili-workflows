@@ -13,18 +13,21 @@ aili-workflows/
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
 │   ├── implementer.md           # 单任务实现 subagent
+│   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
 │   └── test-engineer.md         # 测试与覆盖率 subagent
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
 ├── scripts/
-│   └── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
+│   ├── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
+│   └── install_opencode.sh      # 安全安装 agents/skills 到 OpenCode 全局配置
 ├── skills/
 │   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
 │   ├── android-native-dev/
 │   ├── api-and-interface-design/
 │   ├── browser-testing-with-devtools/
+│   ├── change-interviewer/
 │   ├── ci-cd-and-automation/
 │   ├── code-review-and-quality/
 │   ├── code-simplification/
@@ -43,6 +46,7 @@ aili-workflows/
 │   ├── minimax-docx/
 │   ├── minimax-pdf/
 │   ├── minimax-xlsx/
+│   ├── parallel-subagent-dispatch/
 │   ├── performance-optimization/
 │   ├── planning-and-task-breakdown/
 │   ├── pptx-generator/
@@ -51,10 +55,12 @@ aili-workflows/
 │   ├── security-and-hardening/
 │   ├── shader-dev/
 │   ├── shipping-and-launch/
+│   ├── skill-authoring-and-validation/
 │   ├── source-driven-development/
 │   ├── spec-driven-development/
 │   ├── test-driven-development/
-│   └── using-agent-skills/
+│   ├── using-agent-skills/
+│   └── verification-before-completion/
 ├── templates/
 │   └── AGENTS.md                # 项目 AGENTS.md 的唯一模板源
 ├── tests/
@@ -67,6 +73,7 @@ aili-workflows/
 |---|---|---|
 | `agents/rose.md` | OpenCode primary agent，负责个人主工作流、任务契约、记忆门禁、执行边界和子代理编排 | Rosetears 个人工作流内容 |
 | `agents/implementer.md` | 执行一个明确边界的代码实现任务 | Rosetears 个人工作流内容 |
+| `agents/debug-investigator.md` | 只读根因调查 subagent，用于修复前的失败定位和证据收集 | Rosetears 个人工作流内容，调试纪律参考 obra/superpowers |
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |
 | `agents/security-auditor.md` | 做安全审计、威胁建模和漏洞检查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/security-auditor.md`，遵循 MIT License |
 | `agents/test-engineer.md` | 做测试策略、测试补充和覆盖率分析 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/test-engineer.md`，遵循 MIT License |
@@ -80,7 +87,20 @@ aili-workflows/
 | Skill | 说明 |
 |---|---|
 | `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
+| `change-interviewer` | 通过采访澄清 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft，并写回目标文件 |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
+| `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
+
+### 来自 obra/superpowers
+
+以下内容参考或改编自 [obra/superpowers](https://github.com/obra/superpowers) 的 skills，原项目许可为 MIT License，版权归 Jesse Vincent 所有。本仓库未 vendoring Superpowers 整体系统，仅将部分流程思想改写为适合个人 OpenCode / ROSE 工作流的 skills 和 subagents。
+
+| 内容 | 说明 |
+|---|---|
+| `parallel-subagent-dispatch` | 将独立 work packages 并行派发给 subagents，并由 ROSE 收敛证据 |
+| `verification-before-completion` | 在声明 complete/fixed/passing/verified 前要求 fresh evidence |
+| `debugging-and-error-recovery` | 合入 root-cause-first 调试纪律，避免先猜修复再找证据 |
+| `agents/debug-investigator.md` | 本地化为只读根因调查 subagent，配合 ROSE/implementer 分工 |
 
 ### 来自 addyosmani/agent-skills
 
@@ -133,6 +153,7 @@ aili-workflows/
 ### 思想来源
 
 - `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
+- `skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
 
 ## 使用说明
 
@@ -140,9 +161,9 @@ aili-workflows/
 
 ### OpenCode 设置
 
-安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它根据当前环境和你的需求选择软链接哪些 agents、skills 或可选第三方集成；复制仅作为软链接不可用或明确要求时的 fallback。
+安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective`；复制仅作为软链接不可用或明确要求时的 fallback。
 
-默认目标是 OpenCode 全局配置目录：Linux/macOS 为 `~/.config/opencode/`，Windows 为 `%USERPROFILE%\.config\opencode\`。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/` 和 `skills/` 目录，只在目录内部链接具体 agent 文件和 skill 目录。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
 
 项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -169,6 +190,7 @@ aili-workflows/
 |---|---|---|---|
 | Addy Osmani | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT License | Copyright (c) 2025 Addy Osmani |
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
+| Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |
 | Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
 

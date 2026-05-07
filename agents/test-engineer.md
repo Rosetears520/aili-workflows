@@ -82,6 +82,8 @@ For every function or component:
 
 ## Output Format
 
+Before reporting tests as passing or coverage as sufficient, use `verification-before-completion` when available and include fresh command or inspection evidence.
+
 When analyzing test coverage:
 
 ```markdown

@@ -227,6 +227,8 @@ If automated verification is not possible, explain why and provide the best avai
 
 ## Completion Report
 
+Before returning `STATUS: PASS`, use `verification-before-completion` when available and include fresh evidence for the exact success claim.
+
 Return exactly this structure:
 
 ```text

@@ -17,6 +17,7 @@ When a task arrives, identify the development phase and apply the corresponding 
 Task arrives
     │
     ├── Vague idea/need refinement? ──→ idea-refine
+    ├── Refining a change draft? ─────→ change-interviewer
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
@@ -27,13 +28,16 @@ Task arrives
     ├── Writing/running tests? ────────→ test-driven-development
     │   └── Browser-based? ───────────→ browser-testing-with-devtools
     ├── Something broke? ──────────────→ debugging-and-error-recovery
+    ├── Multiple independent work packages? → parallel-subagent-dispatch
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
     ├── Committing/branching? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
+    ├── Creating/revising skills? ─────→ skill-authoring-and-validation
     ├── Initializing AGENTS.md? ───────→ agents-md-initialization
+    ├── About to claim complete/fixed/passing? → verification-before-completion
     └── Deploying/launching? ─────────→ shipping-and-launch
 ```
 
@@ -97,6 +101,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Phase | Skill | One-Line Summary |
 |-------|-------|-----------------|
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
+| Define | change-interviewer | Interview to clarify and write back change drafts |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Define | agents-md-initialization | Generate project AGENTS.md from the shared template |
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
@@ -105,13 +110,16 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
+| Build | parallel-subagent-dispatch | Split independent work packages across subagents |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
+| Verify | verification-before-completion | Fresh evidence before completion claims |
 | Review | code-review-and-quality | Five-axis review with quality gates |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |
 | Ship | git-workflow-and-versioning | Atomic commits, clean history |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
 | Ship | documentation-and-adrs | Document the why, not just the what |
+| Ship | skill-authoring-and-validation | Create, revise, and validate repository Agent Skills |
 | Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
