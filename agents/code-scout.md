@@ -51,12 +51,23 @@ permission:
     "**/.aws/*": deny
     ".azure/*": deny
     "**/.azure/*": deny
+  glob: allow
+  grep: allow
+  list: allow
+  lsp: allow
   edit: deny
   webfetch: deny
   websearch: deny
   task: deny
   bash:
     "*": deny
+    "git status*": allow
+    "git ls-files*": allow
+    "git grep*": allow
+    "rg*": allow
+    "grep*": allow
+    "find*": allow
+    "ls*": allow
   external_directory: deny
 ---
 
