@@ -218,6 +218,27 @@ Search evidence answers: where should I look?
 
 It does not replace: I inspected the code I am about to change.
 
+## Broad Search Context Isolation
+
+Do not dump broad repository search into MainAgent context.
+
+When evidence requires broad grep, glob, file listing, residual scanning, call-path discovery, test mapping, or docs/spec cross-checking, delegate to `code-scout` and request a compact Evidence Pack.
+
+MainAgent should receive:
+- exact evidence anchors
+- likely next reads
+- constraints and unknowns
+- active/current/stale/archived/generated classification when relevant
+
+MainAgent should not receive:
+- full grep dumps
+- long file excerpts
+- unrelated search hits
+- noisy logs
+- failed exploratory paths unless they materially change the decision
+
+Search evidence is a map, not a substitute for reading target files.
+
 ## MCP Integrations
 
 For richer context, use Model Context Protocol servers:

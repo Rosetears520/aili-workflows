@@ -115,51 +115,36 @@ Return compact results in this exact shape:
 STATUS: FOUND | PARTIAL | NOT_FOUND | BLOCKED
 CONFIDENCE: high | medium | low
 
-QUERY UNDERSTOOD:
-- ...
+EVIDENCE:
+- path:line-or-symbol - fact - active/current/stale/archived/generated
 
-SEARCH STRATEGY:
-- searched: ...
-- read: ...
-
-EVIDENCE ANCHORS:
-- path:line-or-symbol - observed fact
-- path:line-or-symbol - observed fact
-
-LIKELY EDIT TARGETS:
-- path - why this is likely the edit target
-- N/A if this is review/test/doc-only
+NEXT READS:
+- path - why
 
 RELATED TESTS:
-- path - what it appears to cover
+- path - coverage signal
 - N/A if none found
 
-PATTERNS TO FOLLOW:
-- path:line-or-symbol - pattern summary
+CONSTRAINTS / PATTERNS:
+- path:line-or-symbol - constraint or pattern
 - N/A if none found
 
-CONSTRAINTS:
-- path:line-or-symbol - type/schema/config/spec/doc constraint
-- N/A if none found
-
-NEGATIVE SEARCH:
-- searched for X; did not find Y
-- N/A if not relevant
-
-UNKNOWNS / RISKS:
+UNKNOWNS:
 - ...
-
-RECOMMENDED NEXT READS:
-- path - why the caller should read it before acting
 
 CALLER ACTION:
 - READ_BEFORE_EDIT | READY_FOR_REVIEW | NEEDS_MORE_SEARCH | ASK_USER | NOT_FOUND
 ```
 
+Only include search strategy, negative search, or expanded reasoning when status is `PARTIAL`, `NOT_FOUND`, or the caller explicitly asks.
+
+Never return raw grep dumps or long excerpts.
+
 ## Hard Rules
 
 - Keep the final answer short enough for a parent agent to use directly.
 - Do not paste long file contents.
+- Do not return raw grep dumps, long logs, or exploratory dead ends.
 - Do not use shell commands to read denied secret or config files.
 - Do not propose implementation unless the caller explicitly asks for possible locations; even then, frame it as evidence-based possibilities, not a plan.
 - Do not fabricate paths, symbols, APIs, commands, config keys, or tests.

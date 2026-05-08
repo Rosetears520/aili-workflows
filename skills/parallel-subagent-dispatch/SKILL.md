@@ -1,6 +1,6 @@
 ---
 name: parallel-subagent-dispatch
-description: Use when ROSE needs to split two or more independent investigation, implementation, review, or testing work packages across subagents without shared mutable state, overlapping edits, or sequential dependencies.
+description: Use when ROSE needs context-saving subagent dispatch: single read-only scouting for noisy repository evidence, or splitting two or more independent investigation, implementation, review, or testing work packages across subagents without shared mutable state, overlapping edits, or sequential dependencies.
 license: MIT
 compatibility: opencode
 metadata:
@@ -11,13 +11,27 @@ metadata:
 
 ## Purpose
 
-Use parallel subagents only when separate work packages can proceed independently and return evidence for ROSE to reconcile.
+Use subagents when delegation preserves MainAgent context or when separate work packages can proceed independently and return evidence for ROSE to reconcile.
 
 This skill adapts Superpowers-style parallel dispatch discipline to this repository's OpenCode model: ROSE remains the primary orchestrator, subagents receive precise task packets, and no persona delegates to another persona.
 
 ## When to Use
 
-Use this skill when there are two or more independent work packages, such as:
+Use this skill for context-saving dispatch and parallel dispatch.
+
+Use a single read-only subagent, especially `code-scout`, even when there is only one work package, if doing the work in MainAgent would pollute context with broad search, large grep output, repeated file reads, logs, or exploratory dead ends.
+
+Good single-subagent uses:
+- residual marker scans across many files
+- personal-name or local-path scans
+- finding all references to a legacy API, config key, header, route, symbol, or marker
+- mapping tests that cover a behavior
+- checking whether docs/specs/plans reference a path or symbol
+- locating security/trust-model evidence
+- finding active vs archived/generated references
+- confirming whether migration leftovers remain
+
+Use parallel subagents when there are two or more independent work packages, such as:
 
 - code review, security audit, and test analysis on the same completed diff
 - separate root-cause investigations in unrelated subsystems
@@ -30,7 +44,7 @@ Realistic trigger prompts:
 - "Split these unrelated failures across investigators and merge the findings."
 - "Have separate agents inspect frontend, backend, and CI without overlapping edits."
 
-## When Not to Use
+## When Not to Dispatch in Parallel
 
 Do not dispatch in parallel when:
 
@@ -43,6 +57,41 @@ Do not dispatch in parallel when:
 Non-trigger prompt:
 
 - "Fix this failing test after you identify the root cause." Use `debugging-and-error-recovery` first, then a scoped implementation handoff if needed.
+
+## Context-Saving Dispatch
+
+Return only compact evidence anchors:
+- file:line or symbol
+- short classification
+- active/current/stale/archived/generated status when relevant
+- confidence
+- recommended MainAgent next reads
+
+Do not paste large file excerpts, full grep dumps, long logs, or exploratory dead ends back into MainAgent context.
+
+Search evidence is a map. The editing, reviewing, testing, securing, or documenting agent must still read final target files before acting.
+
+## Dispatch ROI Rule
+
+Dispatch when expected MainAgent context cost is greater than subagent overhead.
+
+Use subagent when likely required evidence includes:
+- 3+ files
+- 2+ directories/subsystems
+- 2+ search passes
+- broad grep/list output
+- noisy logs/test output
+- uncertain active vs stale references
+- independent review or coverage assessment
+
+Do not dispatch when:
+- one exact file/symbol is already known
+- the task can be completed by reading one short file section
+- the result is purely conversational
+- the user needs an immediate tiny answer
+- the subagent would need to write overlapping files
+
+Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
 
 ## Independence Check
 

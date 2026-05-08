@@ -99,7 +99,7 @@ aili-workflows/
 
 | 内容 | 说明 |
 |---|---|
-| `parallel-subagent-dispatch` | 将独立 work packages 并行派发给 subagents，并由 ROSE 收敛证据 |
+| `parallel-subagent-dispatch` | 将高噪音只读证据收集隔离到 subagent，或将独立 work packages 并行派发给 subagents，并由 ROSE 收敛证据 |
 | `verification-before-completion` | 在声明 complete/fixed/passing/verified 前要求 fresh evidence |
 | `debugging-and-error-recovery` | 合入 root-cause-first 调试纪律，避免先猜修复再找证据 |
 | `agents/debug-investigator.md` | 本地化为只读根因调查 subagent，配合 ROSE/implementer 分工 |

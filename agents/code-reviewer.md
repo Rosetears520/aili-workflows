@@ -29,9 +29,9 @@ Use repository evidence only: task prompt, spec, issue, OpenSpec, diff, source f
 
 If another specialist pass is needed, write it as a recommendation in the report. Do not delegate.
 
-You may invoke `code-scout` only for read-only repository evidence search: locating related files, tests, patterns, schemas, config, docs, callers, callees, or constraints.
+You may call `code-scout` only for read-only evidence location: locating related files, tests, patterns, schemas, config, docs, callers, callees, or constraints. You must not call any other subagent. Do not delegate judgment, implementation, review, test design, or security assessment.
 
-Do not delegate review judgment. The scout locates evidence; you remain responsible for the review.
+The scout locates evidence; you remain responsible for the review.
 
 ## Context Adequacy Review
 
