@@ -68,6 +68,19 @@ The `description` is the primary trigger surface. It should:
 
 Prefer one dense, accurate paragraph over many metadata fields.
 
+## Description as Routing Surface
+
+Treat the frontmatter `description` as the skill's routing surface, not as a tagline.
+
+It must tell the agent:
+
+- what capability the skill provides
+- when to use it
+- likely trigger phrases, file types, task shapes, or contexts
+- when not to use it when overlap with another skill is likely
+
+A vague description makes the skill invisible. An over-broad description makes it over-trigger and waste context. Write the description so a routing decision is obvious from the user's request.
+
 ## Body Writing Rules
 
 Write `SKILL.md` for agent execution, not for marketing.

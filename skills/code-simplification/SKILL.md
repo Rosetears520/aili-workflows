@@ -98,6 +98,24 @@ Simplification has a failure mode: over-simplification. Watch for these traps:
 - **Removing "unnecessary" abstraction** — some abstractions exist for extensibility or testability, not complexity
 - **Optimizing for line count** — fewer lines is not the goal; easier comprehension is
 
+### Architecture Deepening Checks
+
+Use these terms when deciding whether a simplification should remove, keep, or reshape a boundary:
+
+- **Module:** a unit with a responsibility and callers.
+- **Interface:** the public surface callers depend on.
+- **Implementation:** the hidden complexity behind the interface.
+- **Deep module:** small interface, meaningful hidden implementation.
+- **Shallow module:** public surface is as complex as the thing it wraps.
+- **Seam:** a boundary where alternative implementations or tests can attach.
+- **Adapter:** implementation behind a seam for a concrete external system or variation.
+- **Leverage:** how much caller complexity disappears because the module exists.
+- **Locality:** how much related behavior stays in one place.
+
+Apply the deletion test: if deleting a module makes the complexity disappear, it was probably a pass-through wrapper. If deleting it spreads complexity across callers, the module is earning its keep.
+
+Do not invent interfaces too early. One adapter usually means a hypothetical seam; two real adapters, or a concrete near-term need, can justify a seam.
+
 ### 5. Scope to What Changed
 
 Default to simplifying recently modified code. Avoid drive-by refactors of unrelated code unless explicitly asked to broaden scope. Unscoped simplification creates noise in diffs and risks unintended regressions.

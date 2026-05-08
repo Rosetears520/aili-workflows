@@ -110,6 +110,25 @@ Ask immediately when mentioned:
 
 If the user says `先这样`, `按目前信息写回`, or equivalent, stop asking and proceed with unresolved items recorded as open questions.
 
+### Grilling Discipline
+
+Ask one question at a time when the answer materially changes design or implementation.
+
+For each question:
+- explain why it matters
+- provide the recommended answer
+- state the tradeoff
+- wait for the user's answer when the decision is product/domain/architecture-sensitive
+
+If the answer can be discovered from code or docs, inspect the code/docs instead of asking.
+
+During the interview:
+- call out conflicts with existing glossary terms
+- sharpen vague or overloaded terms into canonical project language
+- test domain claims with concrete edge scenarios
+- compare user statements against current code behavior
+- surface contradictions immediately
+
 ## Phase C: Write Back
 
 Write only to the agreed target files.

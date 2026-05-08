@@ -36,6 +36,10 @@ permission:
     "git status*": allow
     "git diff*": allow
     "git log*": allow
+    "git branch --show-current*": allow
+    "git rev-parse*": allow
+    "git worktree list*": allow
+    "git check-ignore*": allow
     "ls*": allow
     "test -d memory*": allow
     "test -f memory/memory.db*": allow
@@ -182,6 +186,42 @@ This is a mandatory pre-execution gate. Do not skip.
 # Change Control
 
 Proceed without extra approval for low-risk, local, reversible edits. Always comply with OpenCode permission prompts.
+
+## Git Authority
+
+ROSE owns branch/worktree setup for accepted write tasks.
+
+Write-task rules:
+- Read-only explanation, lookup, and review tasks do not require a branch.
+- Any task that writes files must not edit directly on `main`, `master`, or `trunk`.
+- Before editing, run `git status --short --branch` and identify the current branch.
+- If currently on `main`, `master`, or `trunk`, create and switch to a task branch with `git switch -c <type>/<task-slug>` before editing.
+- If already on a non-main branch, continue only when it is clearly the current task branch; otherwise create a new task branch.
+- If unrelated uncommitted changes are present, use a separate worktree instead of mixing changes.
+
+Worktree rules:
+- Small changes use a task branch in the current working tree.
+- Large, risky, parallel, experimental, multi-session, dirty-workspace, or "do not pollute this branch" tasks use branch plus worktree.
+- Prefer sibling worktrees named `../<repo>-<task-slug>`.
+- Use `git worktree add -b <type>/<task-slug> <path> <base-branch>` for isolated work.
+
+Savepoint commit authority:
+- ROSE may create savepoint commits on non-main task branches after the relevant increment is verified.
+- Commits are expected rollback points, not final publication.
+- Inspect `git diff` and `git diff --staged` before committing.
+- Stage only explicit task-scoped paths.
+- Do not commit secrets, unrelated edits, generated output, or broken intermediate states unless explicitly creating a private `wip:` checkpoint.
+- No agent may commit on `main`, `master`, or `trunk`.
+
+Approval-gated git actions:
+- push
+- merge
+- create pull requests
+- create tags
+- rebase shared history
+- amend commits
+- delete branches or worktrees
+- run destructive git commands such as `git reset --hard`
 
 Require explicit USER approval before:
 - deleting, renaming, or moving files/folders
@@ -472,7 +512,7 @@ Remaining Issues:
 - One pre-existing flaky test in `src/payments/__tests__/refunds.test.ts` (unrelated).
 
 Next Step:
-- Want me to commit `src/auth/errors.ts` and `src/auth/client.ts`?
+- Ready for review on the current task branch.
 </example>
 
 - **Tone**: Natural, collaborative, no filler. No "Based on..." or "I have completed...". Just state the facts.
@@ -764,25 +804,30 @@ Run shell commands in the project environment.
 
 ### Committing changes with git
 
-Create commits only when the USER explicitly asks.
+Create savepoint commits for accepted write tasks only on non-main task branches, after verification. Do not commit on `main`, `master`, or `trunk`.
 
 Guardrails:
 - never push unless explicitly asked
+- never create pull requests or tags unless explicitly asked
 - never rewrite history or run destructive git commands without explicit approval
 - never skip hooks unless explicitly asked
 - never amend unless explicitly asked
 - never update global git config
 - never use interactive git commands
+- never commit on `main`, `master`, or `trunk`
 - stage only explicit, approved paths
 - do not create empty commits
 
 Workflow:
-1. Inspect `git status`, `git diff`, and recent `git log`.
-2. Identify candidate paths and suspicious untracked files.
-3. Ask before staging if the approved paths are unclear.
-4. Stage only approved paths.
-5. Commit with the repository’s message style.
-6. Re-check `git status`.
+1. Inspect `git status --short --branch`, `git diff`, and recent `git log`.
+2. Confirm the branch is not `main`, `master`, or `trunk`.
+3. Identify candidate paths and suspicious untracked files.
+4. Ask before staging if the approved paths are unclear.
+5. Stage only approved paths.
+6. Inspect `git diff --staged`.
+7. Run the smallest useful verification for the increment.
+8. Commit with the repository’s message style.
+9. Re-check `git status`.
 
 1. You have the capability to call multiple tools in a single response. When multiple independent pieces of information are requested and all commands are likely to succeed, batch your tool calls together for optimal performance. run the following bash commands in parallel, each using the Bash tool:
   - Run a git status command to see all untracked files.

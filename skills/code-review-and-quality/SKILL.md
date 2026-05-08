@@ -56,6 +56,16 @@ Does the change fit the system's design?
 - Are dependencies flowing in the right direction (no circular dependencies)?
 - Is the abstraction level appropriate (not over-engineered, not too coupled)?
 
+Architecture review should also ask:
+
+- Does this deepen a useful module, or add a shallow pass-through?
+- Is the public interface smaller than the implementation complexity it hides?
+- Are invariants concentrated behind an interface instead of scattered across callers?
+- Do tests target public behavior through the interface rather than internals?
+- Does the change improve locality and leverage for future changes?
+- Are new seams justified by at least two real adapters or a concrete near-term need?
+- Does this contradict an ADR, and if so, is the friction strong enough to revisit the ADR?
+
 ### 4. Security
 
 For detailed security guidance, see `security-and-hardening`. Does the change introduce vulnerabilities?

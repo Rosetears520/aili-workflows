@@ -235,11 +235,71 @@ When verification cannot be run:
 
 ## Git Rules
 
-- Do not create commits, branches, tags, or pull requests unless explicitly requested.
-- Do not rewrite Git history unless explicitly requested.
-- Do not stage unrelated files.
-- Do not include generated files in commits unless the project normally tracks them or the user requests it.
-- Before summarizing changes, inspect the diff when possible.
+Git is the safety net for AI-assisted changes.
+
+### Branch Policy
+
+- Read-only tasks do not require a branch.
+- Any task that writes files must not work directly on `main`, `master`, or `trunk`.
+- For small, local changes, create or use a task branch in the current working tree.
+- For large, risky, experimental, multi-file, multi-session, parallel-agent, or dirty-workspace changes, use a task branch in a separate git worktree.
+- If already on a non-main branch, confirm it belongs to the current task before editing. If it is unrelated, create a new task branch or worktree.
+
+Suggested branch names:
+
+- `feature/<short-slug>`
+- `fix/<short-slug>`
+- `refactor/<short-slug>`
+- `docs/<short-slug>`
+- `chore/<short-slug>`
+
+### Savepoint Commit Policy
+
+- On non-main task branches, create small verified savepoint commits.
+- Commit after each logical increment that has been tested, built, typechecked, linted, or otherwise verified with the smallest relevant evidence.
+- Each commit should do one logical thing.
+- Do not accumulate large uncommitted changes.
+- Prefer many small reversible commits over one giant commit.
+- Use `wip:` commits only for private intermediate checkpoints that are not intended to merge as-is.
+
+Before committing:
+
+1. Run `git status --short --branch`.
+2. Inspect `git diff` and/or `git diff --staged`.
+3. Stage only explicit task-related paths.
+4. Check for secrets, generated files, unrelated files, and accidental broad formatting.
+5. Run the smallest relevant verification.
+6. Commit with a message that explains the purpose.
+
+### Worktree Policy
+
+Use branch + worktree when:
+
+- the user asks not to pollute the current branch;
+- the current working tree has unrelated uncommitted changes;
+- multiple agents or implementation approaches will run in parallel;
+- the task is broad, risky, experimental, or likely to span multiple sessions;
+- the task touches many files or crosses multiple subsystems.
+
+Prefer a sibling worktree directory:
+
+```bash
+git worktree add -b <branch-name> ../<repo>-<task-slug> <base-branch>
+```
+
+Use project-local `.worktrees/<task-slug>` only when `.worktrees/` is ignored. Do not add `.worktrees/` to this workflow repository just because a downstream project uses worktrees; add the ignore rule in the project where the worktree directory will exist.
+
+### Never Without Explicit Approval
+
+- push
+- merge into main/default branch
+- rebase shared history
+- amend commits
+- reset hard
+- clean untracked files destructively
+- delete branches or remove worktrees
+- skip hooks
+- commit secrets or environment files
 
 ## Documentation Rules
 

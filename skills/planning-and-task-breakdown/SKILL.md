@@ -103,6 +103,45 @@ Each task follows this structure:
 **Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
 ```
 
+### Prototype Before Committing to a Design
+
+Use a throwaway prototype only when it answers a concrete design question.
+
+Good prototype questions:
+- Does this state machine feel right?
+- Does this data model support the edge cases?
+- Which UI direction is clearer?
+- Can this integration path work with the current constraints?
+
+Prototype rules:
+- Mark prototype code clearly as throwaway.
+- Keep it close to the relevant module/page, but visibly non-production.
+- Make it runnable with one command.
+- Avoid persistence unless the question is specifically about persistence.
+- Skip polish, broad abstractions, and production hardening.
+- Surface state clearly after each interaction.
+- Delete it or absorb the validated decision into real code when done.
+- Capture the answer in a commit message, ADR, issue, or nearby note before deleting.
+
+### Issue-Shaped Work Packages
+
+When turning a plan into executable work, structure each unit like an issue even if no issue tracker is used.
+
+Each work package should include:
+- Title
+- Type: `AFK` or `HITL`
+- What to build
+- Acceptance criteria
+- Verification
+- Blocked by
+- User stories or requirements covered
+- Likely files
+- Explicit non-goals
+
+Prefer AFK slices when safe. Mark HITL when the slice requires product judgment, architecture choice, design review, credentials, environment access, or risky approval.
+
+Do not publish, close, or modify external issues unless the user explicitly asks.
+
 ### Step 5: Order and Checkpoint
 
 Arrange tasks so that:

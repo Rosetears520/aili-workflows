@@ -33,6 +33,13 @@ ADRs capture the reasoning behind significant technical decisions. They're the h
 - Choosing between build tools, hosting platforms, or infrastructure
 - Any decision that would be expensive to reverse
 
+Offer an ADR only when all are true:
+1. **Hard to reverse** — changing later has meaningful cost.
+2. **Surprising without context** — a future maintainer would ask why.
+3. **Real trade-off** — credible alternatives existed and one was chosen for a reason.
+
+Skip ADRs for obvious choices, temporary decisions, minor implementation details, or choices with no real alternatives.
+
 ### ADR Template
 
 Store ADRs in `docs/decisions/` with sequential numbering:
@@ -217,6 +224,18 @@ Link to ADRs for details.
 ## Contributing
 How to contribute, coding standards, PR process.
 ```
+
+## Domain Glossary and CONTEXT.md
+
+Use `CONTEXT.md` for shared domain language:
+- canonical terms
+- meanings understood by domain experts
+- boundaries between similar concepts
+- terms that reduce repeated explanation
+
+Do not put implementation details in `CONTEXT.md` unless they are part of the domain language.
+
+When terms conflict between user language, docs, and code, surface the mismatch before writing new docs. Prefer one canonical term and record aliases only when they help readers map old language to current language.
 
 ## Changelog Maintenance
 

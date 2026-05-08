@@ -177,6 +177,26 @@ Key files: validation.ts, errors.ts, db.ts
 
 Load only the relevant section when working on a specific area.
 
+### Zoom-Out Before Editing
+
+When the agent is unfamiliar with a code area, do not start by editing.
+
+First produce a compact map:
+- domain concept involved
+- relevant modules/files
+- callers and callees
+- data/control flow
+- existing tests
+- project glossary terms to use
+- uncertainty or missing context
+
+Use this when:
+- the user says they are unfamiliar with the code
+- the implementation surface is unclear
+- the code spans multiple modules
+- naming/domain language is inconsistent
+- the agent is tempted to edit before it can explain how the area fits together
+
 ## MCP Integrations
 
 For richer context, use Model Context Protocol servers:

@@ -63,6 +63,8 @@ Slice 4: Delete a task (delete + API + UI + confirmation)
 
 Each slice delivers working end-to-end functionality.
 
+Do not use horizontal slicing as the default. A slice should produce observable behavior, targeted verification, and a savepoint commit on a non-main task branch before the next slice begins.
+
 ### Contract-First Slicing
 
 When backend and frontend need to develop in parallel:
@@ -139,6 +141,8 @@ Each increment changes one logical thing. Don't mix concerns:
 **Bad:** One commit that adds a new component, refactors an existing one, and updates the build config.
 
 **Good:** Three separate commits — one for each change.
+
+Each increment should be small enough to explain as one reversible savepoint: what changed, how it was verified, and what remains out of scope.
 
 ### Rule 2: Keep It Compilable
 

@@ -47,6 +47,33 @@ For bug, build, test, runtime, integration, Docker/WSL, API, license, or configu
 
 When ROSE is orchestrating, prefer `debug-investigator` for read-only investigation and `implementer` for the scoped fix. ROSE should dispatch, reconcile, and verify; it should not become the debugging worker by default.
 
+### Feedback Loop First
+
+Before deep hypotheses or broad fixes, build the fastest deterministic loop an agent can run to prove pass/fail.
+
+Prefer one of these loops:
+
+- focused failing test
+- HTTP/curl script against the failing endpoint
+- CLI fixture or one-command repro
+- headless browser scenario
+- replayed trace, log payload, webhook, or API response
+- throwaway harness around the suspect module
+- property/fuzz loop for boundary-heavy logic
+- `git bisect run` harness for regressions
+
+Do not proceed to broad fixes without this loop unless you explicitly report why no reliable loop can be built and what weaker evidence you are using instead.
+
+### Hypothesis Discipline
+
+After collecting evidence, generate 3-5 ranked, falsifiable hypotheses before changing code. For each hypothesis, state:
+
+- suspected cause
+- prediction if it is true
+- smallest probe that would confirm or reject it
+
+Change one variable at a time. If a probe rejects the hypothesis, update the ranking instead of piling unrelated changes into the same attempt.
+
 ## The Triage Checklist
 
 Work through these steps in order. Do not skip steps.
@@ -272,6 +299,13 @@ Add logging only when it helps. Remove it when done.
 - Error boundaries with error reporting
 - API error logging with request context
 - Performance metrics at key user flows
+
+**Temporary debug logs:**
+
+- Use a unique prefix such as `[DEBUG-a4f2]` so cleanup is searchable.
+- Never log secrets, tokens, credentials, or sensitive personal data.
+- Before declaring the task done, search for the prefix and remove temporary logs.
+- Keep only production-worthy instrumentation that has an operational purpose.
 
 ## Common Rationalizations
 

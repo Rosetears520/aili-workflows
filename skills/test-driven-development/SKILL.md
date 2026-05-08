@@ -36,6 +36,27 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 Write the test first. It must fail. A test that passes immediately proves nothing.
 
+### Vertical TDD, Not Horizontal TDD
+
+Do not write all tests first and then all implementation.
+
+Use one behavior slice at a time:
+1. Write one test for one observable behavior.
+2. Confirm it fails for the right reason.
+3. Write the minimum implementation.
+4. Confirm it passes.
+5. Commit the verified slice on a non-main branch.
+6. Repeat.
+
+Tests should verify behavior through public interfaces. They should survive internal refactors.
+
+Avoid:
+- testing private methods
+- mocking internal collaborators unnecessarily
+- asserting call order when output/state is what matters
+- writing tests for imagined future structure
+- bulk test generation before learning from the first implementation slice
+
 ```typescript
 // RED: This test fails because createTask doesn't exist yet
 describe('TaskService', () => {

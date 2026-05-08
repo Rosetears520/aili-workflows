@@ -13,6 +13,65 @@ Git is your safety net. Treat commits as save points, branches as sandboxes, and
 
 Always. Every code change flows through git.
 
+## Branch and Savepoint Policy
+
+For any task that writes files, do not work directly on `main`, `master`, or `trunk`. Treat protected trunks as integration targets, not AI editing areas.
+
+Before editing:
+1. Run `git status --short --branch`.
+2. Identify the current branch.
+3. If the current branch is `main`, `master`, or `trunk`, create and switch to a task branch before editing.
+4. If the current branch is a non-main branch but is unrelated to the current task, create and switch to a new task branch.
+5. If the working tree contains unrelated uncommitted changes, use a separate worktree instead of mixing changes in the current directory.
+
+Branch naming:
+- `feature/<short-slug>` for features
+- `fix/<short-slug>` for bug fixes
+- `refactor/<short-slug>` for refactors
+- `docs/<short-slug>` for documentation
+- `chore/<short-slug>` for tooling/configuration
+
+Small changes:
+- Use a task branch in the current working tree.
+- Create the branch with `git switch -c <type>/<task-slug>` so the working tree actually moves to the new branch.
+- Commit each verified increment.
+
+Large or risky changes:
+- Use a task branch in a separate git worktree.
+- This includes multi-file refactors, migrations, experiments, parallel subagent work, multi-session work, dirty workspaces with unrelated changes, or any request to avoid polluting the current branch.
+- Prefer a sibling directory: `../<repo>-<task-slug>`.
+- Use project-local `.worktrees/<task-slug>` only if `.worktrees/` is ignored in that downstream project; do not add `.worktrees/` to this workflow repository just because another project uses worktrees.
+- Create the isolated branch and checkout together with `git worktree add -b <type>/<task-slug> ../<repo>-<task-slug> <base-branch>`.
+
+Savepoint commits:
+- After each small, verified increment, commit.
+- A commit should represent one logical change.
+- Run the smallest useful verification before committing.
+- Inspect `git diff` and `git diff --staged` before committing.
+- Do not commit secrets, unrelated edits, generated output, or broken intermediate states unless explicitly creating a marked `wip:` checkpoint.
+- `wip:` checkpoints are allowed only on private task branches and must not be merged as-is.
+
+Never:
+- commit on `main`, `master`, or `trunk`
+- push without explicit user approval
+- merge without explicit user approval
+- rebase shared history without explicit user approval
+- run destructive git commands without explicit user approval
+- stage unrelated files or unreviewed generated output
+
+Decision matrix:
+
+| Task type | Branch | Worktree | Commit |
+|---|---:|---:|---:|
+| Read-only explanation or review | No | No | No |
+| Small docs change | Required | Usually no | After completion |
+| Small code fix | Required | Usually no | After fix and verification |
+| Multi-file feature | Required | Recommended | Each vertical slice |
+| Large refactor or migration | Required | Required | Each verified phase |
+| Parallel subagent or multi-approach exploration | Required | Required | Independently per approach |
+| Current workspace has unrelated changes | Required | Required | Avoid mixing existing edits |
+| User says not to pollute the current branch | Required | Usually required | Only in isolated branch/worktree |
+
 ## Core Principles
 
 ### Trunk-Based Development (Recommended)
@@ -120,6 +179,8 @@ Target ~100 lines per commit/PR. Changes over ~1000 lines should be split. See t
 
 ## Branching Strategy
 
+Branching is mandatory for write tasks. `git branch <name>` only creates a branch head; it does not switch the working tree. Use `git switch -c <branch>` for small changes, or `git worktree add -b <branch> <path> <base>` for isolated large work.
+
 ### Feature Branches
 
 ```
@@ -130,9 +191,9 @@ main (always deployable)
   └── fix/duplicate-tasks      ← Bug fixes
 ```
 
-- Branch from `main` (or the team's default branch)
+- Branch from `main` (or the team's default branch) before editing
 - Keep branches short-lived (merge within 1-3 days) — long-lived branches are hidden costs
-- Delete branches after merge
+- Delete branches after merge only with explicit user approval
 - Prefer feature flags over long-lived branches for incomplete features
 
 ### Branch Naming
@@ -140,6 +201,7 @@ main (always deployable)
 ```
 feature/<short-description>   → feature/task-creation
 fix/<short-description>       → fix/duplicate-tasks
+docs/<short-description>      → docs/api-examples
 chore/<short-description>     → chore/update-deps
 refactor/<short-description>  → refactor/auth-module
 ```
@@ -149,25 +211,25 @@ refactor/<short-description>  → refactor/auth-module
 For parallel AI agent work, use git worktrees to run multiple branches simultaneously:
 
 ```bash
-# Create a worktree for a feature branch
-git worktree add ../project-feature-a feature/task-creation
-git worktree add ../project-feature-b feature/user-settings
+# Create and checkout feature branches in separate worktrees
+git worktree add -b feature/task-creation ../project-task-creation main
+git worktree add -b feature/user-settings ../project-user-settings main
 
 # Each worktree is a separate directory with its own branch
 # Agents can work in parallel without interfering
 ls ../
   project/              ← main branch
-  project-feature-a/    ← task-creation branch
-  project-feature-b/    ← user-settings branch
+  project-task-creation/    ← task-creation branch
+  project-user-settings/    ← user-settings branch
 
-# When done, merge and clean up
-git worktree remove ../project-feature-a
+# After approved merge, clean up the worktree only with user approval
+git worktree remove ../project-task-creation
 ```
 
 Benefits:
 - Multiple agents can work on different features simultaneously
 - No branch switching needed (each directory has its own branch)
-- If one experiment fails, delete the worktree — nothing is lost
+- If one experiment fails, abandon it until cleanup is approved; do not remove worktrees without approval
 - Changes are isolated until explicitly merged
 
 ## The Save Point Pattern
@@ -186,7 +248,7 @@ Agent starts work
     └── Feature complete → All commits form a clean history
 ```
 
-This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state.
+This pattern means you never lose more than one increment of work. If an agent goes off the rails, return to the last verified save point using an approved recovery path; destructive commands such as `git reset --hard` still require explicit user approval.
 
 ## Change Summaries
 
@@ -281,6 +343,8 @@ git log --grep="validation" --oneline
 ## Red Flags
 
 - Large uncommitted changes accumulating
+- Editing directly on `main`, `master`, or `trunk`
+- Using `git branch <name>` and assuming the working tree switched branches
 - Commit messages like "fix", "update", "misc"
 - Formatting changes mixed with behavior changes
 - No `.gitignore` in the project
