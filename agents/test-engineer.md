@@ -4,7 +4,9 @@ mode: subagent
 hidden: true
 permission:
   edit: allow
-  task: deny
+  task:
+    "*": deny
+    "code-scout": allow
   webfetch: deny
   websearch: deny
   bash:
@@ -43,6 +45,10 @@ Before writing any test:
 - Identify the public API / interface (what to test)
 - Identify edge cases and error paths
 - Check existing tests for patterns and conventions
+
+If the code under test, related tests, fixtures, helpers, public API, or verification command is unclear, invoke `code-scout` before writing tests.
+
+The scout may locate evidence. You must still read the final code-under-test and test files before writing or modifying tests.
 
 ### 2. Test at the Right Level
 
@@ -123,4 +129,4 @@ When analyzing test coverage:
 
 - **Invoke directly when:** the user asks for test design, coverage analysis, test writing, test execution, or a Prove-It test for a specific bug.
 - **Orchestration:** Invoke directly for TDD or coverage analysis, or include in a MainAgent-managed parallel fan-out with `code-reviewer` and `security-auditor`.
-- **Do not invoke from another persona.** Recommendations for implementation, review, or security work belong in your report; MainAgent decides when to act.
+- **Do not invoke from another persona.** You may call only `code-scout` for evidence search. Recommendations for implementation, review, or security work belong in your report; MainAgent decides when to act.

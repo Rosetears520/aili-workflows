@@ -197,6 +197,27 @@ Use this when:
 - naming/domain language is inconsistent
 - the agent is tempted to edit before it can explain how the area fits together
 
+## Code Scout Protocol
+
+Use `code-scout` when repository search would otherwise pollute the caller's context or when the caller lacks exact files, symbols, tests, patterns, or constraints.
+
+`code-scout` returns a Search Evidence Pack:
+
+- evidence anchors
+- likely edit targets
+- related tests
+- patterns to follow
+- constraints
+- negative search
+- unknowns
+- recommended next reads
+
+The caller must still read final target files before editing, reviewing, testing, securing, or documenting.
+
+Search evidence answers: where should I look?
+
+It does not replace: I inspected the code I am about to change.
+
 ## MCP Integrations
 
 For richer context, use Model Context Protocol servers:

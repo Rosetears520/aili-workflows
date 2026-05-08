@@ -12,6 +12,7 @@ aili-workflows/
 ├── .gitignore
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
+│   ├── code-scout.md            # 只读代码侦察 subagent
 │   ├── implementer.md           # 单任务实现 subagent
 │   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
@@ -72,6 +73,7 @@ aili-workflows/
 | Agent | 用途 | 来源与说明 |
 |---|---|---|
 | `agents/rose.md` | OpenCode primary agent，负责个人主工作流、任务契约、记忆门禁、执行边界和子代理编排 | Rosetears 个人工作流内容 |
+| `agents/code-scout.md` | 只读代码侦察 subagent，用于定位文件、符号、测试、调用路径、配置、schema、文档、现有模式和约束，并返回 evidence anchors | Rosetears 个人工作流内容 |
 | `agents/implementer.md` | 执行一个明确边界的代码实现任务 | Rosetears 个人工作流内容 |
 | `agents/debug-investigator.md` | 只读根因调查 subagent，用于修复前的失败定位和证据收集 | Rosetears 个人工作流内容，调试纪律参考 obra/superpowers |
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |

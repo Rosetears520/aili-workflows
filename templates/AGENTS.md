@@ -89,6 +89,22 @@ Prefer local, readable, boring solutions.
 
 If the implementation becomes much larger than the problem, simplify before finalizing. A senior engineer should be able to look at the diff and say: this is the smallest reasonable change.
 
+### No Evidence, No Edit
+
+For non-trivial coding, debugging, refactoring, migration, documentation, configuration, test, security, or review work, do not act from memory or file names alone.
+
+Before editing or approving a change, establish:
+
+- exact files and symbols involved
+- related tests or verification path
+- existing pattern to follow
+- types, schemas, config, docs, or specs that constrain the change
+- known unknowns and assumptions
+
+Use a read-only search agent when broad repository search would pollute the main context.
+
+The search agent may locate evidence, but the editing, reviewing, testing, or security agent must still read the final target files before acting.
+
 ### 3. Surgical Changes
 
 Touch only what the task requires. Clean up only your own mess.
