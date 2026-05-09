@@ -38,13 +38,17 @@ Do not use this skill for tiny obvious edits, pure brainstorming with no artifac
 
 ## Loop Limit
 
-Run up to 3 loops.
+Default to 1 loop.
+
+Run a second or third loop only when the previous loop found material loopholes that could change scope, design, acceptance, verification, security, rollout, or user decisions.
+
+Hard limit: 3 loops.
 
 Stop earlier when:
 
 - all material loopholes are resolved
 - remaining issues are explicitly marked `Open Question` or `Unverified`
-- additional loops would only produce wording tweaks or low-risk nitpicks
+- additional loops would only produce wording tweaks, low-risk nitpicks, or speculative concerns
 
 Never keep looping to manufacture certainty.
 
@@ -59,6 +63,12 @@ For each loop:
 5. For each loophole, choose one repair action: edit the current artifact, inspect repository code/docs, fetch official or external docs, ask the user, defer as `Open Question`, or mark as `Unverified`.
 6. Apply fixes only when they are within scope, allowed by the current mode, and supported by evidence.
 7. Re-run the loop only if material loopholes remain.
+
+If the needed tool or skill is unavailable:
+
+- perform the compact check inline when possible
+- mark only the affected claim as `Unverified`
+- mention tool unavailability only when it changes the result or blocks verification
 
 ## Evidence Rules
 
@@ -123,3 +133,17 @@ When called by another skill or agent:
 - Do not write files unless the caller skill and current mode allow edits.
 - Keep the output compact enough to paste into a final report or artifact appendix.
 - Prefer editing the artifact to adding a long critique when the fix is obvious and allowed.
+
+## Example: Compact Embedded Use
+
+Input artifact:
+
+- Plan says: "Implement auth callback handling and update tests."
+
+Stress-test result:
+
+- Confidence: medium
+- Material loophole: Verification gap - plan does not name the callback error cases or tests.
+- Fix applied: add tasks for invalid state, expired code, provider error, and existing callback test file inspection.
+- Remaining unverified: exact test command until package scripts are inspected.
+- Safe to proceed: conditional.

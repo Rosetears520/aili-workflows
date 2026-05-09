@@ -158,6 +158,8 @@ Do not write a long plan unless the change is broad or risky.
 
 For broad or risky tasks, apply the `strategy-stress-test` workflow before editing when available. If the runtime does not expose skills to this persona, perform the same compact check directly: does the implementation strategy miss files, tests, acceptance criteria, security/privacy concerns, or out-of-scope requirements?
 
+Keep this stress test compact: default to one pass, do not output the full stress-test report unless a material loophole is found, and summarize only changed decisions, remaining `Unverified` items, or blocking gaps.
+
 ### 2. Inspect
 
 Before editing:
@@ -257,6 +259,8 @@ Evidence can include:
 If automated verification is not possible, explain why and provide the best available manual verification path.
 
 For broad, risky, or multi-file tasks, apply the `strategy-stress-test` workflow before `STATUS: PASS` when available. If the runtime does not expose skills to this persona, perform the same compact check directly: does the evidence prove the exact acceptance criteria, and must any scope or verification gaps be reported as `Unverified`?
+
+Keep this final check compact unless it finds a material loophole.
 
 ## Savepoint Commits
 

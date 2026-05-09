@@ -202,7 +202,7 @@ Check whether:
 
 Mark anything not proven by repository evidence as `Unverified`.
 
-Do not approve if a remaining evidence gap could hide a Critical or Important issue. Use a conditional or request-changes verdict until the gap is fixed, deferred with owner/date, or explicitly accepted by the user.
+Do not approve if a remaining evidence gap could hide a Critical or Important issue. Use a conditional or request-changes verdict until the gap is fixed, deferred with owner/date when an external tracker exists, or explicitly accepted by the caller/supervisor in local workflow.
 
 ## Multi-Model Review Pattern
 
@@ -339,7 +339,7 @@ Part of code review is dependency review:
 
 ### Verdict
 - [ ] **Approve** — Ready to merge
-- [ ] **Conditional** — Remaining evidence gaps are accepted or deferred with owner/date
+- [ ] **Conditional** — Remaining evidence gaps are accepted or deferred with owner/date when available, or with explicit caller/supervisor acceptance in local workflow
 - [ ] **Request changes** — Issues must be addressed
 ```
 ## See Also

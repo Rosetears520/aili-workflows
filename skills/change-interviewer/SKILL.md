@@ -72,10 +72,28 @@ Possible targets:
 
 If the target is unclear, ask one question before writing. Do not create files or directories without confirmation.
 
+## Interview Modes
+
+Use Packet Mode by default for non-trivial changes:
+
+- generate the Chinese interview packet
+- let the user fill it
+- ingest answers later
+
+Use Interactive Mode only when:
+
+- the change is small
+- one answer materially changes the next question
+- the user explicitly wants chat-based interviewing
+
+In Interactive Mode, ask one question at a time.
+
+In Packet Mode, do not interrupt the packet with chat-style single-question turns unless a blocking target or persistence decision is missing.
+
 ## Non-Negotiables
 
 - Do not fill in requirements, design, or acceptance criteria by guessing.
-- Ask questions; record unresolved items as `Open Question:`.
+- Ask or include questions according to the selected interview mode; record unresolved items as `Open Question:`.
 - Preserve existing author content and structure whenever possible.
 - If restructuring is necessary, keep original text under `## Appendix: Original Draft` in the same file.
 - Never record unconfirmed information as fact. Use `Assumption:` only when the user has accepted it as a working assumption.
@@ -111,11 +129,13 @@ Do not start writing final content until the interview packet is complete unless
 
 For non-trivial changes, generate a Markdown interview packet instead of asking scattered chat questions.
 
-Default persistence target:
+Default persistence behavior:
 
-- OpenSpec change: `openspec/changes/<change-id>/interview.md`
-- custom plan or spec document: append `## Appendix: Interview Packet` or create a sibling `*-interview.md`
-- no confirmed target: print the packet in chat and ask where to persist it
+- If the user only asks for questions or a questionnaire, print the packet in chat by default.
+- If the user asks for a file, artifact, spec appendix, or write-back workflow, persist the packet to the agreed target.
+- If the source is an existing OpenSpec change and persistence is requested, prefer `openspec/changes/<change-id>/interview.md`.
+- If a custom plan or spec document is the agreed target, append `## Appendix: Interview Packet` or create a sibling `*-interview.md`.
+- Do not create `interview.md`, sibling files, or appendices unless persistence is requested or confirmed.
 
 Do not create files or directories without confirmation.
 
@@ -193,7 +213,7 @@ Question coverage:
 1. Architecture and trade-offs: where logic lives, alternatives rejected, compatibility, scaling, and constraints.
 1. Risks and acceptance: risk register, test strategy, manual checks, rollout, and executable acceptance criteria.
 
-Ask immediately when mentioned:
+In Packet Mode, include questions immediately when mentioned:
 
 - multi-tenancy: isolation model, tenant identifiers, cross-tenant controls, migrations
 - offline/background sync: conflict resolution, retry/backoff, reconciliation
@@ -221,7 +241,7 @@ Apply fixes to the interview packet before sending it to the user.
 
 ### Grilling Discipline
 
-Ask one question at a time when the answer materially changes design or implementation.
+In Interactive Mode, ask one question at a time when the answer materially changes design or implementation.
 
 For each question:
 - explain why it matters

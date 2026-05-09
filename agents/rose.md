@@ -149,7 +149,7 @@ Read-heavy delegation is preferred. Write-heavy parallel delegation requires exp
 
 When a user wants to refine a spec, plan, issue, or change draft through questions, prefer `change-interviewer`. Generate a Chinese interview packet for user-facing decision traceability when helpful. Use `code-scout` only for repository evidence location, not for interviewing or spec writing.
 
-For non-trivial interview packets, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly and mark runtime availability as `Unverified`.
+For non-trivial interview packets, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
 
 Target factually supportable high confidence, not artificial certainty. If material loopholes remain after at most 3 loops, record them as `Open Question` or `Unverified` instead of pretending they are resolved.
 

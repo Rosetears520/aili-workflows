@@ -11,6 +11,8 @@ Agent Skills is a collection of engineering workflow skills organized by develop
 
 ## Skill Discovery
 
+Skills must be installed or linked into an OpenCode discovery path before the runtime can load them, such as global `~/.config/opencode/skills/` or a supported project-local skills directory. In this repository, run `scripts/install_opencode.sh --mode selective` after adding, deleting, or renaming skills, then restart OpenCode or open a new session to refresh discovery.
+
 When a task arrives, identify the development phase and apply the corresponding skill:
 
 ```
@@ -39,7 +41,7 @@ Task arrives
     ├── Need project memory? ──────────→ rose-memory
     ├── Something broke? ──────────────→ debugging-and-error-recovery
     ├── Multiple independent work packages? → parallel-subagent-dispatch
-    ├── Stress-testing a draft/claim? → strategy-stress-test
+    ├── Explicitly stress-testing an existing artifact/claim? → strategy-stress-test
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
@@ -61,7 +63,7 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 - **Surgical changes**: touch only the files needed for the task, preserve existing names/APIs/patterns, and report unrelated findings rather than fixing them opportunistically.
 - **Goal-driven execution**: keep progress tied to the user’s requested outcome; push back on clearly harmful approaches with concrete tradeoffs, then respect an informed decision.
 - **Verify, don’t assume**: every skill ends with evidence such as targeted tests, build/lint output, diff inspection, or a clear manual verification path.
-- **Stress-test material artifacts**: for non-trivial interview packets, specs, plans, reconciliations, reviews, or completion claims, use `strategy-stress-test` before accepting the artifact. If the runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly and mark runtime availability as `Unverified`.
+- **Stress-test material artifacts**: for non-trivial interview packets, specs, plans, reconciliations, reviews, or completion claims, use `strategy-stress-test` before accepting the artifact. If the runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
 
 ## Domain and File-Output Routing
 
@@ -92,7 +94,7 @@ Use these boundaries before defaulting to generic implementation skills:
 | Durable project memory or focused retrieval/writeback | `rose-memory` | Use when a task needs ROSE project-local SQLite memory. |
 | Create/update/validate Agent Skills | `skill-authoring-and-validation` | Use for skill authoring and package validation work. |
 | Independent work packages for subagents | `parallel-subagent-dispatch` | Use when work can safely run in parallel and then be merged. |
-| Stress-testing drafts or claims | `strategy-stress-test` | Use after a first artifact exists and before accepting, writing back, dispatching, implementing, reviewing as final, or claiming completion. Do not use for tiny obvious edits or pure brainstorming. |
+| Explicit loophole/evidence-gap audit of an existing artifact or claim | `strategy-stress-test` | Use as standalone only when the user asks to stress-test/review a draft, plan, claim, or strategy. Otherwise call it as a sub-step inside the owning skill. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
 | Clarifying or writing back change drafts | `change-interviewer` | Use when an existing spec, plan, issue, or change draft needs source-grounded interview questions or a Chinese interview packet for user-filled decisions before write-back. |
 

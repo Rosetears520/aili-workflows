@@ -158,6 +158,7 @@ aili-workflows/
 
 - `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
 - `skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
+- `skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
 - 若干 workflow 纪律在现有 skills 中概念上吸收了 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 方向，包括 zoom-out、prototype、to-issues、grill-with-docs、diagnose、tdd、write-a-skill、improve-codebase-architecture 等。当前仓库没有新增 Matt 风格 skill，也未 vendored 上游文件；如后续复制上游文本或文件，请保留其 MIT License 版权声明。
 
 ## 使用说明
@@ -177,9 +178,11 @@ aili-workflows/
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
 2. 让 OpenCode 发现 `agents/` 中的自定义 agent。
-3. 让 OpenCode 发现 `skills/` 中的 SKILL.md 工作流。
+3. 让 OpenCode 通过安装脚本链接后的全局 `~/.config/opencode/skills/` 发现本仓库 `skills/` 中的 SKILL.md 工作流。
 4. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
 ```
+
+新增、删除或重命名 skill 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 skill discovery 刷新。
 
 `rose-memory` 是随 `skills/rose-memory/` 分发的全局 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
 
@@ -198,6 +201,7 @@ aili-workflows/
 | Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
 | Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |
+| cjzafir | [X post](https://x.com/cjzafir/status/2052110266566107321) | 思想来源 | confidence calibration / loophole loop 方向参考；未 vendored 上游文本 |
 | Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
 
 如果继续从上游同步 agent 或 skill，请同步更新本 README 的来源表和许可说明。
