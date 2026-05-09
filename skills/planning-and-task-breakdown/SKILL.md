@@ -161,6 +161,25 @@ Add explicit checkpoints:
 - [ ] Review with human before proceeding
 ```
 
+### Plan Stress Test
+
+Before finalizing the plan or dispatching implementation work, use `strategy-stress-test`.
+
+Check whether:
+
+- any task is still too large
+- any task title hides multiple tasks behind `and`
+- dependencies are missing or ordered incorrectly
+- shared mutable state requires sequential execution
+- parallel work packages would edit overlapping files
+- verification steps are too vague
+- likely files are missing for risky tasks
+- acceptance criteria are not testable
+- user judgment is required and should be marked `HITL`
+- external credentials, environment access, release approvals, or migrations are required
+
+Fix the plan when evidence supports the fix. Otherwise mark the item as `Open Question` or `Unverified`.
+
 ## Task Sizing Guidelines
 
 | Size | Files | Scope | Example |

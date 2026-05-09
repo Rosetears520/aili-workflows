@@ -138,4 +138,19 @@ After subagents return:
 4. Run or request fresh verification before claiming completion.
 5. Summarize findings by work package and separate verified facts from recommendations.
 
+### Reconciliation Stress Test
+
+After reconciling subagent results, use `strategy-stress-test`.
+
+Check whether:
+
+- any subagent conclusion lacks evidence anchors
+- two subagents conflict and the conflict is unresolved
+- a high-risk claim depends on stale logs or unverified assumptions
+- write-heavy parallel work has overlapping files, shared mutable state, or hidden sequence dependencies
+- a missing specialist pass is required, such as security-auditor or test-engineer
+- follow-up work must be sequential instead of parallel
+
+Do not treat subagent output as truth. Treat it as evidence to reconcile.
+
 Use `verification-before-completion` before reporting complete, fixed, passing, verified, or ready.

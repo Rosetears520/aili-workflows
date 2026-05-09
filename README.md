@@ -59,6 +59,7 @@ aili-workflows/
 │   ├── skill-authoring-and-validation/
 │   ├── source-driven-development/
 │   ├── spec-driven-development/
+│   ├── strategy-stress-test/
 │   ├── test-driven-development/
 │   ├── using-agent-skills/
 │   └── verification-before-completion/
@@ -89,9 +90,10 @@ aili-workflows/
 | Skill | 说明 |
 |---|---|
 | `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
-| `change-interviewer` | 通过采访澄清 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft，并写回目标文件 |
+| `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
+| `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
 
 ### 来自 obra/superpowers
 

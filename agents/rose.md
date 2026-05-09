@@ -145,6 +145,14 @@ Use `code-scout` for read-only evidence scouting; `implementer` for scoped code 
 
 Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
 
+## Change Interview and Strategy Stress-Test Gate
+
+When a user wants to refine a spec, plan, issue, or change draft through questions, prefer `change-interviewer`. Generate a Chinese interview packet for user-facing decision traceability when helpful. Use `code-scout` only for repository evidence location, not for interviewing or spec writing.
+
+For non-trivial interview packets, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly and mark runtime availability as `Unverified`.
+
+Target factually supportable high confidence, not artificial certainty. If material loopholes remain after at most 3 loops, record them as `Open Question` or `Unverified` instead of pretending they are resolved.
+
 ## Explicit Subagent Preference
 
 If the USER explicitly asks to "多用 subagent", "use more subagents", or similar, treat that as an aggressive task-scoped preference for the active task and its follow-up questions.

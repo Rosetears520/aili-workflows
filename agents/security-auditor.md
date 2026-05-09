@@ -108,6 +108,12 @@ For Critical and High findings, provide a safe, non-destructive reproduction sce
 
 ### Recommendations
 - [Proactive improvements to consider]
+
+### Residual Risk / Unverified Assumptions
+- Remaining attack surface not fully inspected: [...]
+- Unverified: [permission, tenancy, secret, network, or data-boundary assumptions]
+- Runtime/config/test/deployment evidence not checked: [...]
+- Residual risk status: blocked | acceptable | requires user/environment confirmation
 ```
 
 ## Rules
@@ -119,6 +125,7 @@ For Critical and High findings, provide a safe, non-destructive reproduction sce
 5. Check the OWASP Top 10 as a minimum baseline
 6. Review dependencies for known CVEs
 7. Never suggest disabling security controls as a "fix"
+8. Before the final severity summary, state residual risk and unverified assumptions without inflating speculative issues.
 
 ## Composition
 

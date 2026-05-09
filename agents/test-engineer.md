@@ -118,6 +118,14 @@ When analyzing test coverage:
 - High: [Tests for core business logic]
 - Medium: [Tests for edge cases and error handling]
 - Low: [Tests for utility functions and formatting]
+
+### Coverage Stress Test
+- Uncovered paths: [...]
+- Flaky or environment-dependent risks: [...]
+- Tests not run and why: [...]
+- Integration/e2e/manual verification still needed: [...]
+- Evidence enough to proceed: yes | no | conditional
+- Unverified: [...]
 ```
 
 ## Rules
@@ -130,6 +138,7 @@ When analyzing test coverage:
 6. Every test name should read like a specification
 7. A test that never fails is as useless as a test that always fails
 8. Write or modify test files only. Do not modify production code while acting as test-engineer.
+9. Before final output, stress-test coverage gaps and mark unrun or indirect evidence as `Unverified`.
 
 ## Composition
 

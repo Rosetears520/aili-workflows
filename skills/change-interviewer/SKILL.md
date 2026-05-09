@@ -1,6 +1,6 @@
 ---
 name: change-interviewer
-description: Interview the user to clarify and complete a proposed change from OpenSpec files, Superpowers-style plans, pasted instructions, issue text, or user-provided files, then write the refined requirements, design, tasks, and acceptance criteria back to the agreed target files when persistence is requested.
+description: Generate a source-grounded Chinese interview packet for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official or web sources when needed, and strategy-stress-test to ask high-value questions; let the user fill the packet, then incorporate confirmed answers into the agreed spec, design, tasks, or acceptance criteria.
 ---
 
 # Change Interviewer
@@ -10,6 +10,22 @@ description: Interview the user to clarify and complete a proposed change from O
 Use this skill to turn an incomplete change idea or draft into an implementable, reviewable change package.
 
 The input can be an OpenSpec change directory, a Superpowers-style plan, a user-pasted paragraph, an issue, a ticket, or one or more custom files. The output should preserve the user's intent, clarify unknowns through interview questions, and persist refined content only to the agreed target files.
+
+## Interview Packet Language
+
+Interview packets are user-facing thinking artifacts. In chat, write them in Simplified Chinese by default for readability and decision traceability.
+
+Keep these items in English or original form:
+
+- file paths
+- command names
+- code symbols
+- API names
+- config keys
+- OpenSpec requirement headers
+- exact source terms
+
+Before persisting an interview packet to the repository, follow the repository's document language convention or ask the user. If no English-only convention exists, persisting the Chinese packet is allowed.
 
 ## When to Use
 
@@ -65,14 +81,18 @@ If the target is unclear, ask one question before writing. Do not create files o
 - Never record unconfirmed information as fact. Use `Assumption:` only when the user has accepted it as a working assumption.
 - Keep source-specific formats intact, especially OpenSpec requirement headers and scenarios.
 
-## Phase A: Read and Diagnose
+## Phase A: Source Grounding
 
-Before interviewing:
+Before generating questions:
 
 1. Read the user-provided source text or files.
 2. If the source is an OpenSpec change directory, inventory `tasks.md` or `task.md`, `proposal.md`, `design.md`, and `specs/` files.
-3. If the source is a plan or custom file, identify its existing sections, task markers, requirements, and acceptance criteria.
-4. Build a concise gap list focused on what would block implementation or review.
+3. If the source is a plan, issue, ticket, PR description, or custom file, identify existing sections, task markers, requirements, acceptance criteria, and unresolved assumptions.
+4. If repository evidence is needed and the search would be broad or noisy, dispatch `code-scout` as a read-only evidence locator.
+5. If external behavior matters, inspect official docs or current web sources before asking the user.
+6. Build a concise evidence table that separates Observed Fact, External Source, Inference, Assumption, Open Question, and Unverified.
+
+Do not ask the user for information that can be reliably discovered from current code, docs, specs, tests, configs, or official sources.
 
 Common gaps:
 
@@ -85,13 +105,86 @@ Common gaps:
 - missing security, privacy, reliability, performance, or observability requirements
 - acceptance criteria that are not executable or verifiable
 
-Do not start writing final content until the first interview round is complete unless the user explicitly says to write with current information.
+Do not start writing final content until the interview packet is complete unless the user explicitly says to write with current information.
 
-## Phase B: Interview
+## Phase B: Generate Interview Packet
 
-Ask high-information-gain questions in rounds. Start broad, then drill down. Use Markdown ordered lists and write `1.` for every question to avoid numbering gaps.
+For non-trivial changes, generate a Markdown interview packet instead of asking scattered chat questions.
 
-Question order:
+Default persistence target:
+
+- OpenSpec change: `openspec/changes/<change-id>/interview.md`
+- custom plan or spec document: append `## Appendix: Interview Packet` or create a sibling `*-interview.md`
+- no confirmed target: print the packet in chat and ask where to persist it
+
+Do not create files or directories without confirmation.
+
+The packet must include:
+
+1. `资料来源与证据`
+2. `当前理解`
+3. `需要你填写的问题`
+4. `设计漏洞 / 证据缺口 / 反例`
+5. `填写说明`
+6. `后续写回映射`
+7. `答案吸收记录`
+
+Use this template:
+
+```markdown
+# 变更采访包：<change-name>
+
+## 1. 资料来源与证据
+
+| 来源 | 已检查内容 | 观察到的事实 | 置信度 | 备注 |
+|---|---|---|---|---|
+| `<path>` | 现有实现 / 文档 / 测试 | ... | high / medium / low | ... |
+
+## 2. 当前理解
+
+- 目标：
+- 当前草稿表达的是：
+- 现有代码 / 文档显示：
+- 已确认约束：
+- 暂定非目标：
+- 仍不确定的地方：
+
+## 3. 需要你填写的问题
+
+| ID | 问题 | 为什么要问 | 推荐默认答案 | 取舍影响 | 你的填写 | 写回位置 |
+|---|---|---|---|---|---|---|
+| Q1 | ... | 会影响 scope / design / tasks / acceptance | ... | 选 A 会...；选 B 会... |  | `proposal.md` |
+
+## 4. 设计漏洞 / 证据缺口 / 反例
+
+| ID | 类型 | 说明 | 建议处理方式 | 状态 |
+|---|---|---|---|---|
+| L1 | Missing evidence | ... | 查代码 / 查官方文档 / 问用户 / Open Question | open |
+
+## 5. 填写说明
+
+- 可以直接在“你的填写”列里写答案。
+- 不确定的地方写“不确定”即可。
+- 接受推荐默认答案时，写“同意默认”。
+- 不进入本次 scope 的内容，写“本次不做”。
+- 未填写内容不会被写成事实，只会保留为 `Open Question`。
+- 无证据支撑但暂时保留的内容会标为 `Unverified`。
+
+## 6. 后续写回映射
+
+| 用户答案 | 将写回到 | 写回方式 |
+|---|---|---|
+| Q1 | `proposal.md` | scope / non-goal |
+
+## 7. 答案吸收记录
+
+_用户填写后由模型补充。_
+
+| 问题 | 用户答案 | 形成的决策 | 已写回位置 | 剩余不确定 |
+|---|---|---|---|---|
+```
+
+Question coverage:
 
 1. Goals and success: who benefits, what pain is solved, what measurable result matters?
 1. Scope boundaries: what is in scope, out of scope, MVP, and follow-up?
@@ -109,6 +202,22 @@ Ask immediately when mentioned:
 - agent workflow changes: primary/subagent boundaries, skill routing, verification, memory, and no nested orchestration
 
 If the user says `先这样`, `按目前信息写回`, or equivalent, stop asking and proceed with unresolved items recorded as open questions.
+
+## Phase C: Stress-Test the Interview Packet
+
+After generating the first interview packet, use `strategy-stress-test` before presenting or persisting it.
+
+Check:
+
+- What important question is missing?
+- Which question asks the user for information that should be discovered from code/docs instead?
+- Which recommended default lacks evidence?
+- Which user answer would lead to a completely different design?
+- Which acceptance criteria are not executable?
+- Which security, privacy, reliability, rollout, migration, compatibility, or observability risks are not covered?
+- Which assumptions must be marked `Open Question` or `Unverified`?
+
+Apply fixes to the interview packet before sending it to the user.
 
 ### Grilling Discipline
 
@@ -129,7 +238,18 @@ During the interview:
 - compare user statements against current code behavior
 - surface contradictions immediately
 
-## Phase C: Write Back
+## Phase D: Ingest User Answers
+
+After the user fills the interview packet:
+
+1. Read the filled answers.
+2. Convert confirmed answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, and Verification commands.
+3. Keep unanswered, ambiguous, or conflicting answers as `Open Question`.
+4. Keep unverifiable external claims as `Unverified`.
+5. Do not silently resolve conflicts.
+6. Build an incorporation log before write-back.
+
+## Phase E: Write Back
 
 Write only to the agreed target files.
 

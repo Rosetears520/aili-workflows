@@ -188,6 +188,22 @@ Check the author's verification story:
 - Is there a before/after comparison?
 ```
 
+### Step 6: Review Stress Test
+
+Before final verdict on a non-trivial review, use `strategy-stress-test`.
+
+Check whether:
+
+- the review conclusion depends on uninspected files, partial diffs, stale logs, or inferred behavior
+- any Critical or Important finding lacks a concrete evidence anchor
+- tests pass but do not prove the changed behavior
+- security, privacy, performance, migration, rollout, or compatibility risk needs a specialist pass
+- the verdict should be downgraded because evidence is partial
+
+Mark anything not proven by repository evidence as `Unverified`.
+
+Do not approve if a remaining evidence gap could hide a Critical or Important issue. Use a conditional or request-changes verdict until the gap is fixed, deferred with owner/date, or explicitly accepted by the user.
+
 ## Multi-Model Review Pattern
 
 Use different models for different review perspectives:
@@ -316,8 +332,14 @@ Part of code review is dependency review:
 - [ ] Build succeeds
 - [ ] Manual verification done (if applicable)
 
+### Stress-Test Notes
+- [ ] Remaining evidence gaps are listed
+- [ ] Unverified assumptions are marked `Unverified`
+- [ ] Any needed specialist pass is named
+
 ### Verdict
 - [ ] **Approve** — Ready to merge
+- [ ] **Conditional** — Remaining evidence gaps are accepted or deferred with owner/date
 - [ ] **Request changes** — Issues must be addressed
 ```
 ## See Also

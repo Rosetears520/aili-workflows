@@ -128,6 +128,23 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
+### Spec Loophole Pass
+
+After the first SPECIFY draft and before moving to PLAN, use `strategy-stress-test`.
+
+Check whether:
+
+- success criteria are executable and measurable
+- scope and non-goals are explicit
+- Always / Ask First / Never boundaries cover high-risk areas
+- user-facing terms are not overloaded
+- architecture-sensitive assumptions are marked
+- security, privacy, reliability, migration, compatibility, and rollback concerns are either covered or explicitly out of scope
+- unresolved items are listed as `Open Question`
+- unverifiable claims are marked `Unverified`
+
+Do not proceed to PLAN until material loopholes are fixed, accepted by the user, or explicitly recorded as `Open Question` / `Unverified`.
+
 ### Phase 2: Plan
 
 With the validated spec, generate a technical implementation plan:

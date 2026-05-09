@@ -39,6 +39,7 @@ Task arrives
     ├── Need project memory? ──────────→ rose-memory
     ├── Something broke? ──────────────→ debugging-and-error-recovery
     ├── Multiple independent work packages? → parallel-subagent-dispatch
+    ├── Stress-testing a draft/claim? → strategy-stress-test
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
@@ -60,6 +61,7 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 - **Surgical changes**: touch only the files needed for the task, preserve existing names/APIs/patterns, and report unrelated findings rather than fixing them opportunistically.
 - **Goal-driven execution**: keep progress tied to the user’s requested outcome; push back on clearly harmful approaches with concrete tradeoffs, then respect an informed decision.
 - **Verify, don’t assume**: every skill ends with evidence such as targeted tests, build/lint output, diff inspection, or a clear manual verification path.
+- **Stress-test material artifacts**: for non-trivial interview packets, specs, plans, reconciliations, reviews, or completion claims, use `strategy-stress-test` before accepting the artifact. If the runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly and mark runtime availability as `Unverified`.
 
 ## Domain and File-Output Routing
 
@@ -90,8 +92,9 @@ Use these boundaries before defaulting to generic implementation skills:
 | Durable project memory or focused retrieval/writeback | `rose-memory` | Use when a task needs ROSE project-local SQLite memory. |
 | Create/update/validate Agent Skills | `skill-authoring-and-validation` | Use for skill authoring and package validation work. |
 | Independent work packages for subagents | `parallel-subagent-dispatch` | Use when work can safely run in parallel and then be merged. |
+| Stress-testing drafts or claims | `strategy-stress-test` | Use after a first artifact exists and before accepting, writing back, dispatching, implementing, reviewing as final, or claiming completion. Do not use for tiny obvious edits or pure brainstorming. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
-| Clarifying or writing back change drafts | `change-interviewer` | Use when requirements need interview-style refinement. |
+| Clarifying or writing back change drafts | `change-interviewer` | Use when an existing spec, plan, issue, or change draft needs source-grounded interview questions or a Chinese interview packet for user-filled decisions before write-back. |
 
 ## Failure Modes to Avoid
 
@@ -136,6 +139,8 @@ For a complete feature, the typical skill sequence is:
 11. shipping-and-launch        → Deploy safely
 ```
 
+Use `strategy-stress-test` conditionally whenever a material artifact or claim exists and risk warrants it, such as before accepting a spec, plan, review, reconciliation, or completion claim. If the skill is not available in the current runtime, perform the same compact check directly instead of skipping the guardrail.
+
 Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
 
 ## Quick Reference
@@ -169,6 +174,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Verify | browser-testing-with-devtools | OpenCode Playwright browser tools for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Verify | verification-before-completion | Fresh evidence before completion claims |
+| Verify | strategy-stress-test | Find material loopholes, evidence gaps, counterexamples, and verification gaps before accepting artifacts or claims |
 | Review | code-review-and-quality | Five-axis review with quality gates |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |

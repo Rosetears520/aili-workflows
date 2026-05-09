@@ -26,6 +26,24 @@ Before making a completion claim:
 5. Report success only if the evidence supports the claim.
 6. Otherwise report the actual status and unverified risk.
 
+## Completion Stress Test
+
+Use `strategy-stress-test` before a completion claim when:
+
+- the claim spans multiple files, modules, agents, or verification sources
+- the verification evidence is partial, indirect, or mixed
+- tests could not be run
+- the work changed security, permissions, schema, migrations, release behavior, CI, or agent workflow rules
+- subagent evidence is involved
+- the final answer would say `ready`, `accepted`, `verified`, or equivalent beyond a narrow test result
+
+The stress test must check:
+
+- whether the evidence proves the exact claim
+- whether unrun tests or uncovered boundaries remain
+- whether stale logs or assumptions are being used as proof
+- whether final wording must be downgraded from `verified` to `implemented but unverified`
+
 ## Evidence Sources
 
 Prefer the narrowest relevant source that proves the claim:

@@ -107,7 +107,7 @@ Categorize every finding:
 ```markdown
 ## Review Summary
 
-**Verdict:** APPROVE | REQUEST CHANGES
+**Verdict:** APPROVE | CONDITIONAL | REQUEST CHANGES
 
 **Overview:** [1-2 sentences summarizing the change and overall assessment]
 
@@ -127,6 +127,12 @@ Categorize every finding:
 - Tests reviewed: [yes/no, observations]
 - Build verified: [yes/no]
 - Security checked: [yes/no, observations]
+
+### Stress-Test Notes
+- What might still be missed: [...]
+- Unverified: [assumptions not independently proven by repository evidence]
+- Evidence limits: [incomplete diffs, logs, tests, or specs]
+- Specialist pass recommended: [none/security/test/performance/etc.]
 ```
 
 ## Rules
@@ -137,6 +143,8 @@ Categorize every finding:
 4. Don't approve code with Critical issues
 5. Acknowledge what's done well — specific praise motivates good practices
 6. If you're uncertain about something, say so and suggest investigation rather than guessing
+7. Before final verdict, briefly stress-test what might still be missed and mark anything not proven by repository evidence as `Unverified`.
+8. Use `CONDITIONAL` only when remaining evidence gaps are explicitly accepted or deferred with owner/date; otherwise use `REQUEST CHANGES` for gaps that could hide Critical or Important issues.
 
 ## Composition
 
