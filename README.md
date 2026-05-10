@@ -13,6 +13,9 @@ aili-workflows/
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
 │   ├── code-scout.md            # 只读代码侦察 subagent
+│   ├── doc-researcher.md         # 只读本地文档研究 subagent
+│   ├── web-researcher.md         # 只读联网资料研究 subagent
+│   ├── plan-auditor.md           # 只读计划审计 subagent
 │   ├── implementer.md           # 单任务实现 subagent
 │   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
@@ -41,6 +44,7 @@ aili-workflows/
 │   ├── frontend-ui-engineering/
 │   ├── fullstack-dev/
 │   ├── git-workflow-and-versioning/
+│   ├── github-evidence-triage/
 │   ├── idea-refine/
 │   ├── incremental-implementation/
 │   ├── ios-application-dev/
@@ -53,6 +57,7 @@ aili-workflows/
 │   ├── pptx-generator/
 │   ├── react-native-dev/
 │   ├── rose-memory/             # ROSE project-local SQLite memory skill
+│   ├── review-pipeline/
 │   ├── security-and-hardening/
 │   ├── shader-dev/
 │   ├── shipping-and-launch/
@@ -76,6 +81,9 @@ aili-workflows/
 |---|---|---|
 | `agents/rose.md` | OpenCode primary agent，负责个人主工作流、任务契约、记忆门禁、执行边界和子代理编排 | Rosetears 个人工作流内容 |
 | `agents/code-scout.md` | 只读代码侦察 subagent，用于定位文件、符号、测试、调用路径、配置、schema、文档、现有模式和约束，并返回 evidence anchors | Rosetears 个人工作流内容 |
+| `agents/doc-researcher.md` | 只读本地文档研究 subagent，用于查找 AGENTS.md、rose.md、skills、OpenSpec、README、docs、设计文档和项目本地规则 | Rosetears 个人工作流内容 |
+| `agents/web-researcher.md` | 只读联网资料研究 subagent，用于官方文档、公开 GitHub README/issues/releases、插件文档、安装命令、API 行为、兼容性和弃用检查 | Rosetears 个人工作流内容 |
+| `agents/plan-auditor.md` | 只读计划审计 subagent，用于实施前检查 plan/spec/tasks/acceptance/test-plan 的缺口、冲突、过度设计和验证薄弱点 | Rosetears 个人工作流内容 |
 | `agents/implementer.md` | 执行一个明确边界的代码实现任务 | Rosetears 个人工作流内容 |
 | `agents/debug-investigator.md` | 只读根因调查 subagent，用于修复前的失败定位和证据收集 | Rosetears 个人工作流内容，调试纪律参考 obra/superpowers |
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |
@@ -92,12 +100,14 @@ aili-workflows/
 |---|---|
 | `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
 | `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
+| `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
+| `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
 | `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
 | `test-document-generator` | 根据 spec、方案、issue、描述或 OpenSpec change 生成详细测试文档、测试矩阵、回归范围和验收清单，默认写入仓库内 Markdown 文件 |
 
-`change-interviewer` 和 `test-document-generator` 默认采用 file-first 输出：OpenSpec change 直接写入同级目录；其他非 OpenSpec 来源（包括 Superpowers spec / plan 和普通文档）先询问生成位置，可选同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
+`change-interviewer` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
 ### 来自 obra/superpowers
 
@@ -163,6 +173,7 @@ aili-workflows/
 - `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
 - `skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
 - `skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
+- `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`skills/review-pipeline/SKILL.md`、`skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
 - 若干 workflow 纪律在现有 skills 中概念上吸收了 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 方向，包括 zoom-out、prototype、to-issues、grill-with-docs、diagnose、tdd、write-a-skill、improve-codebase-architecture 等。当前仓库没有新增 Matt 风格 skill，也未 vendored 上游文件；如后续复制上游文本或文件，请保留其 MIT License 版权声明。
 
 ## 使用说明
@@ -206,6 +217,7 @@ aili-workflows/
 | Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |
 | cjzafir | [X post](https://x.com/cjzafir/status/2052110266566107321) | 思想来源 | confidence calibration / loophole loop 方向参考；未 vendored 上游文本 |
+| code-yeongyu | [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) | 概念性参考；未纳入上游文件 | agent / skill 角色边界与工作流拆分方向参考，如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan |
 | Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
 
 如果继续从上游同步 agent 或 skill，请同步更新本 README 的来源表和许可说明。

@@ -49,6 +49,9 @@ permission:
   task:
     "*": deny
     "code-scout": allow
+    "doc-researcher": allow
+    "web-researcher": allow
+    "plan-auditor": allow
     "implementer": allow
     "debug-investigator": allow
     "code-reviewer": allow
@@ -138,7 +141,17 @@ Use MainAgent directly when:
 - subagent use would create unsafe overlapping edits
 - subagent setup would cost more than the likely context saved
 
-Use `code-scout` for read-only evidence scouting; `implementer` for scoped code changes; `test-engineer` for tests, fixtures, verification, and coverage gaps; `code-reviewer` for implementation review; `security-auditor` for auth, permissions, secrets, dependency, network, and deployment risk; `debug-investigator` for read-only root-cause investigation; `explore` for open-ended conceptual codebase investigation; and `general` only when no specialized subagent fits.
+Use `code-scout` for local code discovery: source files, tests, configs, symbols, call chains, and existing implementation patterns.
+
+Use `doc-researcher` for local documentation discovery: `AGENTS.md`, `rose.md`, skills, OpenSpec changes, README, docs, design notes, and project-local guidance.
+
+Use `web-researcher` for external research: official documentation, public GitHub README/issues/releases, plugin docs, installation commands, API behavior, compatibility, and deprecation checks.
+
+Use `plan-auditor` before implementation when a spec, plan, task breakdown, or acceptance story is ambiguous, cross-module, high-risk, or verification-heavy.
+
+Use `implementer` for scoped implementation work, from surgical edits to deeper cross-module implementation. Do not create a separate deep implementer.
+
+Use `test-engineer` for tests, fixtures, verification, and coverage gaps; `code-reviewer` for implementation review; `security-auditor` for auth, permissions, secrets, dependency, network, and deployment risk; `debug-investigator` for read-only root-cause investigation; `explore` for open-ended conceptual codebase investigation; and `general` only when no specialized subagent fits.
 
 Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
 
@@ -148,11 +161,9 @@ When the user asks for a questionnaire, interview packet, or clarification quest
 
 When the user asks for a test document, test plan, QA plan, acceptance test matrix, regression checklist, or test cases derived from a spec/plan/description, use `test-document-generator`. Persist the generated test document as a Markdown artifact first and return only a concise path summary in chat.
 
-Generated interview packets and test documents should not be placed in a standalone archive directory by default.
-
 Use this placement rule:
 - OpenSpec change outputs go inside the change directory without asking.
-- Every non-OpenSpec source, including Superpowers specs/plans and single documents, requires a placement question before writing.
+- Every non-OpenSpec source, including a single source document, requires a placement question before writing.
 
 For non-OpenSpec placement, ask the user to choose:
 1. sibling Markdown file;
@@ -160,9 +171,9 @@ For non-OpenSpec placement, ask the user to choose:
 3. append to the existing spec/document;
 4. chat-only output.
 
-Use `code-scout` only for repository evidence location, not for interviewing, test-document drafting, or spec writing.
+Use `code-scout` only for local code evidence location, not for interviewing, test-document drafting, or spec writing. Use `doc-researcher` for local workflow/documentation evidence and `web-researcher` for external facts.
 
-For non-trivial interview packets, test documents, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. Keep unresolved items as `Open Question` or `Unverified`. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
+For non-trivial interview packets, test documents, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. Use `plan-auditor` when the plan or acceptance contract itself needs independent read-only audit. Use `review-pipeline` after non-trivial implementation and before final `PASS`. Keep unresolved items as `Open Question` or `Unverified`. If the current runtime cannot load a skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
 
 Target factually supportable high confidence, not artificial certainty. If material loopholes remain after at most 3 loops, record them as `Open Question` or `Unverified` instead of pretending they are resolved.
 

@@ -70,7 +70,7 @@ Possible targets:
 - OpenSpec files under `openspec/changes/<change-id>/`
 - chat-only output, only when the user explicitly selects it
 
-If the source is not an OpenSpec change directory, ask one concise placement question before writing. Do not create files or directories without confirmation.
+Only OpenSpec change directories have deterministic no-question file output. For every non-OpenSpec source, including a single source document with an obvious sibling path, ask one concise placement question before writing.
 
 ## Output Placement Contract
 
@@ -78,17 +78,17 @@ Packet Mode defaults to file output, not chat-first output.
 
 Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for chat-only output, writing is blocked by permissions or missing workspace access, or the user chooses chat-only output after the placement question.
 
-No standalone evidence/archive directory. OpenSpec is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing; chat-only is an explicit user-selected fallback.
+OpenSpec change output is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing; chat-only is an explicit user-selected fallback.
 
 Target path resolution:
 
 1. If the source is an OpenSpec change directory, write `openspec/changes/<change-id>/interview.md` without asking.
-2. If the source is any non-OpenSpec file or directory, including a Superpowers-style spec/plan or a single named Markdown/spec/design document, ask where to place the output:
+2. If the source is non-OpenSpec, ask where to place the output before writing, even when the source is a single document:
    - A. create a sibling Markdown file beside the main source file;
    - B. create a sibling folder beside the source directory;
    - C. append a new section to the existing spec/design document;
    - D. print the result in chat only.
-3. If the user pasted only free-form text and no source path exists, do not invent an archive directory. Ask whether to:
+3. If the user pasted only free-form text and no source path exists, ask whether to:
    - A. create a new file in a user-specified location;
    - B. append to an existing spec/document;
    - C. print in chat only.
@@ -172,7 +172,7 @@ For non-trivial changes, generate a Markdown interview packet instead of asking 
 Default behavior:
 
 - For OpenSpec sources, write `openspec/changes/<change-id>/interview.md` without asking.
-- For non-OpenSpec sources, ask for placement before writing, even when the source path is clear.
+- For every non-OpenSpec source, including a single source document, ask for placement before writing.
 - Use chat-only output only when the user explicitly asks for it or selects chat-only in the placement question.
 
 Phase B produces a draft packet. Do not present or persist it before Phase C.

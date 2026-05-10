@@ -64,6 +64,29 @@ For each loop:
 6. Apply fixes only when they are within scope, allowed by the current mode, and supported by evidence.
 7. Re-run the loop only if material loopholes remain.
 
+## Adversarial Lenses
+
+When the artifact is non-trivial, stress-test it through these lenses without turning the output into a long debate:
+
+1. Pragmatist Skeptic
+   - What can be deleted?
+   - Is this over-engineered?
+   - Is this abstraction premature?
+2. Integration Validator
+   - What adjacent module, state transition, failure path, or regression is missing?
+   - What test proves this?
+3. Evidence Researcher
+   - Which claims are unsupported?
+   - Which claims need repository evidence, official docs, or user confirmation?
+4. Architect
+   - Does this violate boundaries?
+   - Does it introduce coupling or future maintenance debt?
+5. Creative Challenger
+   - Is there a simpler, more direct, or less invasive path?
+   - Is there a better artifact shape?
+
+Keep only material findings in the final stress-test result.
+
 If the needed tool or skill is unavailable:
 
 - perform the compact check inline when possible

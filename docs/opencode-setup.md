@@ -114,6 +114,10 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 
 - `agents/rose.md` - ROSE primary agent.
 - `agents/implementer.md` - focused implementation subagent.
+- `agents/code-scout.md` - local code discovery subagent.
+- `agents/doc-researcher.md` - local documentation discovery subagent.
+- `agents/web-researcher.md` - external research subagent.
+- `agents/plan-auditor.md` - read-only plan audit subagent.
 - `agents/code-reviewer.md` - code review subagent.
 - `agents/security-auditor.md` - security review subagent.
 - `agents/test-engineer.md` - testing subagent.
@@ -205,6 +209,7 @@ done
 
 for dir in "$AILI_HOME"/skills/*; do
   [ -d "$dir" ] || continue
+  [ -f "$dir/SKILL.md" ] || continue
   name="$(basename "$dir")"
   target="$OPENCODE_HOME/skills/$name"
 

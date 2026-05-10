@@ -21,6 +21,7 @@ Task arrives
     ├── Vague idea/need refinement? ──→ idea-refine
     ├── Refining a change draft? ─────→ change-interviewer
     ├── Generating test docs / QA plan / test matrix? ─→ test-document-generator
+    ├── Triage GitHub issue/PR read-only? → github-evidence-triage
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
@@ -43,6 +44,7 @@ Task arrives
     ├── Something broke? ──────────────→ debugging-and-error-recovery
     ├── Multiple independent work packages? → parallel-subagent-dispatch
     ├── Explicitly stress-testing an existing artifact/claim? → strategy-stress-test
+    ├── Reviewing implementation after changes? → review-pipeline
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
@@ -70,7 +72,16 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 
 Use these boundaries before defaulting to generic implementation skills:
 
-Interview packets and generated test documents are durable project artifacts. For OpenSpec changes, write the repository-local Markdown artifact in the change directory without asking. For every non-OpenSpec source, ask where to place the artifact before writing; chat-only remains an explicit user-selected fallback.
+Interview packets and generated test documents are durable project artifacts. For OpenSpec changes, write the repository-local Markdown artifact in the change directory without asking.
+
+For every non-OpenSpec source, including a single source document with an obvious sibling path, ask where to place the artifact before writing; chat-only remains an explicit user-selected fallback.
+
+### Subagent Evidence Routing
+
+- Use `code-scout` for local code discovery: source files, tests, configs, symbols, call chains, and existing implementation patterns.
+- Use `doc-researcher` for local documentation discovery: `AGENTS.md`, `rose.md`, skills, OpenSpec changes, README, docs, design notes, and project-local guidance.
+- Use `web-researcher` for external research: official documentation, public GitHub README/issues/releases, plugin docs, installation commands, API behavior, compatibility, and deprecation checks.
+- Use `plan-auditor` before implementation when a spec, plan, task breakdown, or acceptance story is ambiguous, cross-module, high-risk, or verification-heavy.
 
 ### Document Output Routing
 
@@ -98,6 +109,8 @@ Interview packets and generated test documents are durable project artifacts. Fo
 | Create/update/validate Agent Skills | `skill-authoring-and-validation` | Use for skill authoring and package validation work. |
 | Independent work packages for subagents | `parallel-subagent-dispatch` | Use when work can safely run in parallel and then be merged. |
 | Explicit loophole/evidence-gap audit of an existing artifact or claim | `strategy-stress-test` | Use as standalone only when the user asks to stress-test/review a draft, plan, claim, or strategy. Otherwise call it as a sub-step inside the owning skill. |
+| Post-implementation review orchestration | `review-pipeline` | Use after non-trivial implementation to fan out relevant reviewer agents, reconcile findings, run a bounded fix loop, and gate final PASS. |
+| Read-only GitHub issue/PR triage | `github-evidence-triage` | Use when analyzing GitHub issues or PRs without comments, labels, reviews, merges, pushes, or other write actions. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
 | Clarifying or writing back change drafts | `change-interviewer` | Use when an existing spec, plan, issue, or change draft needs source-grounded interview questions or a Chinese interview packet for user-filled decisions before write-back. |
 | Test docs, QA plans, test matrices, or regression checklists | `test-document-generator` | Use when tests must be documented from specs/plans/descriptions without writing or running test code. |
@@ -140,9 +153,10 @@ For a complete feature, the typical skill sequence is:
 6. incremental-implementation  → Build slice by slice
 7. test-driven-development     → Prove each slice works
 8. code-review-and-quality     → Review before merge
-9. git-workflow-and-versioning → Clean commit history
-10. documentation-and-adrs     → Document decisions
-11. shipping-and-launch        → Deploy safely
+9. review-pipeline             → Reconcile post-implementation reviewers when needed
+10. git-workflow-and-versioning → Clean commit history
+11. documentation-and-adrs     → Document decisions
+12. shipping-and-launch        → Deploy safely
 ```
 
 Use `strategy-stress-test` conditionally whenever a material artifact or claim exists and risk warrants it, such as before accepting a spec, plan, review, reconciliation, or completion claim. If the skill is not available in the current runtime, perform the same compact check directly instead of skipping the guardrail.
@@ -155,6 +169,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 |-------|-------|-----------------|
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | change-interviewer | Interview to clarify and write back change drafts |
+| Define | github-evidence-triage | Read-only GitHub issue/PR triage with evidence links |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Define | agents-md-initialization | Generate project AGENTS.md from the shared template |
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
@@ -182,6 +197,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Verify | verification-before-completion | Fresh evidence before completion claims |
 | Verify | strategy-stress-test | Find material loopholes, evidence gaps, counterexamples, and verification gaps before accepting artifacts or claims |
+| Review | review-pipeline | Orchestrate post-implementation review, reconcile findings, and gate final PASS |
 | Review | code-review-and-quality | Five-axis review with quality gates |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |

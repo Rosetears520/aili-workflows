@@ -36,19 +36,17 @@ Do not ask questions that can be answered from repository code, docs, specs, tes
 
 ## Output Placement Contract
 
-Do not use a standalone evidence/archive directory by default.
-
-When generating a test document, OpenSpec is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing. Generate the draft, run the stress-test pass, repair the document, persist the final document, then summarize the path in chat.
+When generating a test document, OpenSpec change output is the only deterministic no-question placement. For every non-OpenSpec source, including a single source document with an obvious sibling path, ask where to place the output before writing. Generate the draft, run the stress-test pass, repair the document, persist the final document, then summarize the path in chat.
 
 Target path resolution:
 
 1. If the source is an OpenSpec change directory, write `openspec/changes/<change-id>/test-plan.md` without asking.
-2. If the source is any non-OpenSpec file or directory, including a Superpowers-style spec/plan or a single named Markdown/spec/design document, ask where to place the output:
+2. If the source is non-OpenSpec, ask where to place the output before writing, even when the source is a single document:
    - A. create a sibling Markdown file beside the main source file;
    - B. create a sibling folder beside the source directory;
    - C. append a new section to the existing spec/design document;
    - D. print the result in chat only.
-3. If the user pasted only free-form text and no source path exists, do not invent an archive directory. Ask whether to:
+3. If the user pasted only free-form text and no source path exists, ask whether to:
    - A. create a new file in a user-specified location;
    - B. append to an existing spec/document;
    - C. print in chat only.
@@ -98,7 +96,7 @@ Small gaps can be recorded as `Open Question` without blocking document generati
 
 ### Phase C: Generate Test Document
 
-Generate a complete Markdown draft using the template below. Every test point must map back to a requirement, risk, decision, or evidence source. Keep facts, inferences, assumptions, and unverified items separate.
+Generate a complete Markdown draft using the template below or `references/test-document-template.md`. Every test point must map back to a requirement, risk, decision, or evidence source. Keep facts, inferences, assumptions, and unverified items separate.
 
 ### Phase D: Stress-Test
 
@@ -185,5 +183,5 @@ Before finishing:
 
 - Confirm `name` matches the skill directory name.
 - Confirm the document is source-grounded and unresolved items are labeled `Open Question` or `Unverified`.
-- Confirm no standalone archive directory was created unless the user explicitly chose it.
+- Confirm the output location follows the placement contract.
 - Confirm the chat response contains only the generated path, coverage summary, unresolved count, and next action.

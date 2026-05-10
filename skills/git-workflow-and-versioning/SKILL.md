@@ -59,6 +59,53 @@ Never:
 - run destructive git commands without explicit user approval
 - stage unrelated files or unreviewed generated output
 
+## Commit Architecture Mode
+
+Use this mode when organizing unstaged or staged changes, planning commits, drafting commit messages, or preparing a PR.
+
+Rules:
+
+- Inspect `git status --short --branch`, `git diff`, and `git diff --staged` before proposing commits.
+- Group commits by responsibility, not by file count alone.
+- Keep these concerns separate when possible:
+  - agent prompt changes
+  - skill workflow changes
+  - script/install changes
+  - docs/readme changes
+  - generated artifacts
+  - test files
+- Generated interview packets and generated test plans should not be mixed with unrelated prompt or script changes unless the user explicitly wants one combined commit.
+- Propose commit groups first; only commit when the user explicitly asks or task rules explicitly allow savepoint commits.
+- Match the repository's existing commit language and style after inspecting recent commits.
+
+## History Archaeology Mode
+
+Use this mode when the user asks:
+
+- who changed this
+- when this behavior was introduced
+- which commit added or removed a file, symbol, command, route, or rule
+- whether a bug is already fixed in history
+
+Workflow:
+
+1. Use `git log`, `git show`, `git blame`, and targeted path history.
+2. Report commit SHA, date, author if available, files touched, and why the commit is relevant.
+3. Do not infer intent from commit titles alone; inspect the diff.
+4. Do not modify files.
+
+## PR Preparation Mode
+
+Use this mode when preparing a change for review or PR.
+
+Rules:
+
+- Prefer isolated worktree for risky or multi-file changes.
+- Validate locally before recommending push.
+- Draft PR title and body only after inspecting the final diff.
+- Do not push, create PR, merge, delete branch, or clean up worktree without explicit user approval.
+- If `review-pipeline` exists, run it before saying the PR is ready.
+
 Decision matrix:
 
 | Task type | Branch | Worktree | Commit |
