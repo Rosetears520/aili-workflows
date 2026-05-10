@@ -173,7 +173,7 @@ aili-workflows/
 - `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
 - `skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
 - `skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
-- `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`skills/review-pipeline/SKILL.md`、`skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
+- `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`skills/review-pipeline/SKILL.md`、`skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（上游现名 `oh-my-openagent`，曾用名 `oh-my-opencode`；如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
 - 若干 workflow 纪律在现有 skills 中概念上吸收了 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 方向，包括 zoom-out、prototype、to-issues、grill-with-docs、diagnose、tdd、write-a-skill、improve-codebase-architecture 等。当前仓库没有新增 Matt 风格 skill，也未 vendored 上游文件；如后续复制上游文本或文件，请保留其 MIT License 版权声明。
 
 ## 使用说明
@@ -217,7 +217,7 @@ aili-workflows/
 | Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |
 | cjzafir | [X post](https://x.com/cjzafir/status/2052110266566107321) | 思想来源 | confidence calibration / loophole loop 方向参考；未 vendored 上游文本 |
-| code-yeongyu | [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent) | 概念性参考；未纳入上游文件 | agent / skill 角色边界与工作流拆分方向参考，如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan |
+| code-yeongyu | [oh-my-openagent](https://github.com/code-yeongyu/oh-my-openagent)（曾用名 `oh-my-opencode`） | 概念性参考；未纳入上游文件 | agent / skill 角色边界与工作流拆分方向参考，如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan |
 | Forrest Chang / Andrej Karpathy skills | [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需先确认并保留对应版权/许可 |
 
 如果继续从上游同步 agent 或 skill，请同步更新本 README 的来源表和许可说明。
