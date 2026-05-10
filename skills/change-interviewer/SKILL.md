@@ -68,9 +68,49 @@ Possible targets:
 - the same source files
 - a new or existing change document such as `proposal.md`, `design.md`, `tasks.md`, or `acceptance.md`
 - OpenSpec files under `openspec/changes/<change-id>/`
-- no file edits yet, if the user only wants interview questions
+- chat-only output, only when the user explicitly selects it
 
-If the target is unclear, ask one question before writing. Do not create files or directories without confirmation.
+If the source is not an OpenSpec change directory, ask one concise placement question before writing. Do not create files or directories without confirmation.
+
+## Output Placement Contract
+
+Packet Mode defaults to file output, not chat-first output.
+
+Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for chat-only output, writing is blocked by permissions or missing workspace access, or the user chooses chat-only output after the placement question.
+
+No standalone evidence/archive directory. OpenSpec is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing; chat-only is an explicit user-selected fallback.
+
+Target path resolution:
+
+1. If the source is an OpenSpec change directory, write `openspec/changes/<change-id>/interview.md` without asking.
+2. If the source is any non-OpenSpec file or directory, including a Superpowers-style spec/plan or a single named Markdown/spec/design document, ask where to place the output:
+   - A. create a sibling Markdown file beside the main source file;
+   - B. create a sibling folder beside the source directory;
+   - C. append a new section to the existing spec/design document;
+   - D. print the result in chat only.
+3. If the user pasted only free-form text and no source path exists, do not invent an archive directory. Ask whether to:
+   - A. create a new file in a user-specified location;
+   - B. append to an existing spec/document;
+   - C. print in chat only.
+4. If the user explicitly says "print in chat", "do not create files", or "chat only", do not write files.
+
+Use this concise placement question for non-OpenSpec sources:
+
+```text
+这个非 OpenSpec 输出需要先确认落点，你选一个：
+A. 生成在源文件同级：<path>
+B. 在源目录同级新建文件夹：<path>
+C. 追加到现有 spec / design 文档末尾
+D. 只打印在对话框，不写文件
+```
+
+Chat response after persistence should include only:
+
+- generated file path
+- source files reviewed
+- number of questions
+- unresolved `Open Question` / `Unverified` count
+- suggested next action
 
 ## Interview Modes
 
@@ -125,19 +165,17 @@ Common gaps:
 
 Do not start writing final content until the interview packet is complete unless the user explicitly says to write with current information.
 
-## Phase B: Generate Interview Packet
+## Phase B: Draft Interview Packet
 
 For non-trivial changes, generate a Markdown interview packet instead of asking scattered chat questions.
 
-Default persistence behavior:
+Default behavior:
 
-- If the user only asks for questions or a questionnaire, print the packet in chat by default.
-- If the user asks for a file, artifact, spec appendix, or write-back workflow, persist the packet to the agreed target.
-- If the source is an existing OpenSpec change and persistence is requested, prefer `openspec/changes/<change-id>/interview.md`.
-- If a custom plan or spec document is the agreed target, append `## Appendix: Interview Packet` or create a sibling `*-interview.md`.
-- Do not create `interview.md`, sibling files, or appendices unless persistence is requested or confirmed.
+- For OpenSpec sources, write `openspec/changes/<change-id>/interview.md` without asking.
+- For non-OpenSpec sources, ask for placement before writing, even when the source path is clear.
+- Use chat-only output only when the user explicitly asks for it or selects chat-only in the placement question.
 
-Do not create files or directories without confirmation.
+Phase B produces a draft packet. Do not present or persist it before Phase C.
 
 The packet must include:
 
@@ -225,7 +263,7 @@ If the user says `先这样`, `按目前信息写回`, or equivalent, stop askin
 
 ## Phase C: Stress-Test the Interview Packet
 
-After generating the first interview packet, use `strategy-stress-test` before presenting or persisting it.
+After generating the draft interview packet, use `strategy-stress-test` to stress-test and repair the draft packet.
 
 Check:
 
@@ -238,6 +276,8 @@ Check:
 - Which assumptions must be marked `Open Question` or `Unverified`?
 
 Apply fixes to the interview packet before sending it to the user.
+
+After Phase C, persist the final packet according to the Output Placement Contract. Only then present a concise chat summary.
 
 ### Grilling Discipline
 

@@ -20,6 +20,7 @@ Task arrives
     │
     ├── Vague idea/need refinement? ──→ idea-refine
     ├── Refining a change draft? ─────→ change-interviewer
+    ├── Generating test docs / QA plan / test matrix? ─→ test-document-generator
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
@@ -69,6 +70,8 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 
 Use these boundaries before defaulting to generic implementation skills:
 
+Interview packets and generated test documents are durable project artifacts. For OpenSpec changes, write the repository-local Markdown artifact in the change directory without asking. For every non-OpenSpec source, ask where to place the artifact before writing; chat-only remains an explicit user-selected fallback.
+
 ### Document Output Routing
 
 - Use `minimax-docx` only when the user explicitly requests Word, DOCX, `.docx`, an editable Office document, or a DOCX template workflow.
@@ -97,6 +100,7 @@ Use these boundaries before defaulting to generic implementation skills:
 | Explicit loophole/evidence-gap audit of an existing artifact or claim | `strategy-stress-test` | Use as standalone only when the user asks to stress-test/review a draft, plan, claim, or strategy. Otherwise call it as a sub-step inside the owning skill. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
 | Clarifying or writing back change drafts | `change-interviewer` | Use when an existing spec, plan, issue, or change draft needs source-grounded interview questions or a Chinese interview packet for user-filled decisions before write-back. |
+| Test docs, QA plans, test matrices, or regression checklists | `test-document-generator` | Use when tests must be documented from specs/plans/descriptions without writing or running test code. |
 
 ## Failure Modes to Avoid
 
@@ -173,6 +177,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | parallel-subagent-dispatch | Split independent work packages across subagents |
 | Build | rose-memory | Project-local SQLite memory retrieval/writeback |
 | Verify | test-driven-development | Failing test first, then make it pass |
+| Verify | test-document-generator | Generate evidence-grounded test plans, test matrices, QA docs, and regression checklists from specs/plans/descriptions |
 | Verify | browser-testing-with-devtools | OpenCode Playwright browser tools for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Verify | verification-before-completion | Fresh evidence before completion claims |

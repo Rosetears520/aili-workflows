@@ -162,6 +162,10 @@ install_entries() {
 
   for dir in "$AILI_HOME"/skills/*; do
     [ -d "$dir" ] || continue
+    if [ ! -f "$dir/SKILL.md" ]; then
+      log "Skipping non-skill directory without SKILL.md: $dir"
+      continue
+    fi
     name="$(basename "$dir")"
     target="$OPENCODE_HOME/skills/$name"
     "$action" "$dir" "$target"

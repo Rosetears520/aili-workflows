@@ -60,6 +60,7 @@ aili-workflows/
 │   ├── source-driven-development/
 │   ├── spec-driven-development/
 │   ├── strategy-stress-test/
+│   ├── test-document-generator/
 │   ├── test-driven-development/
 │   ├── using-agent-skills/
 │   └── verification-before-completion/
@@ -94,6 +95,9 @@ aili-workflows/
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
 | `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
+| `test-document-generator` | 根据 spec、方案、issue、描述或 OpenSpec change 生成详细测试文档、测试矩阵、回归范围和验收清单，默认写入仓库内 Markdown 文件 |
+
+`change-interviewer` 和 `test-document-generator` 默认采用 file-first 输出：OpenSpec change 直接写入同级目录；其他非 OpenSpec 来源（包括 Superpowers spec / plan 和普通文档）先询问生成位置，可选同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
 ### 来自 obra/superpowers
 

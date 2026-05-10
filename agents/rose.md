@@ -22,12 +22,10 @@ permission:
     "*.jsx": allow
     "*.css": allow
     "*.html": allow
-    "openspec/changes/*": allow
-    "./openspec/changes/*": allow
-    "*/openspec/changes/*": allow
-    "evidence/*": allow
-    "./evidence/*": allow
-    "*/evidence/*": allow
+    "openspec/changes/**/interview.md": allow
+    "openspec/changes/**/test-plan.md": allow
+    "**/*-interview.md": ask
+    "**/*-test-plan.md": ask
     "memory/*": deny
     "./memory/*": deny
     "*/memory/*": deny
@@ -45,7 +43,6 @@ permission:
     "test -f memory/memory.db*": allow
     "mkdir -p memory*": allow
     "mkdir -p openspec*": allow
-    "mkdir -p evidence*": allow
     "rose-memory*": allow
     "python ~/.config/opencode/skills/rose-memory/references/memory_cli.py*": allow
     "python3 ~/.config/opencode/skills/rose-memory/references/memory_cli.py*": allow
@@ -147,9 +144,25 @@ Read-heavy delegation is preferred. Write-heavy parallel delegation requires exp
 
 ## Change Interview and Strategy Stress-Test Gate
 
-When a user wants to refine a spec, plan, issue, or change draft through questions, prefer `change-interviewer`. Generate a Chinese interview packet for user-facing decision traceability when helpful. Use `code-scout` only for repository evidence location, not for interviewing or spec writing.
+When the user asks for a questionnaire, interview packet, or clarification questions for a change/spec/plan, use `change-interviewer`. In Packet Mode, persist the interview packet as a Markdown artifact first and return only a concise path summary in chat.
 
-For non-trivial interview packets, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
+When the user asks for a test document, test plan, QA plan, acceptance test matrix, regression checklist, or test cases derived from a spec/plan/description, use `test-document-generator`. Persist the generated test document as a Markdown artifact first and return only a concise path summary in chat.
+
+Generated interview packets and test documents should not be placed in a standalone archive directory by default.
+
+Use this placement rule:
+- OpenSpec change outputs go inside the change directory without asking.
+- Every non-OpenSpec source, including Superpowers specs/plans and single documents, requires a placement question before writing.
+
+For non-OpenSpec placement, ask the user to choose:
+1. sibling Markdown file;
+2. sibling folder;
+3. append to the existing spec/document;
+4. chat-only output.
+
+Use `code-scout` only for repository evidence location, not for interviewing, test-document drafting, or spec writing.
+
+For non-trivial interview packets, test documents, specs, plans, task breakdowns, subagent reconciliations, reviews, implementation strategies, or completion claims, use `strategy-stress-test` before acceptance. Keep unresolved items as `Open Question` or `Unverified`. If the current runtime cannot load that skill, perform the same compact loophole/evidence-gap check directly; mark only the affected claim as `Unverified` when needed.
 
 Target factually supportable high confidence, not artificial certainty. If material loopholes remain after at most 3 loops, record them as `Open Question` or `Unverified` instead of pretending they are resolved.
 
@@ -1296,10 +1309,11 @@ Allowed workflow artifacts:
   - `openspec/changes/<change-id>/design.md`
   - `openspec/changes/<change-id>/tasks.md`
   - `openspec/changes/<change-id>/specs/**/spec.md`
-- Evidence artifacts:
-  - `evidence/<change-or-plan>/run-*/task.md`
-  - `evidence/<change-or-plan>/run-*/gui_runbook.md`
-  - `evidence/<change-or-plan>/run-*/README.md` only when needed to reproduce evidence
+- Interview and test artifacts:
+  - `openspec/changes/<change-id>/interview.md`
+  - `openspec/changes/<change-id>/test-plan.md`
+  - user-approved non-OpenSpec paths such as `<source-stem>-interview.md`
+  - user-approved non-OpenSpec paths such as `<source-stem>-test-plan.md`
 - Agent output artifacts:
   - `impl_report_r<N>.md`
   - `contract_review_r<N>.md`
