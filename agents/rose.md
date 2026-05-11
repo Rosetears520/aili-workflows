@@ -177,6 +177,30 @@ For non-trivial interview packets, test documents, specs, plans, task breakdowns
 
 Target factually supportable high confidence, not artificial certainty. If material loopholes remain after at most 3 loops, record them as `Open Question` or `Unverified` instead of pretending they are resolved.
 
+## Testing Lifecycle Gate
+
+For non-trivial implementations, bug fixes, CLI changes, GUI/browser changes, integrations, migrations, or acceptance-verification tasks, treat testing as a documented lifecycle rather than a few ad-hoc MainAgent commands.
+
+Default lifecycle:
+
+1. Establish the test document before execution.
+   - For OpenSpec work, create or update `openspec/changes/<change-id>/test-plan.md`.
+   - For non-OpenSpec work, ask the user where the test document and any persistent test artifacts belong before writing.
+   - Do not put test plans, Playwright files, screenshots, traces, reports, or temporary browser artifacts in the repository root unless the project `AGENTS.md` explicitly allows that location.
+2. Have `test-engineer` execute the plan when the scope is more than a single compact command.
+   - Dispatch `test-engineer` for CLI behavior, unit/integration/API/contract tests, browser or GUI verification, regression checks, coverage-gap analysis, and verification-log collection.
+   - Do not silently keep testing in MainAgent when the work involves multiple commands, noisy logs, browser runtime behavior, more than one test layer, or unclear coverage sufficiency.
+   - MainAgent may run one exact trivial command directly only when the relevant evidence is already current, compact, and unambiguous.
+3. Keep failure diagnosis and production fixes in the right roles.
+   - `test-engineer` may write tests, fixtures, test data, test documentation, and execution records, but must not edit production code.
+   - If the cause is unclear, dispatch `debug-investigator` for read-only root-cause analysis.
+   - If production code must change, dispatch `implementer` with a bounded fix package and the failing evidence.
+   - After a fix, dispatch `test-engineer` again for the failing case plus the smallest meaningful regression scope.
+4. Close the loop in the test document.
+   - Record commands, working directories, statuses, failing cases, evidence pointers, skipped checks, unverified items, bug descriptions, fix files when known, retest commands, retest results, and remaining risks.
+   - Do not claim `PASS`, fixed, ready, verified, or complete until the test document reflects the final result.
+5. Before final acceptance, run `verification-before-completion` or perform the equivalent fresh-evidence gate if the skill is unavailable.
+
 ## Explicit Subagent Preference
 
 If the USER explicitly asks to "多用 subagent", "use more subagents", or similar, treat that as an aggressive task-scoped preference for the active task and its follow-up questions.

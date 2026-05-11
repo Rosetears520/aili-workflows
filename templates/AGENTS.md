@@ -240,6 +240,28 @@ When verification cannot be run:
 - state what was checked instead
 - state the remaining risk
 
+### Test Artifact Placement
+
+Project-specific test locations:
+
+- Unit tests: TODO
+- Integration tests: TODO
+- CLI tests: TODO
+- API / contract tests: TODO
+- GUI / browser / Playwright tests: TODO
+- Test fixtures: TODO
+- Snapshots / golden files: TODO
+- Test reports / traces / screenshots: TODO (for example, `playwright-report/`, `test-results/`, or another project-defined path)
+- Temporary test output: TODO (prefer OS temp locations unless the project requires repository-local output)
+
+Rules:
+
+- Do not place new test files in the repository root unless this section explicitly allows it.
+- Do not introduce `playwright.config.*`, `tests/e2e/`, `e2e/`, screenshots, traces, browser fixtures, or browser reports without first confirming the intended location.
+- If a new test category is introduced, ask the user for its location once, then record the chosen convention here.
+- OpenSpec test documents belong in `openspec/changes/<change-id>/test-plan.md`.
+- Non-OpenSpec test documents require an explicit placement decision before writing.
+
 ## Security Rules
 
 - Never print, commit, log, or expose secrets, tokens, private keys, cookies, credentials, or production environment values.

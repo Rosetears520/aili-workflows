@@ -98,6 +98,8 @@ Small gaps can be recorded as `Open Question` without blocking document generati
 
 Generate a complete Markdown draft using the template below or `references/test-document-template.md`. Every test point must map back to a requirement, risk, decision, or evidence source. Keep facts, inferences, assumptions, and unverified items separate.
 
+The document is both a plan and the durable execution ledger. Include sections for automation commands, manual checks, run history, defect/fix/retest closure, and change history even when they start empty.
+
 ### Phase D: Stress-Test
 
 Use `strategy-stress-test` to check whether the document misses failure paths, permission boundaries, data problems, regression scope, acceptance standards, or executable test cases.
@@ -171,10 +173,38 @@ Repair the document after stress-testing and before persistence.
 ## 9. 数据一致性 / 迁移 / 兼容性测试
 ## 10. 性能、稳定性、安全、可观测性测试
 ## 11. 回归范围
+
 ## 12. 自动化验证命令
+
+| 层级 | 命令 | 目的 | 必须执行 | 备注 |
+|---|---|---|---|---|
+| Unit |  |  | yes/no |  |
+| Integration |  |  | yes/no |  |
+| CLI |  |  | yes/no |  |
+| API / Contract |  |  | yes/no |  |
+| GUI / Browser |  |  | yes/no |  |
+| Regression |  |  | yes/no |  |
+
 ## 13. 手工验收清单
+
+- [ ]
+
 ## 14. Open Questions / Unverified
-## 15. 变更记录
+
+| 类型 | 内容 | 影响 | 处理方式 |
+|---|---|---|---|
+
+## 15. 测试执行记录
+
+| Run ID | 时间 | 执行者 | 测试层级 | 命令 / 工具 | 结果 | 关键证据 | 未验证项 |
+|---|---|---|---|---|---|---|---|
+
+## 16. 缺陷与修复闭环
+
+| Bug ID | 来源测试 | 现象 | 根因 | 修复负责人 | 修复文件 | 复测命令 | 复测结果 | 状态 |
+|---|---|---|---|---|---|---|---|---|
+
+## 17. 变更记录
 ```
 
 ## Validation
@@ -184,4 +214,5 @@ Before finishing:
 - Confirm `name` matches the skill directory name.
 - Confirm the document is source-grounded and unresolved items are labeled `Open Question` or `Unverified`.
 - Confirm the output location follows the placement contract.
+- Confirm the automation-command, execution-record, and defect-closure sections exist.
 - Confirm the chat response contains only the generated path, coverage summary, unresolved count, and next action.
