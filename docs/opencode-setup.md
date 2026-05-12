@@ -8,12 +8,13 @@ If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows 
 
 Default installation mode is selective symlink setup.
 
-Do not replace `~/.config/opencode/agents` or `~/.config/opencode/skills` by default. Preserve existing OpenCode directories and create symlinks inside them:
+Do not replace `~/.config/opencode/agents`, `~/.config/opencode/skills`, or `~/.config/opencode/commands` by default. Preserve existing OpenCode directories and create symlinks inside them:
 
 - `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`
 - `~/.config/opencode/skills/<skill> -> <repo>/skills/<skill>`
+- `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`
 
-Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/` and `skills/` directories.
+Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/`, `skills/`, and `commands/` directories.
 
 ## Goal
 
@@ -102,9 +103,9 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/rosetears/code/ai/aili-workflows` | `/home/rosetears/.config/opencode` | selective symlinks inside `agents/` and `skills/` |
-| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` | selective symlinks inside `agents/` and `skills/` |
-| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` | selective symlinks or junctions inside `agents\` and `skills\` |
+| WSL Ubuntu | `/home/rosetears/code/ai/aili-workflows` | `/home/rosetears/.config/opencode` | selective symlinks inside `agents/`, `skills/`, and `commands/` |
+| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` | selective symlinks inside `agents/`, `skills/`, and `commands/` |
+| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` | selective symlinks or junctions inside `agents\`, `skills\`, and `commands\` |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
 
@@ -122,13 +123,14 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/security-auditor.md` - security review subagent.
 - `agents/test-engineer.md` - testing subagent.
 - `skills/*/SKILL.md` - OpenCode skills.
+- `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
 - `skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
 - `skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
-- `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global agents and skills.
+- `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global agents, skills, and commands.
 
-There are no required slash commands. Natural language plus OpenCode's native skill discovery is the intended workflow.
+Slash commands are optional entrypoints. This repository ships only `/ideate`, `/define`, `/build`, and `/ship`, mapped to `commands/{ideate,define,build,ship}.md` and backed by `skills/aili-delivery-flow`; internal stages such as research, questionnaire, test-plan, implement, fix, debug, review, and evolve are not shipped as top-level commands.
 
 ## Installation Decision Rule
 
@@ -155,6 +157,7 @@ Do not rename, delete, replace, or convert these paths into directory symlinks u
 
 - `~/.config/opencode/agents`
 - `~/.config/opencode/skills`
+- `~/.config/opencode/commands`
 - `~/.config/opencode/AGENTS.md`
 - OpenCode runtime configuration files
 
@@ -164,11 +167,13 @@ Allowed by default:
 
 - back up `~/.config/opencode/agents/rose.md` if it is a real file and conflicts with the new symlink
 - back up `~/.config/opencode/skills/rose-memory` if it is a real directory and conflicts with the new symlink
+- back up `~/.config/opencode/commands/ideate.md` if it is a real file and conflicts with the new symlink
 
 Not allowed by default:
 
 - moving the whole `agents/` directory
 - moving the whole `skills/` directory
+- moving the whole `commands/` directory
 - replacing the whole directory with a symlink
 
 ## Installation Modes
@@ -177,7 +182,7 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. It preserves OpenCode's existing global `agents/` and `skills/` directories, then links entries inside them.
+Use this by default. It preserves OpenCode's existing global `agents/`, `skills/`, and `commands/` directories, then links entries inside them.
 
 WSL/Linux recommended command:
 
@@ -194,7 +199,7 @@ OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 mkdir -p "$(dirname "$AILI_HOME")"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
-mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills"
+mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
 
 for file in "$AILI_HOME"/agents/*.md; do
   name="$(basename "$file")"
@@ -219,6 +224,17 @@ for dir in "$AILI_HOME"/skills/*; do
 
   ln -sfn "$dir" "$target"
 done
+
+for file in "$AILI_HOME"/commands/*.md; do
+  name="$(basename "$file")"
+  target="$OPENCODE_HOME/commands/$name"
+
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    mv "$target" "$target.backup.$(date +%Y%m%d%H%M%S)"
+  fi
+
+  ln -sfn "$file" "$target"
+done
 ```
 
 Result examples:
@@ -233,13 +249,19 @@ Result examples:
   caveman/
   caveman-commit/
   rose-memory -> $AILI_HOME/skills/rose-memory
+
+~/.config/opencode/commands/
+  ideate.md -> $AILI_HOME/commands/ideate.md
+  define.md -> $AILI_HOME/commands/define.md
+  build.md -> $AILI_HOME/commands/build.md
+  ship.md -> $AILI_HOME/commands/ship.md
 ```
 
 ### Mode B: Managed Directory Symlink Setup (Exclusive / Advanced)
 
-This is a dangerous exclusive mode. It replaces OpenCode's whole global `agents/` and `skills/` directories with directory-level symlinks.
+This is a dangerous exclusive mode. It replaces OpenCode's whole global `agents/`, `skills/`, and `commands/` directories with directory-level symlinks.
 
-Do not use this mode unless the user explicitly says `aili-workflows` may replace the entire global `agents/` and `skills/` directories.
+Do not use this mode unless the user explicitly says `aili-workflows` may replace the entire global `agents/`, `skills/`, and `commands/` directories.
 
 WSL/Linux command with explicit confirmation:
 
@@ -264,8 +286,13 @@ if [ -e "$OPENCODE_HOME/skills" ] && [ ! -L "$OPENCODE_HOME/skills" ]; then
   mv "$OPENCODE_HOME/skills" "$OPENCODE_HOME/skills.backup.$(date +%Y%m%d%H%M%S)"
 fi
 
+if [ -e "$OPENCODE_HOME/commands" ] && [ ! -L "$OPENCODE_HOME/commands" ]; then
+  mv "$OPENCODE_HOME/commands" "$OPENCODE_HOME/commands.backup.$(date +%Y%m%d%H%M%S)"
+fi
+
 ln -sfn "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
 ln -sfn "$AILI_HOME/skills" "$OPENCODE_HOME/skills"
+ln -sfn "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
 ```
 
 ### Mode C: Copy Fallback
@@ -289,10 +316,11 @@ OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 mkdir -p "$(dirname "$AILI_HOME")"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
-mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills"
+mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
 
 cp -R "$AILI_HOME/agents/"*.md "$OPENCODE_HOME/agents/"
 cp -R "$AILI_HOME/skills/"* "$OPENCODE_HOME/skills/"
+cp -R "$AILI_HOME/commands/"*.md "$OPENCODE_HOME/commands/"
 ```
 
 ## Windows Native Selective Symlink Setup
@@ -310,6 +338,7 @@ $OpenCodeHome = Join-Path $env:USERPROFILE ".config\opencode"
 New-Item -ItemType Directory -Force -Path (Split-Path $AiliHome) | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "agents") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "skills") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "commands") | Out-Null
 
 if (!(Test-Path $AiliHome)) {
   git clone https://github.com/Rosetears520/aili-workflows.git $AiliHome
@@ -344,9 +373,23 @@ Get-ChildItem "$AiliHome\skills" -Directory | ForEach-Object {
 
   New-Item -ItemType SymbolicLink -Path $Target -Target $_.FullName | Out-Null
 }
+
+Get-ChildItem "$AiliHome\commands" -Filter "*.md" | ForEach-Object {
+  $Target = Join-Path "$OpenCodeHome\commands" $_.Name
+
+  if ((Test-Path $Target) -and -not ((Get-Item $Target).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+    Rename-Item $Target "$($Target).backup.$(Get-Date -Format yyyyMMddHHmmss)"
+  }
+
+  if (Test-Path $Target) {
+    Remove-Item $Target -Force
+  }
+
+  New-Item -ItemType SymbolicLink -Path $Target -Target $_.FullName | Out-Null
+}
 ```
 
-If Windows symbolic link permissions are blocked, use junctions as a fallback for skill directories, but keep the same rule: create links inside `skills\`, do not replace the whole `skills\` directory.
+If Windows symbolic link permissions are blocked, use copy fallback for command files or junctions for skill directories, but keep the same rule: create entries inside `skills\` and `commands\`, do not replace the whole directory.
 
 ## Cross-Environment Guard
 
@@ -446,7 +489,18 @@ Recommended default runtime add-ons are DCP plugin, Playwright MCP, and Context7
 opencode plugin @tarquinen/opencode-dcp@latest --global
 ```
 
-Verify after restart by running `/dcp` in OpenCode.
+DCP reads configuration from `~/.config/opencode/dcp.jsonc` / `dcp.json`, `$OPENCODE_CONFIG_DIR/dcp.jsonc` / `dcp.json`, or project `.opencode/dcp.jsonc` / `dcp.json`. Project config overrides global config. Restart OpenCode after changing the file.
+
+Recommended range thresholds for a 400k-token context window:
+
+| DCP config key | Value | Intent |
+|---|---:|---|
+| `compress.minContextLimit` | `"35%"` | start range compression before noisy history dominates attention |
+| `compress.maxContextLimit` | `"45%"` | upper automatic compression threshold for normal operation |
+
+Do not add unsupported keys such as `warn`, `force_compress`, or `target_after_compress`; the DCP schema only accepts documented keys and warns on unknown properties.
+
+Verify after restart by running `/dcp` in OpenCode and confirming the plugin reads `minContextLimit: "35%"` and `maxContextLimit: "45%"` from the active config.
 
 ### Playwright MCP
 
@@ -492,7 +546,7 @@ This repository follows an agent-driven model similar to `addyosmani/agent-skill
 
 - Skills are selected automatically by intent.
 - `AGENTS.md` or the active primary agent should require skill usage when a skill applies.
-- Slash commands are not required.
+- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin entrypoints to `skills/aili-delivery-flow`; no internal stage commands are shipped.
 - The user can work naturally: "implement this", "fix this bug", "review this", "plan this change".
 
 Typical intent mapping:
@@ -537,15 +591,23 @@ WSL/Linux selective symlink setup:
 test -d "$AILI_HOME"
 test -d "$HOME/.config/opencode/agents"
 test -d "$HOME/.config/opencode/skills"
+test -d "$HOME/.config/opencode/commands"
 test ! -L "$HOME/.config/opencode/agents"
 test ! -L "$HOME/.config/opencode/skills"
+test ! -L "$HOME/.config/opencode/commands"
 test -L "$HOME/.config/opencode/agents/rose.md"
 test -L "$HOME/.config/opencode/agents/implementer.md"
 test -L "$HOME/.config/opencode/skills/rose-memory"
+test -L "$HOME/.config/opencode/commands/ideate.md"
+test -L "$HOME/.config/opencode/commands/define.md"
+test -L "$HOME/.config/opencode/commands/build.md"
+test -L "$HOME/.config/opencode/commands/ship.md"
 test -f "$HOME/.config/opencode/agents/rose.md"
 test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
+test -f "$HOME/.config/opencode/commands/ideate.md"
 readlink "$HOME/.config/opencode/agents/rose.md"
 readlink "$HOME/.config/opencode/skills/rose-memory"
+readlink "$HOME/.config/opencode/commands/ideate.md"
 python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
 ```
 
@@ -555,8 +617,10 @@ Windows native selective symlink setup:
 Test-Path "$env:USERPROFILE\code\ai\aili-workflows"
 Test-Path "$env:USERPROFILE\.config\opencode\agents"
 Test-Path "$env:USERPROFILE\.config\opencode\skills"
+Test-Path "$env:USERPROFILE\.config\opencode\commands"
 Get-Item "$env:USERPROFILE\.config\opencode\agents\rose.md"
 Get-Item "$env:USERPROFILE\.config\opencode\skills\rose-memory"
+Get-Item "$env:USERPROFILE\.config\opencode\commands\ideate.md"
 ```
 
 Copy fallback:
@@ -564,6 +628,7 @@ Copy fallback:
 ```bash
 test -f "$HOME/.config/opencode/agents/rose.md"
 test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
+test -f "$HOME/.config/opencode/commands/ideate.md"
 python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
 ```
 
@@ -571,6 +636,7 @@ Required checks for runtime add-on setup:
 
 - OpenCode was fully restarted after installation or runtime configuration changes.
 - `/dcp` is available after installing the DCP plugin.
+- DCP compression thresholds use documented keys only: `compress.minContextLimit=35%` and `compress.maxContextLimit=45%` when the installed plugin supports percentage values.
 - `opencode mcp list` shows the expected Playwright MCP entry.
 - Context7 can answer a library documentation lookup through the installed CLI or MCP capability.
 

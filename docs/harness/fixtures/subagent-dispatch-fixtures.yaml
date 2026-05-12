@@ -1,0 +1,10 @@
+{
+  "fixture": "subagent-dispatch",
+  "required_markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors"],
+  "packet_cases": [
+    {"id": "packet-docs", "trace_id": "TRACE-DOCS-001", "work_package_type": "implementation", "artifact_target": "docs/harness", "coverage_expectation": "tasks 2.1-2.7", "known_exclusions": ["commands", "skills"]}
+  ],
+  "result_cases": [
+    {"id": "result-pass", "status": "pass", "confidence": "high", "evidence_anchors": ["docs/harness/aili-harness-contract.md"], "coverage": "package scope", "skipped_work": ["forbidden files"], "unknowns": [], "harness_failure_signals": []}
+  ]
+}

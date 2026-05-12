@@ -11,6 +11,8 @@ Use this skill after non-trivial implementation and before ROSE claims `PASS`, `
 
 It is an orchestration workflow, not a reviewer persona. ROSE owns dispatch, reconciliation, and final acceptance.
 
+In the AILI lifecycle, this skill is normally entered from `aili-delivery-flow` SHIP mode; keep lifecycle gates there and keep this file focused on review orchestration.
+
 ## When to Use
 
 Use after changes that are multi-file, behavior-changing, security-sensitive, permission-related, test-heavy, release-impacting, or hard to verify by a single narrow command.

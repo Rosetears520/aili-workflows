@@ -10,43 +10,37 @@ It is self-contained and project-local. Do not assume access to private global p
 
 ## Project Overview
 
-<!-- Fill this section during initialization. Use facts from repository files only. Do not invent missing details. -->
-
-- Project purpose: TODO
-- Primary language/runtime: TODO
-- Package manager: TODO
-- Main application entry points: TODO
-- Main test framework: TODO
-- Important directories: TODO
-- Generated/build output directories: TODO
-- Deployment/runtime environment: TODO
+- Project purpose: Personal OpenCode workflow repository containing agents, skills, delivery commands, templates, docs, and helper scripts.
+- Primary language/runtime: Markdown plus Python 3 and Bash helper scripts.
+- Package manager: None for the tracked repository; `.opencode/package*.json` is ignored local OpenCode runtime state.
+- Main application entry points: `commands/{ideate,define,build,ship}.md`, `agents/rose.md`, `skills/*/SKILL.md`, `scripts/install_opencode.sh`, and `scripts/agents_md.py`.
+- Main test framework: Python stdlib smoke checks via `scripts/harness_fixture_check.py` and `scripts/agents_md.py check`.
+- Important directories: `agents/`, `commands/`, `skills/`, `templates/`, `scripts/`, `docs/`, `tests/`, and `manifests/`.
+- Generated/build output directories: none documented; `memory/`, `.opencode/`, `openspec/`, `__pycache__/`, and `*.py[cod]` are ignored local/runtime outputs.
+- Deployment/runtime environment: OpenCode global config installed through `scripts/install_opencode.sh`; repository scripts run on Linux/macOS/WSL shells with Python 3.
 
 ## Setup Commands
 
-<!-- Fill with verified commands from package manifests, README, docs, Makefile, CI, or equivalent project files. Use "unknown" only when the repository does not provide enough evidence. -->
-
-- Install dependencies: TODO
-- Start development server: TODO
-- Build: TODO
-- Lint: TODO
-- Typecheck: TODO
-- Test all: TODO
-- Test focused: TODO
-- Format: TODO
-- Clean: TODO
+- Install dependencies: no tracked dependency install documented.
+- Start development server: not applicable; this is an OpenCode workflow/config repository.
+- Build: no build command documented.
+- Lint: `bash -n scripts/install_opencode.sh` for the installer shell syntax.
+- Typecheck: `python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py`.
+- Test all: `python scripts/harness_fixture_check.py` and `python scripts/agents_md.py check --project .`.
+- Test focused: `python scripts/agents_md.py check --project .` for AGENTS template compliance.
+- Format: no formatter command documented.
+- Clean: no clean command documented.
 
 ## Architecture and Project Structure
 
-<!-- Summarize only facts discovered from repository files. Do not invent architecture. -->
-
-- `src/`: TODO
-- `tests/`: TODO
-- `docs/`: TODO
-- `scripts/`: TODO
-- Configuration files: TODO
-- CI/CD files: TODO
-- Generated files: TODO
-- External integrations: TODO
+- `src/`: no `src/` directory is present.
+- `tests/`: present but no tracked tests were found during initialization.
+- `docs/`: OpenCode setup and harness architecture/fixture documentation.
+- `scripts/`: Python and Bash utilities for AGENTS generation/checking, harness fixture smoke checks, and OpenCode installation.
+- Configuration files: `.gitignore`, `workflow.components.yaml`, `templates/AGENTS.md`, command prompts, agent prompts, and skill definitions.
+- CI/CD files: no `.github/workflows/` or `Makefile` was found during initialization.
+- Generated files: project-local `AGENTS.md` is generated from `templates/AGENTS.md`; runtime/local state is ignored in `memory/`, `.opencode/`, and `openspec/`.
+- External integrations: OpenCode global config, GitHub repository URL in `scripts/install_opencode.sh`, and optional skills with third-party provenance listed in `README.md`.
 
 <!-- AILI_MANAGED_BLOCK_BEGIN: agent-operating-discipline -->
 ## Agent Operating Discipline
@@ -204,9 +198,8 @@ These rules are working when diffs are smaller, clarifying questions happen befo
 
 ## Project-Specific Rules
 
-<!-- Add rules that are specific to this repository. Do not add personal preferences, temporary task notes, or generic advice. -->
-
-- TODO
+- Keep `/ideate`, `/define`, `/build`, and `/ship` as the only top-level delivery command entrypoints.
+- Project `AGENTS.md` must remain generated from `templates/AGENTS.md`; update managed blocks with `scripts/agents_md.py` rather than editing them by hand.
 
 ## Coding Conventions
 
@@ -248,15 +241,15 @@ When verification cannot be run:
 
 Project-specific test locations:
 
-- Unit tests: TODO
-- Integration tests: TODO
-- CLI tests: TODO
-- API / contract tests: TODO
-- GUI / browser / Playwright tests: TODO
-- Test fixtures: TODO
-- Snapshots / golden files: TODO
-- Test reports / traces / screenshots: TODO (for example, `playwright-report/`, `test-results/`, or another project-defined path)
-- Temporary test output: TODO (prefer OS temp locations unless the project requires repository-local output)
+- Unit tests: no convention documented.
+- Integration tests: no convention documented.
+- CLI tests: use repository scripts under `scripts/` and harness fixtures under `docs/harness/fixtures/`.
+- API / contract tests: no API test convention documented.
+- GUI / browser / Playwright tests: no browser test convention documented.
+- Test fixtures: `docs/harness/fixtures/`.
+- Snapshots / golden files: no convention documented.
+- Test reports / traces / screenshots: no repository-local report path documented.
+- Temporary test output: prefer OS temp locations unless a future project rule defines otherwise.
 
 Rules:
 

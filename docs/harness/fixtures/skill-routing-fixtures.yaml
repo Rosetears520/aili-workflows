@@ -1,0 +1,12 @@
+{
+  "fixture": "skill-routing",
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "trigger", "non-trigger"],
+  "cases": [
+    {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
+    {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
+    {"id": "harness-complaint", "skill": "harness-issue-triage", "input": "ROSE is not following the workflow; where is the harness problem?", "expected": "trigger"},
+    {"id": "harness-approved-change", "skill": "harness-evolution", "input": "approved: change ROSE command routing based on triage report", "expected": "trigger"},
+    {"id": "product-bug-not-harness", "skill": "harness-issue-triage", "input": "fix a product login bug", "expected": "non-trigger"},
+    {"id": "ordinary-doc-edit", "skill": "harness-evolution", "input": "fix typo in product doc", "expected": "non-trigger"}
+  ]
+}

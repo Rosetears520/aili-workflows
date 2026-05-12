@@ -11,6 +11,8 @@ Use this skill to generate a durable Markdown test document, test matrix, accept
 
 This skill writes testing documentation. It does not replace `test-driven-development`, which writes or runs automated tests.
 
+In the AILI lifecycle, `aili-delivery-flow` owns when DEFINE must produce or confirm a test document before BUILD. This skill owns only the test-document artifact generation rules.
+
 ## When to Use
 
 Use this skill when the user asks for:

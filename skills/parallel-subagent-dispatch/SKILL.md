@@ -109,6 +109,8 @@ If any item fails, run the work sequentially or narrow the task packets until in
 
 Send each subagent a complete packet. Do not rely on it inheriting the main conversation context.
 
+For harness-sensitive work, use `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `skills/aili-delivery-flow/references/protocols/subagent-result.md` as the packet/result evidence contract instead of redefining fields here.
+
 ```text
 Subagent task packet:
 - Goal:
