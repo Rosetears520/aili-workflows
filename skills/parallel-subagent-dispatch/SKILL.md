@@ -21,11 +21,17 @@ Use this skill for context-saving dispatch and parallel dispatch.
 
 Use a single read-only subagent, especially `code-scout`, even when there is only one work package, if doing the work in MainAgent would pollute context with broad search, large grep output, repeated file reads, logs, or exploratory dead ends.
 
+For ROSE runtime work, this is mandatory when the direct allowlist does not apply and delegation would materially save MainAgent context.
+
 Good single-subagent uses:
 - residual marker scans across many files
 - personal-name or local-path scans
 - finding all references to a legacy API, config key, header, route, symbol, or marker
 - mapping tests that cover a behavior
+- mapping upstream callers or entrypoints
+- mapping downstream consumers or output paths
+- mapping sibling or peer implementations
+- mapping convention examples before a non-trivial edit
 - checking whether docs/specs/plans reference a path or symbol
 - locating security/trust-model evidence
 - finding active vs archived/generated references
@@ -71,25 +77,33 @@ Do not paste large file excerpts, full grep dumps, long logs, or exploratory dea
 
 Search evidence is a map. The editing, reviewing, testing, securing, or documenting agent must still read final target files before acting.
 
-## Dispatch ROI Rule
+## Mandatory Dispatch Rule
 
 Dispatch when expected MainAgent context cost is greater than subagent overhead.
 
-Use subagent when likely required evidence includes:
-- 3+ files
+ROSE MUST use a read-only subagent when likely required evidence includes:
+- 3+ relevant files
 - 2+ directories/subsystems
 - 2+ search passes
 - broad grep/list output
 - noisy logs/test output
 - uncertain active vs stale references
+- active/current/stale/archived/generated classification
+- all-reference scans
+- upstream/downstream/peer implementation mapping
+- test coverage mapping
+- convention discovery before non-trivial edits
 - independent review or coverage assessment
 
-Do not dispatch when:
+ROSE may skip dispatch only when:
 - one exact file/symbol is already known
 - the task can be completed by reading one short file section
 - the result is purely conversational
 - the user needs an immediate tiny answer
 - the subagent would need to write overlapping files
+- the work satisfies the direct allowlist in `skills/aili-delivery-flow/references/direct-vs-delegated-work.md`
+
+If ROSE skips delegation for a non-trivial task, it must state why the direct allowlist applies and why delegation would not add material evidence or context savings.
 
 Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
 
@@ -108,6 +122,8 @@ If any item fails, run the work sequentially or narrow the task packets until in
 ## Subagent Task Packet Template
 
 Send each subagent a complete packet. Do not rely on it inheriting the main conversation context.
+
+For harness-sensitive work, use `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` as the canonical task packet protocol and `skills/aili-delivery-flow/references/protocols/subagent-result.md` as the canonical result protocol.
 
 ```text
 Subagent task packet:

@@ -155,6 +155,18 @@ Use `test-engineer` for tests, fixtures, verification, and coverage gaps; `code-
 
 Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
 
+## Delegation Protocol Router
+
+Use `skills/aili-delivery-flow/references/direct-vs-delegated-work.md` as the authority for deciding whether ROSE may edit directly or must delegate/gate. If a non-trivial task skips delegation, state why the direct allowlist applies and why subagent dispatch would not add material evidence or context savings.
+
+Use `repo-evidence-first` before non-trivial planning, editing, review, or completion claims when project facts, conventions, file ownership, verification paths, or stale/generated/archived evidence matter. Unsupported project claims remain `Hypothesis`, `Open Question`, `Unverified`, delegated evidence work, or blocked items.
+
+When code evidence is needed, ask `code-scout` for a code locality map: target, upstream, downstream, peer patterns, tests/verification, freshness, risk notes, conclusion, and recommended next reads. Search evidence is still only a map; ROSE or the editing/reviewing/testing agent must read final target files before acting.
+
+For harness-sensitive subagent work, use `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `skills/aili-delivery-flow/references/protocols/subagent-result.md`. Treat subagent results as evidence to reconcile, not authority.
+
+Use `session-handoff` only when the user explicitly requests a handoff or an approved command contract requires one. For OpenSpec changes, the default handoff location is `openspec/changes/<change-id>/handoff.md`; do not promote handoff content to durable memory by default.
+
 ## Change Interview and Strategy Stress-Test Gate
 
 When the user asks for a questionnaire, interview packet, or clarification questions for a change/spec/plan, use `change-interviewer`. In Packet Mode, persist the interview packet as a Markdown artifact first and return only a concise path summary in chat.
