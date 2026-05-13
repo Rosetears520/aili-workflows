@@ -21,11 +21,16 @@ aili-workflows/
 │   ├── code-reviewer.md         # 代码审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
 │   └── test-engineer.md         # 测试与覆盖率 subagent
+├── commands/
+│   ├── ideate.md                # /ideate：进入 aili-delivery-flow IDEATE
+│   ├── define.md                # /define：进入 aili-delivery-flow DEFINE
+│   ├── build.md                 # /build：进入 aili-delivery-flow BUILD
+│   └── ship.md                  # /ship：进入 aili-delivery-flow SHIP
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
 ├── scripts/
 │   ├── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
-│   └── install_opencode.sh      # 安全安装 agents/skills 到 OpenCode 全局配置
+│   └── install_opencode.sh      # 安全安装 agents/skills/commands 到 OpenCode 全局配置
 ├── skills/
 │   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
 │   ├── android-native-dev/
@@ -45,6 +50,7 @@ aili-workflows/
 │   ├── fullstack-dev/
 │   ├── git-workflow-and-versioning/
 │   ├── github-evidence-triage/
+│   ├── harness-issue-triage/
 │   ├── idea-refine/
 │   ├── incremental-implementation/
 │   ├── ios-application-dev/
@@ -99,8 +105,11 @@ aili-workflows/
 | Skill | 说明 |
 |---|---|
 | `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
+| `aili-delivery-flow` | AILI 交付生命周期权威：IDEATE、DEFINE、BUILD、SHIP 四模式、后端 adapter、artifact gate、review/repair/closeout |
 | `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
+| `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
+| `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
 | `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
@@ -178,13 +187,13 @@ aili-workflows/
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill，而不是依赖 slash command 文件。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review` 或 `/evolve` 等内部阶段命令。
 
 ### OpenCode 设置
 
-安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective`；复制仅作为软链接不可用或明确要求时的 fallback。
+安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装 agents、skills 和 commands；复制仅作为软链接不可用或明确要求时的 fallback。
 
-默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/` 和 `skills/` 目录，只在目录内部链接具体 agent 文件和 skill 目录。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/`、`skills/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件、skill 目录和 command 文件。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
 
 项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -194,10 +203,13 @@ aili-workflows/
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
 2. 让 OpenCode 发现 `agents/` 中的自定义 agent。
 3. 让 OpenCode 通过安装脚本链接后的全局 `~/.config/opencode/skills/` 发现本仓库 `skills/` 中的 SKILL.md 工作流。
-4. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
+4. 可选使用全局 `~/.config/opencode/commands/` 中的 `/ideate`、`/define`、`/build`、`/ship` 入口。
+5. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
 ```
 
-新增、删除或重命名 skill 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 skill discovery 刷新。
+新增、删除或重命名 skill 或 command 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 discovery 刷新。
+
+`docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会发现并加载被链接的 `skills/*`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 
 `rose-memory` 是随 `skills/rose-memory/` 分发的全局 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
 

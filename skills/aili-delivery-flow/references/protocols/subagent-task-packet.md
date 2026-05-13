@@ -7,12 +7,14 @@ Use this packet for non-trivial, harness-sensitive, evidence-heavy, review, test
 ```text
 Subagent task packet:
 - Trace/work package id:
+- Work package type:
+- Artifact target:
 - Goal:
-- Context:
+- Context / required context:
 - Active contract / source artifacts:
 - Allowed scope:
 - Forbidden scope:
-- Edit permission:
+- Edit permission / allowed edits:
 - Evidence required:
 - Expected return format:
 - Placement / artifact rules:

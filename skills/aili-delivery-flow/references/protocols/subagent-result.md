@@ -5,14 +5,22 @@ Canonical path for this change: `skills/aili-delivery-flow/references/protocols/
 Subagent output is evidence for ROSE to reconcile, not authority. Separate facts from interpretation and recommendations.
 
 ```text
+TRACE ID:
 STATUS: PASS | NEEDS_REVISION | BLOCKED | PARTIAL | NOT_FOUND
 CONFIDENCE: high | medium | low
+SUMMARY:
 
 INSPECTED SCOPE:
 - path / command / source - what was inspected
 
+COVERAGE COMPLETED:
+- scope item - completed / skipped with reason
+
 OBSERVED FACTS:
 - path:line-or-symbol - fact - freshness(active/current/stale/archived/generated/unknown) - confidence
+
+EVIDENCE ANCHORS:
+- path:line / command / source - why it matters
 
 INFERENCES:
 - inference - evidence basis - risk/confidence
@@ -24,6 +32,12 @@ RECOMMENDATIONS:
 
 UNKNOWNS / GAPS:
 - unknown, conflict, or missing evidence
+
+SKIPPED WORK:
+- skipped item - reason - risk
+
+HARNESS FAILURE SIGNALS:
+- lifecycle/gate/protocol/memory/tool-policy failure signal, or N/A
 
 MAINAGENT NEXT READS:
 - path / command - why ROSE should inspect before acting

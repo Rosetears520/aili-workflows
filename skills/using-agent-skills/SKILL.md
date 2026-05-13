@@ -18,6 +18,9 @@ When a task arrives, identify the development phase and apply the corresponding 
 ```
 Task arrives
     │
+    ├── Delivery lifecycle command/mode? → aili-delivery-flow
+    ├── Harness/workflow behavior complaint? → harness-issue-triage
+    ├── Approved harness/process/ROSE/skill/command/subagent/memory/install change? → harness-evolution
     ├── Vague idea/need refinement? ──→ idea-refine
     ├── Refining a change draft? ─────→ change-interviewer
     ├── Generating test docs / QA plan / test matrix? ─→ test-document-generator
@@ -92,6 +95,9 @@ For every non-OpenSpec source, including a single source document with an obviou
 
 | User intent / output | Primary skill | Boundary |
 |---|---|---|
+| `/ideate`, `/define`, `/build`, `/ship`, or delivery lifecycle mode selection | `aili-delivery-flow` | Lifecycle authority for the four top-level modes. Do not duplicate its full flow in this router. |
+| User says workflow/ROSE/command/skill/subagent/memory/install behavior is wrong and asks where the issue lives | `harness-issue-triage` | Read-only localization first. Do not edit core harness controls. |
+| Approved workflow/process, ROSE, skill, command, subagent, memory, install/setup, hook, or harness-doc changes; repeated workflow failures after localization | `harness-evolution` | Report-first harness governance. Do not edit core harness controls without explicit approval. |
 | Explicit Word, `.docx`, editable Office document, or DOCX template workflow | `minimax-docx` | Use only when the output or input workflow is Word/DOCX/editable Office. Do not route generic “report” requests here unless the user wants DOCX/editability/template editing. |
 | PDF, print-ready/final non-editable deliverable, PDF form filling, or visual page fidelity | `minimax-pdf` | Use when the artifact is a PDF or page appearance is the deliverable. If the user needs editable Word output, use `minimax-docx`. |
 | Excel, `.xlsx`, `.xlsm`, `.csv`, spreadsheet formulas, financial tables, tabular modeling, or workbook formatting | `minimax-xlsx` | Use for workbook/data-table artifacts and formula-preserving edits. Do not use for prose documents or slides. |

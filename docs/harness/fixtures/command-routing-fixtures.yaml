@@ -1,0 +1,12 @@
+{
+  "fixture": "command-routing",
+  "required_markers": ["/ideate", "/define", "/build", "/ship", "code-scout", "code-reviewer", "test-engineer", "security-auditor", "release-readiness", "non-trigger"],
+  "cases": [
+    {"id": "cmd-ideate", "input": "/ideate explore task", "expected_mode": "IDEATE", "trigger": true, "expected_scope": "evidence-scouting", "expected_delegation": ["code-scout"]},
+    {"id": "cmd-define", "input": "/define prepare spec", "expected_mode": "DEFINE", "trigger": true},
+    {"id": "cmd-build", "input": "/build package 1", "expected_mode": "BUILD", "trigger": true, "expected_scope": "implementation-quality", "expected_checks": ["code-reviewer", "test-engineer"], "expected_conditional_checks": ["security-auditor"]},
+    {"id": "cmd-ship", "input": "/ship closeout", "expected_mode": "SHIP", "trigger": true, "expected_scope": "release-readiness", "expected_checks": ["code-reviewer", "test-engineer", "release-readiness"], "expected_conditional_checks": ["security-auditor"]},
+    {"id": "internal-research", "input": "/research topic", "expected_mode": "internal-stage", "expected": "non-trigger", "trigger": false},
+    {"id": "internal-review", "input": "/review diff", "expected_mode": "internal-stage", "expected": "non-trigger", "trigger": false}
+  ]
+}
