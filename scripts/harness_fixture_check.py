@@ -21,6 +21,7 @@ REQUIRED = {
             "/define",
             "/build",
             "/ship",
+            "code-scout",
             "code-reviewer",
             "test-engineer",
             "security-auditor",
@@ -120,6 +121,14 @@ def require_checks(case: dict, field: str, required: list[str], name: str, case_
 def validate_command_routing(cases: list, name: str) -> list[str]:
     errors: list[str] = []
 
+    ideate_case = find_trigger_case(cases, "IDEATE")
+    if ideate_case is None:
+        errors.append(f"{name}: missing trigger case for IDEATE")
+    else:
+        if ideate_case.get("expected_scope") != "evidence-scouting":
+            errors.append(f"{name}: IDEATE expected_scope must be 'evidence-scouting'")
+        errors.extend(require_checks(ideate_case, "expected_delegation", ["code-scout"], name, "IDEATE"))
+
     build_case = find_trigger_case(cases, "BUILD")
     if build_case is None:
         errors.append(f"{name}: missing trigger case for BUILD")
@@ -159,10 +168,38 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
     return errors
 
 
+def validate_agent_permissions() -> list[str]:
+    errors: list[str] = []
+    agent_dir = ROOT / "agents"
+    for path in sorted(agent_dir.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        if not text.startswith("---\n"):
+            errors.append(f"{path.relative_to(ROOT)}: missing frontmatter")
+            continue
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            errors.append(f"{path.relative_to(ROOT)}: unterminated frontmatter")
+            continue
+        frontmatter = parts[1]
+        if "\npermission:\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: missing permission block")
+        if path.name == "rose.md":
+            if "\n  skill: allow\n" not in frontmatter and "\n  \"*\": allow\n" not in frontmatter:
+                errors.append(f"{path.relative_to(ROOT)}: missing skill allowance via permission.skill or wildcard")
+        elif "\n  skill: allow\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: missing permission.skill allow")
+        if "\n  read:\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: missing permission.read block")
+        elif "\n    \"*\": allow\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: missing permission.read wildcard allow")
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     for name, spec in REQUIRED.items():
         errors.extend(validate_fixture(name, spec))
+    errors.extend(validate_agent_permissions())
 
     if errors:
         print("harness fixture check: FAIL")

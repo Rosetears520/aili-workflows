@@ -256,11 +256,12 @@ Project-specific test locations:
 - Test fixtures: TODO
 - Snapshots / golden files: TODO
 - Test reports / traces / screenshots: TODO (for example, `playwright-report/`, `test-results/`, or another project-defined path)
-- Temporary test output: TODO (prefer OS temp locations unless the project requires repository-local output)
+- Temporary test output: TODO (OS temp is allowed only for ephemeral scratch/cache data that users do not need to open, review, or reference)
 
 Rules:
 
 - Do not place new test files in the repository root unless this section explicitly allows it.
+- Unless the user explicitly requests an external or temporary-only artifact, user-visible test files, test plans, reports, traces, screenshots, generated fixtures, golden files, and verification artifacts must be written inside the repository at a project-defined path or after a placement decision.
 - Do not introduce `playwright.config.*`, `tests/e2e/`, `e2e/`, screenshots, traces, browser fixtures, or browser reports without first confirming the intended location.
 - If a new test category is introduced, ask the user for its location once, then record the chosen convention here.
 - OpenSpec test documents belong in `openspec/changes/<change-id>/test-plan.md`.

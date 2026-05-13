@@ -7,7 +7,7 @@ AILI delivery has four public modes. The mode gate is mandatory even when a back
 Use when the idea is unclear, broad, or competing options exist.
 
 - Inputs: user goal, constraints, existing context.
-- Actions: explore alternatives, identify assumptions, collect evidence needs.
+- Actions: explore alternatives, identify assumptions, collect evidence needs. When repository/code evidence is needed and the relevant files are not already known, delegate broad search to `code-scout` first and base conclusions on returned evidence anchors rather than intuition.
 - Outputs: idea brief, option list, open questions, recommended next mode.
 - Hard stop: no production code or harness file edits.
 
