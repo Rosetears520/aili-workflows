@@ -24,7 +24,7 @@ This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP mod
 2. Select the backend adapter: OpenSpec, Superpowers-style plan, custom files, or conservative auto-detection.
 3. Apply the mode gate before any work:
    - IDEATE explores options and uncertainty; do not edit production code.
-   - DEFINE produces or updates spec, questionnaire, and test document artifacts; stop before implementation until the user confirms or explicitly waives gates.
+   - DEFINE produces or updates spec, questionnaire/interview, and test document artifacts; for OpenSpec-backed changes it routes `interview.md` through `change-interviewer` and `test-plan.md` through `test-document-generator`; stop before implementation until the user confirms, explicitly waives, or explicitly accepts `Unverified` gates.
    - BUILD requires explicit approval plus a scoped implementation package, then runs automated local implementation quality gates.
    - SHIP requires full release-readiness review/repair, fresh verification evidence, and closeout before claiming ready.
 4. Use the artifact contract for user-facing output and record unknowns instead of guessing.
@@ -35,7 +35,7 @@ This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP mod
 - Only four top-level commands are valid: `/ideate`, `/define`, `/build`, `/ship`.
 - Research, questionnaire, test-plan, implementation, debugging, review, repair, and harness evolution are internal stages, not user command entrypoints.
 - Backend-specific task systems store artifacts; they do not weaken lifecycle gates.
-- Do not start BUILD from DEFINE output unless the user has confirmed the relevant spec/questionnaire/test document state or explicitly waived it.
+- Do not start BUILD from DEFINE output unless the user has confirmed the relevant spec/questionnaire/test document state, explicitly waived it, or explicitly accepted an `Unverified` gate.
 
 ## Verification
 

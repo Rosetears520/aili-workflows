@@ -25,3 +25,12 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 - No SHIP ready claim without fresh release-readiness evidence.
 - No silent scope expansion during repair.
 - No push, publish, archive, or durable memory promotion unless explicitly approved.
+
+## Change Revision Decision
+
+When review, test, or user feedback reveals a bug or adjustment after a lifecycle pass:
+
+- If the issue has the same intent, overlapping scope, and the change is not archived, keep the current change and add repair tasks plus `test-plan.md` defect/fix/retest coverage.
+- If the issue is in the same scope after SHIP but before archive, repair the current change and rerun affected review, test, and security lanes.
+- If the source change is archived, merged, or released, open a new fix change and reference the source change instead of rewriting history.
+- If the issue is about workflow, commands, skills, memory, subagents, installer, or tool policy, route through `harness-issue-triage` and then approved `harness-evolution`.
