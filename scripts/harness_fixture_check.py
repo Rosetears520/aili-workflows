@@ -22,9 +22,13 @@ REQUIRED = {
             "/build",
             "/ship",
             "code-scout",
+            "implementer",
             "code-reviewer",
             "test-engineer",
             "security-auditor",
+            "goal-mode",
+            "package-queue",
+            "external-repo-root",
             "release-readiness",
             "non-trigger",
         ],
@@ -37,9 +41,9 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "package-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance"],
         "case_key": "packet_cases",
-        "min_cases": 1,
+        "min_cases": 2,
     },
     "verification-claim-fixtures.yaml": {
         "markers": ["sufficient-evidence", "insufficient-evidence", "Unverified"],
@@ -96,6 +100,8 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
 
     if name == "command-routing-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_command_routing(cases, name))
+    if name == "subagent-dispatch-fixtures.yaml" and isinstance(cases, list):
+        errors.extend(validate_subagent_dispatch(cases, name))
 
     return errors
 
@@ -140,6 +146,47 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         build_checks = build_case.get("expected_checks", []) + build_case.get("expected_conditional_checks", [])
         if "release-readiness" in build_checks:
             errors.append(f"{name}: BUILD must not include release-readiness in any expected check list")
+        goal_cases = [
+            case
+            for case in cases
+            if isinstance(case, dict)
+            and case.get("expected_mode") == "BUILD"
+            and case.get("trigger") is True
+            and case.get("expected_execution") == "goal-mode"
+        ]
+        if not goal_cases:
+            errors.append(f"{name}: missing BUILD goal-mode trigger case")
+        else:
+            goal_case = goal_cases[0]
+            if goal_case.get("expected_package_source") != "package-queue":
+                errors.append(f"{name}: BUILD goal-mode expected_package_source must be 'package-queue'")
+            if goal_case.get("target_repo_root") != "infer-canonical-from-backend-context":
+                errors.append(f"{name}: BUILD goal-mode target_repo_root must infer canonical root from backend context")
+            if goal_case.get("cwd_authority") is not False:
+                errors.append(f"{name}: BUILD goal-mode cwd_authority must be false")
+            errors.extend(require_checks(goal_case, "queue_inputs", ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], name, "BUILD goal-mode"))
+            errors.extend(require_checks(goal_case, "expected_delegation", ["implementer"], name, "BUILD goal-mode"))
+            errors.extend(require_checks(goal_case, "expected_checks", ["code-reviewer", "test-engineer"], name, "BUILD goal-mode"))
+            errors.extend(require_checks(goal_case, "expected_conditional_checks", ["security-auditor"], name, "BUILD goal-mode"))
+            errors.extend(
+                require_checks(
+                    goal_case,
+                    "stop_conditions",
+                    [
+                        "ambiguous-target",
+                        "missing-readiness",
+                        "external-repo-root",
+                        "high-risk-gate",
+                        "scope-expansion",
+                        "unverifiable-acceptance",
+                        "unavailable-review-lane",
+                        "repair-limit",
+                    ],
+                    name,
+                    "BUILD goal-mode",
+                )
+            )
+            errors.extend(require_checks(goal_case, "non_stop_conditions", ["missing-manual-package"], name, "BUILD goal-mode"))
 
     define_case = find_trigger_case(cases, "DEFINE")
     if define_case is None:
@@ -190,6 +237,29 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
             errors.append(f"{name}: missing non-trigger case for {internal_command}")
         elif any(case.get("trigger") is not False for case in matching):
             errors.append(f"{name}: {internal_command} must remain a non-trigger")
+
+    return errors
+
+
+def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
+    errors: list[str] = []
+    goal_packets = [case for case in cases if isinstance(case, dict) and case.get("id") == "packet-build-goal-mode"]
+    if not goal_packets:
+        return [f"{name}: missing packet-build-goal-mode case"]
+
+    packet = goal_packets[0]
+    expected_scalars = {
+        "agent": "implementer",
+        "artifact_target": "package-queue",
+        "allowed_scope": "single synthesized package",
+        "edit_permission": "package-scoped",
+        "commit_allowance": "active-contract",
+    }
+    for field, expected in expected_scalars.items():
+        if packet.get(field) != expected:
+            errors.append(f"{name}: packet-build-goal-mode {field} must be {expected!r}")
+    errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval"], name, "packet-build-goal-mode"))
+    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "verification", "changed_files", "scope_boundary"], name, "packet-build-goal-mode"))
 
     return errors
 
@@ -371,6 +441,62 @@ def validate_define_artifact_contracts() -> list[str]:
     return errors
 
 
+def validate_build_goal_mode_contracts() -> list[str]:
+    errors: list[str] = []
+    required_markers = {
+        "commands/build.md": [
+            "autonomous goal mode",
+            "implementation package queue",
+            "target repository root",
+            "allowed external directories",
+            "Do not ask for manual package approval",
+        ],
+        "skills/aili-delivery-flow/SKILL.md": [
+            "references/build-goal-mode.md",
+            "resolved ready target",
+            "synthesize a package queue",
+        ],
+        "skills/aili-delivery-flow/references/lifecycle.md": [
+            "autonomous goal mode",
+            "synthesize an ordered implementation package queue",
+            "current active contract",
+            "allowed external directories",
+        ],
+        "skills/aili-delivery-flow/references/backend-routing.md": [
+            "autonomous package queue synthesis",
+            "canonicalizes the target repository root",
+            "allowed external directories",
+        ],
+        "skills/aili-delivery-flow/references/implementation-packages.md": [
+            "synthesize an ordered package queue",
+            "scoped subagent packet",
+            "missing manual package text is not a stop condition",
+        ],
+        "skills/aili-delivery-flow/references/build-goal-mode.md": [
+            "BUILD goal mode",
+            "Target and Repository Root Resolution",
+            "Package Queue Synthesis",
+            "Execution Loop",
+            "Stop Conditions",
+            "allowed external directories",
+        ],
+        "docs/harness/command-lifecycle.md": ["goal mode", "package queue"],
+        "docs/harness/aili-harness-contract.md": ["BUILD goal mode", "package queue"],
+    }
+
+    for relative, markers in required_markers.items():
+        path = ROOT / relative
+        if not path.exists():
+            errors.append(f"{relative}: missing BUILD goal-mode contract file")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for marker in markers:
+            if marker not in text:
+                errors.append(f"{relative}: missing BUILD goal-mode marker {marker!r}")
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     for name, spec in REQUIRED.items():
@@ -378,6 +504,7 @@ def main() -> int:
     errors.extend(validate_agent_permissions())
     errors.extend(validate_command_contracts())
     errors.extend(validate_define_artifact_contracts())
+    errors.extend(validate_build_goal_mode_contracts())
 
     if errors:
         print("harness fixture check: FAIL")

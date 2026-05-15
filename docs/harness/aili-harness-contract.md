@@ -20,12 +20,13 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 |---|---|---|
 | IDEATE | Explore unclear ideas and options | No production implementation. |
 | DEFINE | Produce/align spec, questions, and tests; OpenSpec interview/test artifacts route through `change-interviewer` and `test-document-generator` | Stop before build until blockers are answered, waived, or explicitly accepted as `Unverified`. |
-| BUILD | Dispatch bounded implementation packages and local quality gates | Stay inside approved scope and package boundaries; no BUILD pass without code-review/test evidence and security evidence or a skip reason. |
+| BUILD | Dispatch bounded implementation packages or synthesize a package queue from one resolved ready target, then run local quality gates | Stay inside approved scope and package boundaries; no BUILD pass without code-review/test evidence and security evidence or a skip reason. |
 | SHIP | Verify release-readiness and close out | No ready/pass claim without fresh release-readiness evidence; mark residual gaps as `Unverified`. |
 
 ## Artifact Authority
 
 - Lifecycle: `skills/aili-delivery-flow/references/lifecycle.md`.
+- BUILD goal mode: `skills/aili-delivery-flow/references/build-goal-mode.md` and `skills/aili-delivery-flow/references/implementation-packages.md`.
 - Backend adapters: `docs/harness/backend-adapters.md` and `skills/aili-delivery-flow/references/backend-routing.md`.
 - DEFINE interview/test artifacts: `skills/change-interviewer/SKILL.md`, `skills/test-document-generator/SKILL.md`, and `skills/aili-delivery-flow/references/artifact-contracts.md`.
 - Harness issue localization: `skills/harness-issue-triage/SKILL.md` and `skills/harness-issue-triage/references/*`.

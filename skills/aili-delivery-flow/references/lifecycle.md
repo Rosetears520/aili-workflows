@@ -22,12 +22,12 @@ Use when the goal is plausible but not ready to implement.
 
 ## BUILD
 
-Use when implementation is explicitly approved.
+Use when implementation is explicitly approved. A user `/build` invocation is approval to execute the resolved ready work item in autonomous goal mode unless the command text or project rules narrow that approval.
 
-- Inputs: approved scope, implementation package, acceptance criteria, forbidden scope, BUILD review lanes.
-- Actions: re-read relevant DEFINE artifacts from disk, dispatch bounded implementation work, then run local quality gates: code review, test verification, and security review when security surfaces are present.
-- Outputs: changed files, verification evidence, review findings and resolutions, skipped-lane reasons, residual risks.
-- Hard stop: pause on scope expansion, missing approval, missing package, forbidden file edits, unverifiable acceptance criteria, or unavailable required local review lanes.
+- Inputs: approved ready work item or explicit package, acceptance criteria, forbidden scope, BUILD review lanes, and any backend artifacts that define tasks or readiness. `UNVERIFIED` or waived readiness must be accepted by the current active contract, not inferred from stale conversation context.
+- Actions: re-read relevant DEFINE artifacts from disk, infer the target repository root from the active backend/change context, synthesize an ordered implementation package queue when no explicit package is supplied, dispatch bounded implementation work package-by-package, repair bounded failures, then run local quality gates: code review, test verification, and security review when security surfaces are present.
+- Outputs: target resolved, package queue summary, completed and blocked packages, changed files, verification evidence, review findings and resolutions, skipped-lane reasons, residual risks.
+- Hard stop: pause on ambiguous or missing target, missing approval/readiness evidence that is not explicitly waived by the current active contract, target repository outside the current workspace or allowed external directories without explicit approval, scope expansion, forbidden file edits, high-risk operations requiring explicit approval, unverifiable acceptance criteria, unavailable required local review lanes, or exhausted repair limits. Do not pause solely because the user omitted a manual implementation package; synthesize the queue instead.
 
 ## SHIP
 
