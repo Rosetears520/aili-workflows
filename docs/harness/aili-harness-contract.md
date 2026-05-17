@@ -21,7 +21,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 | IDEATE | Explore unclear ideas and options | No production implementation. |
 | DEFINE | Produce/align spec, questions, and tests; OpenSpec interview/test artifacts route through `change-interviewer` and `test-document-generator` | Stop before build until blockers are answered, waived, or explicitly accepted as `Unverified`. |
 | BUILD | Dispatch bounded implementation packages or synthesize a package queue from one resolved ready target, then run local quality gates | Stay inside approved scope and package boundaries; no BUILD pass without code-review/test evidence and security evidence or a skip reason. |
-| SHIP | Verify release-readiness and close out | No ready/pass claim without fresh release-readiness evidence; mark residual gaps as `Unverified`. |
+| SHIP | Verify release-readiness, run release-blocker audit, and close out | No ready/pass claim without fresh release-readiness evidence, resolved/disproven/user-or-active-contract-accepted release blockers, and explicit `Unverified` gaps. |
 
 ## Artifact Authority
 
@@ -37,7 +37,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Stop Rules
 
 - Do not rename the OpenSpec change directory without separate approval.
-- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, review, or evolve.
+- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, review, release-blocker audit, or evolve.
 - Do not modify SQLite schema, lockfiles, dependency manifests, or memory DBs in this phase.
 - Do not apply core harness edits without approved scope and verification trigger.
 

@@ -187,7 +187,7 @@ aili-workflows/
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review` 或 `/evolve` 等内部阶段命令。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
 
 ### OpenCode 设置
 

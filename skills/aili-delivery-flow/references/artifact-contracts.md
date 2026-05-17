@@ -7,7 +7,7 @@ Use the skill-internal `references/protocols/` templates as the first version of
 | IDEATE | `references/protocols/idea-brief.md`, optional research evidence pack | goal, options, assumptions, unknowns, next decision |
 | DEFINE | spec draft, alignment questionnaire/interview, acceptance test plan | scope, requirements, questions, test cases, approval state, BUILD readiness |
 | BUILD | implementation package, subagent packet/result when delegated, local review report | target files, acceptance criteria, forbidden scope, verification command, review lanes |
-| SHIP | review report, closeout report | BUILD gate status, review findings, repair result, fresh evidence, release-readiness risks, next steps |
+| SHIP | review report, closeout report | BUILD gate status, release-blocker audit target/status, review findings, finding classifications, repair result, fresh evidence, release-readiness risks, `Unverified` items, next steps |
 
 ## Output Contract
 

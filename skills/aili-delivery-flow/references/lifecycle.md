@@ -33,10 +33,10 @@ Use when implementation is explicitly approved. A user `/build` invocation is ap
 
 Use after BUILD is complete enough to evaluate for handoff, merge, release, or archive.
 
-- Inputs: implementation result, BUILD review/test/security evidence, review targets, verification commands, closeout expectations.
-- Actions: re-check evidence freshness, rerun stale or scope-affected checks, audit diff/scope/artifacts, verify release or handoff readiness, prepare closeout.
-- Outputs: BUILD gate status, release-readiness summary, final evidence, closeout report, archive/sync/memory/PR/release next steps when approved.
-- Hard stop: do not claim ready without fresh evidence, resolved or accepted blocking findings, and explicit `Unverified` items.
+- Inputs: implementation result, BUILD review/test/security evidence, review targets, release-blocker audit target or target request, named baseline/previous-release reference when requested, verification commands, closeout expectations.
+- Actions: resolve and report the release-blocker audit target, defaulting to the current resolved change or final diff when no broader target is requested; ask for a missing baseline rather than guessing; re-check evidence freshness; rerun stale or scope-affected checks; audit diff/scope/artifacts for user-impacting regressions, security or permission exposure, unsafe/destructive workflow behavior, data-loss risk, artifact inconsistency, stale or missing evidence, unresolved review/test/security findings, and unverified acceptance criteria; classify findings; verify release or handoff readiness; prepare closeout.
+- Outputs: BUILD gate status, release-blocker audit target and finding classifications, release-readiness summary, final evidence, closeout report, archive/sync/memory/PR/release next steps when approved.
+- Hard stop: do not claim ready without fresh evidence, resolved/disproven/explicitly user-or-active-contract-accepted `release-blocking` findings, a non-guessed baseline when baseline comparison is requested, and explicit `Unverified` items.
 
 ## Change Revision Decision
 

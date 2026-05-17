@@ -30,6 +30,7 @@ REQUIRED = {
             "package-queue",
             "external-repo-root",
             "release-readiness",
+            "release-blocker-audit",
             "non-trigger",
         ],
         "case_key": "cases",
@@ -46,7 +47,7 @@ REQUIRED = {
         "min_cases": 2,
     },
     "verification-claim-fixtures.yaml": {
-        "markers": ["sufficient-evidence", "insufficient-evidence", "Unverified"],
+        "markers": ["sufficient-evidence", "insufficient-evidence", "Unverified", "release-blocking"],
         "case_key": "cases",
         "min_cases": 3,
     },
@@ -100,6 +101,8 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
 
     if name == "command-routing-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_command_routing(cases, name))
+    if name == "verification-claim-fixtures.yaml" and isinstance(cases, list):
+        errors.extend(validate_verification_claims(cases, name))
     if name == "subagent-dispatch-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_subagent_dispatch(cases, name))
 
@@ -224,19 +227,50 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
             require_checks(
                 ship_case,
                 "expected_checks",
-                ["code-reviewer", "test-engineer", "release-readiness"],
+                ["code-reviewer", "test-engineer", "release-readiness", "release-blocker-audit"],
                 name,
                 "SHIP",
             )
         )
         errors.extend(require_checks(ship_case, "expected_conditional_checks", ["security-auditor"], name, "SHIP"))
 
-    for internal_command in ["/research", "/review"]:
+    for internal_command in ["/research", "/review", "/release-blocker-audit"]:
         matching = [case for case in cases if isinstance(case, dict) and case.get("input", "").startswith(internal_command)]
         if not matching:
             errors.append(f"{name}: missing non-trigger case for {internal_command}")
         elif any(case.get("trigger") is not False for case in matching):
             errors.append(f"{name}: {internal_command} must remain a non-trigger")
+
+    release_blocker_cases = [
+        case
+        for case in cases
+        if isinstance(case, dict) and case.get("expected_mode") == "SHIP" and case.get("trigger") is True
+    ]
+    if release_blocker_cases:
+        ship_case = release_blocker_cases[0]
+        errors.extend(require_checks(ship_case, "expected_checks", ["release-blocker-audit"], name, "SHIP release-blocker audit"))
+
+    return errors
+
+
+def validate_verification_claims(cases: list, name: str) -> list[str]:
+    errors: list[str] = []
+    release_blocker_cases = [
+        case
+        for case in cases
+        if isinstance(case, dict) and case.get("id") == "release-blocking-unresolved"
+    ]
+    if not release_blocker_cases:
+        return [f"{name}: missing release-blocking-unresolved case"]
+
+    case = release_blocker_cases[0]
+    if case.get("expected") != "reject":
+        errors.append(f"{name}: release-blocking-unresolved expected must be 'reject'")
+    evidence = case.get("evidence")
+    if not isinstance(evidence, list) or not contains_marker(evidence, "release-blocking"):
+        errors.append(f"{name}: release-blocking-unresolved evidence must mention 'release-blocking'")
+    if "ready" not in str(case.get("claim", "")):
+        errors.append(f"{name}: release-blocking-unresolved claim should exercise a ready claim")
 
     return errors
 
