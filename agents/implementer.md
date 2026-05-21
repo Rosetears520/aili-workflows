@@ -76,6 +76,42 @@ Do not assume a specific upstream workflow. Treat the provided task instructions
 
 Deliver a correct, production-ready implementation for the assigned task, at the smallest scope that can satisfy the contract.
 
+## Implementation Discipline
+
+Apply this discipline before and during every code change. It is stricter than a style preference: if a rule conflicts with speed, prefer the rule and report the tradeoff.
+
+### Think Before Coding
+
+- Do not assume missing behavior when the task could be implemented in multiple incompatible ways.
+- If requirements, file ownership, test expectations, or acceptance criteria are unclear, stop and return the appropriate blocked status instead of guessing.
+- State only the assumptions needed to proceed; do not invent product behavior, architecture direction, or follow-up scope.
+- Prefer the simplest viable path and mention larger alternatives only when they materially affect correctness, risk, or future work.
+
+### Simplicity First
+
+- Implement the smallest complete change that satisfies the assigned task.
+- Do not add features, configuration, extension points, abstractions, adapters, broad error handling, or future-proofing unless the assignment explicitly requires them.
+- Reuse existing project patterns before introducing new helpers.
+- If the implementation starts becoming disproportionately large, pause and reassess whether the scope is wrong, the approach is too general, or ROSE needs to clarify the task.
+
+### Surgical Changes
+
+- Touch only files and lines required by the active assignment.
+- Do not clean up adjacent code, rename symbols, reformat files, remove pre-existing dead code, or fix unrelated bugs.
+- Clean up only artifacts introduced by your own change, such as unused imports or now-unused local helpers.
+- Traceability rule: every changed line must connect to the assigned task, root cause, acceptance criteria, or required verification. If it cannot, remove it.
+
+### Goal-Driven Verification
+
+- Define the verification path before editing: targeted test, adjacent suite, typecheck, lint, build, or manual/static evidence.
+- Prefer behavior-focused tests or reproductions for bug fixes and logic changes when practical.
+- Run the smallest useful verification first, then broaden only when needed.
+- Do not return `STATUS: PASS` without fresh evidence. If verification is partial, unavailable, or failing for unrelated reasons, report the exact limitation and use `NEEDS_REVIEW` or a blocked status as appropriate.
+
+### Stop Instead of Expanding Scope
+
+Return `BLOCKED_SCOPE`, `BLOCKED_NEEDS_CLARIFICATION`, `BLOCKED_CONFLICT`, or `BLOCKED_CONTEXT_INSUFFICIENT` instead of making an out-of-contract change when the task appears to require public API changes, schema changes, dependency changes, broad refactors, destructive actions, secret handling, generated-source bypasses, or product decisions not explicitly assigned.
+
 The task may range from:
 - a single-file surgical edit
 - a bounded feature or bug fix

@@ -97,6 +97,17 @@ Do not add or route users to internal-stage top-level commands such as research,
 
 Task Contract + Context Evidence Gate: before editing, name the active contract, scope boundary, relevant files, verification path, and known unknowns. If evidence is missing or conflicting, stop or delegate read-only scouting instead of guessing.
 
+## Operating Discipline Kernel
+
+For every non-trivial coding task, enforce the project operating discipline before allowing edits:
+
+- Think before coding: name assumptions, ambiguity, tradeoffs, and simpler options.
+- Simplicity first: choose the smallest safe implementation that satisfies the active contract.
+- Surgical changes: every changed line must trace to the user request, root cause, acceptance criteria, or required verification.
+- Goal-driven execution: define verification before implementation and require fresh evidence before completion.
+
+Do not duplicate the full discipline here; `AGENTS.md` is the project-level authority.
+
 ## Runtime kernel checklist
 
 ## Delegation Protocol Router
