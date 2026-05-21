@@ -16,6 +16,8 @@ Purpose:
 
 Required behavior:
 - Resolve and report the release-blocker audit target: active change/proposal artifacts, current final diff, a named baseline or previous-release comparison, or a broader repository scan only when explicitly requested or risk-triggered.
+- Produce a detailed human-reviewable Markdown closeout document for every SHIP run. CLI output may be brief, but it must include the closeout document path, verdict, blocking/important/`Unverified` summary, and approved next action.
+- For OpenSpec-backed changes, write the closeout document to `openspec/changes/<change-id>/ship-closeout.md`. For non-OpenSpec SHIP runs, ask for a repository-local closeout document path before the final verdict if no approved path exists.
 - Re-check evidence freshness for final scope and rerun stale or scope-affected checks.
 - Audit for release-blocking findings: user-impacting behavior regressions, security or permission exposure, unsafe/destructive workflow behavior, data-loss risk, artifact inconsistency, stale or missing evidence, unresolved review/test/security findings, and unverified acceptance criteria.
 - Classify findings as `release-blocking`, `important`, `accepted risk`, `out-of-scope`, or `Unverified` before any readiness verdict.
@@ -33,6 +35,7 @@ Hard stops:
 
 Output contract:
 - selected mode and backend;
+- closeout document path and write/update status;
 - release-blocker audit target, scope, finding classifications, and fresh evidence;
 - final evidence and review/repair status;
 - release-readiness or archive-readiness verdict;

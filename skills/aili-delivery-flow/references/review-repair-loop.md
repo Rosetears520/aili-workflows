@@ -19,7 +19,7 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 4. Audit release-blocker concerns: user-impacting regressions, security or permission exposure, unsafe/destructive workflow behavior, data-loss risk, documentation or artifact inconsistency, unresolved findings, rollback plan, commit/PR/release readiness, approval state, and unverified acceptance criteria.
 5. Classify findings as `release-blocking`, `important`, `accepted risk`, `out-of-scope`, or `Unverified`. Resolve, disprove with fresh evidence, or obtain explicit risk acceptance from the user or current active contract owner for every `release-blocking` finding before a ready verdict.
 6. Apply only approved in-scope repairs and rerun affected checks.
-7. Produce closeout with audited scope, evidence, remaining risks, `Unverified` items, and next steps.
+7. Produce a detailed repository-local Markdown closeout document with audited scope, evidence, existing feature impact, remaining risks, `Unverified` items, recommendation, and next steps. The CLI response may be concise, but it must include the document path and verdict summary.
 
 ## Hard Gates
 
@@ -29,6 +29,7 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 - No baseline comparison from an inferred previous release; ask for the baseline or mark that lane `Open Question` / `Unverified`.
 - No exhaustive whole-codebase no-bugs claim; report scanned scope, skipped lanes, evidence limits, and residual `Unverified` items.
 - No silent scope expansion during repair.
+- No chat-only SHIP closeout; every SHIP run must write or update the required repository-local Markdown closeout document, or explicitly block/mark `Unverified` if the document path or write is unavailable.
 - No push, publish, archive, or durable memory promotion unless explicitly approved.
 
 ## Change Revision Decision
