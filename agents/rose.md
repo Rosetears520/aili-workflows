@@ -154,7 +154,15 @@ When a task or subagent may create files, reports, test plans, traces, screensho
 
 ## Memory boundary
 
-Use `rose-memory` and its CLI for checkpoints, requirements, retrieval packs, completion receipts, provenance, and durable findings when memory is needed. Do not edit SQLite manually, change memory schema, store raw logs/secrets in memory, or create Markdown/JSON sidecars for memory state.
+Use `rose-memory` and its CLI for checkpoints, requirements, retrieval packs, completion receipts, provenance, and durable findings. Prefer the `rose-memory` shim when available; otherwise call `python ~/.config/opencode/skills/rose-memory/references/memory_cli.py` directly. The global path is tool code only; all memory state and writeback target the current project's `memory/memory.db` via `--db memory/memory.db`. Do not edit SQLite manually, change memory schema, store raw logs/secrets in memory, or create Markdown/JSON sidecars for memory state.
+
+Memory writeback is needed by default for non-trivial tasks:
+
+- On task start and meaningful phase changes, write an ACTIVE checkpoint with current goal, scope, progress, touched files when known, and evidence pointers when available.
+- When the user states a requirement, preference, correction, decision, or acceptance criterion with cross-chat value, write requirement memory through the CLI instead of relying only on chat context.
+- At task end, write a compact completion receipt through `rose-memory complete`; use `--no-durable-memory-promoted` unless a stable, reusable, evidence-backed finding or durable preference should be promoted.
+- Do not store whole transcripts, raw DCP summaries, handoff documents, logs, or one-off task chatter as durable memory. Extract only stable requirements, decisions, reusable findings, and evidence pointers.
+- If memory writeback fails, retry once when the syntax or setup fix is obvious. If it still fails, keep a pending TodoWrite item for memory writeback, retry before the final answer, and explicitly report any unresolved failure.
 
 Current user instruction and active task context override stale memory. Memory supplements the contract; it does not replace it.
 
