@@ -6,8 +6,8 @@ Use the skill-internal `references/protocols/` templates as the first version of
 |---|---|---|
 | IDEATE | `references/protocols/idea-brief.md`, optional research evidence pack | goal, options, assumptions, unknowns, next decision |
 | DEFINE | spec draft, alignment questionnaire/interview, acceptance test plan | scope, requirements, questions, test cases, approval state, BUILD readiness |
-| BUILD | implementation package, subagent packet/result when delegated, local review report | target files, acceptance criteria, forbidden scope, verification command, review lanes |
-| SHIP | review report, required repository-local Markdown closeout report | closeout document path, BUILD gate status, release-blocker audit target/status, review findings, finding classifications, repair result, fresh evidence, existing feature impact, release-readiness risks, `Unverified` items, next steps |
+| BUILD | implementation package, subagent packet/result when delegated, compact evidence pack when evidence is noisy, local review report | target files, acceptance criteria, forbidden scope, verification command, review lanes, skipped checks, `Unverified` items |
+| SHIP | review report, compact evidence pack when evidence is noisy, required repository-local Markdown closeout report | closeout document path, BUILD gate status, release-blocker audit target/status, review findings, finding classifications, repair result, fresh evidence, existing feature impact, release-readiness risks, `Unverified` items, next steps |
 
 ## Output Contract
 

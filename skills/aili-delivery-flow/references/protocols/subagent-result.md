@@ -65,6 +65,10 @@ Small read-only scouts may return a shorter result, but they must still distingu
 - unknowns / not found items
 - next reads
 
+## Compact evidence packs
+
+For noisy logs, broad search output, long diffs, multi-source review evidence, or verbose test output, use or cite `skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md` instead of pasting raw output. The result must preserve source, scope, freshness, result, key observations, minimal failure excerpt when relevant, raw evidence access or rerun command, and remaining `Unverified` items.
+
 ## Exclusions
 
-Do not include secrets, credentials, cookies, tokens, raw logs, long grep dumps, full file contents, unrelated exploratory output, or implementation changes outside the packet.
+Do not include secrets, credentials, cookies, tokens, raw logs, long grep dumps, full file contents, unrelated exploratory output, or implementation changes outside the packet. Full logs may be shown only when the user explicitly requests them and the content has been checked as safe to show.

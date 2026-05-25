@@ -64,6 +64,7 @@ Default locations:
 
 - Target / scope:
 - Fresh evidence:
+- Compact evidence packs:
 - Blocking findings:
 - Important findings:
 - Accepted-risk findings:
@@ -74,6 +75,7 @@ Default locations:
 
 - Verification run:
 - Evidence anchors:
+- Raw evidence access / rerun commands（prefer rerun commands; redact/exclude secrets and do not create raw artifacts without explicit approval）:
 - 未运行的检查及原因：
 - 证据新鲜度说明：
 

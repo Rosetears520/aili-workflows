@@ -32,11 +32,11 @@ Subagent task packet:
 - Allowed scope: exact files, directories, systems, or evidence sources the subagent may inspect or edit.
 - Forbidden scope: files, commands, subsystems, or decisions that are out of bounds.
 - Edit permission: `read-only`, `may edit listed files`, or `ask before edits`.
-- Evidence required: anchors, tests, logs, screenshots, command summaries, or inspected sections required for ROSE to reconcile.
-- Expected return format: normally the canonical `subagent-result.md` format or a named compact variant.
-- Placement / artifact rules: where generated artifacts go, or `no files`.
+- Evidence required: anchors, tests, compact evidence packs, command summaries, or inspected sections required for ROSE to reconcile; request minimal key failure excerpts instead of raw logs.
+- Expected return format: normally the canonical `subagent-result.md` format, `compact-evidence-pack.md`, or a named compact variant.
+- Placement / artifact rules: where generated artifacts go, or `no files`; raw evidence artifacts require an explicit repository-local placement and are not created by default.
 - Coverage expectations: what must be checked before returning.
-- Known exclusions: secrets, raw logs, full file dumps, unrelated cleanup, nested agents, commits, pushes.
+- Known exclusions: secrets, raw logs, long dumps, full file dumps, unrelated cleanup, nested agents, commits, pushes.
 - Stop conditions: blockers, conflicting evidence, missing permissions, unsafe ambiguity, or scope expansion.
 
 ## Hard rules

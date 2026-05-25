@@ -18,6 +18,7 @@ REQUIRED_FILES = [
     "skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
     "skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
     "skills/aili-delivery-flow/references/protocols/subagent-result.md",
+    "skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md",
 ]
 
 CONTENT_CHECKS = {
@@ -112,6 +113,25 @@ CONTENT_CHECKS = {
         "VERIFICATION EVIDENCE",
         "STOP CONDITIONS HIT",
         "not authority",
+    ],
+    "skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md": [
+        "Compact evidence pack:",
+        "Evidence id:",
+        "Source:",
+        "Scope:",
+        "Freshness:",
+        "Result:",
+        "Exit code:",
+        "Key observations:",
+        "Key failure excerpt:",
+        "Raw evidence access:",
+        "Unverified items:",
+        "Compression is not proof by itself",
+        "Do not paste full raw logs",
+        "secrets",
+        "credentials",
+        "tokens",
+        "production-sensitive data",
     ],
 }
 
