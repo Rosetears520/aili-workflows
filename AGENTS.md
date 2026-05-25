@@ -278,7 +278,8 @@ Git is the safety net for AI-assisted changes.
 - Read-only tasks do not require a branch.
 - Any task that writes files must not work directly on `main`, `master`, or `trunk`.
 - For small, local changes, create or use a task branch in the current working tree.
-- For large, risky, experimental, multi-file, multi-session, parallel-agent, or dirty-workspace changes, use a task branch in a separate git worktree.
+- For large, risky, experimental, multi-file, multi-session, or parallel-agent changes, use a task branch in a separate git worktree.
+- If the current working tree has unrelated uncommitted changes, stop and ask the user how to proceed before writing files. Offer clear choices: continue in the current working tree and accept mixing risk, create/use a separate worktree, or wait for the user to commit/stash/clean the existing changes. Do not choose a separate worktree automatically unless the user already approved that workflow in the current task.
 - If already on a non-main branch, confirm it belongs to the current task before editing. If it is unrelated, create a new task branch or worktree.
 
 Suggested branch names:
@@ -309,10 +310,24 @@ Before committing:
 
 ### Worktree Policy
 
-Use branch + worktree when:
+Ask before using branch + worktree when:
 
 - the user asks not to pollute the current branch;
 - the current working tree has unrelated uncommitted changes;
+
+When unrelated uncommitted changes are present, ask the user to choose before writing files. Recommended options:
+
+```text
+A. Continue in the current working tree and accept mixing risk.
+B. Create/use a separate worktree.
+C. Pause while the existing changes are committed, stashed, or cleaned by the user.
+```
+
+Do not auto-select option B unless the user pre-approved isolated worktree handling for the current task.
+
+Use branch + worktree without an extra dirty-workspace question when:
+
+- the user explicitly chooses or requests an isolated worktree;
 - multiple agents or implementation approaches will run in parallel;
 - the task is broad, risky, experimental, or likely to span multiple sessions;
 - the task touches many files or crosses multiple subsystems.

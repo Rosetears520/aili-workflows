@@ -22,7 +22,7 @@ Before editing:
 2. Identify the current branch.
 3. If the current branch is `main`, `master`, or `trunk`, create and switch to a task branch before editing.
 4. If the current branch is a non-main branch but is unrelated to the current task, create and switch to a new task branch.
-5. If the working tree contains unrelated uncommitted changes, use a separate worktree instead of mixing changes in the current directory.
+5. If the working tree contains unrelated uncommitted changes, stop and ask the user how to proceed before writing files. Offer: continue in the current working tree and accept mixing risk, create/use a separate worktree, or pause while the user commits/stashes/cleans the existing changes. Do not choose a separate worktree automatically unless the user already approved that workflow in the current task.
 
 Branch naming:
 - `feature/<short-slug>` for features
@@ -38,7 +38,7 @@ Small changes:
 
 Large or risky changes:
 - Use a task branch in a separate git worktree.
-- This includes multi-file refactors, migrations, experiments, parallel subagent work, multi-session work, dirty workspaces with unrelated changes, or any request to avoid polluting the current branch.
+- This includes multi-file refactors, migrations, experiments, parallel subagent work, multi-session work, or any request to avoid polluting the current branch. For dirty workspaces with unrelated changes, ask the user first and follow their choice.
 - Prefer a sibling directory: `../<repo>-<task-slug>`.
 - Use project-local `.worktrees/<task-slug>` only if `.worktrees/` is ignored in that downstream project; do not add `.worktrees/` to this workflow repository just because another project uses worktrees.
 - Create the isolated branch and checkout together with `git worktree add -b <type>/<task-slug> ../<repo>-<task-slug> <base-branch>`.
