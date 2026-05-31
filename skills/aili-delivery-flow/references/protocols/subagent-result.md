@@ -6,7 +6,7 @@ Subagent output is evidence for ROSE to reconcile, not authority. Separate facts
 
 ```text
 TRACE ID:
-STATUS: PASS | NEEDS_REVISION | BLOCKED | PARTIAL | NOT_FOUND
+STATUS: DONE | NEEDS_REVISION | BLOCKED | PARTIAL | NOT_FOUND
 CONFIDENCE: high | medium | low
 SUMMARY:
 
@@ -55,6 +55,8 @@ STOP CONDITIONS HIT:
 - Inferences must state the evidence basis and risk.
 - Recommendations are proposals only; ROSE may accept, reject, or revise them after reading the target files and running verification.
 - Unknowns remain `Unknown`, `Open Question`, or `Unverified`; do not convert them into facts.
+- `STATUS: DONE` means the worker completed its assigned packet and returned evidence. It is not a final PASS/FAIL/ready verdict for the package or change.
+- Workers must not claim final PASS, final FAIL, or final `Unverified` status. ROSE owns final reconciliation, progress-ledger entries, and user-facing acceptance judgment.
 
 ## Compact scout variant
 

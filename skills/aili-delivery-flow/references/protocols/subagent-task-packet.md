@@ -29,6 +29,7 @@ Subagent task packet:
 - Goal: one bounded outcome.
 - Context: only the facts needed to start; include current user decisions when relevant.
 - Active contract / source artifacts: paths to specs, tasks, diffs, issues, or docs that define scope.
+- Work package type: classify as implementation, scout, review, test, security, debug, or documentation so ROSE can reconcile lanes independently.
 - Allowed scope: exact files, directories, systems, or evidence sources the subagent may inspect or edit.
 - Forbidden scope: files, commands, subsystems, or decisions that are out of bounds.
 - Edit permission: `read-only`, `may edit listed files`, or `ask before edits`.
@@ -43,5 +44,8 @@ Subagent task packet:
 
 - Subagents do not spawn subagents unless a future approved contract explicitly changes orchestration rules.
 - Read-heavy delegation is preferred; write-heavy parallel work requires isolated, non-overlapping file ownership.
+- Non-trivial repository work is subagent-first unless the current task explicitly opts out; clear paths, short context, and DCP summaries are not opt-outs.
+- Worker increments are dynamically sized by verifiability, reviewability, lack of parallel conflicts, and clean handoff boundaries.
+- Workers return compact reports and evidence only. They do not write `progress.txt` and do not issue final PASS/FAIL/`Unverified` judgments.
 - A subagent packet is a scope boundary, not a license to broaden work.
 - ROSE remains responsible for reconciliation, verification judgment, and final acceptance.

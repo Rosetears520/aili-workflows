@@ -54,6 +54,7 @@ aili-workflows/
 │   ├── idea-refine/
 │   ├── incremental-implementation/
 │   ├── ios-application-dev/
+│   ├── mature-project-pattern-research/
 │   ├── minimax-docx/
 │   ├── minimax-pdf/
 │   ├── minimax-xlsx/
@@ -110,6 +111,7 @@ aili-workflows/
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
+| `mature-project-pattern-research` | 在 IDEATE 或普通聊天中研究成熟公开项目的 prior art，输出来源、成熟度信号、可借鉴/不推荐模式、风险、不确定性和下一步决策 |
 | `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |

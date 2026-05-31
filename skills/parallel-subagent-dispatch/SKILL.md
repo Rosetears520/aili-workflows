@@ -11,17 +11,19 @@ metadata:
 
 ## Purpose
 
-Use subagents when delegation preserves MainAgent context or when separate work packages can proceed independently and return evidence for ROSE to reconcile.
+Use subagents when delegation preserves MainAgent context, when separate work packages can proceed independently and return evidence for ROSE to reconcile, or when a non-trivial repository task enters the subagent-first runtime path.
 
 This skill adapts Superpowers-style parallel dispatch discipline to this repository's OpenCode model: ROSE remains the primary orchestrator, subagents receive precise task packets, and no persona delegates to another persona.
 
 ## When to Use
 
-Use this skill for context-saving dispatch and parallel dispatch.
+Use this skill for context-saving dispatch, parallel dispatch, and subagent-first routing of non-trivial repository work.
+
+Pure conversation and explicit current-task subagent opt-out may stay direct. A clear target, exact path, short context, or DCP summary is not a direct-work reason by itself.
 
 Use a single read-only subagent, especially `code-scout`, even when there is only one work package, if doing the work in MainAgent would pollute context with broad search, large grep output, repeated file reads, logs, or exploratory dead ends.
 
-For ROSE runtime work, this is mandatory when the direct allowlist does not apply and delegation would materially save MainAgent context.
+For ROSE runtime work, this is mandatory when the direct allowlist does not apply. ROSE remains Supervisor; workers return compact reports and evidence, not final PASS/FAIL/`Unverified` judgments.
 
 Good single-subagent uses:
 - residual marker scans across many files
@@ -39,7 +41,7 @@ Good single-subagent uses:
 
 Use parallel subagents when there are two or more independent work packages, such as:
 
-- code review, security audit, and test analysis on the same completed diff
+- code review and test analysis on the same completed diff; run the security lane independently when the changed surface includes auth, permissions, secrets, shell/installers, dependencies, network, storage, or other security-sensitive behavior
 - separate root-cause investigations in unrelated subsystems
 - independent documentation, test, and implementation checks that do not edit the same files
 - research tasks where each subagent can inspect a distinct area and return evidence
@@ -57,7 +59,7 @@ Do not dispatch in parallel when:
 - tasks share mutable state or edit the same files
 - one task depends on the result of another
 - the work requires a single coherent design decision before implementation
-- the task is small enough for one agent to handle directly
+- the task is an immediate tiny pure-conversation answer with no repository read, edit, or verification obligation
 - the user asked for one specific persona or a sequential investigation
 
 Non-trigger prompt:
@@ -79,7 +81,7 @@ Search evidence is a map. The editing, reviewing, testing, securing, or document
 
 ## Mandatory Dispatch Rule
 
-Dispatch when expected MainAgent context cost is greater than subagent overhead.
+Dispatch non-trivial repository work by default. Also dispatch when expected MainAgent context cost is greater than subagent overhead.
 
 ROSE MUST use a read-only subagent when likely required evidence includes:
 - 3+ relevant files
@@ -96,16 +98,17 @@ ROSE MUST use a read-only subagent when likely required evidence includes:
 - independent review or coverage assessment
 
 ROSE may skip dispatch only when:
-- one exact file/symbol is already known
-- the task can be completed by reading one short file section
 - the result is purely conversational
-- the user needs an immediate tiny answer
-- the subagent would need to write overlapping files
+- the user gives an explicit current-task subagent opt-out
+- the user needs an immediate tiny answer, meaning pure conversation only and no repository work
+- parallel subagents would need to write overlapping files; avoid parallel dispatch and use sequential/scoped delegation, or stop if safe ownership cannot be established
 - the work satisfies the direct allowlist in `skills/aili-delivery-flow/references/direct-vs-delegated-work.md`
 
-If ROSE skips delegation for a non-trivial task, it must state why the direct allowlist applies and why delegation would not add material evidence or context savings.
+If ROSE skips delegation for a non-trivial task, it must state the direct opt-out or pure-conversation reason and the remaining safety/evidence basis. Exact file knowledge, short context, or DCP summaries do not justify skipping dispatch.
 
 Read-heavy delegation is preferred. Write-heavy parallel delegation requires explicit isolation through branch/worktree and non-overlapping file ownership.
+
+Implementation worker increments are dynamic: size them by verifiability, reviewability, absence of parallel edit conflicts, and clean handoff boundaries rather than a fixed number of files.
 
 ## Independence Check
 

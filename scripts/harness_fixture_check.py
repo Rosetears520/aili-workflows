@@ -37,7 +37,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "skill-routing-fixtures.yaml": {
-        "markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "trigger", "non-trigger"],
+        "markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "trigger", "non-trigger"],
         "case_key": "cases",
         "min_cases": 6,
     },
@@ -101,6 +101,8 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
 
     if name == "command-routing-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_command_routing(cases, name))
+    if name == "skill-routing-fixtures.yaml" and isinstance(cases, list):
+        errors.extend(validate_skill_routing(cases, name))
     if name == "verification-claim-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_verification_claims(cases, name))
     if name == "subagent-dispatch-fixtures.yaml" and isinstance(cases, list):
@@ -124,6 +126,34 @@ def require_checks(case: dict, field: str, required: list[str], name: str, case_
     for required_check in required:
         if required_check not in checks:
             errors.append(f"{name}: {case_id} {field} missing {required_check!r}")
+    return errors
+
+
+def validate_skill_routing(cases: list, name: str) -> list[str]:
+    errors: list[str] = []
+    mature_cases = {
+        case.get("id"): case
+        for case in cases
+        if isinstance(case, dict) and case.get("skill") == "mature-project-pattern-research"
+    }
+    expected_cases = {
+        "mature-project-prior-art": ("trigger", "mature public project patterns"),
+        "mature-project-chinese-others": ("trigger", "看看别人怎么做"),
+        "mature-project-github-others": ("trigger", "GitHub 上别人怎么做"),
+        "mature-project-look-others": ("trigger", "look at how others do it"),
+        "mature-project-reference-projects": ("trigger", "reference mature projects"),
+        "mature-project-local-review": ("non-trigger", "local code implementation"),
+        "mature-project-github-issue-pr-triage": ("non-trigger", "GitHub issue and PR"),
+    }
+    for case_id, (expected, input_marker) in expected_cases.items():
+        case = mature_cases.get(case_id)
+        if case is None:
+            errors.append(f"{name}: missing {case_id} case for mature-project-pattern-research")
+        elif case.get("expected") != expected:
+            errors.append(f"{name}: {case_id} expected must be {expected!r}")
+        elif input_marker not in str(case.get("input", "")):
+            errors.append(f"{name}: {case_id} input must contain {input_marker!r}")
+
     return errors
 
 

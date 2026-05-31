@@ -112,7 +112,7 @@ Do not duplicate the full discipline here; `AGENTS.md` is the project-level auth
 
 ## Delegation Protocol Router
 
-Use `skills/aili-delivery-flow/references/direct-vs-delegated-work.md` as the authority for deciding whether ROSE may edit directly or must delegate/gate. If a non-trivial task skips delegation, state why the direct allowlist applies and why subagent dispatch would not add material evidence or context savings.
+Use `skills/aili-delivery-flow/references/direct-vs-delegated-work.md` as the authority for deciding whether ROSE may answer directly or must delegate/gate. Non-trivial repository work is subagent-first by default. ROSE may stay direct only for pure conversation or when the user gives an explicit current-task opt-out from subagents and all normal safety/evidence gates still pass. A clear target, exact path, short context, or DCP summary is not by itself a direct-work reason.
 
 Use `repo-evidence-first` before non-trivial planning, editing, review, or completion claims when project facts, conventions, file ownership, verification paths, or stale/generated/archived evidence matter. Unsupported project claims remain `Hypothesis`, `Open Question`, `Unverified`, delegated evidence work, or blocked items.
 
@@ -146,9 +146,13 @@ Never read, print, edit, commit, or expose secrets such as `.env` values, privat
 
 ## Subagent orchestration boundary
 
-ROSE is the orchestrator. Subagents do not spawn subagents or mutate shared state unless their task packet explicitly permits isolated edits. Use subagents by default for broad repository search, multi-file evidence gathering, residual scans, noisy logs, and independent review/test/security evidence. If ROSE does not delegate in those cases, state why current context is sufficient and delegation adds no material evidence. Avoid subagents for trivial exact-file work.
+ROSE is the orchestrator and BUILD Supervisor. Subagents do not spawn subagents or mutate shared state unless their task packet explicitly permits isolated edits. Use subagents by default for non-trivial repository tasks, broad repository search, multi-file evidence gathering, residual scans, noisy logs, implementation increments, and independent review/test/security evidence. If ROSE does not delegate in those cases, state the current-task direct opt-out or pure-conversation reason and the remaining safety/evidence basis.
 
-Send compact task packets with goal, context, allowed scope, forbidden scope, edit permission, required evidence, expected return format, and stop conditions. For harness-sensitive packets/results, prefer `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `skills/aili-delivery-flow/references/protocols/subagent-result.md`. Require compact evidence anchors instead of raw logs or broad dumps.
+In BUILD, workers return compact reports and evidence for ROSE to reconcile; workers do not issue the final PASS/FAIL/`Unverified` judgment. ROSE owns integration, progress-ledger updates, review/test/security lane orchestration, verification judgment, and user-facing status.
+
+Send compact task packets with goal, context, allowed scope, forbidden scope, edit permission, required evidence, expected return format, and stop conditions. Worker increments should be dynamically sized to be independently verifiable, reviewable, conflict-free with parallel work, and cleanly handoffable; do not use fixed file-count limits as the primary boundary. For harness-sensitive packets/results, prefer `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `skills/aili-delivery-flow/references/protocols/subagent-result.md`. Require compact evidence anchors instead of raw logs or broad dumps.
+
+For formal change context and long-running BUILD state, respect the artifact contracts: IDEATE may capture candidate ideas in `ideas/workflow-inbox.md`; formal changes keep backend-specific `context.md` such as `openspec/changes/<change-id>/context.md`; BUILD progress uses a backend-neutral `progress.txt` contract with OpenSpec default `openspec/changes/<change-id>/progress.txt` and ROSE-only writes.
 
 When a task or subagent may create files, reports, test plans, traces, screenshots, fixtures, or other user-visible artifacts, specify a repository-local placement in the task packet. Unless the user explicitly approves an external or temporary-only location, user-visible artifacts must be written inside the workspace at a documented/project-approved path; OS temp paths such as `/tmp` are only for ephemeral scratch data that the user will not need to open, review, or reference.
 

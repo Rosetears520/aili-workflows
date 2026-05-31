@@ -1,6 +1,6 @@
 # BUILD Goal Mode
 
-BUILD goal mode makes `/build` an autonomous execution entrypoint for the current ready work item. It is modeled on long-running goal workflows: the command starts work, ROSE keeps driving packages until completion or a real stop condition, and the user receives the aggregate result instead of repeated package-approval prompts.
+BUILD goal mode makes `/build` an autonomous execution entrypoint for the current ready work item. It is modeled on long-running goal workflows: the command starts work, ROSE acts as BUILD Supervisor, dispatches dynamic worker increments, keeps driving packages until completion or a real stop condition, and the user receives the aggregate result instead of repeated package-approval prompts.
 
 Goal mode does not bypass tool permissions, repository rules, high-risk gates, or verification requirements.
 
@@ -50,7 +50,20 @@ Each package must include:
 - repair limit and rollback or pause condition;
 - whether commits are allowed by the active contract.
 
-Preserve task dependencies. Prefer packages small enough to review and repair independently.
+Preserve task dependencies. Prefer packages small enough to review and repair independently. Worker increments are dynamic: split by verifiable acceptance slice, clean ownership boundary, no parallel edit conflict, and clean handoff point rather than fixed file counts.
+
+## Supervisor Harness
+
+During BUILD, ROSE remains Supervisor and owns final status. Workers may implement, inspect, review, test, or audit only inside their task packet. Worker results are compact evidence for reconciliation; they never decide final PASS/FAIL/`Unverified` status for the package or change.
+
+ROSE must maintain the active context and progress ledgers when the backend contract requires them:
+
+- read backend-specific `context.md` before dispatching implementation and before claiming BUILD/SHIP readiness;
+- for OpenSpec, use `openspec/changes/<change-id>/context.md` and `openspec/changes/<change-id>/progress.txt`;
+- for non-OpenSpec, resolve repository-local context/progress placement through the backend adapter or ask once before writing;
+- only ROSE writes/appends `progress.txt`; workers return reports and evidence references for ROSE to reconcile;
+- ledger entries record objective, worker dispatches, evidence, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action;
+- never put secrets, raw logs, full transcripts, full file contents, or long dumps in `context.md` or `progress.txt`.
 
 ## Execution Loop
 
@@ -58,11 +71,11 @@ For each package:
 
 1. Refresh relevant artifacts and repository state.
 2. Confirm scope boundaries from evidence.
-3. Delegate broad/non-trivial implementation to `implementer` or edit directly only when direct-work rules apply.
+3. Delegate non-trivial implementation to `implementer` using dynamically sized worker increments, or edit directly only when direct-work rules apply.
 4. Run focused verification.
-5. Run local review lanes: code review, test verification, and security review when security surfaces are present.
+5. Run independent local review lanes: code review and test verification for non-trivial BUILD work, plus security review when security-sensitive surfaces are present; record explicit skip reasons.
 6. Apply bounded repairs and rerun affected checks.
-7. Update task state only after evidence supports completion.
+7. Update `progress.txt` or backend task state only after ROSE reconciles evidence.
 
 After the queue, run aggregate freshness checks for changed scope and report completed packages, blocked packages, verification, skipped lanes, residual risks, and whether `/ship` is appropriate.
 
@@ -76,7 +89,7 @@ Stop and ask when:
 - the package requires destructive commands, file deletes/moves/renames, dependency or lockfile changes, schema/migration changes, auth/permission/security weakening, pushes, merges, tags, or history rewrites;
 - scope expands beyond approved artifacts;
 - acceptance criteria cannot be verified;
-- required review or verification lanes are unavailable;
+- required independent review, test, or security lanes are unavailable;
 - repair limits are exhausted;
 - the user interrupts or changes the goal.
 
