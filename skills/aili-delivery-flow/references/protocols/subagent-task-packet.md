@@ -7,6 +7,7 @@ Use this packet for non-trivial, harness-sensitive, evidence-heavy, review, test
 ```text
 Subagent task packet:
 - Trace/work package id:
+- Owner: ROSE | user | subagent:research | subagent:edit | subagent:review | subagent:test
 - Work package type:
 - Artifact target:
 - Goal:
@@ -26,6 +27,7 @@ Subagent task packet:
 
 ## Field rules
 
+- Owner: explicit execution owner. Preserve the owner prefix in todos and task packets; ROSE must not mark `subagent:*` todos complete based on ROSE's own edits, reviews, tests, or completion work.
 - Goal: one bounded outcome.
 - Context: only the facts needed to start; include current user decisions when relevant.
 - Active contract / source artifacts: paths to specs, tasks, diffs, issues, or docs that define scope.
@@ -43,6 +45,9 @@ Subagent task packet:
 ## Hard rules
 
 - Subagents do not spawn subagents unless a future approved contract explicitly changes orchestration rules.
+- Execution Ownership Gate: valid owners are `ROSE`, `user`, `subagent:research`, `subagent:edit`, `subagent:review`, and `subagent:test`.
+- User-requested subagent ownership: 修改/补强/完成/do/update/implement maps to `subagent:edit`; 复核/review/audit maps to `subagent:review`; 看一下/调研/find evidence/scout maps to `subagent:research` only; test/verify/run tests/coverage/测试/验证/跑测试 maps to `subagent:test`.
+- Evidence is sufficient may complete only `subagent:research`; it must not let ROSE take over `subagent:edit`, `subagent:review`, `subagent:test`, or user-requested subagent completion work without explicit current-task user confirmation.
 - Read-heavy delegation is preferred; write-heavy parallel work requires isolated, non-overlapping file ownership.
 - Non-trivial repository work is subagent-first unless the current task explicitly opts out; clear paths, short context, and DCP summaries are not opt-outs.
 - Worker increments are dynamically sized by verifiability, reviewability, lack of parallel conflicts, and clean handoff boundaries.

@@ -79,6 +79,14 @@ Do not paste large file excerpts, full grep dumps, long logs, or exploratory dea
 
 Search evidence is a map. The editing, reviewing, testing, securing, or documenting agent must still read final target files before acting.
 
+## Execution Ownership Gate
+
+Assign every delegated todo and task packet one explicit owner: `ROSE`, `user`, `subagent:research`, `subagent:edit`, `subagent:review`, or `subagent:test`. Preserve owner prefixes when copying, splitting, reconciling, or reporting todos/task packets.
+
+User-requested subagent ownership is binding for the current task. If the user asks a subagent to 修改, 补强, 完成, do, update, or implement, use `subagent:edit`; if the user asks a subagent to 复核, review, or audit, use `subagent:review`; if the user asks a subagent to 看一下, 调研, find evidence, or scout, use `subagent:research` only; if the user asks a subagent to test, verify, run tests, coverage, 测试, 验证, or 跑测试, use `subagent:test`.
+
+Evidence is sufficient may complete only a `subagent:research` task. It does not authorize ROSE to complete `subagent:edit`, `subagent:review`, `subagent:test`, or user-requested subagent completion work through ROSE's own edits, reviews, tests, or final integration. ROSE may change subagent-owned edit/review/test/completion work to `ROSE` only after explicit current-task user confirmation, not for efficiency, context, or faster integration reasons.
+
 ## Mandatory Dispatch Rule
 
 Dispatch non-trivial repository work by default. Also dispatch when expected MainAgent context cost is greater than subagent overhead.
@@ -130,6 +138,7 @@ For harness-sensitive work, use `skills/aili-delivery-flow/references/protocols/
 
 ```text
 Subagent task packet:
+- Owner: ROSE | user | subagent:research | subagent:edit | subagent:review | subagent:test
 - Goal:
 - Context:
 - Allowed scope:
