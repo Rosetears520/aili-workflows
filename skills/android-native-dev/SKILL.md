@@ -22,6 +22,8 @@ Before starting development, assess the current project state:
 - Before writing business logic, ensure `./gradlew assembleDebug` succeeds
 - If `gradle.properties` is missing, create it first and configure AndroidX
 
+🔴 **CHECKPOINT — Visual and platform decisions before UI code:** confirm app category, target devices/API, Compose vs Views, Material 3 style, dark theme, accessibility target, and required permissions. If the user has not specified these and the choice affects navigation, data model, permissions, or visual identity, stop and ask instead of guessing.
+
 ### 1.1 Required Files Checklist
 
 ```
@@ -612,6 +614,17 @@ val screenBackground = Color.White
 4. **Check dependency versions**: Version conflicts are common causes
 5. **Refresh dependencies if needed**: Clear cache and rebuild
 
+### 6.2.1 Safe Build-Error Recovery
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| Gradle/AGP/Kotlin version conflict | Inspect wrapper, root Gradle, module Gradle, and version catalog before edits | Ask before changing plugin or dependency versions; do not broad-upgrade blindly |
+| Compose compiler/BOM mismatch | Align with existing project version source | If no source exists, ask before pinning versions |
+| AAPT/resource error | Fix the named XML/resource only | Do not rename resources broadly; verify references first |
+| Cache/dependency corruption suspected | Run `./gradlew assembleDebug --stacktrace` before cache refresh | Use `--refresh-dependencies` only after evidence points to cache/dependency state |
+
+🛑 **STOP:** never delete Gradle caches, change SDK/AGP/Kotlin major versions, or rewrite build files as a generic fix without user approval and a specific error trace.
+
 ### 6.3 Debugging Commands
 
 ```bash
@@ -762,6 +775,8 @@ See [Design Style Guide](references/design-style-guide.md) for detailed style pr
 - [ ] contentDescription on all interactive elements
 - [ ] Startup < 2 seconds or shows progress
 - [ ] Visual style matches app category
+
+🔴 **CHECKPOINT — Visual validation before delivery:** run or inspect the changed screen in light/dark mode and at least one compact and one expanded size when UI changed. If no emulator/device/browser-preview equivalent is available, report the missing visual evidence and do not claim full UI verification.
 
 ### Design References
 

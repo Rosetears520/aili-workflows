@@ -27,6 +27,8 @@ If the user has already specified these in their request, skip asking and procee
 
 Based on requirements, make and state these decisions before coding:
 
+🔴 **CHECKPOINT — architecture/security/db decisions:** stop before choosing or changing architecture, auth/session model, database/schema/migration strategy, CORS/upload behavior, or realtime transport. Proceed only when the user request or repository evidence makes the choice clear; otherwise ask for the missing decision instead of inventing it.
+
 | Decision | Options | Reference |
 |----------|---------|-----------|
 | Project structure | Feature-first (recommended) vs layer-first | [Section 1](#1-project-structure--layering-critical) |
@@ -66,6 +68,13 @@ After implementation, run these checks before claiming completion:
 4. **Real-time check** (if applicable): Open two browser tabs, verify changes sync
 
 If any check fails, fix the issue before proceeding.
+
+| Failure | First response | If still failing |
+|---|---|---|
+| Build/typecheck fails | Fix the changed package or shared type causing the error | Do not rewrite the stack; report blocker if dependency/schema changes are needed |
+| Auth/CORS/upload smoke test fails | Keep restrictive defaults and inspect middleware/order/config | Ask before relaxing origins, token storage, file limits, or permissions |
+| Database migration/schema mismatch | Stop and inspect existing migration pattern | Do not edit production schema manually; request approval for schema/API contract change |
+| Frontend cannot reach backend | Verify base URL, env loading, proxy, and health endpoint | Report environment gap rather than hardcoding URLs |
 
 ### Step 5: Handoff Summary
 

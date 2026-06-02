@@ -17,10 +17,7 @@ Refines raw ideas into sharp, actionable concepts worth building through structu
 
 This skill is primarily an interactive dialogue. Invoke it with an idea, and the agent will guide you through the process.
 
-```bash
-# Optional: Initialize the ideas directory
-bash /mnt/skills/user/idea-refine/scripts/idea-refine.sh
-```
+No script or bundled resource is required. Run this as an interactive conversation; write files only after the user confirms the destination.
 
 **Trigger Phrases:**
 - "Help me refine this idea"
@@ -66,7 +63,9 @@ When the user invokes this skill with an idea (`$ARGUMENTS`), guide them through
    - What's been tried before?
    - Why now?
 
-   Use the `AskUserQuestion` tool to gather this input. Do NOT proceed until you understand who this is for and what success looks like.
+   Ask these questions directly in chat. Do NOT proceed until you understand who this is for and what success looks like.
+
+   🔴 CHECKPOINT / 🛑 STOP: If the user stays vague after one question round, stop expansion and offer exactly two paths: (a) continue with explicit assumptions labeled `Assumption`, or (b) answer the missing target-user/success questions first.
 
 3. **Generate 5-8 idea variations** using these lenses:
    - **Inversion:** "What if we did the opposite?"
@@ -81,7 +80,7 @@ When the user invokes this skill with an idea (`$ARGUMENTS`), guide them through
 
 **If running inside a codebase:** Use `Glob`, `Grep`, and `Read` to scan for relevant context — existing architecture, patterns, constraints, prior art. Ground your variations in what actually exists. Reference specific files and patterns when relevant.
 
-Read `frameworks.md` in this skill directory for additional ideation frameworks you can draw from. Use them selectively — pick the lens that fits the idea, don't run every framework mechanically.
+Use only the lenses listed above unless the user provides another framework. Do not cite missing local resource files.
 
 #### Phase 2: Evaluate & Converge
 
@@ -94,7 +93,7 @@ After the user reacts to Phase 1 (indicates which ideas resonate, pushes back, a
    - **Feasibility:** What's the technical and resource cost? What's the hardest part?
    - **Differentiation:** What makes this genuinely different? Would someone switch from their current solution?
 
-   Read `refinement-criteria.md` in this skill directory for the full evaluation rubric.
+   Use the three criteria above as the full rubric unless the user supplies a different rubric.
 
 3. **Surface hidden assumptions.** For each direction, explicitly name:
    - What you're betting is true (but haven't validated)
@@ -139,6 +138,14 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
 
+### Fallbacks
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| User gives only a slogan or one-line idea | Ask 3 targeted questions for user, success, and constraint | Proceed only with labeled assumptions or stop for answers |
+| User asks for implementation before convergence | Return to Phase 2 and name assumptions to validate | Produce only the one-pager, not build steps |
+| No safe output path is known | Ask where to save the one-pager | Provide the markdown in the reply without writing a file |
+
 ### Anti-patterns to Avoid
 
 - **Don't generate 20+ ideas.** Quality over quantity. 5-8 well-considered variations beat 20 shallow ones.
@@ -153,7 +160,7 @@ Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a lo
 
 Direct, thoughtful, slightly provocative. You're a sharp thinking partner, not a facilitator reading from a script. Channel the energy of "that's interesting, but what if..." -- always pushing one step further without being exhausting.
 
-Read `examples.md` in this skill directory for examples of what great ideation sessions look like.
+Do not rely on external examples unless the user provides them; the template in Phase 3 is the source of truth.
 
 ## Red Flags
 

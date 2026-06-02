@@ -36,6 +36,8 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 Write the test first. It must fail. A test that passes immediately proves nothing.
 
+🔴 CHECKPOINT / 🛑 STOP after RED: Before writing implementation, capture the failing command, failure reason, and why the failure proves the intended behavior gap. If the test passes immediately or fails for the wrong reason, fix the test first.
+
 ### Vertical TDD, Not Horizontal TDD
 
 Do not write all tests first and then all implementation.
@@ -45,10 +47,12 @@ Use one behavior slice at a time:
 2. Confirm it fails for the right reason.
 3. Write the minimum implementation.
 4. Confirm it passes.
-5. Commit the verified slice on a non-main branch.
+5. Commit the verified slice on a non-main branch, or write a savepoint report when the active task forbids commits.
 6. Repeat.
 
 Tests should verify behavior through public interfaces. They should survive internal refactors.
+
+If commits are forbidden by the user or task contract, do not commit to satisfy this skill. Record a savepoint report instead: changed files, verification evidence, and rollback notes.
 
 Avoid:
 - testing private methods
@@ -75,6 +79,8 @@ describe('TaskService', () => {
 
 Write the minimum code to make the test pass. Don't over-engineer:
 
+🔴 CHECKPOINT / 🛑 STOP before fix: Name the smallest code path that can make the RED test pass. If the fix requires unrelated files, new dependencies, schema/API changes, or broad refactors, stop and ask for scope approval instead of expanding TDD silently.
+
 ```typescript
 // GREEN: Minimal implementation
 export async function createTask(input: { title: string }): Promise<Task> {
@@ -99,6 +105,8 @@ With tests green, improve the code without changing behavior:
 - Optimize if necessary
 
 Run tests after every refactor step to confirm nothing broke.
+
+🔴 CHECKPOINT before broad-suite claim: Do not say "all tests pass" until the targeted RED→GREEN command has passed and the relevant broader suite command has been run or explicitly marked unavailable.
 
 ## The Prove-It Pattern (Bug Fixes)
 

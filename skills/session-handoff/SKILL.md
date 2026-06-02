@@ -23,6 +23,8 @@ description: 当用户明确要求交接、恢复提示或会话 handoff 时，�
 
 不要默认写入 OS temp 目录、全局 docs/current、SQLite durable memory、或不相关目录。
 
+🔴 CHECKPOINT / 🛑 STOP：写入或更新文件前，先确认三件事：目标路径已知且在任务范围内、内容不含 secrets/raw logs/full files、用户或上游合同明确允许写 handoff。任一条件不满足，只在回复中给草稿，不创建文件。
+
 ## Handoff 字段
 
 ```markdown
@@ -70,6 +72,15 @@ MUST NOT include:
 - durable memory promotion by default
 
 如果内容适合长期复用项目记忆，另走 `rose-memory`，并只写 evidence-backed durable finding 或 requirement memory。
+
+## Fallbacks
+
+| 触发条件 | 一线处理 | 仍失败兜底 |
+|---|---|---|
+| 不知道 handoff 应写到哪里 | 问用户确认路径，列出 OpenSpec/current-task/不写文件三选项 | 不写文件，只返回 Markdown 草稿 |
+| 输入包含 secrets、token、cookie、私钥或未脱敏隐私 | 停止摘录原文，改写为 `[REDACTED]` 和风险说明 | 拒绝写文件，要求用户提供脱敏材料 |
+| 用户要求包含 raw logs、完整文件或大段聊天记录 | 摘要成证据锚点、错误签名、命令和结果 | 如果用户坚持保留原文，拒绝并说明 handoff 只存轻量摘要 |
+| 任务状态不清或证据不足 | 标记 `Unverified` / `Open Question`，不要补造结论 | 请求用户补充来源或把 handoff 标为 blocked |
 
 ## 输出规则
 

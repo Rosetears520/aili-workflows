@@ -38,8 +38,10 @@ For each slice:
 1. **Implement** the smallest complete piece of functionality
 2. **Test** — run the test suite (or write a test if none exists)
 3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance)
+4. **Commit / Savepoint** -- save progress with a commit, or a savepoint report when commits are forbidden (see `git-workflow-and-versioning` for atomic commit guidance)
 5. **Move to the next slice** — carry forward, don't restart
+
+🔴 CHECKPOINT / 🛑 STOP: Before starting a slice, write the slice gate in one sentence: observable behavior, files in scope, verification command, and savepoint policy. If the slice cannot produce visible behavior or a targeted verification result, split it again.
 
 ## Slicing Strategies
 
@@ -64,6 +66,8 @@ Slice 4: Delete a task (delete + API + UI + confirmation)
 Each slice delivers working end-to-end functionality.
 
 Do not use horizontal slicing as the default. A slice should produce observable behavior, targeted verification, and a savepoint commit on a non-main task branch before the next slice begins.
+
+If commits are forbidden by the user/task contract, replace the commit with an explicit savepoint report: changed files, verification result, and rollback note. Do not violate a no-commit contract to satisfy this skill.
 
 ### Contract-First Slicing
 
@@ -210,7 +214,16 @@ After each increment, verify:
 - [ ] Type checking passes (`npx tsc --noEmit`)
 - [ ] Linting passes (`npm run lint`)
 - [ ] The new functionality works as expected
-- [ ] The change is committed with a descriptive message
+- [ ] The change is committed with a descriptive message, or a savepoint report exists when commits are forbidden
+
+## Fallbacks
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Tests fail after a slice | Stop next-slice work; identify whether failure is from this slice or pre-existing | Revert or narrow the slice; report unrelated failures instead of piling on fixes |
+| Working tree is dirty before a slice | Inspect status and separate task-related from unrelated changes | Ask whether to continue, branch/worktree, or pause; do not mix unrelated edits silently |
+| Slice grows past the planned behavior/files | Stop and cut scope to the smallest observable behavior | Return the oversized remainder to the task queue; do not finish it in the same increment |
+| No automated test exists | Add the smallest focused test when practical | Use a documented manual/static check and mark the gap `Unverified` |
 
 ## Common Rationalizations
 
@@ -238,8 +251,8 @@ After each increment, verify:
 
 After completing all increments for a task:
 
-- [ ] Each increment was individually tested and committed
+- [ ] Each increment was individually tested and committed, or documented with a savepoint report when commits are forbidden
 - [ ] The full test suite passes
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified
-- [ ] No uncommitted changes remain
+- [ ] No uncommitted changes remain, unless the active no-commit contract requires reviewed uncommitted changes
