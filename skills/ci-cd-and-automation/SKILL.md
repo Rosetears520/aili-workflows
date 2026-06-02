@@ -53,6 +53,8 @@ Pull Request Opened
 
 **No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
 
+🔴 **CHECKPOINT · Gate Integrity:** Stop before disabling checks, relaxing branch protection, or marking a failing required status as optional. Continue only when the owner explicitly accepts the risk and records the temporary exception, owner, expiry date, and restoration plan.
+
 ## GitHub Actions Configuration
 
 ### Basic CI Pipeline
@@ -190,6 +192,15 @@ Test failure → Agent follows debugging-and-error-recovery skill
 Build error → Agent checks config and dependencies
 ```
 
+**CI failure fallback:**
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| Failure log is missing or truncated | Re-run the failed job once with full logs/artifacts enabled | Mark the cause `Unverified`; do not weaken the gate to merge |
+| Failure is flaky | Quarantine only with an owner, issue, and replacement coverage | Keep the required gate red until the flake fix or approved temporary exception lands |
+| Failure comes from secrets or environment config | Verify the secret exists in the CI secret store and is scoped to the right environment | Escalate to the CI/platform owner; never paste or hardcode the secret |
+| Failure blocks an urgent release | Use the rollback/hotfix path with explicit approval | Do not disable branch protection or required checks without the Gate Integrity checkpoint |
+
 ## Deployment Strategies
 
 ### Preview Deployments
@@ -227,6 +238,8 @@ return renderLegacyCheckout();
 **Flag lifecycle:** Create → Enable for testing → Canary → Full rollout → Remove the flag and dead code. Flags that live forever become technical debt — set a cleanup date when you create them.
 
 ### Staged Rollouts
+
+🔴 **CHECKPOINT · Production Deploy:** Stop before granting CI access to production secrets, enabling automatic production deployment, or deploying without branch protection and required checks. Production deploys need environment-scoped secrets, protected branches, required status checks, and a rollback path.
 
 ```
 PR merged to main
@@ -306,6 +319,8 @@ Designate someone responsible for keeping CI green. When the build breaks, the B
 - **Branch protection:** No force-pushes to main
 - **Auto-merge:** If all checks pass and approved, merge automatically
 
+Do not remove branch protection, required reviews, or required status checks to unblock a merge. Use a documented temporary exception only after the Gate Integrity checkpoint.
+
 ## CI Optimization
 
 When the pipeline exceeds 10 minutes, apply these strategies in order of impact:
@@ -372,7 +387,9 @@ jobs:
 - No CI pipeline in the project
 - CI failures ignored or silenced
 - Tests disabled in CI to make the pipeline pass
+- Required status checks or branch protection disabled to merge a change
 - Production deploys without staging verification
+- CI jobs using production secrets outside a protected deployment environment
 - No rollback mechanism
 - Secrets stored in code or CI config files (not secrets manager)
 - Long CI times with no optimization effort

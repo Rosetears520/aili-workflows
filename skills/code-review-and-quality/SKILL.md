@@ -204,6 +204,25 @@ Mark anything not proven by repository evidence as `Unverified`.
 
 Do not approve if a remaining evidence gap could hide a Critical or Important issue. Use a conditional or request-changes verdict until the gap is fixed, deferred with owner/date when an external tracker exists, or explicitly accepted by the caller/supervisor in local workflow.
 
+### Step 7: Verdict Gate
+
+🔴 **CHECKPOINT · Verdict:** Stop before approving. The verdict must match the worst unresolved finding and the strength of the verification evidence.
+
+| Verdict | Use when | Hard blockers |
+|---|---|---|
+| **Approve** | No Critical or Important issues remain, verification is fresh, and evidence covers the change | Any unresolved Critical/Important finding, unverified risky behavior, or missing required test |
+| **Conditional** | Remaining gaps are low risk and explicitly accepted or deferred with owner/date | Security/privacy risk, data loss risk, public API break, failed required check, or unclear ownership |
+| **Request changes** | The change is incorrect, unsafe, unverified, too broad, or incompatible with project rules | N/A — this is the safe verdict for unresolved blockers |
+
+**Failure escalation:**
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Diff is too large to review confidently | Request split or scoped summary with evidence anchors | Do not approve; escalate to maintainer/product owner for decomposition |
+| Required verification is missing or stale | Ask author to run targeted checks and provide output | Use Conditional only with explicit caller/supervisor acceptance; otherwise Request changes |
+| Security, privacy, migration, or rollout risk appears | Request specialist review or focused evidence | Do not approve until the specialist risk is resolved or formally accepted |
+| Reviewer and author disagree on a blocker | Re-anchor on facts, spec, tests, and project rules | Escalate with both positions and evidence; do not rubber-stamp |
+
 ## Multi-Model Review Pattern
 
 Use different models for different review perspectives:
@@ -341,6 +360,7 @@ Part of code review is dependency review:
 - [ ] **Approve** — Ready to merge
 - [ ] **Conditional** — Remaining evidence gaps are accepted or deferred with owner/date when available, or with explicit caller/supervisor acceptance in local workflow
 - [ ] **Request changes** — Issues must be addressed
+- [ ] Verdict matches the worst unresolved finding from the Verdict Gate
 ```
 ## See Also
 
@@ -367,6 +387,8 @@ Part of code review is dependency review:
 - No regression tests with bug fix PRs
 - Review comments without severity labels — makes it unclear what's required vs optional
 - Accepting "I'll fix it later" — it never happens
+- Approving despite unresolved Critical/Important findings or stale verification
+- Using Conditional to bypass security, privacy, migration, rollout, or data-loss blockers
 
 ## Verification
 

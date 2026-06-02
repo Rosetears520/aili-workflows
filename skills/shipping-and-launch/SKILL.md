@@ -150,6 +150,17 @@ Use these thresholds to decide whether to advance, hold, or roll back at each st
 | Client JS errors | No new error types | New errors at <0.1% of sessions | New errors at >0.1% of sessions |
 | Business metrics | Neutral or positive | Decline <5% (may be noise) | Decline >5% |
 
+### 🔴 CHECKPOINT / 🛑 STOP: Deploy Gate
+
+Do not deploy until all of these are true:
+
+- production owner, monitoring owner, and rollback owner are named
+- health check, error-rate dashboard, latency dashboard, and critical-flow smoke test are ready
+- rollback trigger thresholds and exact rollback command/path are documented
+- the user or release owner has approved the launch window
+
+If any item is missing, stop and return `BLOCKED_LAUNCH_READINESS` with the missing evidence instead of continuing.
+
 ### When to Roll Back
 
 Roll back immediately if:
@@ -239,6 +250,10 @@ In the first hour after launch:
 
 Every deployment needs a rollback plan before it happens:
 
+### 🔴 CHECKPOINT / 🛑 STOP: Rollback Gate
+
+Do not start or claim a rollback is ready until the rollback path is known and evidence-backed. If the rollback command, feature-flag kill switch, database rollback path, or verification owner is unknown, stop and ask for the missing release-specific detail.
+
 ```markdown
 ## Rollback Plan for [Feature/Release]
 
@@ -263,11 +278,13 @@ Every deployment needs a rollback plan before it happens:
 - Redeploy previous version: < 5 minutes
 - Database rollback: < 15 minutes
 ```
-## See Also
+## Missing Evidence Fallbacks
 
-- For security pre-launch checks, see `references/security-checklist.md`
-- For performance pre-launch checklist, see `references/performance-checklist.md`
-- For accessibility verification before launch, see `references/accessibility-checklist.md`
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Monitoring dashboard unavailable | Use health check, logs, and error tracker as temporary evidence | Hold rollout; do not increase exposure |
+| Rollback path untested | Run a dry run in staging or confirm the exact production-safe command | Do not deploy until rollback readiness is confirmed |
+| Security, performance, or accessibility evidence missing | Use the relevant checklist sections in this file as the source of truth | Block launch or mark the launch risk explicitly for release-owner approval |
 
 ## Common Rationalizations
 

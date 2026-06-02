@@ -63,14 +63,24 @@ Mark any unavailable signal as `[UNVERIFIED]`; do not infer maturity from popula
 
 1. Restate the research question and decision the user is trying to make.
 2. Define scope: domain, project types to compare, excluded sources, and minimum evidence needed.
-3. If external evidence is needed, ask ROSE to dispatch `web-researcher` with a narrow, read-only task packet that requests sources, maturity signals, pattern evidence, risks, and uncertainty.
-4. Compare at least two mature public examples when practical. If only one credible example is found, label the result `PARTIAL`.
-5. Extract patterns, not vendor text: describe the approach in your own words and cite evidence anchors.
-6. Separate applicable patterns from not-recommended patterns and explain fit for the current project or decision context.
-7. State license, security, maintenance, complexity, and adoption risks.
-8. Recommend the next decision or follow-up question.
+3. 🔴 CHECKPOINT / 🛑 STOP: confirm the scope with the user when the domain, comparison set, excluded sources, or decision target is ambiguous. Do not dispatch broad research until scope is confirmed.
+4. If external evidence is needed, ask ROSE to dispatch `web-researcher` with a narrow, read-only task packet that requests sources, maturity signals, pattern evidence, risks, and uncertainty.
+5. Compare at least two mature public examples when practical. If only one credible example is found, label the result `PARTIAL`.
+6. Extract patterns, not vendor text: describe the approach in your own words and cite evidence anchors.
+7. Separate applicable patterns from not-recommended patterns and explain fit for the current project or decision context.
+8. State license, security, maintenance, complexity, and adoption risks.
+9. Recommend the next decision or follow-up question.
 
 See `references/research-rubric.md` for the compact scoring rubric and delegation packet.
+
+## Source Failure Fallbacks
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| No credible mature sources found | Return `STATUS: NOT_FOUND` with searched source types and queries | Ask the user to broaden scope or accept a hypothesis-only exploration |
+| Only one credible example found | Return `STATUS: PARTIAL`; separate supported pattern from `[UNVERIFIED]` fit claims | Do not generalize it as an industry pattern |
+| Sources conflict | Return `STATUS: PARTIAL`; list the conflict, source dates, and maturity signals | Ask for a decision criterion before recommending |
+| User scope is ambiguous | Ask a focused scope question before dispatch | If the user declines, state the chosen narrow assumption and mark it `[UNVERIFIED]` |
 
 ## Output Contract
 

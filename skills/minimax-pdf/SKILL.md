@@ -33,6 +33,33 @@ Use this skill for PDF output, final non-editable deliverables, PDF form filling
 
 **Rule:** when in doubt between CREATE and REFORMAT, ask whether the user has an existing document to start from. If yes → REFORMAT. If no → CREATE.
 
+## Route validation gates
+
+1. **Classify the route:** choose CREATE, FILL, or REFORMAT from the table above before running scripts.
+2. **Validate inputs:** confirm source files exist, output path is writable, and route-specific required values are present.
+3. **Run the route pipeline:** use only the scripts for the selected route; do not mix FILL with CREATE/REFORMAT unless the user explicitly asks for both.
+4. **Verify route evidence:** inspect script output and the resulting PDF before claiming success.
+
+🔴 CHECKPOINT / 🛑 STOP: If the task may alter an existing PDF's visual layout, field positions, page count, signatures, or print-readiness, pause and confirm whether fidelity or content transformation is the priority.
+
+## Failure recovery
+
+| Trigger condition | First response | If still failing |
+|---|---|---|
+| Route is ambiguous | Ask whether there is an existing source document or fillable PDF | Stop; do not invent a route |
+| `make.sh check` reports missing tools | Run the documented `make.sh fix` only with explicit user approval and only if allowed in the environment | Report missing dependency and exact failing tool |
+| CREATE output has overflow, clipped text, or broken charts | Adjust content blocks, page breaks, or chart/table sizing and rebuild | Report affected pages/blocks; do not claim print-ready |
+| FILL field name/value is rejected | Re-run `fill_inspect.py` and use exact field names/choices | Ask for corrected values; do not guess field mappings |
+| REFORMAT loses structure or images | Prefer a simpler `content.json` mapping and preserve essential order | Ask whether to prioritize visual match or semantic cleanup |
+
+## Do not do this
+
+- Do not recreate a fillable PDF from scratch when the user asked to fill fields; preserve the original layout.
+- Do not change page size, margins, fonts, form field positions, or signatures during FILL.
+- Do not claim visual fidelity from script success alone; inspect the rendered PDF.
+- Do not use vivid default colors or decorative effects that conflict with the document's audience.
+- Do not overwrite the user's source PDF; always write to a separate output path.
+
 ---
 
 ## Route A: CREATE

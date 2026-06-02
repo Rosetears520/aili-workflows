@@ -17,6 +17,27 @@ Build production-quality user interfaces that are accessible, performant, and vi
 - Adding interactivity or state management
 - Fixing visual or UX issues
 
+## Ordered UI Workflow
+
+1. **Inspect existing patterns:** find the nearest component, design tokens, state pattern, tests, and accessibility conventions before editing.
+2. **Define UI states:** list loading, empty, error, disabled, focused, active, and success states that the component must render.
+3. **Implement the smallest slice:** build the component/page using project primitives and the existing design system before adding custom styling.
+4. **Run accessibility gates:** verify semantic HTML, labels, focus order, keyboard interaction, contrast, and screen-reader structure.
+5. **Run responsive gates:** check mobile-first behavior at project-defined breakpoints; if none exist, use 320px, 768px, 1024px, and 1440px.
+6. **Verify evidence:** use the closest automated test, story, browser check, or manual runbook and report any unverified states.
+
+🔴 CHECKPOINT / 🛑 STOP: Before introducing new UI primitives, global state, animation systems, raw color palettes, or responsive breakpoints, confirm no existing project pattern already owns the decision.
+
+## UI Failure Recovery
+
+| Trigger condition | First response | If still failing |
+|---|---|---|
+| Existing design system is unclear | Inspect adjacent screens/components and reuse their tokens | Ask for design direction; do not invent a new visual language |
+| Keyboard or focus behavior fails | Replace non-semantic elements with native controls and add explicit focus handling | Stop and report the inaccessible interaction |
+| Layout breaks at a required breakpoint | Simplify the layout and re-check the mobile-first structure | Report the failing viewport and avoid claiming responsive completion |
+| Component lacks loading/error/empty states | Add the missing states closest to the component boundary | Mark unimplemented states as product questions |
+| Tests or browser checks are unavailable | Provide exact manual steps and inspected states | Mark verification partial; do not claim fully verified UI |
+
 ## Component Architecture
 
 ### File Structure
@@ -253,7 +274,7 @@ Design for mobile first, then expand:
 ">
 ```
 
-Test at these breakpoints: 320px, 768px, 1024px, 1440px.
+Test at the project's defined breakpoints; if the project has no breakpoint guidance, use 320px, 768px, 1024px, and 1440px.
 
 ## Loading and Transitions
 
@@ -314,6 +335,9 @@ For detailed accessibility requirements and testing tools, see `references/acces
 - No keyboard navigation testing
 - Color as the sole indicator of state (red/green without text or icons)
 - Generic "AI look" (purple gradients, oversized cards, stock layouts)
+- New UI patterns that duplicate existing components or design tokens
+- Responsive claims without checking the required viewport widths
+- Dialogs, menus, or popovers without focus management and escape/close behavior
 
 ## Verification
 
@@ -322,7 +346,7 @@ After building UI:
 - [ ] Component renders without console errors
 - [ ] All interactive elements are keyboard accessible (Tab through the page)
 - [ ] Screen reader can convey the page's content and structure
-- [ ] Responsive: works at 320px, 768px, 1024px, 1440px
+- [ ] Responsive: works at project-defined breakpoints, or 320px, 768px, 1024px, and 1440px when none are defined
 - [ ] Loading, error, and empty states all handled
 - [ ] Follows the project's design system (spacing, colors, typography)
 - [ ] No accessibility warnings in dev tools or axe-core

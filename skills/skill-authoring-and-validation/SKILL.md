@@ -120,6 +120,8 @@ Do not turn every workflow into a script. Scripts are best for actions that must
 9. Validate triggering with realistic prompts.
 10. Iterate until the skill is useful, bounded, and cheap to load.
 
+🔴 **CHECKPOINT · Draft approval gate:** before writing or replacing `SKILL.md`, show the proposed trigger boundary, non-goals, and file/resource changes. Wait for explicit approval when the skill is new, broad, overlaps existing skills, or changes routing behavior.
+
 ## Trigger Validation
 
 For each new or materially changed skill, write 2-3 realistic prompts a user might say.
@@ -139,6 +141,15 @@ Example validation table:
 | "Create a reusable skill for release checklists" | trigger | authoring a new `SKILL.md` |
 | "Review this existing skill for over-triggering" | trigger | validation request |
 | "Initialize AGENTS.md in this repo" | do not trigger | belongs to `agents-md-initialization` |
+
+### Over-Trigger Fallbacks
+
+| Trigger condition | First response | If still unresolved |
+|---|---|---|
+| A prompt could reasonably trigger multiple skills | Name the competing skills and choose the narrowest matching skill | Add an explicit exclusion to the description or stop for user routing input |
+| The description uses catch-all wording such as "any development task" | Rewrite it around concrete task shapes, files, or trigger phrases | Do not ship the skill until the routing boundary is narrow enough to test |
+| Validation prompts show the skill triggers for another skill's job | Add a `When NOT to use` or exclusion clause in the description/body | Re-run the same prompt; if still ambiguous, keep the skill unapproved |
+| The workflow depends on a runtime-specific command or platform | Mark the dependency explicitly or provide a repository-supported fallback | Do not imply cross-runtime support that was not validated |
 
 ## Optional Advanced Eval Loop
 
@@ -162,6 +173,8 @@ Before finishing, confirm:
 - The skill distinguishes workflow instructions from persona behavior.
 - The skill has clear handoff points to other skills when needed.
 
+🛑 **STOP · Do-not-proceed conditions:** do not create or update a skill if it would override ROSE lifecycle authority, duplicate an existing skill without a narrower boundary, require unapproved new dependencies, store project memory, or add scripts/references/assets outside the user's approved scope.
+
 ## Verification
 
 Before reporting completion:
@@ -172,3 +185,5 @@ Before reporting completion:
 - Check that `README.md` structure and source tables remain accurate when applicable.
 - Inspect the diff for accidental vendored text, secrets, generated files, or unrelated changes.
 - Report the validation prompts or the reason they were unnecessary.
+
+🔴 **CHECKPOINT · Validation gate:** if frontmatter, trigger prompts, resource paths, ROSE compatibility, or diff inspection fails, report the failure and do not mark the skill ready. Fix only the scoped issue, then repeat this gate.

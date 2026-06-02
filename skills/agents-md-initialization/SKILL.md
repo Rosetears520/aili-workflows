@@ -43,6 +43,9 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 
 1. Run `init` when the target project has no `AGENTS.md`.
 2. If `AGENTS.md` already exists, do not overwrite it silently. Use `update` for managed blocks, or ask before using `init --strategy backup-overwrite`.
+
+   🛑 **STOP before overwrite or backup-overwrite:** show the existing path, state that project-local content may be replaced outside managed blocks, and wait for explicit human approval.
+
 3. Inspect the repository and fill only project-specific sections:
    - `Project Overview`
    - `Setup Commands`
@@ -50,6 +53,16 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
    - `Project-Specific Rules`
 4. Do not remove or weaken the `Agent Operating Discipline` managed block.
 5. Run `check` before completion.
+
+## Fallbacks and Stop Conditions
+
+| Trigger condition | First response | If still unresolved |
+|---|---|---|
+| `templates/AGENTS.md` is missing or unreadable | Stop and report the expected template path; do not hand-write `AGENTS.md` | Ask the user to restore the template or provide the correct `AILI_HOME` |
+| `scripts/agents_md.py` is missing or not executable by Python | Stop and report the expected script path and command attempted | Ask for the correct clone path; do not create a replacement script |
+| `AILI_HOME` is unset and cannot be inferred from the current repo | Ask the user for the absolute local `aili-workflows` clone path | Do not assume a home-directory path |
+| Existing `AGENTS.md` has unrecognized local content outside managed blocks | Prefer `update`; summarize preserved local sections before editing | Require explicit approval before any backup-overwrite strategy |
+| `check` fails after init/update | Report the failing output and inspect only the relevant sections | Do not claim completion until `check` passes or the failure is marked unresolved |
 
 ## CI / Pre-Commit Gate
 

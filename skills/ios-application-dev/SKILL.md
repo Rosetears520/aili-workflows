@@ -14,6 +14,45 @@ Use this skill for native iOS/iPadOS apps, Swift, SwiftUI, UIKit, SnapKit, Apple
 
 ## Quick Reference
 
+### Implementation Workflow
+
+1. **Inspect the app boundary**: identify SwiftUI vs UIKit ownership, deployment target, package manager, navigation root, design system, accessibility patterns, and nearest tests before editing.
+2. **Choose SwiftUI or UIKit** with the decision table below; keep mixed apps at their existing seam instead of moving screens across frameworks.
+3. **Implement one screen/flow at a time**: data model or view model first, navigation/presentation second, layout third, accessibility/privacy states fourth.
+4. **Build and test**: run the narrowest available Xcode scheme/test target; for UI-only changes, also inspect Dynamic Type, Dark Mode, VoiceOver labels, and reduced motion behavior.
+5. **Report platform evidence**: include scheme/device or simulator used, tests run, and any manual checks that could not be executed.
+
+🔴 CHECKPOINT · 🛑 STOP before changing navigation roots, permission timing, authentication/sign-in behavior, App Store-facing privacy behavior, or converting a screen between SwiftUI and UIKit. These are product/API decisions, not local UI cleanup.
+
+### SwiftUI vs UIKit Decision Table
+
+| Situation | Use | Avoid |
+|---|---|---|
+| New simple screen in SwiftUI app | `View` + `@StateObject`/`@Observable` pattern already present | Introducing UIKit controller just for layout convenience |
+| Existing UIKit feature | `UIViewController`, `UICollectionView`, SnapKit, existing coordinator | Rewriting to SwiftUI unless migration is requested |
+| Complex collection/grid | Existing UIKit compositional layout or SwiftUI `Grid/List` if app already uses it | Mixing two list systems in one screen |
+| Deep navigation/state restoration | Existing `UINavigationController`/coordinator or `NavigationStack` pattern | Ad-hoc modal chains without back path |
+| Custom drawing/animation | Core Animation/UIKit when precision is needed; SwiftUI animation for simple state transitions | Decorative motion that ignores Reduce Motion |
+
+### Failure Modes and Fallbacks
+
+| Trigger | First response | If still failing |
+|---|---|---|
+| Xcode build fails from signing/provisioning | Separate code errors from signing errors; verify compile diagnostics first | Report signing as environment-blocked; do not change bundle IDs or teams |
+| SwiftUI preview fails | Run the scheme/tests instead of treating preview failure as runtime truth | Mark preview-only issue separately if app builds |
+| Auto Layout warnings appear | Identify the exact conflicting constraint and adjust local priorities/anchors | Do not silence by lowering many priorities; stop if layout ownership is unclear |
+| Dynamic Type truncates content | Reflow layout, allow multiline text, or adjust stack priorities | Report if product copy/visual design must change |
+| Permission prompt behavior is unclear | Inspect existing permission wrapper and Info.plist strings | Stop before changing request timing or privacy copy |
+| UI test is flaky | Re-run once, check accessibility identifiers and async waits | Report flake evidence; do not add arbitrary sleeps |
+
+### Do Not Do This
+
+- Do not use hamburger/drawer navigation in native iOS flows.
+- Do not override system back gestures or remove standard dismissal paths.
+- Do not request camera/location/notification permissions at launch unless explicitly required.
+- Do not use hard-coded colors/fonts that break Dark Mode or Dynamic Type.
+- Do not change signing, entitlements, bundle identifiers, or privacy prompts as a side effect of UI work.
+
 ### UIKit
 
 | Purpose | Component |

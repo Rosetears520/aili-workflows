@@ -16,12 +16,15 @@ Use this OpenCode skill when the user asks for a rich visual frontend experience
 
 Use this skill for standalone or campaign-like frontend work where the deliverable depends on premium visual design, cinematic scroll/motion, persuasive copy, AI-generated media assets, or generative art. For production UI components inside an existing app, use `frontend-ui-engineering`. For backend + frontend integration, use `fullstack-dev`. For GLSL/procedural shader effects, use `shader-dev`.
 
+Do not use this skill for ordinary CRUD screens, dashboard fixes, isolated component styling, backend/API work, native mobile apps, or shader-only work. If rich media assets are not required, keep the implementation inside the existing app workflow and route to the narrower skill.
+
 | Trigger | Use this skill? | Why |
 |---|---:|---|
 | "Build a cinematic product landing page with hero video" | Yes | Rich marketing/media frontend |
 | "Generate imagery and copy for a campaign page" | Yes | AI assets + persuasive copy |
 | "Fix this dashboard form state" | No | Route to `frontend-ui-engineering` |
 | "Add an API and database behind this UI" | No | Route to `fullstack-dev` |
+| "Write only a WebGL fragment shader" | No | Route to `shader-dev` |
 
 ## Skill Structure
 
@@ -168,6 +171,8 @@ Generate all image/video/audio assets using `scripts/`. NEVER use placeholder UR
 1. Parse asset requirements (type, style, spec, usage)
 2. Craft optimized prompts, show to user, confirm before generating
 3. Execute via scripts, save to project — do NOT proceed to Phase 5 until all assets are saved locally
+
+🔴 CHECKPOINT / 🛑 STOP: If the request only needs layout/components and does not require premium media, motion, copy, or generative art, stop and route to `frontend-ui-engineering` before generating assets.
 
 ### Phase 4: Copywriting & Content
 Follow copywriting frameworks (AIDA, PAS, FAB) to craft all text content. Do NOT use "Lorem ipsum" — write real copy.
@@ -379,7 +384,18 @@ Env: `MINIMAX_API_KEY` (required).
 5. **Post-process:** Images → WebP, Videos → ffmpeg compress, Audio → normalize
 6. **Deliver:** File path + code snippet + CSS suggestion
 
-## 3.3 Preset Shortcuts
+## 3.3 Asset Failure Fallback
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| `MINIMAX_API_KEY` missing or invalid | Read `references/env-setup.md`; ask the user to provide/configure the key | Use CSS/SVG/local hand-built visuals only with user approval; mark AI media generation unverified |
+| MiniMax script exits with an error | Re-run with the exact script, prompt, and flags from `references/minimax-cli-reference.md` | Report the command and stderr; do not replace with placeholder URLs |
+| Video async job times out or download fails | Poll once more and verify the returned asset URL/path | Fall back to image/animated CSS treatment only after user confirmation |
+| Generated asset is off-brand, text-filled, or unusable | Regenerate with a corrected prompt from `references/asset-prompt-guide.md` | Ask the user to approve a simpler local visual treatment |
+
+🔴 CHECKPOINT / 🛑 STOP: Never proceed to UI integration while required media files are missing; either recover, get user-approved fallback assets, or report `NEEDS_REVIEW`.
+
+## 3.4 Preset Shortcuts
 
 | Shortcut | Spec |
 |----------|------|
@@ -393,7 +409,7 @@ Env: `MINIMAX_API_KEY` (required).
 | `bgm` | 30s, no vocals, loopable |
 | `tts` | MiniMax HD, MP3 |
 
-## 3.4 Reference
+## 3.5 Reference
 
 - `references/minimax-cli-reference.md` — CLI flags
 - `references/asset-prompt-guide.md` — Prompt rules
@@ -551,6 +567,7 @@ Refine, don't add. Make it crisp. Polish into masterpiece.
 - [ ] **No placeholder URLs** — grep the output for `unsplash`, `picsum`, `placeholder`, `placehold`, `via.placeholder`, `lorem.space`, `dummyimage`. If ANY found, STOP and replace with generated assets before delivering.
 - [ ] **All media assets exist as local files** in the project's assets directory
 - [ ] Asset prompts confirmed with user before generation
+- [ ] MiniMax/env/script failures were either recovered or explicitly reported with a user-approved fallback
 
 ---
 

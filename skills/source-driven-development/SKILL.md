@@ -66,6 +66,17 @@ Fetch the specific documentation page for the feature you're implementing. Not t
 
 For library/API documentation, setup commands, framework examples, or version-sensitive code, prefer Context7 when it is installed in the current OpenCode environment. Do not require the user to manually say "use context7" each time. Do not assume Context7 is installed; if it is unavailable, fall back to official docs, package documentation, and source references. Do not add or rely on a repository-local Context7 skill.
 
+**Source-fetch fallback ladder:**
+
+| Trigger | Next source | If still unavailable |
+|---|---|---|
+| Context7 is unavailable or has no matching library/version | Fetch the official documentation URL directly | Use the package's official README/changelog/release notes from the upstream repository |
+| Official docs page is unavailable, moved, or lacks the needed pattern | Check official blog, migration guide, API reference, or versioned docs | Mark the pattern `UNVERIFIED` and ask before implementing version-sensitive code |
+| Package docs and source disagree | Prefer versioned docs, then inspect installed package types/source for the detected version | Surface the discrepancy as a conflict; do not silently choose |
+| Network/tooling prevents source access | Use only already-present local docs/types/package files | Report `BLOCKED_VERIFICATION` or `NEEDS_REVIEW` for framework-specific code that cannot be sourced |
+
+🔴 CHECKPOINT / 🛑 STOP: If no authoritative source can confirm a version-sensitive API, stop before coding unless the user explicitly accepts an `UNVERIFIED` implementation.
+
 **Source hierarchy (in order of authority):**
 
 | Priority | Source | Example |
@@ -120,6 +131,8 @@ B) Match existing code (useState) — consistent with codebase
 ```
 
 Surface the conflict. Don't silently pick one.
+
+🔴 CHECKPOINT / 🛑 STOP: If documented best practice conflicts with existing project conventions, compatibility constraints, or tests, pause with options before editing. The user must choose whether to follow current docs, preserve local patterns, or defer the change.
 
 ### Step 4: Cite Your Sources
 
@@ -181,6 +194,14 @@ Honesty about what you couldn't verify is more valuable than false confidence.
 - Not reading `package.json` / dependency files before implementing
 - Delivering code without source citations for framework-specific decisions
 - Fetching an entire docs site when only one page is relevant
+
+## Do Not Do
+
+- Do not use Stack Overflow, tutorials, AI summaries, or memory as the primary authority for framework-specific code.
+- Do not hide missing docs behind hedging language like "probably" or "should work"; label it `UNVERIFIED`.
+- Do not keep coding through a docs/code conflict without a visible checkpoint and user decision.
+- Do not add a repository-local docs tool or Context7 skill as a workaround for unavailable documentation tooling.
+- Do not cite a source you did not actually read for the detected version or feature.
 
 ## Verification
 

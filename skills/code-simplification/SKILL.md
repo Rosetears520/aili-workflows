@@ -138,6 +138,17 @@ BEFORE SIMPLIFYING, ANSWER:
 
 If you can't answer these, you're not ready to simplify. Read more context first.
 
+### 🔴 CHECKPOINT · Behavior-Risk Gate
+
+🛑 STOP before editing when a simplification would touch any of these behavior-risky areas:
+
+- public interfaces, exported types, API routes, schemas, migrations, auth, permissions, or persistence
+- error handling, retry behavior, ordering, concurrency, caching, validation, or side effects
+- performance-critical paths where the simpler version may change complexity or allocation patterns
+- code without tests or without enough context to prove equivalent behavior
+
+At this gate, either narrow the change to a behavior-neutral refactor with verification, or ask for explicit approval to proceed. Do not treat a behavior-changing cleanup as simplification.
+
 ### Step 2: Identify Simplification Opportunities
 
 Scan for these patterns — each one is a concrete signal, not a vague smell:
@@ -185,6 +196,16 @@ FOR EACH SIMPLIFICATION:
 ```
 
 Avoid batching multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+
+### Failure and Fallback Table
+
+| Trigger | First response | If still unresolved |
+|---|---|---|
+| Tests fail after a simplification | Revert that one simplification and inspect the failing behavior | Keep the original code and report the simplification as rejected |
+| Behavior equivalence cannot be proven | Stop before editing and gather tests, callers, or examples | Ask for approval or leave the code unchanged |
+| Simplification requires changing tests | Treat it as a behavior change, not simplification | Split into a separate feature/bug-fix task |
+| Public interface or schema would change | Stop and request explicit scope approval | Do not make the change under this skill |
+| The diff grows large or hard to review | Break into smaller independent simplifications | Abandon the broad pass and keep only verified local changes |
 
 **The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
 
