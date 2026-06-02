@@ -45,14 +45,14 @@ Do not optimize because a change "seems faster" or an anti-pattern is familiar. 
 
 Two complementary approaches — use both:
 
-- **Synthetic (Lighthouse, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
+- **Synthetic (Lighthouse, OpenCode Playwright/browser tooling, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
 - **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
 
 **Frontend:**
 ```bash
-# Synthetic: Lighthouse in Chrome DevTools (or CI)
-# Chrome DevTools → Performance tab → Record
-# Chrome DevTools MCP → Performance trace
+# Synthetic: Lighthouse in CI/manual runs
+# OpenCode: use browser-testing-with-devtools / Playwright tooling for runtime evidence
+# Manual reference: Chrome DevTools → Performance tab → Record
 
 # RUM: Web Vitals library in code
 import { onLCP, onINP, onCLS } from 'web-vitals';
@@ -82,7 +82,7 @@ Use the symptom to decide what to measure first:
 What is slow?
 ├── First page load
 │   ├── Large bundle? --> Measure bundle size, check code splitting
-│   ├── Slow server response? --> Measure TTFB in DevTools Network waterfall
+│   ├── Slow server response? --> Measure TTFB in OpenCode browser network requests or DevTools Network waterfall
 │   │   ├── DNS long? --> Add dns-prefetch / preconnect for known origins
 │   │   ├── TCP/TLS long? --> Enable HTTP/2, check edge deployment, keep-alive
 │   │   └── Waiting (server) long? --> Profile backend, check queries and caching

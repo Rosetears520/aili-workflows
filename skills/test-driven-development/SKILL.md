@@ -357,23 +357,23 @@ For detailed browser runtime setup instructions and workflows, see `browser-test
 
 ## When to Use Subagents for Testing
 
-For complex bug fixes, spawn a subagent to write the reproduction test:
+For complex bug fixes, separate reproduction-test authorship from fix authorship when the active ROSE/orchestrator contract allows it. Do not directly spawn nested agents from this skill; route any delegated test work through ROSE / `parallel-subagent-dispatch`.
 
 ```
-Main agent: "Spawn a subagent to write a test that reproduces this bug:
-[bug description]. The test should fail with the current code."
+ROSE/orchestrator: "Use `parallel-subagent-dispatch` to assign a test-focused worker:
+[bug description]. The reproduction test should fail with the current code."
 
-Subagent: Writes the reproduction test
+Test worker: Writes the reproduction test
 
-Main agent: Verifies the test fails, then implements the fix,
+Implementing agent: Verifies the test fails, then implements the fix,
 then verifies the test passes.
 ```
 
-This separation ensures the test is written without knowledge of the fix, making it more robust.
+If delegation is unavailable, disallowed, or would violate user-requested ownership, the current agent writes the smallest reproduction test directly before implementing the fix. The goal is independence of evidence, not bypassing ROSE routing or runtime constraints.
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+Use the patterns above as the local source of truth for behavior-focused tests, DAMP test data, minimal mocks, Arrange-Act-Assert structure, and reproduction-first bug fixes. For browser runtime verification, route to `browser-testing-with-devtools` when applicable.
 
 ## Common Rationalizations
 

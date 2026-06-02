@@ -228,35 +228,7 @@ Controller (HTTP) → Service (Business Logic) → Repository (Data Access)
 
 ### Dependency Injection (All Languages)
 
-**TypeScript:**
-```typescript
-class OrderService {
-  constructor(
-    private readonly orderRepo: OrderRepository,    // ✅ injected interface
-    private readonly emailService: EmailService,
-  ) {}
-}
-```
-
-**Python:**
-```python
-class OrderService:
-    def __init__(self, order_repo: OrderRepository, email_service: EmailService):
-        self.order_repo = order_repo                 # ✅ injected
-        self.email_service = email_service
-```
-
-**Go:**
-```go
-type OrderService struct {
-    orderRepo    OrderRepository                      // ✅ interface
-    emailService EmailService
-}
-
-func NewOrderService(repo OrderRepository, email EmailService) *OrderService {
-    return &OrderService{orderRepo: repo, emailService: email}
-}
-```
+Inject repositories, clients, and side-effect services through constructors or framework providers. Services should depend on interfaces/protocols where the language supports them, not concrete HTTP or database details.
 
 ---
 
@@ -277,21 +249,6 @@ function requiredEnv(name: string): string {
   if (!value) throw new Error(`Missing required env var: ${name}`);  // fail fast
   return value;
 }
-```
-
-**Python:**
-```python
-from pydantic_settings import BaseSettings
-
-class Settings(BaseSettings):
-    database_url: str                        # required — app won't start without it
-    jwt_secret: str                          # required
-    port: int = 3000                         # optional with default
-    db_pool_size: int = 10
-    class Config:
-        env_file = ".env"
-
-settings = Settings()                        # fails fast if DATABASE_URL missing
 ```
 
 ### Rules
@@ -333,17 +290,6 @@ class ValidationError extends AppError {
     super('Validation failed', 'VALIDATION_ERROR', 422);
   }
 }
-```
-
-```python
-# Base (Python)
-class AppError(Exception):
-    def __init__(self, message: str, code: str, status_code: int):
-        self.message, self.code, self.status_code = message, code, status_code
-
-class NotFoundError(AppError):
-    def __init__(self, resource: str, id: str):
-        super().__init__(f"{resource} not found: {id}", "NOT_FOUND", 404)
 ```
 
 ### Global Error Handler
@@ -470,65 +416,11 @@ export const apiClient = {
 
 ### Option B: React Query + Typed Client (Recommended for React)
 
-```typescript
-// hooks/use-orders.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
-
-interface Order { id: string; total: number; status: string; }
-interface CreateOrderInput { items: { productId: string; quantity: number }[] }
-
-export function useOrders() {
-  return useQuery({
-    queryKey: ['orders'],
-    queryFn: () => apiClient.get<{ data: Order[] }>('/api/orders'),
-    staleTime: 1000 * 60,  // 1 min
-  });
-}
-
-export function useCreateOrder() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateOrderInput) =>
-      apiClient.post<{ data: Order }>('/api/orders', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
-  });
-}
-
-// Usage in component:
-function OrdersPage() {
-  const { data, isLoading, error } = useOrders();
-  const createOrder = useCreateOrder();
-  if (isLoading) return <Skeleton />;
-  if (error) return <ErrorBanner error={error} />;
-  // ...
-}
-```
+Wrap the typed client in `useQuery` / `useMutation`, use stable query keys, invalidate affected resources on mutation success, and render loading/error states at the component boundary.
 
 ### Option C: tRPC (Same Team Owns Both Sides)
 
-```typescript
-// server: trpc/router.ts
-export const appRouter = router({
-  orders: router({
-    list: publicProcedure.query(async () => {
-      return db.order.findMany({ include: { items: true } });
-    }),
-    create: protectedProcedure
-      .input(z.object({ items: z.array(orderItemSchema) }))
-      .mutation(async ({ input, ctx }) => {
-        return orderService.create(ctx.user.id, input);
-      }),
-  }),
-});
-export type AppRouter = typeof appRouter;
-
-// client: automatic type safety, no code generation
-const { data } = trpc.orders.list.useQuery();
-const createOrder = trpc.orders.create.useMutation();
-```
+Use tRPC when both sides are TypeScript and the same team owns the contract. Keep procedures validated, protected where needed, and exported through the inferred `AppRouter` type.
 
 ### Option D: OpenAPI Generated Client (Public / Multi-Consumer APIs)
 
@@ -588,24 +480,7 @@ router.delete('/users/:id', authenticate, authorize('admin'), deleteUser);
 
 ### Auth Token Automatic Refresh
 
-```typescript
-// lib/api-client.ts — transparent refresh on 401
-async function apiWithRefresh<T>(path: string, options: RequestInit = {}): Promise<T> {
-  try {
-    return await api<T>(path, options);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
-      const refreshed = await api<{ accessToken: string }>('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',  // send httpOnly cookie
-      });
-      setAuthToken(refreshed.accessToken);
-      return api<T>(path, options);  // retry
-    }
-    throw err;
-  }
-}
-```
+On 401, call the refresh endpoint once with the httpOnly refresh cookie, update in-memory access token state, retry the original request once, then fail closed and redirect to login if refresh fails.
 
 ---
 
@@ -613,17 +488,7 @@ async function apiWithRefresh<T>(path: string, options: RequestInit = {}): Promi
 
 ### Structured JSON Logging
 
-```typescript
-// ✅ Structured — parseable, filterable, alertable
-logger.info('Order created', {
-  orderId: order.id, userId: user.id, total: order.total,
-  items: order.items.length, duration_ms: Date.now() - startTime,
-});
-// Output: {"level":"info","msg":"Order created","orderId":"ord_123",...}
-
-// ❌ Unstructured — useless at scale
-console.log(`Order created for user ${user.id} with total ${order.total}`);
-```
+Log structured objects (`logger.info('Order created', { orderId, userId, duration_ms })`) instead of string interpolation. Include request IDs and never log passwords, tokens, PII, or secrets.
 
 ### Log Levels
 
@@ -718,29 +583,7 @@ Client → PUT uploadUrl (direct to S3, bypasses your server)
 Client → POST /api/photos { fileKey: "uploads/abc123.jpg" }  (save reference)
 ```
 
-**Backend:**
-```typescript
-app.get('/api/uploads/presign', authenticate, async (req, res) => {
-  const { filename, type } = req.query;
-  const key = `uploads/${crypto.randomUUID()}-${filename}`;
-  const url = await s3.getSignedUrl('putObject', {
-    Bucket: process.env.S3_BUCKET, Key: key,
-    ContentType: type, Expires: 300,  // 5 min
-  });
-  res.json({ uploadUrl: url, fileKey: key });
-});
-```
-
-**Frontend:**
-```typescript
-async function uploadFile(file: File) {
-  const { uploadUrl, fileKey } = await apiClient.get<PresignResponse>(
-    `/api/uploads/presign?filename=${file.name}&type=${file.type}`
-  );
-  await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-  return apiClient.post('/api/photos', { fileKey });
-}
-```
+Backend returns a short-lived upload URL and storage key after validating auth, filename, content type, and size policy. Frontend uploads directly to storage, then sends the returned key to the API to create the domain record.
 
 ### Option B: Multipart (Small Files < 10MB)
 
@@ -767,88 +610,15 @@ const res = await fetch('/api/upload', { method: 'POST', body: formData });
 
 ### Option A: Server-Sent Events (SSE) — One-Way Server → Client
 
-Best for: notifications, live feeds, streaming AI responses.
-
-**Backend (Express):**
-```typescript
-app.get('/api/events', authenticate, (req, res) => {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    Connection: 'keep-alive',
-  });
-  const send = (event: string, data: unknown) => {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-  };
-  const unsubscribe = eventBus.subscribe(req.user.id, (event) => {
-    send(event.type, event.payload);
-  });
-  req.on('close', () => unsubscribe());
-});
-```
-
-**Frontend:**
-```typescript
-function useServerEvents(userId: string) {
-  useEffect(() => {
-    const source = new EventSource(`/api/events?userId=${userId}`);
-    source.addEventListener('notification', (e) => {
-      showToast(JSON.parse(e.data).message);
-    });
-    source.onerror = () => { source.close(); setTimeout(() => /* reconnect */, 3000); };
-    return () => source.close();
-  }, [userId]);
-}
-```
+Best for notifications, live feeds, and streaming AI responses. Authenticate the stream, send typed events, clean up subscriptions on close, and rely on browser reconnection with bounded backoff.
 
 ### Option B: WebSocket — Bidirectional
 
-Best for: chat, collaborative editing, gaming.
-
-**Backend (ws library):**
-```typescript
-import { WebSocketServer } from 'ws';
-const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-wss.on('connection', (ws, req) => {
-  const userId = authenticateWs(req);
-  if (!userId) { ws.close(4001, 'Unauthorized'); return; }
-  ws.on('message', (raw) => handleMessage(userId, JSON.parse(raw.toString())));
-  ws.on('close', () => cleanupUser(userId));
-  const interval = setInterval(() => ws.ping(), 30000);
-  ws.on('pong', () => { /* alive */ });
-  ws.on('close', () => clearInterval(interval));
-});
-```
-
-**Frontend:**
-```typescript
-function useWebSocket(url: string) {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  useEffect(() => {
-    const socket = new WebSocket(url);
-    socket.onopen = () => setWs(socket);
-    socket.onclose = () => setTimeout(() => /* reconnect */, 3000);
-    return () => socket.close();
-  }, [url]);
-  const send = useCallback((data: unknown) => ws?.send(JSON.stringify(data)), [ws]);
-  return { ws, send };
-}
-```
+Best for chat, collaborative editing, and gaming. Authenticate during connection, validate every message, heartbeat idle sockets, clean up user state on close, and reconnect on the client with backoff.
 
 ### Option C: Polling (Simplest, No Infrastructure)
 
-```typescript
-function useOrderStatus(orderId: string) {
-  return useQuery({
-    queryKey: ['order-status', orderId],
-    queryFn: () => apiClient.get<Order>(`/api/orders/${orderId}`),
-    refetchInterval: (query) => {
-      if (query.state.data?.status === 'completed') return false;
-      return 5000;
-    },
-  });
-}
-```
+Use bounded polling for simple status checks. Stop polling when terminal state is reached and avoid using it as a substitute for high-volume realtime workloads.
 
 ### Decision
 

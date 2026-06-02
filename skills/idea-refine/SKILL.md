@@ -1,11 +1,15 @@
 ---
 name: idea-refine
-description: Refines ideas iteratively. Refine ideas through structured divergent and convergent thinking. Use "idea-refine" or "ideate" to trigger.
+description: Refines raw ideas through structured divergent and convergent thinking for ordinary non-command brainstorming, idea shaping, options comparison, and explicit IDEATE deepening routed by `aili-delivery-flow`; do not use as the top-level `/ideate` command owner or for existing-plan stress-test, review, or completion-claim checks.
 ---
 
 # Idea Refine
 
 Refines raw ideas into sharp, actionable concepts worth building through structured divergent and convergent thinking.
+
+## Routing Boundary
+
+Use this skill for ordinary non-command brainstorming and idea shaping, or when `aili-delivery-flow` explicitly routes an IDEATE session here for deeper divergence, convergence, or options comparison. Do not treat `/ideate` as this skill's own top-level trigger; lifecycle entry remains owned by `aili-delivery-flow`. Do not use this skill for stress-testing an existing plan, reviewing work, or validating a completion claim; route those scenarios to the appropriate review or stress-test skill.
 
 ## How It Works
 
@@ -21,8 +25,8 @@ No script or bundled resource is required. Run this as an interactive conversati
 
 **Trigger Phrases:**
 - "Help me refine this idea"
-- "Ideate on [concept]"
-- "Stress-test my plan"
+- "Brainstorm on [concept]"
+- "Compare directions for [concept]"
 
 ## Output
 

@@ -5,7 +5,7 @@ description: "Create, edit, analyze, format, or validate Excel/XLSX/CSV spreadsh
 
 # MiniMax XLSX Skill
 
-Handle the request directly. Do NOT spawn sub-agents. Always write the output file the user requests.
+Within an already-owned XLSX artifact task, handle the request directly and do not spawn sub-agents yourself. This does not override ROSE/user-assigned subagent ownership or `parallel-subagent-dispatch` routing. Always write the output file the user requests.
 
 ## Routing Boundary
 

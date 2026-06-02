@@ -28,30 +28,7 @@ Do not use this skill for ordinary CRUD screens, dashboard fixes, isolated compo
 
 ## Skill Structure
 
-```
-frontend-dev/
-├── SKILL.md                      # Core skill (this file)
-├── scripts/                      # Asset generation scripts
-│   ├── minimax_tts.py            # Text-to-speech
-│   ├── minimax_music.py          # Music generation
-│   ├── minimax_video.py          # Video generation (async)
-│   └── minimax_image.py          # Image generation
-├── references/                   # Detailed guides (read as needed)
-│   ├── minimax-cli-reference.md  # CLI flags quick reference
-│   ├── asset-prompt-guide.md     # Asset prompt engineering rules
-│   ├── minimax-tts-guide.md      # TTS usage & voices
-│   ├── minimax-music-guide.md    # Music prompts & lyrics format
-│   ├── minimax-video-guide.md    # Camera commands & models
-│   ├── minimax-image-guide.md    # Ratios & batch generation
-│   ├── minimax-voice-catalog.md  # All voice IDs
-│   ├── motion-recipes.md         # Animation code snippets
-│   ├── env-setup.md              # Environment setup
-│   └── troubleshooting.md        # Common issues
-├── templates/                    # Visual art templates
-│   ├── viewer.html               # p5.js interactive art base
-│   └── generator_template.js     # p5.js code reference
-└── canvas-fonts/                 # Static art fonts (TTF + licenses)
-```
+This skill uses local `scripts/` for MiniMax asset generation, `references/` for CLI/prompt/motion details, `templates/` for visual art, and `canvas-fonts/` for static art typography. Read only the relevant resource for the task.
 
 ## Project Structure
 
@@ -85,67 +62,7 @@ assets/
 | **Svelte/SvelteKit** | `static/assets/` | `src/lib/components/` |
 | **Astro** | `public/assets/` | `src/components/` |
 
-### Pure HTML
-
-```
-project/
-├── index.html
-├── assets/
-│   ├── images/
-│   ├── videos/
-│   └── audio/
-├── css/
-│   └── styles.css
-└── js/
-    └── main.js           # Animations (GSAP/vanilla)
-```
-
-### React / Next.js
-
-```
-project/
-├── public/assets/        # Static assets
-├── src/
-│   ├── components/
-│   │   ├── ui/           # Button, Card, Input
-│   │   ├── sections/     # Hero, Features, CTA
-│   │   └── motion/       # RevealSection, StaggerGrid
-│   ├── lib/
-│   ├── styles/
-│   └── app/              # Pages
-└── package.json
-```
-
-### Vue / Nuxt
-
-```
-project/
-├── public/assets/
-├── src/                  # or root for Nuxt
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── sections/
-│   │   └── motion/
-│   ├── composables/      # Shared logic
-│   ├── pages/
-│   └── assets/           # Processed assets (optional)
-└── package.json
-```
-
-### Astro
-
-```
-project/
-├── public/assets/
-├── src/
-│   ├── components/       # .astro, .tsx, .vue, .svelte
-│   ├── layouts/
-│   ├── pages/
-│   └── styles/
-└── package.json
-```
-
-**Component naming:** PascalCase (`HeroSection.tsx`, `HeroSection.vue`, `HeroSection.astro`)
+Keep sections/components in the framework's normal component directory (`src/components`, `src/lib/components`, or Astro `src/components`), assets in the static asset directory above, and component names in PascalCase (`HeroSection.tsx`, `HeroSection.vue`, `HeroSection.astro`).
 
 ---
 
@@ -233,15 +150,7 @@ Adapt dynamically based on user requests.
 
 ## 1.6 Creative Arsenal
 
-| Category | Patterns |
-|----------|----------|
-| Navigation | Dock magnification, Magnetic button, Gooey menu, Dynamic island, Radial menu, Speed dial, Mega menu |
-| Layout | Bento grid, Masonry, Chroma grid, Split-screen scroll, Curtain reveal |
-| Cards | Parallax tilt, Spotlight border, Glassmorphism, Holographic foil, Swipe stack, Morphing modal |
-| Scroll | Sticky stack, Horizontal hijack, Locomotive sequence, Zoom parallax, Progress path, Liquid swipe |
-| Gallery | Dome gallery, Coverflow, Drag-to-pan, Accordion slider, Hover trail, Glitch effect |
-| Text | Kinetic marquee, Text mask reveal, Scramble effect, Circular path, Gradient stroke, Kinetic grid |
-| Micro | Particle explosion, Pull-to-refresh, Skeleton shimmer, Directional hover, Ripple click, SVG draw, Mesh gradient, Lens blur |
+Use high-variance patterns only when they serve the campaign: bento/masonry/split-screen layouts, parallax/spotlight/glass cards, sticky or horizontal scroll storytelling, kinetic text, hover trails, mesh gradients, SVG draw, lens blur, and particle accents.
 
 ## 1.7 Bento Paradigm
 
@@ -453,17 +362,7 @@ BENEFIT:    What customer gains
 
 ## 4.3 Headlines
 
-| Formula | Example |
-|---------|---------|
-| Promise | "Double open rates in 30 days" |
-| Question | "Still wasting 10 hours/week?" |
-| How-To | "How to automate your pipeline" |
-| Number | "7 mistakes killing conversions" |
-| Negative | "Stop losing leads" |
-| Curiosity | "The one change that tripled bookings" |
-| Transformation | "From 50 to 500 leads" |
-
-Be specific. Lead with outcome, not method.
+Use promise, question, how-to, numbered, negative, curiosity, or transformation headlines. Be specific and lead with outcome, not method.
 
 ## 4.4 CTAs
 
@@ -477,14 +376,7 @@ Place: above fold, after value, multiple on long pages.
 
 ## 4.5 Emotional Triggers
 
-| Trigger | Example |
-|---------|---------|
-| FOMO | "Only 3 spots left" |
-| Fear of loss | "Every day without this, you're losing $X" |
-| Status | "Join 10,000+ top agencies" |
-| Ease | "Set it up once. Forget forever." |
-| Frustration | "Tired of tools that deliver nothing?" |
-| Hope | "Yes, you CAN hit $10K MRR" |
+Use FOMO, fear of loss, status, ease, frustration, or hope only when appropriate to the product and audience.
 
 ## 4.6 Objection Handling
 

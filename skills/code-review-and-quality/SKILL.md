@@ -364,8 +364,8 @@ Part of code review is dependency review:
 ```
 ## See Also
 
-- For detailed security review guidance, see `references/security-checklist.md`
-- For performance review checks, see `references/performance-checklist.md`
+- For detailed security review guidance, use `security-and-hardening`
+- For detailed profiling and optimization checks, use `performance-optimization`
 
 ## Common Rationalizations
 

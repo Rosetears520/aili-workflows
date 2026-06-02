@@ -22,7 +22,7 @@ Every framework-specific code decision must be backed by official documentation.
 
 - Correctness does not depend on a specific version (renaming variables, fixing typos, moving files)
 - Pure logic that works the same across all versions (loops, conditionals, data structures)
-- The user explicitly wants speed over verification ("just do it quickly")
+- The user explicitly wants speed over verification ("just do it quickly") and the task does not involve version-sensitive framework/API/library behavior
 
 ## The Process
 
@@ -65,6 +65,8 @@ If versions are missing or ambiguous, **ask the user**. Don't guess — the vers
 Fetch the specific documentation page for the feature you're implementing. Not the homepage, not the full docs — the relevant page.
 
 For library/API documentation, setup commands, framework examples, or version-sensitive code, prefer Context7 when it is installed in the current OpenCode environment. Do not require the user to manually say "use context7" each time. Do not assume Context7 is installed; if it is unavailable, fall back to official docs, package documentation, and source references. Do not add or rely on a repository-local Context7 skill.
+
+Speed requests may reduce citation verbosity, but they do not remove the required source/evidence check for version-sensitive framework, API, or library behavior. If correctness depends on the detected version, verify the source first and then summarize citations briefly.
 
 **Source-fetch fallback ladder:**
 

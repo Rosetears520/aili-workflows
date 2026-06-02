@@ -315,7 +315,7 @@ function useToggleTask() {
 
 ## See Also
 
-For detailed accessibility requirements and testing tools, see `references/accessibility-checklist.md`.
+Accessibility gate: use semantic elements first; every control needs an accessible name; keyboard users must be able to reach, operate, and leave each interaction; focus must move predictably for dialogs, menus, and route/content changes; text and essential UI contrast must meet WCAG 2.1 AA; errors and status updates must be exposed without relying on color alone.
 
 ## Common Rationalizations
 
