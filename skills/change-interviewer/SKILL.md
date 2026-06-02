@@ -76,9 +76,18 @@ Only OpenSpec change directories have deterministic no-question file output. For
 
 Packet Mode defaults to file output, not chat-first output.
 
+### Quick Reference Flow
+
+```text
+source-ground -> resolve placement -> draft packet -> 🔴 stress-test -> repair -> persist -> concise summary
+filled answers -> incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
+```
+
 Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for chat-only output, writing is blocked by permissions or missing workspace access, or the user chooses chat-only output after the placement question.
 
 OpenSpec change output is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing; chat-only is an explicit user-selected fallback.
+
+🔴 STOP before writing when placement is not deterministic: for any non-OpenSpec source, missing workspace access, ambiguous target, existing target ownership conflict, or user-pasted text with no path, ask the placement question and wait. Do not choose a path silently.
 
 Target path resolution:
 
@@ -265,6 +274,8 @@ If the user says `先这样`, `按目前信息写回`, or equivalent, stop askin
 
 After generating the draft interview packet, use `strategy-stress-test` to stress-test and repair the draft packet.
 
+🔴 STOP before persistence if the stress-test found an unresolved missing question, unsupported default, non-executable acceptance criterion, or unmarked `Open Question` / `Unverified` item. Repair the packet first or report the blocker.
+
 Check:
 
 - What important question is missing?
@@ -312,6 +323,8 @@ After the user fills the interview packet:
 ## Phase E: Write Back
 
 Write only to the agreed target files.
+
+🔴 STOP before write-back when the target file is not explicitly agreed, answers conflict, existing content would need replacement instead of merge, or a confirmed answer would change scope/design/tasks beyond the agreed package. Ask or report the conflict instead of overwriting.
 
 General write-back rules:
 

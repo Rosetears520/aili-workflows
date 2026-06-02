@@ -75,6 +75,16 @@ These behaviors apply at all times, across all skills. ROSE’s canonical guardr
 
 Use these boundaries before defaulting to generic implementation skills:
 
+🔴 CHECKPOINT for routing conflicts: when two or more skills plausibly apply, choose the skill that owns the user's current artifact or lifecycle gate, then use narrower skills only as sub-steps. Do not let this router restate or override `aili-delivery-flow`, ROSE, review gates, or subagent ownership rules.
+
+| Conflict | Choose first | Fallback if still ambiguous |
+|---|---|---|
+| `/ideate`, `/define`, `/build`, `/ship` vs any phase skill | `aili-delivery-flow` | Stop and ask which lifecycle mode the user wants |
+| Harness behavior complaint vs approved harness edit | `harness-issue-triage` before `harness-evolution` | Do not edit core harness controls until approval exists |
+| Implementation plus independent subagent lanes | `parallel-subagent-dispatch` for packet routing, then the domain skill inside each packet | If edit scopes overlap, use sequential work or ask ROSE/user |
+| Review after implementation vs direct code review | `review-pipeline` for non-trivial completed changes; `code-review-and-quality` for a single review lane | If blockers cannot be reconciled, keep final PASS blocked |
+| Artifact format skill vs generic docs/test planning | Use the explicit output format skill (`minimax-*`, `pptx-generator`) | Ask for output format/placement before writing |
+
 Interview packets and generated test documents are durable project artifacts. For OpenSpec changes, write the repository-local Markdown artifact in the change directory without asking.
 
 For every non-OpenSpec source, including a single source document with an obvious sibling path, ask where to place the artifact before writing; chat-only remains an explicit user-selected fallback.
@@ -146,28 +156,13 @@ These are the subtle errors that look like productivity but create problems:
 
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
 
-## Lifecycle Sequence
+## Lifecycle Boundary
 
-For a complete feature, the typical skill sequence is:
+Do not duplicate the full delivery lifecycle here. If the user invokes `/ideate`, `/define`, `/build`, `/ship`, or asks for AILI lifecycle routing, hand control to `aili-delivery-flow` and let that skill own mode transitions, gates, and final routing.
 
-```
-1. idea-refine                 → Refine vague ideas
-2. spec-driven-development     → Define what we're building
-3. planning-and-task-breakdown → Break into verifiable chunks
-4. context-engineering         → Load the right context
-5. source-driven-development   → Verify against official docs
-6. incremental-implementation  → Build slice by slice
-7. test-driven-development     → Prove each slice works
-8. code-review-and-quality     → Review before merge
-9. review-pipeline             → Reconcile post-implementation reviewers when needed
-10. git-workflow-and-versioning → Clean commit history
-11. documentation-and-adrs     → Document decisions
-12. shipping-and-launch        → Deploy safely
-```
+For ordinary non-lifecycle work, choose only the smallest applicable chain. Example: a bug fix might need `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`; a completed non-trivial diff might go directly to `review-pipeline`.
 
 Use `strategy-stress-test` conditionally whenever a material artifact or claim exists and risk warrants it, such as before accepting a spec, plan, review, reconciliation, or completion claim. If the skill is not available in the current runtime, perform the same compact check directly instead of skipping the guardrail.
-
-Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
 
 ## Quick Reference
 

@@ -29,6 +29,8 @@ Direct allowlist 小改可以跳过完整 evidence pack，但必须说明为什�
 5. 把冲突、stale、missing、generated、archived 证据显式标出。
 6. 给出下一步：edit、delegate、ask_user、blocked、verify。
 
+🔴 CHECKPOINT: 在进入编辑、审查结论或 completion claim 前，必须能列出至少 1 个有效证据锚点，或把状态降级为 `PARTIAL` / `NOT_FOUND` / `CONFLICTING` / `BLOCKED`。没有 anchors，就不能说 “confirmed / verified / done / repository pattern”。
+
 ## Evidence pack 字段
 
 ```text
@@ -80,6 +82,22 @@ Unsupported project facts must become `Hypothesis`, delegated evidence work, use
 - Secrets, auth, permissions, tool policy, install/hooks, trust model: `security-auditor`
 
 Use the lightest specialist that can return compact anchors. Do not paste raw grep dumps or long logs into MainAgent context.
+
+Runtime-valid delegation only:
+
+| Need | If specialist is exposed and allowed | If not exposed/allowed |
+|---|---|---|
+| Broad local code evidence | Delegate to `code-scout` or equivalent read-only scout | Search locally with available tools, or mark `Unverified` |
+| Docs/OpenSpec/workflow evidence | Delegate to exposed docs scout | Read local docs yourself, or ask caller to dispatch |
+| External/current behavior | Delegate/fetch only if web access is allowed | Mark external behavior `Unverified`; do not infer |
+| Test/security review | Delegate only when caller/runtime permits | Provide escalation request; do not fabricate specialist verdict |
+
+## 🛑 STOP / Blacklist
+
+- Do not claim a repo fact without `path:line`, symbol, command output, explicit user instruction, or reconciled anchored subagent evidence.
+- Do not name unavailable agents as if they ran; say “escalation needed” or `Unverified`.
+- Do not convert stale docs, generated files, partial logs, or memory into current fact without freshness checks.
+- Do not proceed from `CONFLICTING` evidence to edit/ship without resolving or reporting the conflict.
 
 ## 输出给用户
 

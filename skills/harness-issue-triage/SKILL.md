@@ -26,6 +26,16 @@ Do not use this for ordinary application bugs or product-code implementation iss
 5. Explain the narrowest fix and why broader prompt changes are or are not needed.
 6. If a core harness edit is needed, stop with a triage report and ask for approval or hand off to `harness-evolution`.
 
+🛑 STOP / fallback table:
+
+| Condition | Conservative fallback |
+|---|---|
+| Packaged `references/` are missing or unreadable | Do not guess; report `BLOCKED_CONTEXT_INSUFFICIENT` and name the missing reference. |
+| Evidence is insufficient to localize a component | Return a partial triage with observed facts, unknowns, and the next read-only evidence request. |
+| The issue is actually product-code, app behavior, or ordinary test failure | Stop triage and route to debugging/planning/implementation; do not label it a harness defect. |
+| Downstream repo lacks `docs/harness/**` | Use packaged references first; mark source-repo docs as unavailable, not required. |
+| User asks to edit during triage | Refuse edits in this skill and hand off only after explicit approval through `harness-evolution`. |
+
 ## Boundaries
 
 - Read-only by default: do not edit, stage, commit, push, or rewrite harness files.
@@ -33,6 +43,7 @@ Do not use this for ordinary application bugs or product-code implementation iss
 - Agent prompt changes require an explicit harness maintenance task and user approval.
 - Read `docs/harness/**` only for harness issues, harness maintenance, or review of a harness change.
 - In downstream/global installs, do not assume `docs/harness/**` exists. Use this skill’s packaged `references/` first.
+- Do not fabricate ownership from file names alone; every component call needs a reference, path, or quoted rule as evidence.
 
 ## Output
 

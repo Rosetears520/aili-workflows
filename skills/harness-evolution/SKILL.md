@@ -28,6 +28,21 @@ If the user is only reporting that behavior is wrong and asking where the issue 
 5. If approved, apply only the approved change and run the named verification trigger.
 6. Record the verdict using `references/verdict-policy.md`.
 
+🔴 CHECKPOINTS:
+
+- Missing triage evidence: do not edit; produce a report that names the missing evidence and next read-only step.
+- Approval denied or absent: do not edit protected harness files; return `BLOCKED_APPROVAL_REQUIRED` with the proposed change and verification plan.
+- Verification fails after an approved edit: stop, report the failing command/output, and propose rollback or a smaller follow-up patch instead of widening scope.
+
+Fallback table:
+
+| Condition | Conservative fallback |
+|---|---|
+| No `harness-issue-triage` report and component is unclear | Classify with packaged references only; if still unclear, ask for triage first. |
+| User asks for direct core harness edit without approval record | Convert to report-first proposal and request explicit approval. |
+| Approved change requires extra files, new deps, schema changes, or broader refactor | Stop as out of approved scope and request a new approval. |
+| Named verification cannot run | Mark `NEEDS_REVIEW`, explain why, and provide the strongest manual/static evidence. |
+
 ## Boundaries
 
 - Report/proposal artifacts are allowed by default.
@@ -35,6 +50,7 @@ If the user is only reporting that behavior is wrong and asking where the issue 
 - Core harness includes ROSE/runtime rules, commands, skill routing, subagent contracts, memory policy, install scripts, OpenCode hooks, and harness docs.
 - Do not write SQLite manually, change memory schema, add dependencies, commit, push, or silently edit protected harness files.
 - Do not modify `agents/rose.md` during normal tasks. Agent prompt edits require an explicit harness maintenance task and human approval.
+- Do not treat an OpenSpec mention as edit approval unless it explicitly approves the exact harness files and change direction.
 
 ## Verification
 

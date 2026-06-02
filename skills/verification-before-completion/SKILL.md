@@ -17,6 +17,8 @@ This skill adapts Superpowers-style "evidence before claims" discipline to this 
 
 ## Gate
 
+🔴 GATE: No completion wording until the claim is mapped to fresh evidence and the evidence actually proves that exact claim.
+
 Before making a completion claim:
 
 1. Identify the claim.
@@ -25,6 +27,19 @@ Before making a completion claim:
 4. Read the full output and exit code when a command is used.
 5. Report success only if the evidence supports the claim.
 6. Otherwise report the actual status and unverified risk.
+
+## Claim → Evidence Matrix
+
+| Claim wording | Minimum acceptable evidence | Downgrade when missing |
+|---|---|---|
+| `implemented` | Diff inspection shows requested files/behavior changed | `changes drafted; implementation unverified` |
+| `fixed` | Reproduction or targeted test now passes, or bug path manually verified | `fix attempted; not verified` |
+| `tests passing` | Fresh command output with exit code/result read | `tests not run` or `tests failed` |
+| `build/typecheck/lint passing` | Fresh relevant command output with exit code/result read | `check not run` or `check failed` |
+| `ready` / `accepted` / `verified` | Required targeted evidence plus any requested broader gates; stress-test if multi-source | `needs review` or `partially verified` |
+| `no new files/artifacts` | `git status`, `git ls-files --others`, or equivalent scoped inspection | `artifact state unverified` |
+
+If evidence only proves a narrower claim, use the narrower wording.
 
 ## Completion Stress Test
 

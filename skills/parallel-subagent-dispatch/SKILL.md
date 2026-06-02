@@ -130,6 +130,15 @@ Before dispatching, ROSE must verify:
 
 If any item fails, run the work sequentially or narrow the task packets until independence is true.
 
+🔴 CHECKPOINT before dispatch: name each packet owner, allowed scope, evidence source, edit permission, and reconciliation criterion. Do not dispatch until overlapping edits, hidden sequencing, and missing specialist lanes are resolved or explicitly blocked.
+
+| If this is true | Do this first | If still unresolved |
+|---|---|---|
+| Two subagents would edit the same file or shared mutable state | Split into sequential packets or assign one editor and one read-only reviewer | Stop; report overlapping ownership instead of parallelizing |
+| A packet needs another packet's result to start | Run the dependency first and dispatch only the independent remainder | Stop; mark parallel dispatch unsafe |
+| Required evidence source is unclear | Narrow the packet to scouting only and require evidence anchors | Return `BLOCKED_CONTEXT_INSUFFICIENT` to ROSE |
+| User requested a specific subagent owner | Preserve that owner in the packet | Ask the user before converting ownership to ROSE |
+
 ## Subagent Task Packet Template
 
 Send each subagent a complete packet. Do not rely on it inheriting the main conversation context.
@@ -165,6 +174,15 @@ After subagents return:
 3. Decide whether follow-up work is sequential, parallel, or blocked.
 4. Run or request fresh verification before claiming completion.
 5. Summarize findings by work package and separate verified facts from recommendations.
+
+🔴 CHECKPOINT before reconciliation: every accepted conclusion must have evidence anchors and an owner. ROSE owns evidence reconciliation, routing, and final acceptance gates, but must not fabricate, redo, or silently replace subagent-owned edit/review/test work; if ownership must change, get explicit user approval first.
+
+| Reconciliation failure | ROSE action | Stop condition |
+|---|---|---|
+| Subagents conflict on a fact or recommendation | Read the cited evidence and request one focused follow-up if needed | If evidence remains split, mark `Unverified`; do not claim PASS |
+| A result lacks file/line, command, log, or source evidence | Ask for a bounded evidence-only follow-up or exclude the claim | If the claim is required for acceptance, block completion |
+| A required reviewer/test/security lane was missed | Dispatch the missing lane before final acceptance | If dispatch is unavailable, report `NEEDS_REVIEW` |
+| Parallel edit work produced overlap or ordering ambiguity | Stop new edits; reconcile ownership and verify the combined diff sequentially | If ownership cannot be made safe, block and ask the user |
 
 ### Reconciliation Stress Test
 

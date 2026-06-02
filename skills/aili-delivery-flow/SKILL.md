@@ -21,6 +21,25 @@ This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP mod
 
 ## Workflow
 
+### Compact Mode Decision Table
+
+| User intent | Mode | Required gate before continuing | Must not do |
+|---|---|---|---|
+| Explore/refine an idea | IDEATE | none beyond evidence discipline | edit production code or create BUILD packages |
+| Define requirements, specs, tests, or interviews | DEFINE | stop before implementation unless the user confirms, waives, or accepts `Unverified` gates | implement, review-repair, or claim BUILD readiness |
+| Implement approved work | BUILD | explicit approval plus scoped package queue or ready target evidence | weaken DEFINE artifacts or skip local quality gates |
+| Review/repair/close out implemented work | SHIP | implementation evidence plus review/repair readiness | claim ready without fresh verification and closeout |
+
+### 🔴 Red Gates
+
+Stop immediately and report the missing next action when:
+
+- the requested mode is not one of IDEATE, DEFINE, BUILD, or SHIP;
+- DEFINE output lacks required spec/interview/test-document confirmation for BUILD;
+- BUILD lacks explicit approval, package scope, or resolvable ready-target evidence;
+- SHIP lacks fresh implementation, review, repair, or verification evidence;
+- backend artifacts conflict with lifecycle state or make readiness ambiguous.
+
 1. Select one mode from the user request or command: IDEATE, DEFINE, BUILD, or SHIP.
 2. Select the backend adapter: OpenSpec, Superpowers-style plan, custom files, or conservative auto-detection.
 3. Apply the mode gate before any work:
@@ -35,6 +54,7 @@ This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP mod
 
 - Only four top-level commands are valid: `/ideate`, `/define`, `/build`, `/ship`.
 - Research, questionnaire, test-plan, implementation, debugging, review, repair, and harness evolution are internal stages, not user command entrypoints.
+- Anti-entrypoint blacklist: do not expose or invent top-level `/research`, `/questionnaire`, `/test-plan`, `/implement`, `/debug`, `/review`, `/repair`, `/harness`, or backend-specific lifecycle commands.
 - Backend-specific task systems store artifacts; they do not weaken lifecycle gates.
 - Do not start BUILD from DEFINE output unless the user has confirmed the relevant spec/questionnaire/test document state, explicitly waived it, or explicitly accepted an `Unverified` gate.
 

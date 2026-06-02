@@ -24,6 +24,16 @@ Before editing:
 4. If the current branch is a non-main branch but is unrelated to the current task, create and switch to a new task branch.
 5. If the working tree contains unrelated uncommitted changes, stop and ask the user how to proceed before writing files. Offer: continue in the current working tree and accept mixing risk, create/use a separate worktree, or pause while the user commits/stashes/cleans the existing changes. Do not choose a separate worktree automatically unless the user already approved that workflow in the current task.
 
+🛑 Hard gates:
+
+| Situation | Required action |
+|---|---|
+| On `main`, `master`, or `trunk` for a write task | Do not edit until on an approved task branch/worktree. |
+| User/task forbids commits | Do not create savepoint commits; still inspect diff and verify. |
+| Push, merge, PR creation, branch deletion, or worktree removal requested | Require explicit user approval for that exact action. |
+| Force-push, reset hard, clean, skipped hooks, or shared-history rewrite | Require explicit approval and report safer alternatives first. |
+| Unrelated dirty workspace | Stop and ask; do not auto-stash, auto-clean, or auto-worktree. |
+
 Branch naming:
 - `feature/<short-slug>` for features
 - `fix/<short-slug>` for bug fixes
@@ -328,17 +338,14 @@ git diff --staged
 # 2. Ensure no secrets
 git diff --staged | grep -i "password\|secret\|api_key\|token"
 
-# 3. Run tests
-npm test
-
-# 4. Run linting
-npm run lint
-
-# 5. Run type checking
-npx tsc --noEmit
+# 3. Discover and run the smallest relevant project command
+# Prefer AGENTS.md, README, Makefile, package scripts, pyproject, Cargo.toml,
+# or CI config over generic npm examples.
 ```
 
-Automate this with git hooks:
+If the project documents exact commands, use those commands. If no command is documented, state the discovery path and run the narrowest safe verification available before committing.
+
+Automate checks with project-approved hooks only; do not add hook tooling or dependencies unless the task explicitly asks:
 
 ```json
 // package.json (using lint-staged + husky)
@@ -391,6 +398,7 @@ git log --grep="validation" --oneline
 
 - Large uncommitted changes accumulating
 - Editing directly on `main`, `master`, or `trunk`
+- Push, merge, PR, or branch cleanup without explicit approval
 - Using `git branch <name>` and assuming the working tree switched branches
 - Commit messages like "fix", "update", "misc"
 - Formatting changes mixed with behavior changes
