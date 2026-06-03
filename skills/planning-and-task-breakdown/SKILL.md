@@ -180,6 +180,26 @@ Check whether:
 
 Fix the plan when evidence supports the fix. Otherwise mark the item as `Open Question` or `Unverified`.
 
+### 🔴 CHECKPOINT / 🛑 STOP: Dispatch and Parallel Work Gate
+
+Before assigning work to another agent, session, issue, or parallel lane, confirm:
+
+- each package has non-overlapping files or an explicit sequential dependency
+- shared contracts, schemas, APIs, and acceptance criteria are settled first
+- each package has a single owner, verification command, and blocked-by field
+- risky work is marked `HITL` when it needs product, architecture, credential, migration, or release approval
+
+If any item is missing, stop and revise the plan; do not dispatch ambiguous or overlapping packages.
+
+### Oversized or Blocked Task Fallbacks
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Task is XL or touches independent subsystems | Split by vertical user-visible slice or dependency layer | Mark as `BLOCKED_OVERSIZED_TASK` and ask for scope reduction |
+| Acceptance criteria cannot fit in 3 focused bullets | Separate behavior, edge cases, and verification into smaller tasks | Mark unclear criteria as `Open Question` |
+| Likely files overlap across parallel packages | Make the packages sequential or define a shared contract task first | Do not parallelize |
+| Task needs credentials, schema migration, release approval, or destructive action | Mark `HITL` and name the required approval/evidence | Block implementation until the human gate is cleared |
+
 ## Task Sizing Guidelines
 
 | Size | Files | Scope | Example |
@@ -250,6 +270,7 @@ When multiple agents or sessions are available:
 - **Safe to parallelize:** Independent feature slices, tests for already-implemented features, documentation
 - **Must be sequential:** Database migrations, shared state changes, dependency chains
 - **Needs coordination:** Features that share an API contract (define the contract first, then parallelize)
+- **Do not parallelize:** Packages with overlapping edit paths, unsettled public contracts, shared mutable state, or missing verification commands
 
 ## Common Rationalizations
 
@@ -268,6 +289,8 @@ When multiple agents or sessions are available:
 - All tasks are XL-sized
 - No checkpoints between tasks
 - Dependency order isn't considered
+- Parallel dispatch before overlap, ownership, and verification are explicit
+- Blocked or oversized tasks passed to implementation without a fallback decision
 
 ## Verification
 

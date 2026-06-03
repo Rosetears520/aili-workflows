@@ -51,6 +51,16 @@ Every factual claim about repository code, commits, issues, or PRs should includ
 
 No evidence means no claim. Mark unsupported claims as `[UNVERIFIED]`.
 
+🛑 Evidence availability fallbacks:
+
+| Condition | Conservative fallback |
+|---|---|
+| Missing GitHub URL or repository/number | Ask for the URL or exact repo plus issue/PR number; do not infer from vague text. |
+| Ambiguous issue vs PR reference | Resolve read-only if possible; otherwise ask before triage. |
+| Private repo, permission denied, or auth unavailable | Report `BLOCKED` or `PARTIAL` with the inaccessible URL and continue only with user-provided/local evidence clearly marked. |
+| Rate limit, network failure, deleted item, or unavailable API | Retry only if cheap and safe; otherwise report the failure and mark affected claims `[UNVERIFIED]`. |
+| Evidence conflicts across comments, commits, or files | Separate claims by source and avoid a definitive conclusion until reconciled. |
+
 ## Output Placement
 
 - If the triage belongs to an existing OpenSpec change, write inside that change directory only when the user or current workflow requests a file.
@@ -64,6 +74,8 @@ No evidence means no claim. Mark unsupported claims as `[UNVERIFIED]`.
 3. Inspect linked code, tests, docs, and git history only as needed for the claim.
 4. Separate reporter claims, maintainer statements, observed repository facts, inferred risks, and unverified items.
 5. Produce a triage report with no write actions.
+
+Red flags: requests to comment, label, close, approve, request changes, merge, push, or mutate branch/issue state. Stop and confirm this skill is read-only instead of performing the action.
 
 ## Output Contract
 

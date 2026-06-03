@@ -31,6 +31,8 @@ SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
  reviews    reviews  reviews    reviews
 ```
 
+🔴 **CHECKPOINT · Phase approval required:** after SPECIFY, PLAN, and TASKS, stop and ask the human to approve, revise, or mark unresolved items as `Open Question` / `Unverified`. Do not treat silence, inferred intent, or a generated draft as approval.
+
 ### Phase 1: Specify
 
 Start with a high-level vision. Ask the human clarifying questions until requirements are concrete.
@@ -47,6 +49,15 @@ ASSUMPTIONS I'M MAKING:
 ```
 
 Don't silently fill in ambiguous requirements. The spec's entire purpose is to surface misunderstandings *before* code gets written — assumptions are the most dangerous form of misunderstanding.
+
+### Ambiguity Fallbacks
+
+| Trigger condition | First response | If still unresolved |
+|---|---|---|
+| User asks for a broad feature with no success criteria | Draft 2-4 concrete success criteria and ask the user to accept or edit them | Keep the item as `Open Question`; do not proceed to PLAN |
+| Architecture, data model, security, or migration behavior is unclear | List the competing options and the tradeoff of each | Add the decision to `Ask First` boundaries and stop before implementation |
+| Existing code/docs conflict with the user's description | Cite the conflicting evidence and ask which source wins | Mark the conflict `Unverified`; do not choose silently |
+| The spec would require public API, dependency, schema, or deployment changes | Move the change into `Ask First` and request explicit approval | Block implementation tasks until approval is recorded |
 
 **Write a spec document covering these six core areas:**
 
@@ -145,6 +156,8 @@ Check whether:
 
 Do not proceed to PLAN until material loopholes are fixed, accepted by the user, or explicitly recorded as `Open Question` / `Unverified`.
 
+🛑 **STOP before PLAN:** if any material loophole remains neither accepted nor recorded, return a clarification request instead of drafting a plan.
+
 ### Phase 2: Plan
 
 With the validated spec, generate a technical implementation plan:
@@ -157,6 +170,8 @@ With the validated spec, generate a technical implementation plan:
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
+🛑 **STOP before TASKS:** do not break work into tasks until the human has approved the plan or explicitly accepted its open risks.
+
 ### Phase 3: Tasks
 
 Break the plan into discrete, implementable tasks:
@@ -166,6 +181,8 @@ Break the plan into discrete, implementable tasks:
 - Each task includes a verification step (test, build, manual check)
 - Tasks are ordered by dependency, not by perceived importance
 - No task should require changing more than ~5 files
+
+🛑 **STOP before IMPLEMENT:** do not start coding until the task list has human approval and each task has acceptance criteria plus verification.
 
 **Task template:**
 ```markdown

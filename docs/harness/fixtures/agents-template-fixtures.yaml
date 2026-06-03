@@ -1,0 +1,16 @@
+{
+  "fixture": "agents-template-smoke",
+  "required_markers": ["AGENTS.md", "templates/AGENTS.md", "test-plan.md", "placement decision", "smoke"],
+  "cases": [
+    {
+      "id": "agents-template-lifecycle-pointer-smoke",
+      "input": "Project template references installed AILI lifecycle commands.",
+      "expected": "templates/AGENTS.md keeps only a short smoke pointer to /ideate, /define, /build, /ship and routes lifecycle authority to skills/aili-delivery-flow."
+    },
+    {
+      "id": "test-document-placement-smoke",
+      "input": "A non-OpenSpec source asks for a test document.",
+      "expected": "test-plan.md generation requires a placement decision before writing outside an OpenSpec change directory."
+    }
+  ]
+}

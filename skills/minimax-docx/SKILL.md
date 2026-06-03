@@ -25,6 +25,8 @@ Use this skill only when the workflow explicitly needs Word/DOCX or an editable 
 
 **First operation in session:** `scripts/env_check.sh` — do not proceed if `NOT READY`. (Skip on subsequent operations within the same session.)
 
+🛑 **STOP — env NOT READY:** if `scripts/env_check.sh` reports `NOT READY`, do not create, edit, validate, or promise a DOCX. Report the missing dependency/tool and wait for setup or user approval of a degraded manual path.
+
 ## Quick Start: Direct C# Path
 
 When the task requires structural document manipulation (custom styles, complex tables, multi-section layouts, headers/footers, TOC, images), write C# directly instead of wrestling with CLI limitations. Use this scaffold:
@@ -129,6 +131,8 @@ $CLI diff --before in.docx --after out.docx
 
 Read `references/scenario_c_apply_template.md` first. Preview and analyze both source and template.
 
+🔴 **CHECKPOINT — template ambiguity:** before applying a template, identify whether it is C-1 style overlay or C-2 base-replace, and list content that must be preserved. If the template purpose, section/header/footer ownership, or source-vs-template precedence is unclear, stop and ask instead of guessing.
+
 ```bash
 $CLI apply-template --input source.docx --template template.docx --output out.docx
 ```
@@ -140,6 +144,17 @@ Run the **validation pipeline**, then the **hard gate-check**:
 $CLI validate --input out.docx --gate-check assets/xsd/business-rules.xsd
 ```
 Gate-check is a **hard requirement**. Do NOT deliver until it passes. If it fails: diagnose, fix, re-run.
+
+If gate-check fails, use this recovery path:
+
+| Trigger | First fix | Still failing |
+|---|---|---|
+| XSD/business rule names element order | Run `fix-order`, then inspect the named parent/child ordering | Patch only the named XML structure; do not regenerate the whole document |
+| Style/header/footer preservation fails | Re-check C-1 vs C-2 routing and compare source/template preview | Stop if preserving both content and template structure conflicts |
+| Content disappeared or duplicated | Run `$CLI diff --before ... --after ...` and restore from source/template base | Do not deliver until paragraph/table counts match expected preservation |
+| Gate-check cannot run | Run business validation and preview as fallback | Mark gate-check as unverified; do not claim full validation |
+
+🛑 **STOP — failed gate-check:** do not deliver or call the DOCX complete while the hard gate-check fails unless the user explicitly accepts an unverified artifact.
 
 Also diff to verify content preservation: `$CLI diff --before source.docx --after out.docx`
 

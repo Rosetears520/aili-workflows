@@ -5,7 +5,7 @@ description: "Create, edit, analyze, format, or validate Excel/XLSX/CSV spreadsh
 
 # MiniMax XLSX Skill
 
-Handle the request directly. Do NOT spawn sub-agents. Always write the output file the user requests.
+Within an already-owned XLSX artifact task, handle the request directly and do not spawn sub-agents yourself. This does not override ROSE/user-assigned subagent ownership or `parallel-subagent-dispatch` routing. Always write the output file the user requests.
 
 ## Routing Boundary
 
@@ -41,6 +41,8 @@ Start with `xlsx_reader.py` for structure discovery, then pandas for custom anal
 Copy `templates/minimal_xlsx/` → edit XML directly → pack with `xlsx_pack.py`. Every derived value MUST be an Excel formula (`<f>SUM(B2:B9)</f>`), never a hardcoded number. Apply font colors per `format.md`.
 
 ## EDIT — XML direct-edit (read `references/edit.md` first)
+
+🔴 **CHECKPOINT — destructive workbook edit:** before editing an existing workbook, confirm the exact input file, output file, target sheet/cells/rows/columns, formula intent, and whether VBA/pivots/sparklines must be preserved. If the task requires deleting sheets, replacing the workbook, overwriting formulas with values, or changing protected/hidden content, stop for explicit user approval.
 
 **CRITICAL — EDIT INTEGRITY RULES:**
 1. **NEVER create a new `Workbook()`** for edit tasks. Always load the original file.
@@ -111,6 +113,17 @@ This is an EDIT task. Unpack → fix broken `<f>` nodes → pack. Preserve all o
 ## VALIDATE — Check formulas (read `references/validate.md` first)
 
 Run `formula_check.py` for static validation. Use `libreoffice_recalc.py` for dynamic recalculation when available.
+
+If formula validation fails:
+
+| Trigger | First fix | Still failing |
+|---|---|---|
+| Bad cell reference/range | Correct the `<f>` formula text and preserve the `<c r="...">` address | Re-open workbook XML and verify sheet relationship IDs |
+| Cross-sheet formula error | Quote sheet names exactly and verify workbook sheet names | Read back with `xlsx_reader.py`; do not deliver until sample formulas resolve |
+| Cached values stale | Recalculate with LibreOffice when available or clear stale `<v>` only for formula cells | Report dynamic recalculation as unverified if no recalc tool exists |
+| Reader/pack validation fails | Repack from the original unpacked workbook after minimal XML fix | Do not create a new workbook as fallback for EDIT tasks |
+
+🛑 **STOP:** do not deliver a workbook with failing `formula_check.py`, missing original sheets, or unverified formula readback unless the user explicitly accepts the risk.
 
 ## Financial Color Standard
 

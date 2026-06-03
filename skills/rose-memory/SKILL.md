@@ -49,6 +49,7 @@ Use this skill when:
 - DCP compression is normal context management. Use compressed summaries as the authoritative active-chat state; query memory only when the summary is insufficient, the active task is ambiguous, the user explicitly resumes prior work, or memory writeback is pending.
 - If memory writeback fails, retry once when the fix is obvious. If it still fails, continue safe task progress, keep a pending TodoWrite item for memory writeback, retry before final handoff, and report any remaining failure.
 - If the current directory is not inside a project, stop and report `SETUP_BLOCKED_NO_PROJECT_ROOT`.
+- 🔴 CHECKPOINT: before promoting durable memory, confirm the fact is stable, reusable, evidence-backed, non-secret, and not contradicted by the current user message or DCP summary. If any condition is missing, complete with `--no-durable-memory-promoted` and report the no-promotion reason.
 
 ## Memory Layers
 
@@ -68,6 +69,16 @@ Conflict rule:
 - Current user message wins over current chat history, DCP summaries, and memory.
 - DCP compressed summary wins over stale memory for active-task state.
 - If memory suggests a conflict that changes the next action, surface it before acting.
+
+Conflict next-action table:
+
+| Conflict found | Next action |
+|---|---|
+| Current user message conflicts with memory | Follow the current user message; do not promote the stale memory. |
+| DCP summary conflicts with memory for active-task state | Follow the DCP summary unless the user corrects it. |
+| Memory claims lack evidence | Treat as context only; mark `[UNVERIFIED]` and avoid durable promotion. |
+| Memory contains possible secret, raw log, or credential | Do not repeat or store it; report a redacted concern. |
+| Conflict changes what you would do next | Stop and ask or state the conflict before acting. |
 
 ## Command
 

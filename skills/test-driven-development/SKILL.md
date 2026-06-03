@@ -36,6 +36,8 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 Write the test first. It must fail. A test that passes immediately proves nothing.
 
+🔴 CHECKPOINT / 🛑 STOP after RED: Before writing implementation, capture the failing command, failure reason, and why the failure proves the intended behavior gap. If the test passes immediately or fails for the wrong reason, fix the test first.
+
 ### Vertical TDD, Not Horizontal TDD
 
 Do not write all tests first and then all implementation.
@@ -45,10 +47,12 @@ Use one behavior slice at a time:
 2. Confirm it fails for the right reason.
 3. Write the minimum implementation.
 4. Confirm it passes.
-5. Commit the verified slice on a non-main branch.
+5. Commit the verified slice on a non-main branch, or write a savepoint report when the active task forbids commits.
 6. Repeat.
 
 Tests should verify behavior through public interfaces. They should survive internal refactors.
+
+If commits are forbidden by the user or task contract, do not commit to satisfy this skill. Record a savepoint report instead: changed files, verification evidence, and rollback notes.
 
 Avoid:
 - testing private methods
@@ -75,6 +79,8 @@ describe('TaskService', () => {
 
 Write the minimum code to make the test pass. Don't over-engineer:
 
+🔴 CHECKPOINT / 🛑 STOP before fix: Name the smallest code path that can make the RED test pass. If the fix requires unrelated files, new dependencies, schema/API changes, or broad refactors, stop and ask for scope approval instead of expanding TDD silently.
+
 ```typescript
 // GREEN: Minimal implementation
 export async function createTask(input: { title: string }): Promise<Task> {
@@ -99,6 +105,8 @@ With tests green, improve the code without changing behavior:
 - Optimize if necessary
 
 Run tests after every refactor step to confirm nothing broke.
+
+🔴 CHECKPOINT before broad-suite claim: Do not say "all tests pass" until the targeted RED→GREEN command has passed and the relevant broader suite command has been run or explicitly marked unavailable.
 
 ## The Prove-It Pattern (Bug Fixes)
 
@@ -349,23 +357,23 @@ For detailed browser runtime setup instructions and workflows, see `browser-test
 
 ## When to Use Subagents for Testing
 
-For complex bug fixes, spawn a subagent to write the reproduction test:
+For complex bug fixes, separate reproduction-test authorship from fix authorship when the active ROSE/orchestrator contract allows it. Do not directly spawn nested agents from this skill; route any delegated test work through ROSE / `parallel-subagent-dispatch`.
 
 ```
-Main agent: "Spawn a subagent to write a test that reproduces this bug:
-[bug description]. The test should fail with the current code."
+ROSE/orchestrator: "Use `parallel-subagent-dispatch` to assign a test-focused worker:
+[bug description]. The reproduction test should fail with the current code."
 
-Subagent: Writes the reproduction test
+Test worker: Writes the reproduction test
 
-Main agent: Verifies the test fails, then implements the fix,
+Implementing agent: Verifies the test fails, then implements the fix,
 then verifies the test passes.
 ```
 
-This separation ensures the test is written without knowledge of the fix, making it more robust.
+If delegation is unavailable, disallowed, or would violate user-requested ownership, the current agent writes the smallest reproduction test directly before implementing the fix. The goal is independence of evidence, not bypassing ROSE routing or runtime constraints.
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+Use the patterns above as the local source of truth for behavior-focused tests, DAMP test data, minimal mocks, Arrange-Act-Assert structure, and reproduction-first bug fixes. For browser runtime verification, route to `browser-testing-with-devtools` when applicable.
 
 ## Common Rationalizations
 

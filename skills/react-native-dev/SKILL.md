@@ -30,6 +30,46 @@ Consult these resources as needed:
 
 ## Quick Reference
 
+### Implementation Workflow
+
+1. **Inspect runtime mode**: determine Expo managed, Expo prebuild/dev client, or bare React Native; record SDK/RN versions, router, state libraries, native modules, and nearest tests.
+2. **Choose the path** with the Expo/RN decision table; keep the existing runtime mode unless the task explicitly requires migration.
+3. **Implement the smallest slice**: route/screen shell, state/data layer, native capability permission path, loading/error/empty states, then release configuration only if requested.
+4. **Verify in layers**: run targeted Jest/RNTL tests, TypeScript/lint if present, `npx expo start` or platform build only when native/runtime behavior changed.
+5. **Report evidence**: list emulator/device/runtime mode, command results, and any store/EAS checks left `Unverified`.
+
+🔴 CHECKPOINT · 🛑 STOP before ejecting/prebuilding, adding a native module, changing EAS profiles, modifying store metadata, or replacing navigation/state architecture. These require explicit approval.
+
+### Expo / React Native Decision Flow
+
+| Project state or need | Use | Do not use |
+|---|---|---|
+| New app or Expo managed app | Expo Router + Expo SDK modules | Bare RN setup without explicit reason |
+| Existing bare RN app | Existing React Navigation/native module setup | Migrating to Expo during a feature fix |
+| Native API available in Expo Go | Expo module and permission hooks | Custom native module |
+| Native API not available in Expo Go | Dev client/prebuild only after approval | Silent `expo prebuild` |
+| Long list/image-heavy UI | `FlashList`, `expo-image`, memoized rows | `FlatList`/RN `Image` for large feeds |
+| Shared server state | React Query | Global Zustand store for fetched cache |
+
+### Failure Modes and Fallbacks
+
+| Trigger | First response | If still failing |
+|---|---|---|
+| `npm/yarn/pnpm install` dependency conflict | Identify package manager and lockfile; keep existing versions and Expo SDK compatibility | Report conflict; do not force install or upgrade SDK unasked |
+| Expo SDK/native module mismatch | Check `npx expo doctor` or package peer requirements when available | Stop before prebuild/eject or dependency changes |
+| Metro cache/runtime error | Restart Metro with project-approved cache command if documented | Report exact error and avoid deleting broad local state |
+| Jest/RNTL fails after UI change | Mock only native modules required by the changed component, following nearby tests | Mark test blocker if native module cannot be mocked locally |
+| EAS build fails | Separate code/signing/profile errors; inspect the failing phase | Do not change credentials, profiles, or store config without approval |
+| Release/test lane unavailable | Provide manual runbook and mark release evidence `Unverified` | Do not claim app-store readiness |
+
+### Do Not Do This
+
+- Do not run `expo prebuild`, eject, or add native modules as an unapproved shortcut.
+- Do not use `--force`, `--legacy-peer-deps`, or broad dependency upgrades to bypass conflicts.
+- Do not mutate EAS credentials, signing, bundle IDs, package names, or store metadata unless assigned.
+- Do not use browser React patterns that ignore native safe areas, gestures, keyboard avoidance, or accessibility roles.
+- Do not claim performance improvement without profiler, frame, bundle, or before/after evidence.
+
 ### Component Preferences
 
 | Purpose | Use | Instead of |

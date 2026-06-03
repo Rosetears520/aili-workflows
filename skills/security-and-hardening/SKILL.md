@@ -41,6 +41,8 @@ Security-first development practices for web applications. Treat every external 
 - Modifying rate limiting or throttling
 - Granting elevated permissions or roles
 
+🔴 **CHECKPOINT — High-risk security decisions:** stop for explicit approval before changing authentication/session behavior, storing or exposing new PII, relaxing CORS, adding uploads, changing authorization roles, or weakening rate limits/security headers. State the threat, data affected, and rollback path before editing.
+
 ### Never Do
 
 - **Never commit secrets** to version control (API keys, passwords, tokens)
@@ -50,6 +52,17 @@ Security-first development practices for web applications. Treat every external 
 - **Never use `eval()` or `innerHTML`** with user-provided data
 - **Never store sessions in client-accessible storage** (localStorage for auth tokens)
 - **Never expose stack traces** or internal error details to users
+
+## Security Decision Gates
+
+| Area | Stop before | Required evidence before implementation |
+|---|---|---|
+| Auth/session | New login flow, token storage change, OAuth provider, password reset | Current auth model, token lifetime/storage, revocation/error path |
+| PII/payment | New field, logging, analytics, export, third-party sharing | Data classification, minimization plan, encryption/redaction rule |
+| CORS | Adding wildcard, credentials, new origins, proxy bypass | Exact allowed origins, credential need, environment-specific config |
+| Uploads | New file type, larger size, public storage, direct-to-cloud flow | MIME + magic-byte check, max size, storage ACL, malware/quarantine plan |
+
+If the evidence is missing, return a clarification request instead of implementing a permissive default.
 
 ## OWASP Top 10 Prevention
 
@@ -312,9 +325,15 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 - [ ] Dependencies audited for vulnerabilities
 - [ ] Error messages don't expose internals
 ```
-## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+## Failure Handling
+
+| Trigger | First response | If unresolved |
+|---|---|---|
+| Security requirement conflicts with product request | Name the conflict and preserve the safer default | Ask for explicit product/security approval; do not silently weaken controls |
+| Audit finding has no patch | Check reachability and documented workaround | Track an allowlist with owner/review date or replace the dependency |
+| Secret appears in diff/log | Stop, remove it from output, and tell the user rotation may be required | Do not commit or print more context; request incident handling guidance |
+| Upload/CORS/auth behavior cannot be verified | Report the unverified gate and keep restrictive behavior | Do not claim hardened/secure until evidence exists |
 
 ## Common Rationalizations
 

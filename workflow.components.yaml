@@ -1,0 +1,14 @@
+{
+  "schema": "aili-workflow-components.v1",
+  "components": [
+    {"id": "lifecycle", "authority": "skills/aili-delivery-flow/references/lifecycle.md", "fallback": "docs/harness/aili-harness-contract.md"},
+    {"id": "backend", "authority": "docs/harness/backend-adapters.md"},
+    {"id": "harness-triage", "authority": "skills/harness-issue-triage/SKILL.md"},
+    {"id": "harness-change", "authority": "docs/harness/harness-change-report-template.md"},
+    {"id": "protocol", "authority": "skills/aili-delivery-flow/references/protocols/"},
+    {"id": "verification", "authority": "docs/harness/tool-policies.md"},
+    {"id": "memory", "authority": "skills/rose-memory/SKILL.md"},
+    {"id": "command", "authority": "docs/harness/command-lifecycle.md"},
+    {"id": "install", "authority": "scripts/install_opencode.sh"}
+  ]
+}

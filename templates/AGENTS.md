@@ -53,6 +53,8 @@ It is self-contained and project-local. Do not assume access to private global p
 
 These rules exist to reduce common LLM coding mistakes: wrong assumptions, hidden confusion, over-engineering, unrelated edits, and unverifiable completion.
 
+If this repository installs AILI delivery commands, treat `/ideate`, `/define`, `/build`, and `/ship` as thin lifecycle entrypoints governed by `skills/aili-delivery-flow`; localize harness/process problems with `skills/harness-issue-triage`, then route approved harness changes through `skills/harness-evolution` rather than duplicating lifecycle rules here.
+
 Tradeoff: these rules bias toward caution over speed. For trivial one-line tasks, use judgment and avoid ceremony. For non-trivial coding, debugging, refactoring, migration, review, documentation, or configuration work, follow them as hard execution rules.
 
 ### 1. Think Before Coding
@@ -104,6 +106,8 @@ Before editing or approving a change, establish:
 Use a read-only search agent when broad repository search would pollute the main context.
 
 The search agent may locate evidence, but the editing, reviewing, testing, or security agent must still read the final target files before acting.
+
+Before adding a local special-case, one-off branch, duplicated mapping, or hand-written generated output, inspect whether the behavior is controlled by an existing shared config, registry, manifest, template, schema, generator, or documented source of truth. If such a source exists, change that source and run the documented generation/check command; do not patch generated outputs or bypass the shared path unless the user explicitly approves the exception.
 
 ### Agentic Failure Guards
 
@@ -255,6 +259,29 @@ When verification cannot be run:
 - state what was checked instead
 - state the remaining risk
 
+### Test Artifact Placement
+
+Project-specific test locations:
+
+- Unit tests: TODO
+- Integration tests: TODO
+- CLI tests: TODO
+- API / contract tests: TODO
+- GUI / browser / Playwright tests: TODO
+- Test fixtures: TODO
+- Snapshots / golden files: TODO
+- Test reports / traces / screenshots: TODO (for example, `playwright-report/`, `test-results/`, or another project-defined path)
+- Temporary test output: TODO (OS temp is allowed only for ephemeral scratch/cache data that users do not need to open, review, or reference)
+
+Rules:
+
+- Do not place new test files in the repository root unless this section explicitly allows it.
+- Unless the user explicitly requests an external or temporary-only artifact, user-visible test files, test plans, reports, traces, screenshots, generated fixtures, golden files, and verification artifacts must be written inside the repository at a project-defined path or after a placement decision.
+- Do not introduce `playwright.config.*`, `tests/e2e/`, `e2e/`, screenshots, traces, browser fixtures, or browser reports without first confirming the intended location.
+- If a new test category is introduced, ask the user for its location once, then record the chosen convention here.
+- OpenSpec test documents belong in `openspec/changes/<change-id>/test-plan.md`.
+- Non-OpenSpec test documents require an explicit placement decision before writing.
+
 ## Security Rules
 
 - Never print, commit, log, or expose secrets, tokens, private keys, cookies, credentials, or production environment values.
@@ -273,7 +300,8 @@ Git is the safety net for AI-assisted changes.
 - Read-only tasks do not require a branch.
 - Any task that writes files must not work directly on `main`, `master`, or `trunk`.
 - For small, local changes, create or use a task branch in the current working tree.
-- For large, risky, experimental, multi-file, multi-session, parallel-agent, or dirty-workspace changes, use a task branch in a separate git worktree.
+- For large, risky, experimental, multi-file, multi-session, or parallel-agent changes, use a task branch in a separate git worktree.
+- If the current working tree has unrelated uncommitted changes, stop and ask the user how to proceed before writing files. Offer clear choices: continue in the current working tree and accept mixing risk, create/use a separate worktree, or wait for the user to commit/stash/clean the existing changes. Do not choose a separate worktree automatically unless the user already approved that workflow in the current task.
 - If already on a non-main branch, confirm it belongs to the current task before editing. If it is unrelated, create a new task branch or worktree.
 
 Suggested branch names:
@@ -304,10 +332,24 @@ Before committing:
 
 ### Worktree Policy
 
-Use branch + worktree when:
+Ask before using branch + worktree when:
 
 - the user asks not to pollute the current branch;
 - the current working tree has unrelated uncommitted changes;
+
+When unrelated uncommitted changes are present, ask the user to choose before writing files. Recommended options:
+
+```text
+A. Continue in the current working tree and accept mixing risk.
+B. Create/use a separate worktree.
+C. Pause while the existing changes are committed, stashed, or cleaned by the user.
+```
+
+Do not auto-select option B unless the user pre-approved isolated worktree handling for the current task.
+
+Use branch + worktree without an extra dirty-workspace question when:
+
+- the user explicitly chooses or requests an isolated worktree;
 - multiple agents or implementation approaches will run in parallel;
 - the task is broad, risky, experimental, or likely to span multiple sessions;
 - the task touches many files or crosses multiple subsystems.

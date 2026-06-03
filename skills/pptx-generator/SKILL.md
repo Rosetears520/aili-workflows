@@ -128,6 +128,17 @@ Run with: `cd slides && node compile.js`
 See [QA Process](references/pitfalls.md#qa-process).
 Use `verification-before-completion` before claiming the deck/slides are complete, fixed, passing, or verified; cite fresh compile and QA evidence.
 
+### Compile / QA Failure Recovery
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| `node compile.js` throws module/export errors | Verify every `slides/slide-XX.js` exists and exports synchronous `createSlide(pres, theme)` | Stop and report the missing/broken slide module; do not fabricate a finished deck |
+| PPTX opens with repair/corruption warning | Remove the last changed slide module, recompile, then re-add shapes/images incrementally | Treat as `BLOCKED_VERIFICATION`; deliver the last non-corrupt compile evidence, not the corrupt file |
+| Text, charts, or images overflow the slide | Reduce content, font size, or image crop within the 10" × 5.625" canvas | Ask the user to approve content cuts; do not ship clipped or unreadable slides |
+| QA cannot inspect the final PPTX | Compile successfully, then provide the exact missing QA capability and manual review checklist | Mark visual QA as unverified instead of claiming completion |
+
+🔴 CHECKPOINT / 🛑 STOP: If a compile, corruption, or visual QA failure remains after one focused repair pass, stop and report evidence before further edits.
+
 ### Output Structure
 
 ```
@@ -244,6 +255,16 @@ slide.addText("03", {
   align: "center", valign: "middle"
 });
 ```
+
+---
+
+## Red Flags and Anti-Patterns
+
+- Do not claim the deck is complete without a fresh compile result and QA evidence.
+- Do not ignore PowerPoint repair prompts, missing-slide warnings, broken media links, or unreadable overflow.
+- Do not use theme keys outside the required contract (`primary`, `secondary`, `accent`, `light`, `bg`).
+- Do not hide layout problems by exporting screenshots or PDF instead of fixing the PPTX.
+- Do not create extra `references/`, `scripts/`, or asset folders for this skill unless explicitly assigned.
 
 ---
 

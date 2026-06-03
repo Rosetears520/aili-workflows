@@ -40,6 +40,12 @@ Offer an ADR only when all are true:
 
 Skip ADRs for obvious choices, temporary decisions, minor implementation details, or choices with no real alternatives.
 
+### 🔴 CHECKPOINT · ADR Decision Gate
+
+🛑 STOP before writing an ADR as accepted when the decision changes architecture, data model, authentication, infrastructure, public API, or a hard-to-reverse dependency. Confirm the decision owner, accepted option, rejected alternatives, and reversal cost first.
+
+If those facts are missing, write a proposed ADR or an interview packet instead of inventing rationale.
+
 ### ADR Template
 
 Store ADRs in `docs/decisions/` with sequential numbering:
@@ -150,6 +156,12 @@ export function initializeTheme(theme: Theme): void {
 
 For public APIs (REST, GraphQL, library interfaces):
 
+### 🔴 CHECKPOINT · Public API Documentation Gate
+
+🛑 STOP before publishing API docs when the docs would define or imply new public behavior, compatibility promises, auth requirements, error codes, rate limits, or versioning policy that the implementation or owner has not confirmed.
+
+Document the implemented contract exactly. If code, tests, OpenAPI schemas, and existing docs disagree, resolve the conflict before updating user-facing docs.
+
 ### Inline with Types (Preferred for TypeScript)
 
 ```typescript
@@ -236,6 +248,17 @@ Use `CONTEXT.md` for shared domain language:
 Do not put implementation details in `CONTEXT.md` unless they are part of the domain language.
 
 When terms conflict between user language, docs, and code, surface the mismatch before writing new docs. Prefer one canonical term and record aliases only when they help readers map old language to current language.
+
+## Documentation Conflict Fallbacks
+
+| Trigger | First response | If still unresolved |
+|---|---|---|
+| Existing docs conflict with code or tests | Treat code/tests as evidence and label docs as stale | Ask the owner which source is authoritative before editing |
+| Two docs make incompatible claims | Identify both paths and the exact conflicting statements | Update only after the canonical source is confirmed |
+| Public API behavior is unclear | Inspect implementation, schemas, tests, and release notes | Stop; do not create compatibility promises from inference |
+| ADR rationale is missing | Record known context and alternatives as `Proposed` or `Draft` | Ask decision makers for the missing rationale |
+| A doc update would require product or architecture decisions | Separate the decision from the documentation task | Do not decide by writing docs |
+| The requested doc would expose secrets or internal-only data | Remove sensitive content and document safe operational guidance | Escalate instead of publishing the unsafe detail |
 
 ## Changelog Maintenance
 

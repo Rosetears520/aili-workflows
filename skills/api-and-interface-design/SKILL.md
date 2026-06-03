@@ -17,6 +17,27 @@ Design stable, well-documented interfaces that are hard to misuse. Good interfac
 - Establishing database schema that informs API shape
 - Changing existing public interfaces
 
+## Contract Design Workflow
+
+1. **Identify consumers:** list current and expected clients, internal callers, SDKs, jobs, integrations, and tests that observe the interface.
+2. **Define the contract first:** write request/input, response/output, error shape, authorization expectations, idempotency, pagination, and versioning/deprecation notes before implementation.
+3. **Check compatibility:** classify every change as additive, behavior-preserving, or breaking; prefer optional additions over field removals or type changes.
+4. **Validate boundary data:** place validation at external boundaries and parse third-party responses before using them.
+5. **Design verification:** add or update contract tests, schema checks, typed clients, or examples that prove consumer-visible behavior.
+6. **Document the contract:** keep types, OpenAPI/GraphQL schema, route docs, or module docs in sync with the implementation.
+
+🔴 CHECKPOINT / 🛑 STOP: Before changing a public route, field type, enum value, error shape, authorization rule, pagination contract, or module interface, pause and confirm whether a breaking-change plan, migration path, or deprecation window is required.
+
+## Fallbacks for Unclear Contracts
+
+| Trigger condition | First response | If still unresolved |
+|---|---|---|
+| Consumers are unknown | Search callers, clients, docs, tests, schemas, and usage examples | Treat the interface as public and avoid breaking changes |
+| Versioning policy is unclear | Prefer one-version-compatible additive changes | Escalate for product/architecture decision before version forks |
+| Error semantics differ across existing endpoints | Follow the nearest established API family | Document the inconsistency and avoid introducing a third pattern |
+| Required behavior conflicts with compatibility | Propose an additive field/endpoint or feature flag | Stop until migration/deprecation is approved |
+| Third-party response shape is undocumented | Validate with a narrow schema and fail closed | Report the unverified external contract |
+
 ## Core Principles
 
 ### Hyrum's Law
@@ -280,6 +301,9 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - List endpoints without pagination
 - Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
 - Third-party API responses used without validation or sanitization
+- Public interface changes without consumer inventory or migration notes
+- New versioned endpoints created only to avoid designing backward compatibility
+- Error messages or enum values changed without checking observable consumer behavior
 
 ## Verification
 

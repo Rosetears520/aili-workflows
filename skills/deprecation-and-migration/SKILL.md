@@ -64,6 +64,10 @@ Before deprecating anything, answer these questions:
 
 **Default to advisory.** Use compulsory only when the maintenance cost or risk justifies forcing migration. Compulsory deprecation requires providing migration tooling, documentation, and support — you can't just announce a deadline.
 
+🔴 **CHECKPOINT · Compulsory Deprecation:** Stop before converting advisory deprecation into a forced migration. Continue only when the accountable owner approves the reason, affected consumers, migration support plan, removal date, and rollback/extension criteria.
+
+🔴 **CHECKPOINT · Removal Date:** Stop before publishing a hard removal date. The date must include evidence of replacement readiness, consumer impact, support channel, and who can approve an extension.
+
 ## The Migration Process
 
 ### Step 1: Build the Replacement
@@ -111,11 +115,20 @@ Only after all consumers have migrated:
 
 ```
 1. Verify zero active usage (metrics, logs, dependency analysis)
-2. Remove the code
+2. 🔴 CHECKPOINT · Code Deletion: get explicit approval to delete code, tests, docs, and config
 3. Remove associated tests, documentation, and configuration
 4. Remove the deprecation notices
 5. Celebrate — removing code is an achievement
 ```
+
+**Removal failure fallback:**
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Active usage remains | Keep the old system running and contact the consuming owner | Extend the removal date through the Removal Date checkpoint |
+| Replacement does not cover a critical use case | Pause compulsory migration and close the gap in the replacement | Downgrade to advisory until replacement readiness is proven |
+| Owner approval is missing | Do not delete code | Escalate with usage evidence, migration status, and proposed new date |
+| Deletion breaks tests or dependent builds | Restore the deleted path in the same change and identify the dependency | Re-plan consumer migration before attempting deletion again |
 
 ## Migration Patterns
 
@@ -188,11 +201,14 @@ Zombie code is code that nobody owns but everybody depends on. It's not actively
 
 - Deprecated systems with no replacement available
 - Deprecation announcements with no migration tooling or documentation
+- Compulsory deprecation without explicit owner approval, support plan, and removal date
 - "Soft" deprecation that's been advisory for years with no progress
+- Hard removal date with no extension criteria or consumer impact evidence
 - Zombie code with no owner and active consumers
 - New features added to a deprecated system (invest in the replacement instead)
 - Deprecation without measuring current usage
 - Removing code without verifying zero active consumers
+- Deleting code, tests, docs, or config before the Code Deletion checkpoint
 
 ## Verification
 

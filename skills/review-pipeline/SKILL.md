@@ -11,6 +11,8 @@ Use this skill after non-trivial implementation and before ROSE claims `PASS`, `
 
 It is an orchestration workflow, not a reviewer persona. ROSE owns dispatch, reconciliation, and final acceptance.
 
+In the AILI lifecycle, this skill is normally entered from `aili-delivery-flow` SHIP mode; keep lifecycle gates there and keep this file focused on review orchestration.
+
 ## When to Use
 
 Use after changes that are multi-file, behavior-changing, security-sensitive, permission-related, test-heavy, release-impacting, or hard to verify by a single narrow command.
@@ -33,6 +35,8 @@ Collect:
 
 Dispatch only relevant read-only reviewers:
 
+🔴 CHECKPOINT before dispatch: reviewers must be read-only, relevant to the changed surface, and given the same review target, accepted scope, diff/files, verification evidence, and stop conditions. Do not dispatch security or test lanes away when the changed surface makes them relevant.
+
 - `code-reviewer`: correctness, maintainability, architecture, performance, and context adequacy
 - `test-engineer`: coverage gaps, test quality, and verification story
 - `security-auditor`: auth, permissions, secrets, command execution, network, dependency, deployment, schema, or data risk
@@ -50,6 +54,15 @@ Merge duplicate findings and classify each as:
 
 Name conflicts between reviewers and resolve them with evidence. If evidence is insufficient, mark the item `Unverified` instead of approving it.
 
+🔴 CHECKPOINT before accepting reconciliation: each blocker must be fixed, disproven with cited evidence, or explicitly accepted by the user. ROSE remains responsible for the final gate; reviewers provide evidence and recommendations, not final PASS.
+
+| Reconciliation failure | Required action | Do not do |
+|---|---|---|
+| Reviewers disagree on severity or correctness | Read cited evidence, classify by user scope and acceptance criteria, and request one focused follow-up only if needed | Average the opinions or choose the convenient result |
+| A finding has no concrete evidence | Mark `Unverified` and ask for bounded evidence if it affects acceptance | Treat reviewer confidence as proof |
+| A security/test lane reports missing context | Dispatch `code-scout` or a focused re-check for that context | Let ROSE invent context or waive the gate silently |
+| Fix verification passes but reviewer concern remains plausible | Re-run only the relevant reviewer lane with the new diff and evidence | Claim PASS from the command result alone |
+
 ### Phase 4: Fix Loop
 
 If blocking issues exist:
@@ -57,7 +70,7 @@ If blocking issues exist:
 1. Send a bounded work package to `implementer` or fix directly when the edit is small and safe.
 2. Run the narrowest verification that proves the fix.
 3. Re-run only the relevant reviewer pass.
-4. Stop after three non-converging loops and report `BLOCKED_VERIFICATION` or `BLOCKED_REVIEW`.
+4. 🛑 STOP after three non-converging loops on the same finding class; report `BLOCKED_VERIFICATION` or `BLOCKED_REVIEW` with the attempts, evidence, and remaining decision needed.
 
 ### Phase 5: Completion Gate
 

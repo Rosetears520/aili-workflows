@@ -41,6 +41,8 @@ shader-dev/
 3. If you need deeper understanding (math derivations, advanced patterns), follow the reference link at the bottom of each technique file to `reference/`
 4. Apply the **WebGL2 Adaptation Rules** below when generating standalone HTML pages
 
+🔴 **CHECKPOINT — Technique and performance budget:** before writing shader code, state the chosen technique stack, target runtime (ShaderToy vs standalone WebGL2), resolution/performance target, maximum loop counts, and required interaction/audio/multipass buffers. If the visual target or perf budget is unclear, ask before implementing.
+
 ## Technique Routing Table
 
 | User wants to create... | Primary technique | Combine with |
@@ -251,6 +253,25 @@ Deployment environments may use headless software rendering with limited GPU pow
 - Volume sampling / lighting inner loops: ≤ 32 steps
 - FBM octaves: ≤ 6 layers
 - Total nested loop iterations per pixel: ≤ 1000 (exceeding this freezes the browser)
+
+## Compile and Visual Validation Loop
+
+Run this loop after every shader draft:
+
+1. Compile vertex and fragment shaders; surface the exact compiler log if either fails.
+2. If compilation fails, fix only the named GLSL/JS issue first, then recompile.
+3. Render one frame and check for black/white screen, NaN-looking flashes, frozen animation, and missing uniforms.
+4. Use one visual debug output from [Shader Debugging Techniques](#shader-debugging-techniques) when geometry, normals, shadows, or UVs look wrong.
+5. Re-check the performance budget before adding another loop, FBM octave, ray-march step, or post-processing pass.
+
+| Failure | First fix | Still failing |
+|---|---|---|
+| Compile error | Fix the exact line/signature/type/order issue | Reduce to a minimal shader, then re-add techniques one at a time |
+| Black/white screen | Check WebGL2 context, shader link log, uniforms, and TDZ order | Add solid-color output, then restore stages incrementally |
+| Browser freezes | Cut ray steps/octaves/inner loops to budget | Remove the heaviest technique before adding new effects |
+| Visual mismatch | Switch to normal/depth/UV/material debug output | Ask for target reference or simplify the scene description |
+
+🛑 **STOP:** do not stack more techniques to hide a broken shader; compile, render, and visually isolate the failing stage first.
 
 ## Quick Recipes
 

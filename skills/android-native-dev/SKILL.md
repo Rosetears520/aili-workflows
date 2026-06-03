@@ -22,6 +22,8 @@ Before starting development, assess the current project state:
 - Before writing business logic, ensure `./gradlew assembleDebug` succeeds
 - If `gradle.properties` is missing, create it first and configure AndroidX
 
+🔴 **CHECKPOINT — Visual and platform decisions before UI code:** confirm app category, target devices/API, Compose vs Views, Material 3 style, dark theme, accessibility target, and required permissions. If the user has not specified these and the choice affects navigation, data model, permissions, or visual identity, stop and ask instead of guessing.
+
 ### 1.1 Required Files Checklist
 
 ```
@@ -84,91 +86,11 @@ dependencies {
 
 ### 2.3 Build Variants & Product Flavors
 
-Product Flavors allow you to create different versions of your app (e.g., free/paid, dev/staging/prod).
+Use product flavors for distinct app variants such as dev/staging/prod or free/paid. Keep variant-specific application IDs, app names, API URLs, logging flags, and resources in `app/build.gradle.kts` / source sets instead of runtime conditionals.
 
-**Configuration in app/build.gradle.kts**:
-
-```kotlin
-android {
-    // Define flavor dimensions
-    flavorDimensions += "environment"
-
-    productFlavors {
-        create("dev") {
-            dimension = "environment"
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
-
-            // Different config values per flavor
-            buildConfigField("String", "API_BASE_URL", "\"https://dev-api.example.com\"")
-            buildConfigField("Boolean", "ENABLE_LOGGING", "true")
-
-            // Different resources
-            resValue("string", "app_name", "MyApp Dev")
-        }
-
-        create("staging") {
-            dimension = "environment"
-            applicationIdSuffix = ".staging"
-            versionNameSuffix = "-staging"
-
-            buildConfigField("String", "API_BASE_URL", "\"https://staging-api.example.com\"")
-            buildConfigField("Boolean", "ENABLE_LOGGING", "true")
-            resValue("string", "app_name", "MyApp Staging")
-        }
-
-        create("prod") {
-            dimension = "environment"
-            // No suffix for production
-
-            buildConfigField("String", "API_BASE_URL", "\"https://api.example.com\"")
-            buildConfigField("Boolean", "ENABLE_LOGGING", "false")
-            resValue("string", "app_name", "MyApp")
-        }
-    }
-
-    buildTypes {
-        debug {
-            isDebuggable = true
-            isMinifyEnabled = false
-        }
-        release {
-            isDebuggable = false
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-}
-```
-
-**Build Variant Naming**: `{flavor}{BuildType}` → e.g., `devDebug`, `prodRelease`
-
-**Gradle Build Commands**:
-
-```bash
-# List all available build variants
-./gradlew tasks --group="build"
-
-# Build specific variant (flavor + buildType)
-./gradlew assembleDevDebug        # Dev flavor, Debug build
-./gradlew assembleStagingDebug    # Staging flavor, Debug build
-./gradlew assembleProdRelease     # Prod flavor, Release build
-
-# Build all variants of a specific flavor
-./gradlew assembleDev             # All Dev variants (debug + release)
-./gradlew assembleProd            # All Prod variants
-
-# Build all variants of a specific build type
-./gradlew assembleDebug           # All flavors, Debug build
-./gradlew assembleRelease         # All flavors, Release build
-
-# Install specific variant to device
-./gradlew installDevDebug
-./gradlew installProdRelease
-
-# Build and install in one command
-./gradlew installDevDebug && adb shell am start -n com.example.myapp.dev/.MainActivity
-```
+- Variant name format: `{flavor}{BuildType}` such as `devDebug` or `prodRelease`.
+- Useful commands: `./gradlew tasks --group="build"`, `./gradlew assembleDevDebug`, `./gradlew assembleRelease`, `./gradlew installDevDebug`.
+- For multiple dimensions, declare each dimension explicitly and assign every flavor to one dimension.
 
 **Access BuildConfig in Code**:
 
@@ -203,23 +125,6 @@ app/src/
 ├── prod/           # Prod-only code and resources
 ├── debug/          # Debug build type code
 └── release/        # Release build type code
-```
-
-**Multiple Flavor Dimensions** (e.g., environment + tier):
-
-```kotlin
-android {
-    flavorDimensions += listOf("environment", "tier")
-
-    productFlavors {
-        create("dev") { dimension = "environment" }
-        create("prod") { dimension = "environment" }
-
-        create("free") { dimension = "tier" }
-        create("paid") { dimension = "tier" }
-    }
-}
-// Results in: devFreeDebug, devPaidDebug, prodFreeRelease, etc.
 ```
 
 ---
@@ -349,29 +254,9 @@ data class User(
 
 ### 3.5 Common Syntax Pitfalls
 
-```kotlin
-// ❌ Wrong: Accessing uninitialized lateinit
-class MyViewModel : ViewModel() {
-    lateinit var data: String
-    fun process() = data.length  // May crash
-}
-
-// ✅ Correct: Use nullable or default value
-class MyViewModel : ViewModel() {
-    var data: String? = null
-    fun process() = data?.length ?: 0
-}
-
-// ❌ Wrong: Using return in lambda
-list.forEach { item ->
-    if (item.isEmpty()) return  // Returns from outer function!
-}
-
-// ✅ Correct: Use return@forEach
-list.forEach { item ->
-    if (item.isEmpty()) return@forEach
-}
-```
+- Avoid `lateinit` for data that may not be initialized before use; prefer nullable state or explicit defaults.
+- Use labeled returns such as `return@forEach` inside lambdas when you do not intend to return from the outer function.
+- Keep public data class fields deliberate; mark implementation details `private` or `internal`.
 
 ### 3.6 Server Response Data Class Fields Must Be Nullable
 
@@ -559,35 +444,7 @@ Variable names, resource IDs, colors, icons, and XML elements **must not** use A
 | Attributes | `id`, `name`, `type`, `style`, `theme`, `color` |
 | System | `app`, `android`, `content`, `data`, `action` |
 
-**Examples**:
-
-```xml
-<!-- ❌ Wrong: Using reserved names -->
-<color name="background">#FFFFFF</color>
-<color name="icon">#000000</color>
-
-<!-- ✅ Correct: Add prefix or specific naming -->
-<color name="app_background">#FFFFFF</color>
-<color name="icon_primary">#000000</color>
-```
-
-```kotlin
-// ❌ Wrong: Variable names conflict with system
-val icon = R.drawable.my_icon
-val background = Color.White
-
-// ✅ Correct: Use descriptive names
-val appIcon = R.drawable.my_icon
-val screenBackground = Color.White
-```
-
-```xml
-<!-- ❌ Wrong: Drawable name conflicts -->
-<ImageView android:src="@drawable/icon" />
-
-<!-- ✅ Correct: Add prefix -->
-<ImageView android:src="@drawable/ic_home" />
-```
+Use descriptive prefixes, e.g. `app_background`, `icon_primary`, `screenBackground`, and `ic_home`, rather than generic system-like names such as `background`, `icon`, or `view`.
 
 ---
 
@@ -611,6 +468,17 @@ val screenBackground = Color.White
 3. **Clean Build**: `./gradlew clean assembleDebug`
 4. **Check dependency versions**: Version conflicts are common causes
 5. **Refresh dependencies if needed**: Clear cache and rebuild
+
+### 6.2.1 Safe Build-Error Recovery
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| Gradle/AGP/Kotlin version conflict | Inspect wrapper, root Gradle, module Gradle, and version catalog before edits | Ask before changing plugin or dependency versions; do not broad-upgrade blindly |
+| Compose compiler/BOM mismatch | Align with existing project version source | If no source exists, ask before pinning versions |
+| AAPT/resource error | Fix the named XML/resource only | Do not rename resources broadly; verify references first |
+| Cache/dependency corruption suspected | Run `./gradlew assembleDebug --stacktrace` before cache refresh | Use `--refresh-dependencies` only after evidence points to cache/dependency state |
+
+🛑 **STOP:** never delete Gradle caches, change SDK/AGP/Kotlin major versions, or rewrite build files as a generic fix without user approval and a specific error trace.
 
 ### 6.3 Debugging Commands
 
@@ -763,6 +631,8 @@ See [Design Style Guide](references/design-style-guide.md) for detailed style pr
 - [ ] Startup < 2 seconds or shows progress
 - [ ] Visual style matches app category
 
+🔴 **CHECKPOINT — Visual validation before delivery:** run or inspect the changed screen in light/dark mode and at least one compact and one expanded size when UI changed. If no emulator/device/browser-preview equivalent is available, report the missing visual evidence and do not claim full UI verification.
+
 ### Design References
 
 | Topic | Reference |
@@ -802,33 +672,7 @@ Before adding test dependencies, inspect the project's existing versions to avoi
 | `androidx.test:runner`, `rules`, `ext:junit` | Should use compatible AndroidX Test versions      | Search for `androidx.test` in build files                             |
 | `mockk`                                      | Must support the project's Kotlin version         | Check `kotlin` version in root `build.gradle.kts` or version catalog |
 
-**Dependencies Reference** — add only the groups you need:
-
-```kotlin
-dependencies {
-    // --- Local unit tests (src/test/) ---
-    testImplementation("junit:junit:<version>")                          // 4.13.2+
-    testImplementation("org.robolectric:robolectric:<version>")          // 4.16.1+
-    testImplementation("io.mockk:mockk:<version>")                      // match Kotlin version
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:<version>")  // match coroutines-core
-    testImplementation("androidx.arch.core:core-testing:<version>")      // InstantTaskExecutorRule for LiveData
-    testImplementation("app.cash.turbine:turbine:<version>")             // Flow/StateFlow testing
-
-    // --- Instrumentation tests (src/androidTest/) ---
-    androidTestImplementation("androidx.test.ext:junit:<version>")
-    androidTestImplementation("androidx.test:runner:<version>")
-    androidTestImplementation("androidx.test:rules:<version>")
-    androidTestImplementation("androidx.test.espresso:espresso-core:<version>")
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:<version>")   // RecyclerView, Drawer
-    androidTestImplementation("androidx.test.espresso:espresso-intents:<version>")   // Intent verification
-    androidTestImplementation("androidx.test.espresso:espresso-idling-resource:<version>")
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:<version>")
-
-    // --- Compose UI tests (only if project uses Compose) ---
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")      // version from Compose BOM
-    debugImplementation("androidx.compose.ui:ui-test-manifest")          // required for createComposeRule
-}
-```
+**Dependencies Reference** — add only the groups you need: JUnit/Robolectric/MockK/coroutines-test for local unit tests, AndroidX Test/Espresso/UI Automator for instrumentation, and `compose-ui-test-junit4` plus `ui-test-manifest` for Compose UI tests.
 
 > **Note**: If the project uses a Compose BOM, `ui-test-junit4` and `ui-test-manifest` don't need explicit versions — the BOM manages them.
 

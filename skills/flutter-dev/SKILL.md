@@ -14,6 +14,45 @@ Use this skill for Flutter/Dart apps, widgets, Riverpod/Bloc, GoRouter, Flutter 
 
 ## Quick Reference
 
+### Implementation Workflow
+
+1. **Inspect project shape**: identify Flutter version, `pubspec.yaml` dependencies, state package, router, existing feature folders, and nearest tests before editing.
+2. **Choose the pattern** using the decision tables below; do not introduce Riverpod, Bloc, GoRouter, or Hooks into a project that already uses another working pattern unless the task explicitly asks for that migration.
+3. **Implement the smallest vertical slice**: model/state first, route or widget entry point second, UI states third (`loading`, `empty`, `error`, `success`), then platform-specific hooks only if required.
+4. **Verify locally**: run the narrowest available command first, usually `flutter test <target>` for logic/widgets, then `flutter analyze`, then `flutter run --profile` only for performance work.
+5. **Report evidence**: name changed widgets/providers/routes, state the verification command, and mark any skipped platform check as `Unverified`.
+
+🔴 CHECKPOINT · 🛑 STOP before a state-management or router change if it would migrate existing app architecture, affect deep links/auth redirects, or require adding packages. Ask for approval instead of silently replacing the project pattern.
+
+### State and Routing Decisions
+
+| Need | Use | Do not use |
+|---|---|---|
+| Local ephemeral UI state | `StatefulWidget`, `useState`, or local `StateProvider` matching the project | Global provider for one text field or toggle |
+| Shared synchronous app state | Riverpod `NotifierProvider` or existing Bloc/Cubit | Direct mutable singleton state |
+| Async/server state | `AsyncNotifierProvider`, `FutureProvider`, or existing repository + Bloc | Manual `isLoading` booleans spread across widgets |
+| Event-heavy workflow | Bloc/Cubit when already present or explicitly requested | Bloc for simple derived display state |
+| Auth-aware navigation | Existing `GoRouter` redirect/auth guard pattern | Imperative pushes from random widgets |
+| Feature navigation only | Existing route declarations plus typed route names | Ad-hoc string paths duplicated in widgets |
+
+### Failure Modes and Fallbacks
+
+| Trigger | First response | If still failing |
+|---|---|---|
+| `flutter pub get` fails | Inspect SDK/package constraints in `pubspec.yaml`; keep existing versions unless task allows dependency changes | Report dependency conflict; do not upgrade packages unasked |
+| Widget test cannot pump route/provider | Wrap the widget with the same app-level providers/router used by nearby tests | Add a minimal test harness in the test file only if adjacent tests already do this |
+| Auth redirect loops | Trace redirect conditions and provider loading state; ensure loading returns `null` redirect | Stop and report route/auth ambiguity before changing public navigation |
+| Rebuild jank persists | Use DevTools/rebuild logging to identify the specific provider/widget; apply `select()` or `const` locally | Mark performance result `Unverified` if profile evidence is unavailable |
+| Platform-specific behavior differs | Check `Platform`/plugin usage and run the relevant simulator/emulator if available | Report the unverified platform instead of assuming parity |
+
+### Do Not Do This
+
+- Do not add a new state-management framework just to satisfy a small widget task.
+- Do not replace existing Navigator/GoRouter architecture without explicit migration scope.
+- Do not optimize performance from intuition only; require profiling, rebuild counts, or a concrete failing scenario.
+- Do not hide loading/error states to make UI code shorter.
+- Do not add packages, generated code, or platform folders unless the task explicitly requires them.
+
 ### Widget Patterns
 
 | Purpose | Component |

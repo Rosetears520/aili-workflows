@@ -115,6 +115,20 @@ Invalid evidence:
 - `should work` language
 - subagent conclusions without evidence anchors
 
+## 🛑 Anti-Pattern Blacklist
+
+Stop and repair the stress test if it does any of these:
+
+- Manufactures certainty to satisfy a requested confidence level.
+- Replaces missing evidence with confident tone, generic best practice, or “likely”.
+- Treats a passing narrow check as proof of broad readiness.
+- Hides unresolved user decisions inside assumptions.
+- Ignores counter-evidence because it complicates the plan or final claim.
+- Runs more loops only to polish wording instead of resolving material loopholes.
+- Reports subagent conclusions without anchors or conflict reconciliation.
+
+Fallback: downgrade confidence, mark the affected item `Open Question` or `Unverified`, and choose a concrete repair action from the process table.
+
 ## Output Contract
 
 Return this structure when reporting the stress-test result:

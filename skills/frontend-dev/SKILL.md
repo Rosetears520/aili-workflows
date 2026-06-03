@@ -16,39 +16,19 @@ Use this OpenCode skill when the user asks for a rich visual frontend experience
 
 Use this skill for standalone or campaign-like frontend work where the deliverable depends on premium visual design, cinematic scroll/motion, persuasive copy, AI-generated media assets, or generative art. For production UI components inside an existing app, use `frontend-ui-engineering`. For backend + frontend integration, use `fullstack-dev`. For GLSL/procedural shader effects, use `shader-dev`.
 
+Do not use this skill for ordinary CRUD screens, dashboard fixes, isolated component styling, backend/API work, native mobile apps, or shader-only work. If rich media assets are not required, keep the implementation inside the existing app workflow and route to the narrower skill.
+
 | Trigger | Use this skill? | Why |
 |---|---:|---|
 | "Build a cinematic product landing page with hero video" | Yes | Rich marketing/media frontend |
 | "Generate imagery and copy for a campaign page" | Yes | AI assets + persuasive copy |
 | "Fix this dashboard form state" | No | Route to `frontend-ui-engineering` |
 | "Add an API and database behind this UI" | No | Route to `fullstack-dev` |
+| "Write only a WebGL fragment shader" | No | Route to `shader-dev` |
 
 ## Skill Structure
 
-```
-frontend-dev/
-├── SKILL.md                      # Core skill (this file)
-├── scripts/                      # Asset generation scripts
-│   ├── minimax_tts.py            # Text-to-speech
-│   ├── minimax_music.py          # Music generation
-│   ├── minimax_video.py          # Video generation (async)
-│   └── minimax_image.py          # Image generation
-├── references/                   # Detailed guides (read as needed)
-│   ├── minimax-cli-reference.md  # CLI flags quick reference
-│   ├── asset-prompt-guide.md     # Asset prompt engineering rules
-│   ├── minimax-tts-guide.md      # TTS usage & voices
-│   ├── minimax-music-guide.md    # Music prompts & lyrics format
-│   ├── minimax-video-guide.md    # Camera commands & models
-│   ├── minimax-image-guide.md    # Ratios & batch generation
-│   ├── minimax-voice-catalog.md  # All voice IDs
-│   ├── motion-recipes.md         # Animation code snippets
-│   ├── env-setup.md              # Environment setup
-│   └── troubleshooting.md        # Common issues
-├── templates/                    # Visual art templates
-│   ├── viewer.html               # p5.js interactive art base
-│   └── generator_template.js     # p5.js code reference
-└── canvas-fonts/                 # Static art fonts (TTF + licenses)
-```
+This skill uses local `scripts/` for MiniMax asset generation, `references/` for CLI/prompt/motion details, `templates/` for visual art, and `canvas-fonts/` for static art typography. Read only the relevant resource for the task.
 
 ## Project Structure
 
@@ -82,67 +62,7 @@ assets/
 | **Svelte/SvelteKit** | `static/assets/` | `src/lib/components/` |
 | **Astro** | `public/assets/` | `src/components/` |
 
-### Pure HTML
-
-```
-project/
-├── index.html
-├── assets/
-│   ├── images/
-│   ├── videos/
-│   └── audio/
-├── css/
-│   └── styles.css
-└── js/
-    └── main.js           # Animations (GSAP/vanilla)
-```
-
-### React / Next.js
-
-```
-project/
-├── public/assets/        # Static assets
-├── src/
-│   ├── components/
-│   │   ├── ui/           # Button, Card, Input
-│   │   ├── sections/     # Hero, Features, CTA
-│   │   └── motion/       # RevealSection, StaggerGrid
-│   ├── lib/
-│   ├── styles/
-│   └── app/              # Pages
-└── package.json
-```
-
-### Vue / Nuxt
-
-```
-project/
-├── public/assets/
-├── src/                  # or root for Nuxt
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── sections/
-│   │   └── motion/
-│   ├── composables/      # Shared logic
-│   ├── pages/
-│   └── assets/           # Processed assets (optional)
-└── package.json
-```
-
-### Astro
-
-```
-project/
-├── public/assets/
-├── src/
-│   ├── components/       # .astro, .tsx, .vue, .svelte
-│   ├── layouts/
-│   ├── pages/
-│   └── styles/
-└── package.json
-```
-
-**Component naming:** PascalCase (`HeroSection.tsx`, `HeroSection.vue`, `HeroSection.astro`)
+Keep sections/components in the framework's normal component directory (`src/components`, `src/lib/components`, or Astro `src/components`), assets in the static asset directory above, and component names in PascalCase (`HeroSection.tsx`, `HeroSection.vue`, `HeroSection.astro`).
 
 ---
 
@@ -168,6 +88,8 @@ Generate all image/video/audio assets using `scripts/`. NEVER use placeholder UR
 1. Parse asset requirements (type, style, spec, usage)
 2. Craft optimized prompts, show to user, confirm before generating
 3. Execute via scripts, save to project — do NOT proceed to Phase 5 until all assets are saved locally
+
+🔴 CHECKPOINT / 🛑 STOP: If the request only needs layout/components and does not require premium media, motion, copy, or generative art, stop and route to `frontend-ui-engineering` before generating assets.
 
 ### Phase 4: Copywriting & Content
 Follow copywriting frameworks (AIDA, PAS, FAB) to craft all text content. Do NOT use "Lorem ipsum" — write real copy.
@@ -228,15 +150,7 @@ Adapt dynamically based on user requests.
 
 ## 1.6 Creative Arsenal
 
-| Category | Patterns |
-|----------|----------|
-| Navigation | Dock magnification, Magnetic button, Gooey menu, Dynamic island, Radial menu, Speed dial, Mega menu |
-| Layout | Bento grid, Masonry, Chroma grid, Split-screen scroll, Curtain reveal |
-| Cards | Parallax tilt, Spotlight border, Glassmorphism, Holographic foil, Swipe stack, Morphing modal |
-| Scroll | Sticky stack, Horizontal hijack, Locomotive sequence, Zoom parallax, Progress path, Liquid swipe |
-| Gallery | Dome gallery, Coverflow, Drag-to-pan, Accordion slider, Hover trail, Glitch effect |
-| Text | Kinetic marquee, Text mask reveal, Scramble effect, Circular path, Gradient stroke, Kinetic grid |
-| Micro | Particle explosion, Pull-to-refresh, Skeleton shimmer, Directional hover, Ripple click, SVG draw, Mesh gradient, Lens blur |
+Use high-variance patterns only when they serve the campaign: bento/masonry/split-screen layouts, parallax/spotlight/glass cards, sticky or horizontal scroll storytelling, kinetic text, hover trails, mesh gradients, SVG draw, lens blur, and particle accents.
 
 ## 1.7 Bento Paradigm
 
@@ -379,7 +293,18 @@ Env: `MINIMAX_API_KEY` (required).
 5. **Post-process:** Images → WebP, Videos → ffmpeg compress, Audio → normalize
 6. **Deliver:** File path + code snippet + CSS suggestion
 
-## 3.3 Preset Shortcuts
+## 3.3 Asset Failure Fallback
+
+| Trigger | First action | If still failing |
+|---|---|---|
+| `MINIMAX_API_KEY` missing or invalid | Read `references/env-setup.md`; ask the user to provide/configure the key | Use CSS/SVG/local hand-built visuals only with user approval; mark AI media generation unverified |
+| MiniMax script exits with an error | Re-run with the exact script, prompt, and flags from `references/minimax-cli-reference.md` | Report the command and stderr; do not replace with placeholder URLs |
+| Video async job times out or download fails | Poll once more and verify the returned asset URL/path | Fall back to image/animated CSS treatment only after user confirmation |
+| Generated asset is off-brand, text-filled, or unusable | Regenerate with a corrected prompt from `references/asset-prompt-guide.md` | Ask the user to approve a simpler local visual treatment |
+
+🔴 CHECKPOINT / 🛑 STOP: Never proceed to UI integration while required media files are missing; either recover, get user-approved fallback assets, or report `NEEDS_REVIEW`.
+
+## 3.4 Preset Shortcuts
 
 | Shortcut | Spec |
 |----------|------|
@@ -393,7 +318,7 @@ Env: `MINIMAX_API_KEY` (required).
 | `bgm` | 30s, no vocals, loopable |
 | `tts` | MiniMax HD, MP3 |
 
-## 3.4 Reference
+## 3.5 Reference
 
 - `references/minimax-cli-reference.md` — CLI flags
 - `references/asset-prompt-guide.md` — Prompt rules
@@ -437,17 +362,7 @@ BENEFIT:    What customer gains
 
 ## 4.3 Headlines
 
-| Formula | Example |
-|---------|---------|
-| Promise | "Double open rates in 30 days" |
-| Question | "Still wasting 10 hours/week?" |
-| How-To | "How to automate your pipeline" |
-| Number | "7 mistakes killing conversions" |
-| Negative | "Stop losing leads" |
-| Curiosity | "The one change that tripled bookings" |
-| Transformation | "From 50 to 500 leads" |
-
-Be specific. Lead with outcome, not method.
+Use promise, question, how-to, numbered, negative, curiosity, or transformation headlines. Be specific and lead with outcome, not method.
 
 ## 4.4 CTAs
 
@@ -461,14 +376,7 @@ Place: above fold, after value, multiple on long pages.
 
 ## 4.5 Emotional Triggers
 
-| Trigger | Example |
-|---------|---------|
-| FOMO | "Only 3 spots left" |
-| Fear of loss | "Every day without this, you're losing $X" |
-| Status | "Join 10,000+ top agencies" |
-| Ease | "Set it up once. Forget forever." |
-| Frustration | "Tired of tools that deliver nothing?" |
-| Hope | "Yes, you CAN hit $10K MRR" |
+Use FOMO, fear of loss, status, ease, frustration, or hope only when appropriate to the product and audience.
 
 ## 4.6 Objection Handling
 
@@ -551,6 +459,7 @@ Refine, don't add. Make it crisp. Polish into masterpiece.
 - [ ] **No placeholder URLs** — grep the output for `unsplash`, `picsum`, `placeholder`, `placehold`, `via.placeholder`, `lorem.space`, `dummyimage`. If ANY found, STOP and replace with generated assets before delivering.
 - [ ] **All media assets exist as local files** in the project's assets directory
 - [ ] Asset prompts confirmed with user before generation
+- [ ] MiniMax/env/script failures were either recovered or explicitly reported with a user-approved fallback
 
 ---
 

@@ -37,18 +37,22 @@ Measure before optimizing. Performance work without measurement is guessing — 
 5. GUARD    → Add monitoring or tests to prevent regression
 ```
 
+### 🔴 CHECKPOINT / 🛑 STOP: No Speculative Optimization
+
+Do not optimize because a change "seems faster" or an anti-pattern is familiar. If there is no baseline measurement, user-reported symptom, production signal, or explicit performance budget, stop and return `BLOCKED_NEEDS_MEASUREMENT` instead of changing code.
+
 ### Step 1: Measure
 
 Two complementary approaches — use both:
 
-- **Synthetic (Lighthouse, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
+- **Synthetic (Lighthouse, OpenCode Playwright/browser tooling, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
 - **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
 
 **Frontend:**
 ```bash
-# Synthetic: Lighthouse in Chrome DevTools (or CI)
-# Chrome DevTools → Performance tab → Record
-# Chrome DevTools MCP → Performance trace
+# Synthetic: Lighthouse in CI/manual runs
+# OpenCode: use browser-testing-with-devtools / Playwright tooling for runtime evidence
+# Manual reference: Chrome DevTools → Performance tab → Record
 
 # RUM: Web Vitals library in code
 import { onLCP, onINP, onCLS } from 'web-vitals';
@@ -78,7 +82,7 @@ Use the symptom to decide what to measure first:
 What is slow?
 ├── First page load
 │   ├── Large bundle? --> Measure bundle size, check code splitting
-│   ├── Slow server response? --> Measure TTFB in DevTools Network waterfall
+│   ├── Slow server response? --> Measure TTFB in OpenCode browser network requests or DevTools Network waterfall
 │   │   ├── DNS long? --> Add dns-prefetch / preconnect for known origins
 │   │   ├── TCP/TLS long? --> Enable HTTP/2, check edge deployment, keep-alive
 │   │   └── Waiting (server) long? --> Profile backend, check queries and caching
@@ -95,6 +99,15 @@ What is slow?
     ├── All endpoints slow? --> Check connection pool, memory, CPU
     └── Intermittent slowness? --> Check for lock contention, GC pauses, external deps
 ```
+
+### Measurement-Unavailable Fallbacks
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Browser profiling unavailable | Capture network timing, console warnings, screenshot/snapshot, and available Performance API entries | Mark Core Web Vitals as `[UNVERIFIED]`; do not claim frontend improvement |
+| Production/RUM data unavailable | Use reproducible synthetic measurements with device/network settings stated | Label the result `synthetic_only` and request RUM before broad rollout |
+| Backend profiler unavailable | Add bounded timing around the suspected path or inspect existing logs/APM | Mark root cause as `Hypothesis`; do not rewrite unrelated code |
+| Measurements conflict | Prefer production/RUM for user impact and synthetic traces for root cause | Hold optimization until the conflict is explained or scoped |
 
 ### Step 2: Identify the Bottleneck
 
@@ -312,9 +325,9 @@ npx bundlesize --config bundlesize.config.json
 npx lhci autorun
 ```
 
-## See Also
+## Inline Performance Checklist
 
-For detailed performance checklists, optimization commands, and anti-pattern reference, see `references/performance-checklist.md`.
+Use the workflow, bottleneck tables, budget, and verification checklist in this file as the source of truth. Do not reference external checklist files unless they exist in this skill directory.
 
 
 ## Common Rationalizations
@@ -330,6 +343,7 @@ For detailed performance checklists, optimization commands, and anti-pattern ref
 ## Red Flags
 
 - Optimization without profiling data to justify it
+- Speculative performance rewrites when measurement is unavailable
 - N+1 query patterns in data fetching
 - List endpoints without pagination
 - Images without dimensions, lazy loading, or responsive sizes
