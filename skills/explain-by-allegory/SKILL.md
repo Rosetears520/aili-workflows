@@ -31,6 +31,8 @@ Do not use this as the primary skill when the user asks to:
 
 If the concept affects an implementation, architecture, workflow, or spec decision, keep the allegory separate from the formal decision and route the decision through the appropriate workflow.
 
+🔴 CHECKPOINT: If the user asks for a decision, implementation, spec, or source-cited guidance, stop allegory-only mode and route to the appropriate workflow instead of continuing the story.
+
 ## Workflow
 
 1. Identify the real concept and the user's desired depth.
@@ -40,6 +42,15 @@ If the concept affects an implementation, architecture, workflow, or spec decisi
 5. Give the formal explanation in direct technical language.
 6. State where the allegory breaks down, including boundary cases and misconceptions it could create.
 7. If the user needs action after understanding, recommend the next workflow, such as source-driven development, spec-driven development, implementation, documentation, or ADRs.
+
+## Failure Modes
+
+| Trigger | First action | If still unresolved |
+|---|---|---|
+| Concept is too broad | Ask one scope/depth question before writing the allegory | Use a tiny overview allegory and mark the missing depth as an open follow-up |
+| User needs citations, current APIs, or official guidance | Route to source-driven or documentation workflow | Mark source-dependent claims `Unverified`; do not invent citations |
+| Allegory becomes misleading | State the limit and switch to formal explanation | Drop the story and answer directly |
+| User asks for implementation, spec, or architecture decisions | Keep the allegory explanatory only | Route the decision to the appropriate lifecycle or design workflow |
 
 ## Output Contract
 
@@ -61,6 +72,21 @@ Limits and Misconceptions:
 Next Step, if needed:
 - <appropriate workflow or question>
 ```
+
+Rules:
+
+- Keep the story normally at three short paragraphs or fewer.
+- Include at least three meaningful mapping bullets when the concept has enough parts.
+- Include at least two limits or misconception bullets unless the user asks for a very short answer.
+- Match the user's language unless they request another language.
+
+## Do Not
+
+- Do not present the metaphor as proof, source evidence, or a formal model.
+- Do not invent source claims, citations, or current API behavior.
+- Do not make implementation, architecture, spec, or acceptance decisions inside the allegory.
+- Do not over-map every story detail; map only details that clarify the real concept.
+- Do not continue story mode when direct formal explanation would be safer or clearer.
 
 ## Verification
 

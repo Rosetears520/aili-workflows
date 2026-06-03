@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>实现记录：optimize-new-skills-with-darwin</title>
+</head>
+<body>
+  <h1>实现记录：optimize-new-skills-with-darwin</h1>
+  <section>
+    <h2>元信息</h2>
+    <ul>
+      <li>变更：<code>optimize-new-skills-with-darwin</code></li>
+      <li>日期：2026-06-03</li>
+      <li>范围：只优化 <code>skills/explain-by-allegory/SKILL.md</code> 与 <code>skills/evidence-scoped-retrospective/SKILL.md</code>。</li>
+      <li>限制：不在目标 skill 目录下新增 <code>references/</code>、<code>scripts/</code>、<code>assets/</code>、<code>test-prompts.json</code>、<code>results.tsv</code>、结果卡片、日志或报告。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>规格偏离</h2>
+    <p>暂无。实现保持两项 skill 的核心用途与路由边界。</p>
+  </section>
+  <section>
+    <h2>临时决策</h2>
+    <ul>
+      <li>继续使用 <code>dry_run</code> 重评分；完整 with-skill/baseline 实测仍标记为未验证。</li>
+      <li>不生成 Darwin 结果卡片或 skill 目录下的测试提示文件，避免违反本次范围。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>取舍</h2>
+    <ul>
+      <li><code>explain-by-allegory</code> 增加失败模式、显式检查点与黑名单，但控制体积，避免把教学 skill 变成复杂流程。</li>
+      <li><code>evidence-scoped-retrospective</code> 增加检查点、证据置信度、fallback 表和反模式清单，优先保护安全边界。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>开放问题</h2>
+    <p>暂无阻塞问题。</p>
+  </section>
+  <section>
+    <h2>未验证假设</h2>
+    <ul>
+      <li>Darwin 维度 8 仍为 <code>dry_run</code>，不是完整实测。</li>
+      <li>后续归档是否同步 delta spec 到主 spec 需按 archive 流程处理。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>证据指针</h2>
+    <ul>
+      <li><code>openspec/changes/optimize-new-skills-with-darwin/baseline-report.md</code></li>
+      <li><code>openspec/changes/optimize-new-skills-with-darwin/tasks.md</code></li>
+      <li><code>skills/explain-by-allegory/SKILL.md</code></li>
+      <li><code>skills/evidence-scoped-retrospective/SKILL.md</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>更新历史</h2>
+    <ul>
+      <li>2026-06-03：创建实现记录；记录两项 skill 的 Darwin 优化范围、取舍和未验证项。</li>
+      <li>2026-06-03：完成 subagent 审查，结论为 PASS；剩余未验证项为 Darwin 维度 8 仍是 dry_run。</li>
+    </ul>
+  </section>
+</body>
+</html>
