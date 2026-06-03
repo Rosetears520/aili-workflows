@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>实施记录：add-explain-retrospective-skills</title>
+  <style>
+    body { font-family: sans-serif; line-height: 1.5; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1, h2 { line-height: 1.2; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+  <h1>实施记录：add-explain-retrospective-skills</h1>
+
+  <h2>元数据</h2>
+  <table>
+    <tr><th>变更</th><td>add-explain-retrospective-skills</td></tr>
+    <tr><th>后端</th><td>OpenSpec</td></tr>
+    <tr><th>制品角色</th><td>补充性的实施理由记录；正式 specs 和 tasks 仍是权威来源。</td></tr>
+    <tr><th>创建时间</th><td>2026-06-03</td></tr>
+    <tr><th>语言</th><td>默认使用用户语言；本任务用户语言为中文。</td></tr>
+  </table>
+
+  <h2>规格偏差</h2>
+  <p>实施期间未记录规格偏差。</p>
+
+  <h2>临时决策</h2>
+  <ul>
+    <li>两个新 skill 都以单文件 <code>SKILL.md</code> 工作流实现，不新增 references 或 scripts，因为已批准的 MVP 不需要额外资源。</li>
+  </ul>
+
+  <h2>取舍</h2>
+  <ul>
+    <li>README 归因保持概念性和简洁，避免复制上游 prompt 或文章原文。</li>
+    <li>AGENTS 模板在 managed block 内增加 guardrails，但不引入固定 token 预算或 raw context percentage gate。</li>
+  </ul>
+
+  <h2>开放问题</h2>
+  <p>当前 BUILD package 没有阻塞性开放问题。</p>
+
+  <h2>未验证假设</h2>
+  <ul>
+    <li>本次实施未直接抓取用户指定的 Mnilax X 链接内容；README 将其标记为概念性 / 用户提供来源，而不是引用原文。</li>
+  </ul>
+
+  <h2>证据指针</h2>
+  <ul>
+    <li><code>openspec/changes/add-explain-retrospective-skills/specs/*/spec.md</code> 定义已批准行为。</li>
+    <li><code>openspec/changes/add-explain-retrospective-skills/test-plan.md</code> 记录验证证据。</li>
+    <li><code>templates/AGENTS.md</code>、<code>skills/*/SKILL.md</code> 和 <code>README.md</code> 包含已实施的工作流变更。</li>
+  </ul>
+
+  <h2>更新历史</h2>
+  <table>
+    <tr><th>日期</th><th>更新</th></tr>
+    <tr><td>2026-06-03</td><td>为 BUILD implementation package 创建 notes artifact。</td></tr>
+    <tr><td>2026-06-03</td><td>ROSE reconciliation 添加验证证据：OpenSpec tasks complete，template 在临时生成项目中验证通过；project-local AGENTS check 因本分支缺少根目录 <code>AGENTS.md</code> 仍在 scope 外。</td></tr>
+    <tr><td>2026-06-03</td><td>按用户确认，将 <code>implementation-notes.html</code> 默认语言规则改为使用用户语言；本文件改为中文。</td></tr>
+    <tr><td>2026-06-03</td><td>按用户纠正，将 mandatory <code>implementation-notes.html</code> 规则归属移动到 <code>templates/AGENTS.md</code>；<code>evidence-scoped-retrospective</code> 仅把 notes 当作 retrospective evidence。</td></tr>
+  </table>
+</body>
+</html>

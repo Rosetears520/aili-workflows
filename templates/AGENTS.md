@@ -105,6 +105,21 @@ Use a read-only search agent when broad repository search would pollute the main
 
 The search agent may locate evidence, but the editing, reviewing, testing, or security agent must still read the final target files before acting.
 
+### Agentic Failure Guards
+
+Apply these compact guards during non-trivial work:
+
+- Use deterministic sources for deterministic work: status codes, schemas, tests, typecheckers, scripts, existing config, and explicit rules beat model guessing.
+- Expose conflicts between repository patterns, specs, tests, or user instructions; choose the better-supported path only when safe and leave the other as follow-up.
+- Read before writing. For broad searches, use read-only scouting first, then personally read the final target files before editing.
+- Tests must prove meaningful behavior or workflow value. A test that only executes code or checks superficial output is weak evidence.
+- Prefer local convention over novelty. New styles, dependencies, abstractions, or frameworks require explicit approval when they diverge from the project.
+- Fail explicitly. If checks are skipped, evidence is partial, or success is uncertain, report the gap and do not claim completion beyond the evidence.
+
+Long tasks require DCP-aware task-continuity checkpoints. Do not use fixed token budgets or raw context percentages as authoritative gates when compression is active. Checkpoint when you cannot accurately restate the active contract, changed files, open decisions, or verification path; when state depends on compressed or raw session history not re-grounded in files/todos; when logs or tool output outpace durable summaries; when a debug/review loop repeats without a new hypothesis or evidence anchor; or when the next edit/review/ship step would rely on memory instead of fresh repository evidence. A soft checkpoint summarizes contract, decisions, files, todos, unknowns, and verification path. A hard checkpoint stops before more edits and updates the approved task, progress/checkpoint, handoff, or implementation-notes artifact before re-grounding.
+
+For approved spec-backed implementation, maintain `implementation-notes.html` beside the active spec/task artifacts. Use the user's language by default, or Simplified Chinese when the language is unclear. Keep it supplemental: record spec deviations, temporary decisions, trade-offs, open questions, unverified assumptions, safe evidence pointers, and update history; do not store raw logs, full transcripts, secrets, private data, or large file dumps.
+
 ### 3. Surgical Changes
 
 Touch only what the task requires. Clean up only your own mess.
