@@ -326,7 +326,7 @@ describe('TaskService', () => {
 
 ## Browser Runtime Testing
 
-For anything that runs in a browser, unit tests alone aren't enough — you need runtime verification. In OpenCode, use browser tools for screenshots, accessibility snapshots, console logs, network requests, interactions, and bounded JavaScript inspection. If Playwright MCP is installed, default to `npx -y @playwright/mcp@latest --caps=testing,storage`; add `--caps=devtools` for trace/debug work, or use `--caps=network,storage,testing,vision,pdf,devtools` only when full automation is explicitly needed. Chrome DevTools MCP is a compatibility fallback only.
+For anything that runs in a browser, unit tests alone aren't enough — you need runtime verification. In OpenCode, use browser tools for screenshots, accessibility snapshots, console logs, network requests, interactions, and bounded JavaScript inspection. If Playwright MCP is installed, default to `npx -y @playwright/mcp@0.0.75 --caps=testing,storage`; add `--caps=devtools` for trace/debug work, or use `--caps=network,storage,testing,vision,pdf,devtools` only when full automation is explicitly needed. Chrome DevTools MCP is a compatibility fallback only.
 
 ### Browser Debugging Workflow
 

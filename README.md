@@ -28,9 +28,13 @@ aili-workflows/
 │   └── ship.md                  # /ship：进入 aili-delivery-flow SHIP
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
+├── manifests/
+│   └── rose-aili.components.json # rose-aili installer component manifest
+├── package.json                  # rose-aili Node/TypeScript CLI package metadata
 ├── scripts/
 │   ├── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
 │   └── install_opencode.sh      # 安全安装 agents/skills/commands 到 OpenCode 全局配置
+├── src/                          # rose-aili CLI source
 ├── skills/
 │   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
 │   ├── android-native-dev/
@@ -200,7 +204,48 @@ aili-workflows/
 
 ### OpenCode 设置
 
-安装方式采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装 agents、skills 和 commands；复制仅作为软链接不可用或明确要求时的 fallback。
+推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
+
+```bash
+npx -y rose-aili install
+```
+
+在 npm 发布前，AI assistant 可从 GitHub package spec 运行同一个 binary（把 `<owner>/<repo>` 替换为用户提供的仓库）：
+
+```bash
+npx -y --package github:<owner>/<repo> rose-aili install
+```
+
+常用维护命令：
+
+```bash
+npx -y rose-aili update
+npx -y rose-aili doctor
+```
+
+`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装 agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。安装时可选择把 `rose` 设为 OpenCode 默认 primary agent，并把模型偏好写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+
+交互式 `rose-aili install` 在发现 OpenCode JSON/JSONC 中还没有 `agent.rose.model` 时，会在同一次安装对话中询问模型值（格式如 `provider/model`）。直接回车留空会跳过模型写入；之后也可以用 `--model <provider/model>` 非交互设置。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+
+```jsonc
+{
+  "default_agent": "rose",
+  "agent": {
+    "rose": {
+      "model": "anthropic/claude-sonnet-4-5"
+    }
+  }
+}
+```
+
+自动化或 AI 代理可用显式 flag 避免交互：
+
+```bash
+npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --enable-playwright
+```
+
+安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装 agents、skills 和 commands。
 
 默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/`、`skills/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件、skill 目录和 command 文件。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
 

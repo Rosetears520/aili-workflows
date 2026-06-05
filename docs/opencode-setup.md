@@ -134,7 +134,52 @@ Slash commands are optional entrypoints. This repository ships only `/ideate`, `
 
 ## Installation Decision Rule
 
-Use Selective Symlink Setup by default.
+Use `rose-aili install` by default when Node/npm is available. It wraps the same entry-level setup for repository-managed agents, skills, and commands, then safely merges optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so OpenCode does not point at a transient package cache.
+
+```bash
+npx -y rose-aili install
+```
+
+Before npm publishing, use the GitHub package-spec form from the repository URL:
+
+```bash
+npx -y --package github:<owner>/<repo> rose-aili install
+```
+
+Use these non-interactive flags for AI-agent or scripted setup:
+
+```bash
+npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --enable-playwright
+npx -y rose-aili doctor
+npx -y rose-aili update
+```
+
+`--yes` sets `rose` as `default_agent` when no conflicting default exists. Existing non-rose `default_agent` and existing `agent.rose.model` values are preserved unless `--force-default-agent` or `--force-model` is passed. `--dry-run` reports planned component/config operations without mutating OpenCode files.
+
+Interactive `rose-aili install` asks for `agent.rose.model` when no rose model exists in OpenCode JSON/JSONC. The prompt accepts a free-form `provider/model` value; pressing Enter with a blank value skips model writing. Non-interactive setup can pass `--model <provider/model>`. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
+
+User preferences belong in OpenCode runtime config, not in symlinked upstream agent Markdown:
+
+```jsonc
+{
+  "default_agent": "rose",
+  "agent": {
+    "rose": {
+      "model": "anthropic/claude-sonnet-4-5"
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@0.0.75", "--caps=testing,storage"],
+      "enabled": true
+    }
+  }
+}
+```
+
+Use Selective Symlink Setup by default when falling back to the Bash script.
 
 Choose Selective Symlink Setup when:
 
@@ -481,13 +526,15 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 
 ## Recommended OpenCode Runtime Add-ons
 
-Recommended default runtime add-ons are DCP plugin, Playwright MCP, and Context7 integration. Install them through their official commands or interactive setup only; do not vendor third-party source into this repository. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
+Recommended runtime add-ons are DCP plugin, Playwright MCP, and Context7 integration. `rose-aili` can configure the pinned optional Playwright MCP entry, but it does not install OpenCode plugins such as DCP; install plugins through their official commands or interactive setup only. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
 
 ### DCP Plugin
 
 ```bash
 opencode plugin @tarquinen/opencode-dcp@latest --global
 ```
+
+This is a manual-only, trust-latest command. It is documented for users who explicitly want DCP, but `rose-aili install` does not run it or silently install DCP plugins.
 
 DCP reads configuration from `~/.config/opencode/dcp.jsonc` / `dcp.json`, `$OPENCODE_CONFIG_DIR/dcp.jsonc` / `dcp.json`, or project `.opencode/dcp.jsonc` / `dcp.json`. Project config overrides global config. Restart OpenCode after changing the file.
 
@@ -514,13 +561,13 @@ Use these answers/details:
 
 - name: `playwright`
 - type: `local`
-- command: `npx -y @playwright/mcp@latest --caps=testing,storage`
+- command: `npx -y @playwright/mcp@0.0.75 --caps=testing,storage`
 - default caps: `testing,storage`
 
 Optional profiles:
 
-- trace/debug: `npx -y @playwright/mcp@latest --caps=devtools`
-- full automation only when explicitly needed: `npx -y @playwright/mcp@latest --caps=network,storage,testing,vision,pdf,devtools`
+- trace/debug: `npx -y @playwright/mcp@0.0.75 --caps=devtools`
+- full automation only when explicitly needed: `npx -y @playwright/mcp@0.0.75 --caps=network,storage,testing,vision,pdf,devtools`
 
 Verify after restart with `opencode mcp list`, then ask `test-engineer` or `browser-testing-with-devtools` to use Playwright for a simple local page check.
 
@@ -641,6 +688,13 @@ Required checks for runtime add-on setup:
 - Context7 can answer a library documentation lookup through the installed CLI or MCP capability.
 
 ## Update
+
+Preferred CLI update/check:
+
+```bash
+npx -y rose-aili update
+npx -y rose-aili doctor
+```
 
 For symlink setup, update the cloned repository:
 

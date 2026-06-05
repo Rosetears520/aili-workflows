@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev
+
+      - name: Check Bash installer syntax
+        run: bash -n scripts/install_opencode.sh
+
+      - name: Compile Python helpers
+        run: python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py
+
+      - name: Run harness fixture check
+        run: python scripts/harness_fixture_check.py
+
+      - name: Check AGENTS.md template compliance
+        run: python scripts/agents_md.py check --project .
+
+      - name: Verify npm package contents
+        run: npm pack --dry-run

@@ -160,6 +160,8 @@ ensure_repo() {
       log "Updating repository: $AILI_HOME"
       git -C "$AILI_HOME" pull --ff-only >&2
     fi
+  elif [ -e "$AILI_HOME" ] && [ "${AILI_ALLOW_PACKAGE_HOME:-}" = "yes" ] && [ -d "$AILI_HOME/agents" ] && [ -d "$AILI_HOME/skills" ] && [ -d "$AILI_HOME/commands" ]; then
+    log "Using existing packaged AILI_HOME without git update: $AILI_HOME"
   elif [ -e "$AILI_HOME" ]; then
     log "Refusing to use existing non-git path: $AILI_HOME"
     exit 2

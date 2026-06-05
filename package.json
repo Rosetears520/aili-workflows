@@ -1,0 +1,35 @@
+{
+  "name": "rose-aili",
+  "version": "0.1.0",
+  "description": "AILI OpenCode workflow installer CLI",
+  "type": "module",
+  "bin": {
+    "rose-aili": "dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "agents/",
+    "commands/",
+    "skills/",
+    "manifests/",
+    "scripts/install_opencode.sh",
+    "README.md",
+    "docs/opencode-setup.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
