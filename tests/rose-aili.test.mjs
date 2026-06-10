@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, lstat, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { applyPromptDecisions } from "../dist/cli.js";
 import { mergeOpenCodeConfig } from "../dist/config.js";
 
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, "dist", "cli.js");
+const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? false : "OpenSpec install success paths require Node.js 20.19.0+";
 
 test("dry-run install reports operations without mutating OpenCode home", async () => {
   const fixture = await fixtureAiliHome();
@@ -75,6 +77,18 @@ test("force flags overwrite default agent and rose model", async () => {
   await rm(root, { recursive: true, force: true });
 });
 
+test("set-default-rose does not create a model override", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--set-default-rose", "--json"]);
+  const config = JSON.parse(await readFile(path.join(opencodeHome, "opencode.json"), "utf8"));
+
+  assert.equal(config.default_agent, "rose");
+  assert.equal(config.agent, undefined);
+  await fixture.cleanup();
+});
+
 test("invalid JSONC fails closed without overwrite", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "rose-aili-invalid-"));
   const opencodeHome = path.join(root, "opencode");
@@ -102,6 +116,295 @@ test("install configures or skips Playwright MCP by explicit flag", async () => 
   assert.equal(skippedConfig.mcp, undefined);
   await enabledFixture.cleanup();
   await skippedFixture.cleanup();
+});
+
+test("interactive prompt decisions cover defaults, blank model, DCP, and OpenSpec", async () => {
+  const options = { dryRun: false, opencodeHome: "/tmp/opencode", ailiHome: repoRoot, plugins: [] };
+  const answers = ["", "", "y", "y", "n"];
+  const prompts = [];
+
+  await applyPromptDecisions(options, {}, async (prompt) => {
+    prompts.push(prompt);
+    return answers.shift() ?? "";
+  });
+
+  assert.deepEqual(prompts, [
+    "Set rose as OpenCode default_agent? [Y/n] ",
+    "Model for agent.rose.model (provider/model, blank to skip): ",
+    "Enable optional Playwright MCP? [y/N] ",
+    "Enable DCP plugin globally via `opencode plugin @tarquinen/opencode-dcp@latest --global`? [y/N] ",
+    "Install/configure OpenSpec for spec-driven changes via `npm install -g @fission-ai/openspec@latest` and project `openspec init/update`? Requires Node.js 20.19+. [y/N] "
+  ]);
+  assert.equal(options.setDefaultRose, true);
+  assert.equal(options.model, undefined);
+  assert.equal(options.enablePlaywright, true);
+  assert.equal(options.skipPlaywright, false);
+  assert.equal(options.enableDcp, true);
+  assert.equal(options.skipDcp, false);
+  assert.equal(options.enableOpenspec, false);
+  assert.equal(options.skipOpenspec, true);
+});
+
+test("non-interactive install reports skipped optional decisions with next steps", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.dcp.status, "skipped");
+  assert.equal(summary.openspec.status, "skipped");
+  assertDecision(summary, "default rose", "rose-aili install --set-default-rose");
+  assertDecision(summary, "rose model override", "rose-aili install --model <provider/model>");
+  assertDecision(summary, "Playwright MCP", "rose-aili install --enable-playwright");
+  assertDecision(summary, "DCP plugin", "rose-aili install --enable-dcp");
+  assertDecision(summary, "OpenSpec", "rose-aili install --enable-openspec");
+  await fixture.cleanup();
+});
+
+test("DCP is not installed without flag and --yes does not silently install it", async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  await writeStub(binDir, "opencode", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.dcp.status, "skipped");
+  await assert.rejects(readFile(logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("--enable-dcp delegates exact opencode argv", async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  await writeStub(binDir, "opencode", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-dcp", "--json"], {
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(logPath, "utf8"));
+
+  assert.equal(summary.dcp.status, "configured");
+  assert.deepEqual(logged, [{ name: "opencode", args: ["plugin", "@tarquinen/opencode-dcp@latest", "--global"] }]);
+  await fixture.cleanup();
+});
+
+test("DCP failure is reported separately while core install succeeds", async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  await writeStub(binDir, "opencode", logPath, { exitCode: 7, stderr: "dcp failed" });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-dcp", "--json"], {
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.dcp.status, "failed");
+  assert.match(summary.dcp.reason, /dcp failed/);
+  assert.match(summary.dcp.recovery, /opencode plugin @tarquinen\/opencode-dcp@latest --global/);
+  await fixture.cleanup();
+});
+
+test("OpenSpec is not installed without flag and --yes does not silently install it", async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  await writeStub(binDir, "npm", logPath);
+  await writeStub(binDir, "openspec", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.openspec.status, "skipped");
+  await assert.rejects(readFile(logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("--enable-openspec installs package then initializes first-time project", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(binDir, "npm", logPath);
+  await writeStub(binDir, "openspec", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(logPath, "utf8"));
+
+  assert.equal(summary.openspec.status, "configured");
+  assert.deepEqual(logged, [
+    { name: "npm", args: ["install", "-g", "@fission-ai/openspec@latest"] },
+    { name: "openspec", args: ["init"] }
+  ]);
+  await fixture.cleanup();
+});
+
+test("--enable-openspec updates existing OpenSpec project", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(path.join(projectDir, "openspec"), { recursive: true });
+  await writeStub(binDir, "npm", logPath);
+  await writeStub(binDir, "openspec", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const logged = JSON.parse(await readFile(logPath, "utf8"));
+
+  assert.deepEqual(logged.at(-1), { name: "openspec", args: ["update"] });
+  await fixture.cleanup();
+});
+
+test("OpenSpec optional commands ignore unsafe current-directory PATH entries", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const npmBinDir = path.join(fixture.root, "npm-bin");
+  const openspecBinDir = path.join(fixture.root, "openspec-bin");
+  const safeLogPath = path.join(fixture.root, "commands.log");
+  const unsafeLogPath = path.join(fixture.root, "unsafe.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(npmBinDir, "npm", safeLogPath);
+  await writeStub(openspecBinDir, "openspec", safeLogPath);
+  await writeStub(projectDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "unsafe openspec ran" });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: [npmBinDir, projectDir, ".", "", openspecBinDir, process.env.PATH].join(path.delimiter) }
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(safeLogPath, "utf8"));
+
+  assert.equal(summary.openspec.status, "configured");
+  assert.deepEqual(logged, [
+    { name: "npm", args: ["install", "-g", "@fission-ai/openspec@latest"] },
+    { name: "openspec", args: ["init"] }
+  ]);
+  await assert.rejects(readFile(unsafeLogPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("OpenSpec optional commands ignore relative PATH entries", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const npmBinDir = path.join(fixture.root, "npm-bin");
+  const openspecBinDir = path.join(fixture.root, "openspec-bin");
+  const unsafeBinDir = path.join(fixture.root, "target-project", "bin");
+  const safeLogPath = path.join(fixture.root, "commands.log");
+  const unsafeLogPath = path.join(fixture.root, "unsafe.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(npmBinDir, "npm", safeLogPath);
+  await writeStub(openspecBinDir, "openspec", safeLogPath);
+  await writeStub(unsafeBinDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "relative openspec ran" });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: [npmBinDir, "bin", openspecBinDir, process.env.PATH].join(path.delimiter) }
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(safeLogPath, "utf8"));
+
+  assert.equal(summary.openspec.status, "configured");
+  assert.deepEqual(logged.at(-1), { name: "openspec", args: ["init"] });
+  await assert.rejects(readFile(unsafeLogPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("optional commands fail closed when sanitized PATH has no safe entries", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const unsafeLogPath = path.join(fixture.root, "unsafe.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(projectDir, "npm", unsafeLogPath, { exitCode: 99, stderr: "unsafe npm ran" });
+  await writeStub(projectDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "unsafe openspec ran" });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: [projectDir, ".", "bin", ""].join(path.delimiter) }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.openspec.status, "failed");
+  assert.match(summary.openspec.reason, /npm command not found in sanitized PATH/);
+  await assert.rejects(readFile(unsafeLogPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("OpenSpec low Node.js gate is reported separately before optional commands", { skip: !openSpecNodeSkip && "current Node.js already satisfies the OpenSpec minimum" }, async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(binDir, "npm", logPath);
+  await writeStub(binDir, "openspec", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.openspec.status, "failed");
+  assert.match(summary.openspec.reason, /OpenSpec requires Node\.js 20\.19\.0 or higher/);
+  await assert.rejects(readFile(logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("OpenSpec failure is reported separately while core install succeeds", { skip: openSpecNodeSkip }, async () => {
+  const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(binDir, "npm", logPath, { exitCode: 8, stderr: "npm failed" });
+  await writeStub(binDir, "openspec", logPath);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.openspec.status, "failed");
+  assert.match(summary.openspec.reason, /npm failed/);
+  assert.match(summary.openspec.recovery, /npm install -g @fission-ai\/openspec@latest/);
+  await fixture.cleanup();
 });
 
 test("unknown plugins are rejected and not installed", async () => {
@@ -264,14 +567,43 @@ test("config merge refuses broken symlink OpenCode config without writing target
   await rm(root, { recursive: true, force: true });
 });
 
-test("package exposes rose-aili bin at dist/cli.js with shebang", async () => {
+test("package exposes executable rose-aili bin at dist/cli.js with shebang", async () => {
   const packageJson = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
   const cliText = await readFile(cliPath, "utf8");
+  const cliStat = await stat(cliPath);
 
   assert.equal(packageJson.name, "rose-aili");
   assert.equal(packageJson.private, undefined);
   assert.deepEqual(packageJson.bin, { "rose-aili": "dist/cli.js" });
   assert.match(cliText, /^#!\/usr\/bin\/env node/);
+  assert.ok((cliStat.mode & 0o111) !== 0, `expected ${cliPath} to be executable`);
+});
+
+test("packed package keeps CLI bin executable", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "rose-aili-pack-"));
+  const packResult = await execFileP("npm", ["pack", "--pack-destination", root], { cwd: repoRoot });
+  const tarball = path.join(root, packResult.stdout.trim().split(/\r?\n/).at(-1));
+  const extractDir = path.join(root, "extract");
+  await mkdir(extractDir);
+  await execFileP("tar", ["-xzf", tarball, "-C", extractDir]);
+  const packedCli = path.join(extractDir, "package", "dist", "cli.js");
+  const packedText = await readFile(packedCli, "utf8");
+  const packedStat = await stat(packedCli);
+
+  assert.match(packedText, /^#!\/usr\/bin\/env node/);
+  assert.ok((packedStat.mode & 0o111) !== 0, `expected ${packedCli} to be executable`);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("package bin symlink invokes CLI main", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "rose-aili-bin-"));
+  const binPath = path.join(root, "rose-aili");
+  await symlink(cliPath, binPath);
+
+  const result = await execFileP(binPath, ["help"], { cwd: repoRoot });
+
+  assert.match(result.stdout, /rose-aili install\|update\|doctor/);
+  await rm(root, { recursive: true, force: true });
 });
 
 async function fixtureAiliHome() {
@@ -290,11 +622,51 @@ async function fixtureAiliHome() {
 
 function runCli(args, options = {}) {
   return new Promise((resolve, reject) => {
-    execFile(process.execPath, [cliPath, ...args], { cwd: repoRoot, env: options.env }, (error, stdout, stderr) => {
+    execFile(process.execPath, [cliPath, ...args], { cwd: options.cwd ?? repoRoot, env: options.env }, (error, stdout, stderr) => {
       const code = error && typeof error.code === "number" ? error.code : 0;
       const result = { code, stdout, stderr };
       if (error && options.reject !== false) reject(Object.assign(error, result));
       else resolve(result);
     });
   });
+}
+
+function execFileP(file, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, options, (error, stdout, stderr) => {
+      if (error) reject(Object.assign(error, { stdout, stderr }));
+      else resolve({ stdout, stderr });
+    });
+  });
+}
+
+function supportsOpenSpecSuccessNode(version) {
+  const [major, minor, patch] = version.split(".").map((part) => Number.parseInt(part, 10));
+  return major > 20 || (major === 20 && (minor > 19 || (minor === 19 && patch >= 0)));
+}
+
+function assertDecision(summary, name, nextStep) {
+  const decision = summary.optionalDecisions.find((entry) => entry.name === name);
+  assert.ok(decision, `missing decision ${name}`);
+  assert.equal(decision.status, "skipped");
+  assert.equal(decision.nextStep, nextStep);
+}
+
+async function writeStub(binDir, name, logPath, options = {}) {
+  await mkdir(binDir, { recursive: true });
+  const exitCode = options.exitCode ?? 0;
+  const stderr = JSON.stringify(options.stderr ?? "");
+  const scriptPath = path.join(binDir, name);
+  await writeFile(scriptPath, `#!/usr/bin/env node
+import { readFileSync, writeFileSync } from "node:fs";
+const logPath = ${JSON.stringify(logPath)};
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: ${JSON.stringify(name)}, args: process.argv.slice(2) });
+writeFileSync(logPath, JSON.stringify(entries));
+const stderr = ${stderr};
+if (stderr) process.stderr.write(stderr);
+process.exit(${exitCode});
+`, "utf8");
+  await chmod(scriptPath, 0o755);
 }

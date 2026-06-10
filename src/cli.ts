@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import os from "node:os";
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
+import { fileURLToPath } from "node:url";
 import { readOpenCodeConfig } from "./config.js";
 import { runDoctor } from "./doctor.js";
 import { defaultAiliHome, InstallOptions, runInstall, validateOpenCodeHome } from "./installer.js";
@@ -9,6 +11,8 @@ import { defaultAiliHome, InstallOptions, runInstall, validateOpenCodeHome } fro
 interface CliOptions extends InstallOptions {
   help?: boolean;
 }
+
+type PromptAsk = (prompt: string) => Promise<string>;
 
 async function main(argv: string[]): Promise<void> {
   const command = argv[0] ?? "help";
@@ -46,26 +50,40 @@ async function applyInteractivePrompts(options: CliOptions): Promise<void> {
   const config = await readOpenCodeConfig(options.opencodeHome);
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
-    if (!options.setDefaultRose) {
-      const currentDefault = config.value?.default_agent;
-      const prompt = currentDefault && currentDefault !== "rose"
-        ? `OpenCode default_agent is ${String(currentDefault)}. Replace it with rose? [y/N] `
-        : "Set rose as OpenCode default_agent? [Y/n] ";
-      const answer = (await rl.question(prompt)).trim().toLowerCase();
-      options.setDefaultRose = currentDefault && currentDefault !== "rose" ? answer === "y" || answer === "yes" : answer !== "n" && answer !== "no";
-      options.forceDefaultAgent = Boolean(currentDefault && currentDefault !== "rose" && options.setDefaultRose);
-    }
-    if (!options.model && !config.value?.agent?.rose?.model) {
-      const model = (await rl.question("Model for agent.rose.model (provider/model, blank to skip): ")).trim();
-      if (model) options.model = model;
-    }
-    if (!options.enablePlaywright && !options.skipPlaywright) {
-      const answer = (await rl.question("Enable optional Playwright MCP? [y/N] ")).trim().toLowerCase();
-      options.enablePlaywright = answer === "y" || answer === "yes";
-      options.skipPlaywright = !options.enablePlaywright;
-    }
+    await applyPromptDecisions(options, config.value, (prompt) => rl.question(prompt));
   } finally {
     rl.close();
+  }
+}
+
+async function applyPromptDecisions(options: CliOptions, config: Record<string, any> | undefined, ask: PromptAsk): Promise<void> {
+  if (!options.setDefaultRose) {
+    const currentDefault = config?.default_agent;
+    const prompt = currentDefault && currentDefault !== "rose"
+      ? `OpenCode default_agent is ${String(currentDefault)}. Replace it with rose? [y/N] `
+      : "Set rose as OpenCode default_agent? [Y/n] ";
+    const answer = (await ask(prompt)).trim().toLowerCase();
+    options.setDefaultRose = currentDefault && currentDefault !== "rose" ? answer === "y" || answer === "yes" : answer !== "n" && answer !== "no";
+    options.forceDefaultAgent = Boolean(currentDefault && currentDefault !== "rose" && options.setDefaultRose);
+  }
+  if (!options.model && !config?.agent?.rose?.model) {
+    const model = (await ask("Model for agent.rose.model (provider/model, blank to skip): ")).trim();
+    if (model) options.model = model;
+  }
+  if (!options.enablePlaywright && !options.skipPlaywright) {
+    const answer = (await ask("Enable optional Playwright MCP? [y/N] ")).trim().toLowerCase();
+    options.enablePlaywright = answer === "y" || answer === "yes";
+    options.skipPlaywright = !options.enablePlaywright;
+  }
+  if (!options.enableDcp && !options.skipDcp) {
+    const answer = (await ask("Enable DCP plugin globally via `opencode plugin @tarquinen/opencode-dcp@latest --global`? [y/N] ")).trim().toLowerCase();
+    options.enableDcp = answer === "y" || answer === "yes";
+    options.skipDcp = !options.enableDcp;
+  }
+  if (!options.enableOpenspec && !options.skipOpenspec) {
+    const answer = (await ask("Install/configure OpenSpec for spec-driven changes via `npm install -g @fission-ai/openspec@latest` and project `openspec init/update`? Requires Node.js 20.19+. [y/N] ")).trim().toLowerCase();
+    options.enableOpenspec = answer === "y" || answer === "yes";
+    options.skipOpenspec = !options.enableOpenspec;
   }
 }
 
@@ -108,6 +126,18 @@ function parseOptions(argv: string[]): CliOptions {
         break;
       case "--skip-playwright":
         options.skipPlaywright = true;
+        break;
+      case "--enable-dcp":
+        options.enableDcp = true;
+        break;
+      case "--skip-dcp":
+        options.skipDcp = true;
+        break;
+      case "--enable-openspec":
+        options.enableOpenspec = true;
+        break;
+      case "--skip-openspec":
+        options.skipOpenspec = true;
         break;
       case "--plugin":
         options.plugins.push(requireValue(argv, ++index, arg));
@@ -153,14 +183,26 @@ Options:
   --force-default-agent
   --force-model
   --enable-playwright | --skip-playwright
+  --enable-dcp | --skip-dcp
+  --enable-openspec | --skip-openspec
   --plugin <name>
   --json`);
 }
 
-main(process.argv.slice(2)).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(message);
-  process.exitCode = 1;
-});
+if (process.argv[1] && isMainModule(process.argv[1], fileURLToPath(import.meta.url))) {
+  main(process.argv.slice(2)).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exitCode = 1;
+  });
+}
 
-export { parseOptions };
+function isMainModule(argvPath: string, modulePath: string): boolean {
+  try {
+    return realpathSync(argvPath) === realpathSync(modulePath);
+  } catch {
+    return path.resolve(argvPath) === path.resolve(modulePath);
+  }
+}
+
+export { applyPromptDecisions, parseOptions };

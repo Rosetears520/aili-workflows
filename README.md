@@ -223,9 +223,9 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装 agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。安装时可选择把 `rose` 设为 OpenCode 默认 primary agent，并把模型偏好写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装 agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。安装时可选择把 `rose` 设为 OpenCode 默认 primary agent，并把模型偏好写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
 
-交互式 `rose-aili install` 在发现 OpenCode JSON/JSONC 中还没有 `agent.rose.model` 时，会在同一次安装对话中询问模型值（格式如 `provider/model`）。直接回车留空会跳过模型写入；之后也可以用 `--model <provider/model>` 非交互设置。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+交互式 `rose-aili install` 会按顺序询问：是否设置 `default_agent: "rose"`、是否设置可选 `agent.rose.model`、是否启用 Playwright MCP、是否安装 DCP plugin、是否安装/配置 OpenSpec。模型问题直接回车留空会跳过模型写入；之后也可以用 `--model <provider/model>` 非交互设置。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
 
 ```jsonc
 {
@@ -241,9 +241,19 @@ npx -y rose-aili doctor
 自动化或 AI 代理可用显式 flag 避免交互：
 
 ```bash
-npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --yes
+npx -y rose-aili install --set-default-rose
+npx -y rose-aili install --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --enable-playwright
+npx -y rose-aili install --enable-dcp
+npx -y rose-aili install --enable-openspec
 ```
+
+非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。`--yes` 保留当前安全默认：可设置 `rose` 为默认 agent（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默安装 DCP/OpenSpec，也不会在未传 `--model` 时静默固定模型。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，使用 `rose-aili install --set-default-rose`，不要传 `--model`。
+
+DCP 是显式 opt-in：`--enable-dcp` 会委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心 agents/skills/commands 安装判为失败。
+
+OpenSpec 也是显式 opt-in：`--enable-openspec` 要求 Node.js `20.19.0+`，会先运行 `npm install -g @fission-ai/openspec@latest`，再在当前项目中检测既有 OpenSpec 标记；已有项目运行 `openspec update`，首次项目运行 `openspec init`。扩展 workflow 的 `openspec config profile` 仍是手动后续步骤。
 
 安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装 agents、skills 和 commands。
 

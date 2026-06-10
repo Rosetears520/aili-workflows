@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
-import { access, readdir } from "node:fs/promises";
+import { access, readdir, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,8 +18,21 @@ export interface InstallOptions {
   forceModel?: boolean;
   enablePlaywright?: boolean;
   skipPlaywright?: boolean;
+  enableDcp?: boolean;
+  skipDcp?: boolean;
+  enableOpenspec?: boolean;
+  skipOpenspec?: boolean;
   plugins: string[];
   json?: boolean;
+}
+
+type OptionalStatus = "configured" | "planned" | "skipped" | "failed" | "unverified";
+
+interface OptionalSummary {
+  status: OptionalStatus;
+  command?: string;
+  reason?: string;
+  recovery?: string;
 }
 
 export interface InstallSummary {
@@ -30,8 +43,15 @@ export interface InstallSummary {
   componentInstall: { status: "planned" | "completed"; code: number | null };
   config: Awaited<ReturnType<typeof mergeOpenCodeConfig>>;
   mcp: { playwright: "configured" | "planned" | "skipped" };
+  optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
+  dcp: OptionalSummary;
+  openspec: OptionalSummary;
   plugins: Array<{ name: string; status: "skipped" | "unverified"; reason: string; source?: string }>;
 }
+
+const DCP_COMMAND = ["opencode", "plugin", "@tarquinen/opencode-dcp@latest", "--global"];
+const OPENSPEC_INSTALL_COMMAND = ["npm", "install", "-g", "@fission-ai/openspec@latest"];
+const MIN_OPENSPEC_NODE = [20, 19, 0] as const;
 
 export function defaultAiliHome(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
@@ -67,6 +87,8 @@ export async function runInstall(command: "install" | "update", options: Install
 
   const componentInstall = await runCompatibilityInstaller(options);
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
+  const dcp = await runDcpInstall(options);
+  const openspec = await runOpenSpecInstall(options);
 
   return {
     command,
@@ -76,8 +98,172 @@ export async function runInstall(command: "install" | "update", options: Install
     componentInstall,
     config,
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
+    optionalDecisions: buildOptionalDecisions(options, shouldConfigurePlaywright),
+    dcp,
+    openspec,
     plugins: pluginStatuses
   };
+}
+
+function buildOptionalDecisions(options: InstallOptions, shouldConfigurePlaywright: boolean): InstallSummary["optionalDecisions"] {
+  const decisions: InstallSummary["optionalDecisions"] = [];
+  if (!options.setDefaultRose && !options.yes) {
+    decisions.push({
+      name: "default rose",
+      status: "skipped",
+      reason: "not configured in this install",
+      nextStep: "rose-aili install --set-default-rose"
+    });
+  }
+  if (!options.model) {
+    decisions.push({
+      name: "rose model override",
+      status: "skipped",
+      reason: "not configured in this install; omit this to use OpenCode's default model behavior",
+      nextStep: "rose-aili install --model <provider/model>"
+    });
+  }
+  if (!shouldConfigurePlaywright) {
+    decisions.push({
+      name: "Playwright MCP",
+      status: "skipped",
+      reason: options.skipPlaywright ? "explicitly skipped" : "not configured in this install",
+      nextStep: "rose-aili install --enable-playwright"
+    });
+  }
+  if (!options.enableDcp) {
+    decisions.push({
+      name: "DCP plugin",
+      status: "skipped",
+      reason: options.skipDcp ? "explicitly skipped" : "not configured in this install",
+      nextStep: "rose-aili install --enable-dcp"
+    });
+  }
+  if (!options.enableOpenspec) {
+    decisions.push({
+      name: "OpenSpec",
+      status: "skipped",
+      reason: options.skipOpenspec ? "explicitly skipped" : "not configured in this install",
+      nextStep: "rose-aili install --enable-openspec"
+    });
+  }
+  return decisions;
+}
+
+async function runDcpInstall(options: InstallOptions): Promise<OptionalSummary> {
+  const command = DCP_COMMAND.join(" ");
+  if (!options.enableDcp || options.skipDcp) {
+    return { status: "skipped", command, reason: "DCP is explicit opt-in only; run rose-aili install --enable-dcp." };
+  }
+  if (options.dryRun) return { status: "planned", command };
+  const result = await spawnOptional(DCP_COMMAND[0], DCP_COMMAND.slice(1), options);
+  if (result.code === 0) return { status: "configured", command, reason: "Duplicate detection is delegated to OpenCode plugin command; Unverified." };
+  return {
+    status: "failed",
+    command,
+    reason: result.detail || `command exited with ${result.code ?? "unknown status"}`,
+    recovery: "Install DCP manually with: opencode plugin @tarquinen/opencode-dcp@latest --global"
+  };
+}
+
+async function runOpenSpecInstall(options: InstallOptions): Promise<OptionalSummary> {
+  if (!options.enableOpenspec || options.skipOpenspec) {
+    return { status: "skipped", command: "rose-aili install --enable-openspec", reason: "OpenSpec is explicit opt-in only." };
+  }
+  if (!supportsOpenSpecNode(process.versions.node)) {
+    return {
+      status: "failed",
+      command: OPENSPEC_INSTALL_COMMAND.join(" "),
+      reason: `OpenSpec requires Node.js 20.19.0 or higher; current Node.js is ${process.versions.node}.`,
+      recovery: "Upgrade Node.js to 20.19.0+ and rerun: rose-aili install --enable-openspec"
+    };
+  }
+  const projectCommand = await hasOpenSpecProject(process.cwd()) ? "update" : "init";
+  const command = `${OPENSPEC_INSTALL_COMMAND.join(" ")} && openspec ${projectCommand}`;
+  if (options.dryRun) return { status: "planned", command };
+  const installResult = await spawnOptional(OPENSPEC_INSTALL_COMMAND[0], OPENSPEC_INSTALL_COMMAND.slice(1), options);
+  if (installResult.code !== 0) {
+    return {
+      status: "failed",
+      command: OPENSPEC_INSTALL_COMMAND.join(" "),
+      reason: installResult.detail || `command exited with ${installResult.code ?? "unknown status"}`,
+      recovery: "Install OpenSpec manually with: npm install -g @fission-ai/openspec@latest"
+    };
+  }
+  const projectResult = await spawnOptional("openspec", [projectCommand], options, process.cwd());
+  if (projectResult.code !== 0) {
+    return {
+      status: "failed",
+      command: `openspec ${projectCommand}`,
+      reason: projectResult.detail || `command exited with ${projectResult.code ?? "unknown status"}`,
+      recovery: `Run manually inside the target project: openspec ${projectCommand}`
+    };
+  }
+  return { status: "configured", command };
+}
+
+function supportsOpenSpecNode(version: string): boolean {
+  const parts = version.split(".").map((part) => Number.parseInt(part, 10));
+  return parts[0] > MIN_OPENSPEC_NODE[0]
+    || (parts[0] === MIN_OPENSPEC_NODE[0] && parts[1] > MIN_OPENSPEC_NODE[1])
+    || (parts[0] === MIN_OPENSPEC_NODE[0] && parts[1] === MIN_OPENSPEC_NODE[1] && parts[2] >= MIN_OPENSPEC_NODE[2]);
+}
+
+async function hasOpenSpecProject(cwd: string): Promise<boolean> {
+  for (const name of ["openspec", "openspec.json", "openspec.yaml", "openspec.yml"] as const) {
+    try {
+      const marker = await stat(path.join(cwd, name));
+      if (name === "openspec" ? marker.isDirectory() : marker.isFile()) return true;
+    } catch {
+      // keep checking known OpenSpec markers
+    }
+  }
+  return false;
+}
+
+function spawnOptional(command: string, args: string[], options: InstallOptions, cwd?: string): Promise<{ code: number | null; detail: string }> {
+  return new Promise((resolve) => {
+    let stderr = "";
+    const env = sanitizedOptionalEnv(options);
+    if (!env.PATH) {
+      resolve({ code: null, detail: `${command} command not found in sanitized PATH` });
+      return;
+    }
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ["ignore", "ignore", "pipe"],
+      env
+    });
+    child.stderr?.setEncoding("utf8");
+    child.stderr?.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("error", (error: NodeJS.ErrnoException) => {
+      resolve({ code: null, detail: error.code === "ENOENT" ? `${command} command not found` : error.message });
+    });
+    child.on("close", (code) => {
+      resolve({ code, detail: stderr.trim() });
+    });
+  });
+}
+
+function sanitizedOptionalEnv(options: InstallOptions): NodeJS.ProcessEnv {
+  return {
+    HOME: os.homedir(),
+    PATH: sanitizedOptionalPath(process.env.PATH ?? "/usr/bin:/bin:/usr/sbin:/sbin"),
+    OPENCODE_HOME: options.opencodeHome,
+    OPENCODE_ALLOW_CUSTOM_HOME: "yes",
+    AILI_ALLOW_PACKAGE_HOME: "yes"
+  };
+}
+
+function sanitizedOptionalPath(rawPath: string): string {
+  const cwd = path.resolve(process.cwd());
+  const entries = rawPath.split(path.delimiter).filter((entry) => {
+    if (!entry || !path.isAbsolute(entry)) return false;
+    return path.resolve(entry) !== cwd;
+  });
+  return entries.join(path.delimiter);
 }
 
 async function runCompatibilityInstaller(options: InstallOptions): Promise<{ status: "planned" | "completed"; code: number | null }> {
