@@ -1,43 +1,57 @@
 ---
 name: agents-md-initialization
 description: Create, update, or validate a project-local AGENTS.md from the shared AILI template when initializing or checking repository agent rules.
+metadata:
+  tool: references/agents_md.py
+  template: references/agents-template.md
 ---
 
 # AGENTS.md Initialization
 
 ## Non-Negotiable Rule
 
-Project `AGENTS.md` must be created from `templates/AGENTS.md`.
+Project `AGENTS.md` must be created from the bundled AILI AGENTS template.
 
 Do not write a project `AGENTS.md` from scratch.
 
 Use the bundled script:
 
 ```bash
-python "$AILI_HOME/scripts/agents_md.py" init --project .
+python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py init --project .
 ```
 
-Define `AILI_HOME` as the absolute path to the local `aili-workflows` clone. If `AILI_HOME` is unset, ask the user for the clone path or infer it safely from the current repository context; do not assume a fixed home-directory location.
+The script and template are distributed with this skill:
+
+- `references/agents_md.py`
+- `references/agents-template.md`
+
+If this skill is being run from a repository checkout rather than an installed OpenCode skill, use the repository-local path:
+
+```bash
+python skills/agents-md-initialization/references/agents_md.py init --project .
+```
 
 ## Commands
 
 Initialize a project-local `AGENTS.md`:
 
 ```bash
-python "$AILI_HOME/scripts/agents_md.py" init --project .
+python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py init --project .
 ```
 
 Update only AILI managed blocks:
 
 ```bash
-python "$AILI_HOME/scripts/agents_md.py" update --project .
+python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py update --project .
 ```
 
 Check template compliance:
 
 ```bash
-python "$AILI_HOME/scripts/agents_md.py" check --project .
+python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py check --project .
 ```
+
+If the global installed path is unavailable but the current repository contains this skill, replace the path prefix with `skills/agents-md-initialization/`.
 
 ## Workflow
 
@@ -58,9 +72,9 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 
 | Trigger condition | First response | If still unresolved |
 |---|---|---|
-| `templates/AGENTS.md` is missing or unreadable | Stop and report the expected template path; do not hand-write `AGENTS.md` | Ask the user to restore the template or provide the correct `AILI_HOME` |
-| `scripts/agents_md.py` is missing or not executable by Python | Stop and report the expected script path and command attempted | Ask for the correct clone path; do not create a replacement script |
-| `AILI_HOME` is unset and cannot be inferred from the current repo | Ask the user for the absolute local `aili-workflows` clone path | Do not assume a home-directory path |
+| `references/agents-template.md` is missing or unreadable | Stop and report the expected bundled template path; do not hand-write `AGENTS.md` | Ask the user to restore/reinstall the skill or provide an approved template source |
+| `references/agents_md.py` is missing or not executable by Python | Stop and report the expected bundled script path and command attempted | Ask the user to restore/reinstall the skill; do not create a replacement script in the target project |
+| Installed skill path is unavailable but a repository checkout is present | Use `skills/agents-md-initialization/references/agents_md.py` from the checkout | If neither installed nor repo-local bundled script exists, stop and ask for the AILI workflow checkout path |
 | Existing `AGENTS.md` has unrecognized local content outside managed blocks | Prefer `update`; summarize preserved local sections before editing | Require explicit approval before any backup-overwrite strategy |
 | `check` fails after init/update | Report the failing output and inspect only the relevant sections | Do not claim completion until `check` passes or the failure is marked unresolved |
 
@@ -69,21 +83,21 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 Target projects should add a lightweight check when practical:
 
 ```bash
-python "$AILI_HOME/scripts/agents_md.py" check --project .
+python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py check --project .
 ```
 
 For `Makefile` projects:
 
 ```makefile
 check-agents:
-	python "$(AILI_HOME)/scripts/agents_md.py" check --project .
+	python "$${HOME}/.config/opencode/skills/agents-md-initialization/references/agents_md.py" check --project .
 ```
 
 For pre-commit hooks:
 
 ```bash
 #!/usr/bin/env bash
-python "$AILI_HOME/scripts/agents_md.py" check --project .
+python "$HOME/.config/opencode/skills/agents-md-initialization/references/agents_md.py" check --project .
 ```
 
 ## Verification
