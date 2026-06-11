@@ -1,6 +1,6 @@
 {
   "name": "rose-aili",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "AILI OpenCode workflow installer CLI",
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
     "commands/",
     "skills/",
     "manifests/",
+    "templates/opencode-global-AGENTS.md",
     "scripts/install_opencode.sh",
     "README.md",
     "docs/opencode-setup.md"

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 docs/research/
 .opencode/
+.codegraph/
 openspec/
 data/
 node_modules/

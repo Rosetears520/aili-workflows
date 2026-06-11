@@ -29,6 +29,8 @@ Direct allowlist 小改可以跳过完整 evidence pack，但必须说明为什�
 5. 把冲突、stale、missing、generated、archived 证据显式标出。
 6. 给出下一步：edit、delegate、ask_user、blocked、verify。
 
+可选证据源：当非平凡代码任务需要文件/符号/调用方/被调用方/peer pattern/测试/影响面定位，且 CodeGraph 可用且有帮助时，ROSE 可把 CodeGraph 作为可选 locality provider 分配给合格 lane owner。CodeGraph 结果必须压缩成 evidence anchors；不可当作 proof；不可替代 edit/review/test/doc lane 的最终读文件、读 diff、读测试或读文档；不可用时回退到普通 search/read，只有 materially affects confidence 时标 `Unverified`。
+
 🔴 CHECKPOINT: 在进入编辑、审查结论或 completion claim 前，必须能列出至少 1 个有效证据锚点，或把状态降级为 `PARTIAL` / `NOT_FOUND` / `CONFLICTING` / `BLOCKED`。没有 anchors，就不能说 “confirmed / verified / done / repository pattern”。
 
 ## Evidence pack 字段
@@ -87,7 +89,7 @@ Runtime-valid delegation only:
 
 | Need | If specialist is exposed and allowed | If not exposed/allowed |
 |---|---|---|
-| Broad local code evidence | Delegate to `code-scout` or equivalent read-only scout | Search locally with available tools, or mark `Unverified` |
+| Broad local code evidence | Delegate to `code-scout` or equivalent read-only scout; optionally include CodeGraph locality evidence when available/useful | Search locally with available tools, or mark `Unverified` |
 | Docs/OpenSpec/workflow evidence | Delegate to exposed docs scout | Read local docs yourself, or ask caller to dispatch |
 | External/current behavior | Delegate/fetch only if web access is allowed | Mark external behavior `Unverified`; do not infer |
 | Test/security review | Delegate only when caller/runtime permits | Provide escalation request; do not fabricate specialist verdict |

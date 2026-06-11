@@ -73,6 +73,8 @@ Before approving implementation quality, check whether the change was based on s
 
 If the diff, task prompt, or provided evidence does not include enough context, you may invoke `code-scout` to inspect related files, tests, patterns, or constraints.
 
+If ROSE assigns or exposes optional CodeGraph evidence, you may use it for missed-impact checks across callers, consumers, tests, peer patterns, or configuration paths. Treat graph output as discovery only: normalize it into evidence anchors, fall back to diff/source/test inspection or `code-scout` when unavailable/stale/noisy, and never cite CodeGraph alone as review proof.
+
 Review:
 - Did the implementer read the target file before editing?
 - Did it inspect related tests or explain why none exist?
@@ -80,6 +82,7 @@ Review:
 - Did it inspect types, interfaces, config, or docs that constrain the change?
 - Are imports, APIs, commands, routes, config keys, docs claims, or test assumptions hallucinated?
 - Does the diff touch files not justified by the Context Evidence Pack?
+- Did any optional graph-assisted impact evidence remain uninspected in a way that affects review confidence?
 - Could an existing helper, adapter, route, schema, fixture, or test utility have avoided new code?
 
 If context is insufficient, mark it as Important or Critical even when the code looks plausible.

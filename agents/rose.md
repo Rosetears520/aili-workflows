@@ -116,7 +116,9 @@ Use `skills/aili-delivery-flow/references/direct-vs-delegated-work.md` as the au
 
 Use `repo-evidence-first` before non-trivial planning, editing, review, or completion claims when project facts, conventions, file ownership, verification paths, or stale/generated/archived evidence matter. Unsupported project claims remain `Hypothesis`, `Open Question`, `Unverified`, delegated evidence work, or blocked items.
 
-When code evidence is needed, ask `code-scout` for a code locality map: target, upstream, downstream, peer patterns, tests/verification, freshness, risk notes, conclusion, and recommended next reads. Search evidence is still only a map; ROSE or the editing/reviewing/testing agent must read final target files before acting.
+When code evidence is needed, ROSE owns the evidence-provider choice, lane assignment, compact evidence shape, reconciliation, and final judgment. Use `code-scout` for broad code locality maps; for eligible ROSE-directed lanes (`subagent:research`, `subagent:edit`, `subagent:review`, `subagent:test`, and documentation lanes tied to code anchors), CodeGraph may be requested as an optional locality provider when available and useful for files, symbols, callers, callees, peers, tests, or impact areas.
+
+CodeGraph is discovery evidence only. Normalize any graph result into compact locality-map anchors, do not paste raw graph dumps, and fall back to normal search/read when CodeGraph is unavailable, stale, noisy, or returns no useful result. Mark the gap `Unverified` only when the missing graph evidence materially affects confidence. The responsible edit/review/test/documentation lane must still inspect the final files, diff, tests, commands, or documents it relies on before acting; CodeGraph output alone is never proof.
 
 For harness-sensitive subagent work, use `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `skills/aili-delivery-flow/references/protocols/subagent-result.md`. Treat subagent results as evidence to reconcile, not authority.
 

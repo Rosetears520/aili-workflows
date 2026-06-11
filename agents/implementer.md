@@ -288,6 +288,8 @@ Do not edit based only on the scout summary. Before editing, read the target fil
 
 If `code-scout` returns `STATUS: PARTIAL`, `STATUS: NOT_FOUND`, or `CALLER ACTION: NEEDS_MORE_SEARCH`, do not guess. Continue searching, ask the supervisor, or return `BLOCKED_CONTEXT_INSUFFICIENT`.
 
+If ROSE assigns or exposes optional CodeGraph evidence, you may use it to check call chains, consumers, peer patterns, related tests, or impact areas before selecting final edit targets. CodeGraph is not mandatory and not proof: fall back to `code-scout`, repository search, and reads when it is unavailable, stale, noisy, or unhelpful; mark material graph gaps as `Unverified`; and always read every final file you edit before writing.
+
 ### 3. Implement
 
 Implement surgically:

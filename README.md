@@ -33,7 +33,7 @@ aili-workflows/
 ├── package.json                  # rose-aili Node/TypeScript CLI package metadata
 ├── scripts/
 │   ├── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
-│   └── install_opencode.sh      # 安全安装 agents/skills/commands 到 OpenCode 全局配置
+│   └── install_opencode.sh      # 安全安装全局 AGENTS/agents/skills/commands 到 OpenCode 配置
 ├── src/                          # rose-aili CLI source
 ├── skills/
 │   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
@@ -83,7 +83,8 @@ aili-workflows/
 │   ├── using-agent-skills/
 │   └── verification-before-completion/
 ├── templates/
-│   └── AGENTS.md                # 项目 AGENTS.md 的唯一模板源
+│   ├── AGENTS.md                # 项目 AGENTS.md 的唯一模板源
+│   └── opencode-global-AGENTS.md # rose-aili 安装到 OpenCode home 的全局规则源
 ├── tests/
 └── README.md
 ```
@@ -205,6 +206,7 @@ aili-workflows/
 ### OpenCode 设置
 
 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
+安装会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`，项目级事实和本地例外仍通过各项目自己的 `AGENTS.md` 管理。
 
 ```bash
 npx -y rose-aili install
@@ -223,9 +225,9 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装 agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。安装时可选择把 `rose` 设为 OpenCode 默认 primary agent，并把模型偏好写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。安装时可选择把 `rose` 设为 OpenCode 默认 primary agent，并把模型偏好写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
 
-交互式 `rose-aili install` 会按顺序询问：是否设置 `default_agent: "rose"`、是否设置可选 `agent.rose.model`、是否启用 Playwright MCP、是否安装 DCP plugin、是否安装/配置 OpenSpec。模型问题直接回车留空会跳过模型写入；之后也可以用 `--model <provider/model>` 非交互设置。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+交互式 `rose-aili install` 会按顺序询问：是否设置 `default_agent: "rose"`、是否设置可选 `agent.rose.model`、是否启用 Playwright MCP、是否安装 DCP plugin、是否安装 CodeGraph OpenCode 集成、是否安装/配置 OpenSpec。交互式 `rose-aili update` 只询问新增的 CodeGraph 集成，不询问 default agent / model，也不会因为 CodeGraph 升级提示触发 OpenSpec 项目初始化。模型问题直接回车留空会跳过模型写入；之后也可以用 `--model <provider/model>` 非交互设置。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
 
 ```jsonc
 {
@@ -246,16 +248,21 @@ npx -y rose-aili install --set-default-rose
 npx -y rose-aili install --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --enable-playwright
 npx -y rose-aili install --enable-dcp
+npx -y rose-aili install --enable-codegraph
 npx -y rose-aili install --enable-openspec
 ```
 
-非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。`--yes` 保留当前安全默认：可设置 `rose` 为默认 agent（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默安装 DCP/OpenSpec，也不会在未传 `--model` 时静默固定模型。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，使用 `rose-aili install --set-default-rose`，不要传 `--model`。
+非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。`--yes` 保留当前安全默认：可设置 `rose` 为默认 agent（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默安装 DCP/CodeGraph/OpenSpec，也不会在未传 `--model` 时静默固定模型。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，使用 `rose-aili install --set-default-rose`，不要传 `--model`。
 
-DCP 是显式 opt-in：`--enable-dcp` 会委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心 agents/skills/commands 安装判为失败。
+DCP 是显式 opt-in：`--enable-dcp` 会委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
+
+CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
+
+项目内 CodeGraph 初始化不属于全局安装。AI agent 只能在确认当前仓库根目录后，对该仓库运行 `codegraph init -i` 和 `codegraph status`；不得因为 CodeGraph 初始化顺手运行 `openspec init`，也不得未经明确授权批量初始化多个仓库。
 
 OpenSpec 也是显式 opt-in：`--enable-openspec` 要求 Node.js `20.19.0+`，会先运行 `npm install -g @fission-ai/openspec@latest`，再在当前项目中检测既有 OpenSpec 标记；已有项目运行 `openspec update`，首次项目运行 `openspec init`。扩展 workflow 的 `openspec config profile` 仍是手动后续步骤。
 
-安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装 agents、skills 和 commands。
+安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装全局 `AGENTS.md`、agents、skills 和 commands。
 
 默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/`、`skills/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件、skill 目录和 command 文件。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
 

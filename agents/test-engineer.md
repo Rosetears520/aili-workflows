@@ -200,6 +200,8 @@ If the code under test, related tests, fixtures, helpers, public API, or verific
 
 The scout may locate evidence. You must still read the final code-under-test and test files before writing or modifying tests.
 
+If ROSE assigns or exposes optional CodeGraph evidence, you may use it to locate affected files, related tests, callers/consumers, and verification scope. CodeGraph is not a test result: fall back to repository search/read when unavailable, stale, noisy, or unhelpful; inspect the final tests, code targets, and commands you rely on; and mark material graph gaps as `Unverified`.
+
 ### 2. Test at the Right Level
 
 ```

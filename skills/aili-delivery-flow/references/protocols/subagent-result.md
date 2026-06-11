@@ -13,6 +13,9 @@ SUMMARY:
 INSPECTED SCOPE:
 - path / command / source - what was inspected
 
+EVIDENCE PROVIDER NOTES:
+- CodeGraph used/skipped/unavailable/stale/noisy/N/A - confidence impact and fallback used
+
 COVERAGE COMPLETED:
 - scope item - completed / skipped with reason
 
@@ -57,6 +60,7 @@ STOP CONDITIONS HIT:
 - Unknowns remain `Unknown`, `Open Question`, or `Unverified`; do not convert them into facts.
 - `STATUS: DONE` means the worker completed its assigned packet and returned evidence. It is not a final PASS/FAIL/ready verdict for the package or change.
 - Workers must not claim final PASS, final FAIL, or final `Unverified` status. ROSE owns final reconciliation, progress-ledger entries, and user-facing acceptance judgment.
+- CodeGraph evidence is optional discovery evidence. It must be summarized as anchors, labeled when stale/noisy/no-result, and must not replace final file, diff, test, command, or document inspection by the responsible lane.
 
 ## Compact scout variant
 

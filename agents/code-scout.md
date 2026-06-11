@@ -108,6 +108,8 @@ Do not claim a file is irrelevant unless you searched or inspected enough to jus
 
 Use permission-aware repository tools (`glob`, `grep`, `read`, `list`, `lsp`) for search and file reads. Do not use broad shell search/list commands to inspect file contents; shell permissions intentionally allow only `git status` and `git ls-files`.
 
+If an optional CodeGraph provider is exposed through allowed tools or supplied in the task packet, you may use it to discover candidate files, symbols, callers, callees, peers, tests, and impact areas for non-trivial code-evidence tasks. Treat it as one source for locality discovery, not authority: normalize useful results into the map below, label stale/noisy/no-result graph evidence, fall back to normal repository search/read when needed, and never return raw graph dumps.
+
 ## Output Contract
 
 Return compact results in this exact shape. Use `N/A` or `unknown` for locality fields that were searched but not found.
@@ -125,6 +127,7 @@ CODE LOCALITY MAP:
 - Peer patterns: path:line-or-symbol - fact | N/A | unknown
 - Tests/verification: path/test/command - coverage signal | N/A | unknown
 - Docs/config/schema constraints: path:line-or-symbol - constraint | N/A | unknown
+- Evidence provider notes: CodeGraph used/skipped/unavailable/stale/noisy/N/A - impact on confidence
 - Freshness: active/current/stale/archived/generated/unknown with evidence
 - Risk notes: evidence-backed risk notes | N/A
 
@@ -163,3 +166,4 @@ Never return raw grep dumps or long excerpts.
 - If evidence is weak, say `PARTIAL` or `NOT_FOUND`.
 - Search evidence answers: where should the caller look?
 - Search evidence does not replace reading the final target files before editing, reviewing, testing, securing, or documenting.
+- CodeGraph evidence, when used, is optional discovery evidence and does not replace permission-aware search, targeted reads, or the acting lane's final inspection.

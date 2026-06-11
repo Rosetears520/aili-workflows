@@ -10,6 +10,7 @@ Default installation mode is selective symlink setup.
 
 Do not replace `~/.config/opencode/agents`, `~/.config/opencode/skills`, or `~/.config/opencode/commands` by default. Preserve existing OpenCode directories and create symlinks inside them:
 
+- `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`
 - `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`
 - `~/.config/opencode/skills/<skill> -> <repo>/skills/<skill>`
 - `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`
@@ -23,6 +24,7 @@ Install ROSE agents and skills for OpenCode while keeping:
 - workflow source synced with this repository
 - existing OpenCode global agents and skills preserved
 - OpenCode global config lightweight
+- reusable global AGENTS rules installed in OpenCode home
 - project memory local to each project
 - project `AGENTS.md` self-contained and project-specific
 
@@ -127,14 +129,15 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
 - `skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
+- `templates/opencode-global-AGENTS.md` - installer-owned source for reusable global OpenCode `AGENTS.md` rules.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
-- `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global agents, skills, and commands.
+- `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global AGENTS rules, agents, skills, and commands.
 
 Slash commands are optional entrypoints. This repository ships only `/ideate`, `/define`, `/build`, and `/ship`, mapped to `commands/{ideate,define,build,ship}.md` and backed by `skills/aili-delivery-flow`; internal stages such as research, questionnaire, test-plan, implement, fix, debug, review, and evolve are not shipped as top-level commands.
 
 ## Installation Decision Rule
 
-Use `rose-aili install` by default when Node/npm is available. It wraps the same entry-level setup for repository-managed agents, skills, and commands, then safely merges optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so OpenCode does not point at a transient package cache. The npm package bin target is `dist/cli.js`; builds enforce a Node shebang and executable file mode so npm/npx can execute it directly.
+Use `rose-aili install` by default when Node/npm is available. It wraps the same entry-level setup for repository-managed global AGENTS rules, agents, skills, and commands, then safely merges optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so OpenCode does not point at a transient package cache. The npm package bin target is `dist/cli.js`; builds enforce a Node shebang and executable file mode so npm/npx can execute it directly.
 
 ```bash
 npx -y rose-aili install
@@ -153,16 +156,21 @@ npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --set-default-rose
 npx -y rose-aili install --enable-playwright
 npx -y rose-aili install --enable-dcp
+npx -y rose-aili install --enable-codegraph
 npx -y rose-aili install --enable-openspec
 npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-`--yes` sets `rose` as `default_agent` when no conflicting default exists. Existing non-rose `default_agent` and existing `agent.rose.model` values are preserved unless `--force-default-agent` or `--force-model` is passed. `--yes` does not silently install DCP/OpenSpec and does not silently pin `agent.rose.model`; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
+`--yes` sets `rose` as `default_agent` when no conflicting default exists. Existing non-rose `default_agent` and existing `agent.rose.model` values are preserved unless `--force-default-agent` or `--force-model` is passed. `--yes` does not silently install DCP/CodeGraph/OpenSpec and does not silently pin `agent.rose.model`; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
 
-Interactive `rose-aili install` asks, in order: set default `rose`, optional `agent.rose.model`, Playwright MCP, DCP plugin, and OpenSpec install/configure. The model prompt accepts a free-form `provider/model` value; pressing Enter with a blank value skips model writing. To make `rose` default while keeping OpenCode's default model behavior, run `rose-aili install --set-default-rose` without `--model`. Non-interactive setup can pass `--model <provider/model>` only when the user wants a fixed model override. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
+Interactive `rose-aili install` asks, in order: set default `rose`, optional `agent.rose.model`, Playwright MCP, DCP plugin, CodeGraph OpenCode integration, and OpenSpec install/configure. Interactive `rose-aili update` asks only the new CodeGraph integration question; OpenSpec remains install-time or explicit-flag-only so CodeGraph upgrade prompts do not trigger project OpenSpec initialization. The model prompt accepts a free-form `provider/model` value; pressing Enter with a blank value skips model writing. To make `rose` default while keeping OpenCode's default model behavior, run `rose-aili install --set-default-rose` without `--model`. Non-interactive setup can pass `--model <provider/model>` only when the user wants a fixed model override. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
 
-DCP opt-in is explicit: `rose-aili install --enable-dcp` delegates `opencode plugin @tarquinen/opencode-dcp@latest --global` with argv execution. This uses a third-party `@latest` package, so treat it as user-accepted latest-version risk. If the plugin command is unavailable or fails, the core agents/skills/commands install can still succeed and the summary reports DCP recovery instructions separately.
+DCP opt-in is explicit: `rose-aili install --enable-dcp` delegates `opencode plugin @tarquinen/opencode-dcp@latest --global` with argv execution. This uses a third-party `@latest` package, so treat it as user-accepted latest-version risk. If the plugin command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports DCP recovery instructions separately.
+
+CodeGraph opt-in is explicit: `rose-aili install --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`. Restart OpenCode after a configured CodeGraph install so OpenCode reloads the MCP integration. If either command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports CodeGraph recovery instructions separately.
+
+Project-local CodeGraph initialization is separate from global install/update. An AI agent should confirm the current repository root before running `codegraph init -i` and `codegraph status` for that repository only. It must not run `openspec init` as part of CodeGraph initialization, and it must not initialize multiple repositories without explicit approval for that batch scope.
 
 OpenSpec opt-in is explicit: `rose-aili install --enable-openspec` requires Node.js `20.19.0+`, runs `npm install -g @fission-ai/openspec@latest`, then runs `openspec update` inside projects with existing OpenSpec markers or `openspec init` for first-time setup. Expanded workflow selection with `openspec config profile` remains a manual follow-up.
 
@@ -205,7 +213,7 @@ If unsure, use Selective Symlink Setup.
 
 ## Destructive-Config Guard
 
-Do not rename, delete, replace, or convert these paths into directory symlinks unless explicitly approved by the user:
+Do not delete, replace without backup, or convert these paths into directory symlinks unless explicitly approved by the user:
 
 - `~/.config/opencode/agents`
 - `~/.config/opencode/skills`
@@ -220,6 +228,7 @@ Allowed by default:
 - back up `~/.config/opencode/agents/rose.md` if it is a real file and conflicts with the new symlink
 - back up `~/.config/opencode/skills/rose-memory` if it is a real directory and conflicts with the new symlink
 - back up `~/.config/opencode/commands/ideate.md` if it is a real file and conflicts with the new symlink
+- back up `~/.config/opencode/AGENTS.md` if it is a real file and conflicts with the installer-owned global AGENTS file
 
 Not allowed by default:
 
@@ -252,6 +261,12 @@ mkdir -p "$(dirname "$AILI_HOME")"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
 mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
+
+global_agents_target="$OPENCODE_HOME/AGENTS.md"
+if [ -e "$global_agents_target" ] && [ ! -L "$global_agents_target" ]; then
+  mv "$global_agents_target" "$global_agents_target.backup.$(date +%Y%m%d%H%M%S)"
+fi
+ln -sfn "$AILI_HOME/templates/opencode-global-AGENTS.md" "$global_agents_target"
 
 for file in "$AILI_HOME"/agents/*.md; do
   name="$(basename "$file")"
@@ -296,6 +311,8 @@ Result examples:
   rose_old.md
   rose.md -> $AILI_HOME/agents/rose.md
   implementer.md -> $AILI_HOME/agents/implementer.md
+
+~/.config/opencode/AGENTS.md -> $AILI_HOME/templates/opencode-global-AGENTS.md
 
 ~/.config/opencode/skills/
   caveman/
@@ -342,9 +359,14 @@ if [ -e "$OPENCODE_HOME/commands" ] && [ ! -L "$OPENCODE_HOME/commands" ]; then
   mv "$OPENCODE_HOME/commands" "$OPENCODE_HOME/commands.backup.$(date +%Y%m%d%H%M%S)"
 fi
 
+if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; then
+  mv "$OPENCODE_HOME/AGENTS.md" "$OPENCODE_HOME/AGENTS.md.backup.$(date +%Y%m%d%H%M%S)"
+fi
+
 ln -sfn "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
 ln -sfn "$AILI_HOME/skills" "$OPENCODE_HOME/skills"
 ln -sfn "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
+ln -sfn "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
 ```
 
 ### Mode C: Copy Fallback
@@ -370,9 +392,14 @@ git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev
 
 mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
 
+if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; then
+  mv "$OPENCODE_HOME/AGENTS.md" "$OPENCODE_HOME/AGENTS.md.backup.$(date +%Y%m%d%H%M%S)"
+fi
+
 cp -R "$AILI_HOME/agents/"*.md "$OPENCODE_HOME/agents/"
 cp -R "$AILI_HOME/skills/"* "$OPENCODE_HOME/skills/"
 cp -R "$AILI_HOME/commands/"*.md "$OPENCODE_HOME/commands/"
+cp -R "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
 ```
 
 ## Windows Native Selective Symlink Setup
@@ -397,6 +424,15 @@ if (!(Test-Path $AiliHome)) {
 } else {
   git -C $AiliHome pull --ff-only
 }
+
+$GlobalAgentsTarget = Join-Path $OpenCodeHome "AGENTS.md"
+if ((Test-Path $GlobalAgentsTarget) -and -not ((Get-Item $GlobalAgentsTarget).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+  Rename-Item $GlobalAgentsTarget "$($GlobalAgentsTarget).backup.$(Get-Date -Format yyyyMMddHHmmss)"
+}
+if (Test-Path $GlobalAgentsTarget) {
+  Remove-Item $GlobalAgentsTarget -Force
+}
+New-Item -ItemType SymbolicLink -Path $GlobalAgentsTarget -Target (Join-Path $AiliHome "templates\opencode-global-AGENTS.md") | Out-Null
 
 Get-ChildItem "$AiliHome\agents" -Filter "*.md" | ForEach-Object {
   $Target = Join-Path "$OpenCodeHome\agents" $_.Name
@@ -501,9 +537,11 @@ Then rerun Mode A selective setup.
 
 ## Project AGENTS.md Rule
 
+`~/.config/opencode/AGENTS.md` is the global reusable rule file installed from `templates/opencode-global-AGENTS.md`.
+
 Do not symlink this repository's `AGENTS.md` into each target project's root by default.
 
-Project `AGENTS.md` files must be generated from this repository's `templates/AGENTS.md`, then filled with project-specific commands and conventions, and committed to that project.
+Project `AGENTS.md` files must be generated from this repository's `templates/AGENTS.md`, then filled with project-specific commands, facts, and conventions, and committed to that project.
 
 Use symlinks for reusable global ROSE agents and skills. Use project-local generated files for project-specific instructions.
 
@@ -672,6 +710,7 @@ test -d "$HOME/.config/opencode/commands"
 test ! -L "$HOME/.config/opencode/agents"
 test ! -L "$HOME/.config/opencode/skills"
 test ! -L "$HOME/.config/opencode/commands"
+test -L "$HOME/.config/opencode/AGENTS.md"
 test -L "$HOME/.config/opencode/agents/rose.md"
 test -L "$HOME/.config/opencode/agents/implementer.md"
 test -L "$HOME/.config/opencode/skills/rose-memory"
@@ -682,6 +721,8 @@ test -L "$HOME/.config/opencode/commands/ship.md"
 test -f "$HOME/.config/opencode/agents/rose.md"
 test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
+test -f "$HOME/.config/opencode/AGENTS.md"
+readlink "$HOME/.config/opencode/AGENTS.md"
 readlink "$HOME/.config/opencode/agents/rose.md"
 readlink "$HOME/.config/opencode/skills/rose-memory"
 readlink "$HOME/.config/opencode/commands/ideate.md"
@@ -695,6 +736,7 @@ Test-Path "$env:USERPROFILE\code\ai\aili-workflows"
 Test-Path "$env:USERPROFILE\.config\opencode\agents"
 Test-Path "$env:USERPROFILE\.config\opencode\skills"
 Test-Path "$env:USERPROFILE\.config\opencode\commands"
+Get-Item "$env:USERPROFILE\.config\opencode\AGENTS.md"
 Get-Item "$env:USERPROFILE\.config\opencode\agents\rose.md"
 Get-Item "$env:USERPROFILE\.config\opencode\skills\rose-memory"
 Get-Item "$env:USERPROFILE\.config\opencode\commands\ideate.md"
@@ -706,6 +748,7 @@ Copy fallback:
 test -f "$HOME/.config/opencode/agents/rose.md"
 test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
+test -f "$HOME/.config/opencode/AGENTS.md"
 python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
 ```
 
@@ -726,7 +769,7 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-For symlink setup, update the cloned repository:
+For symlink setup, update the cloned repository; the global `AGENTS.md` symlink will read the updated `templates/opencode-global-AGENTS.md` immediately after OpenCode restart:
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -736,7 +779,7 @@ git -C "$AILI_HOME" pull --ff-only
 
 No reinstall is needed unless new optional third-party integrations were added or the user wants to change installation mode.
 
-For copy fallback, update requires copying files again.
+For copy fallback, update requires copying files again, including `templates/opencode-global-AGENTS.md` to `AGENTS.md`.
 
 ## Report Back
 

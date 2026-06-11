@@ -29,9 +29,9 @@ async function main(argv: string[]): Promise<void> {
     validateOpenCodeHome(options.opencodeHome);
   }
   if (command === "install" || command === "update") {
-    if (command === "install") {
-      await applyInteractivePrompts(options);
-    }
+    await applyInteractivePrompts(options, command === "install"
+      ? { includeCoreConfig: true }
+      : { includeCoreConfig: false, includePlaywright: false, includeDcp: false, includeCodegraph: true, includeOpenspec: false });
     const summary = await runInstall(command, options);
     print(summary, options.json);
     return;
@@ -45,19 +45,32 @@ async function main(argv: string[]): Promise<void> {
   throw new Error(`Unknown command: ${command}`);
 }
 
-async function applyInteractivePrompts(options: CliOptions): Promise<void> {
+interface PromptDecisionOptions {
+  includeCoreConfig?: boolean;
+  includePlaywright?: boolean;
+  includeDcp?: boolean;
+  includeCodegraph?: boolean;
+  includeOpenspec?: boolean;
+}
+
+async function applyInteractivePrompts(options: CliOptions, promptOptions: PromptDecisionOptions = {}): Promise<void> {
   if (options.json || options.yes || !process.stdin.isTTY || !process.stdout.isTTY) return;
   const config = await readOpenCodeConfig(options.opencodeHome);
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
-    await applyPromptDecisions(options, config.value, (prompt) => rl.question(prompt));
+    await applyPromptDecisions(options, config.value, (prompt) => rl.question(prompt), promptOptions);
   } finally {
     rl.close();
   }
 }
 
-async function applyPromptDecisions(options: CliOptions, config: Record<string, any> | undefined, ask: PromptAsk): Promise<void> {
-  if (!options.setDefaultRose) {
+async function applyPromptDecisions(options: CliOptions, config: Record<string, any> | undefined, ask: PromptAsk, promptOptions: PromptDecisionOptions = {}): Promise<void> {
+  const includeCoreConfig = promptOptions.includeCoreConfig ?? true;
+  const includePlaywright = promptOptions.includePlaywright ?? true;
+  const includeDcp = promptOptions.includeDcp ?? true;
+  const includeCodegraph = promptOptions.includeCodegraph ?? true;
+  const includeOpenspec = promptOptions.includeOpenspec ?? true;
+  if (includeCoreConfig && !options.setDefaultRose) {
     const currentDefault = config?.default_agent;
     const prompt = currentDefault && currentDefault !== "rose"
       ? `OpenCode default_agent is ${String(currentDefault)}. Replace it with rose? [y/N] `
@@ -66,21 +79,26 @@ async function applyPromptDecisions(options: CliOptions, config: Record<string, 
     options.setDefaultRose = currentDefault && currentDefault !== "rose" ? answer === "y" || answer === "yes" : answer !== "n" && answer !== "no";
     options.forceDefaultAgent = Boolean(currentDefault && currentDefault !== "rose" && options.setDefaultRose);
   }
-  if (!options.model && !config?.agent?.rose?.model) {
+  if (includeCoreConfig && !options.model && !config?.agent?.rose?.model) {
     const model = (await ask("Model for agent.rose.model (provider/model, blank to skip): ")).trim();
     if (model) options.model = model;
   }
-  if (!options.enablePlaywright && !options.skipPlaywright) {
+  if (includePlaywright && !options.enablePlaywright && !options.skipPlaywright) {
     const answer = (await ask("Enable optional Playwright MCP? [y/N] ")).trim().toLowerCase();
     options.enablePlaywright = answer === "y" || answer === "yes";
     options.skipPlaywright = !options.enablePlaywright;
   }
-  if (!options.enableDcp && !options.skipDcp) {
+  if (includeDcp && !options.enableDcp && !options.skipDcp) {
     const answer = (await ask("Enable DCP plugin globally via `opencode plugin @tarquinen/opencode-dcp@latest --global`? [y/N] ")).trim().toLowerCase();
     options.enableDcp = answer === "y" || answer === "yes";
     options.skipDcp = !options.enableDcp;
   }
-  if (!options.enableOpenspec && !options.skipOpenspec) {
+  if (includeCodegraph && !options.enableCodegraph && !options.skipCodegraph) {
+    const answer = (await ask("Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] ")).trim().toLowerCase();
+    options.enableCodegraph = answer === "y" || answer === "yes";
+    options.skipCodegraph = !options.enableCodegraph;
+  }
+  if (includeOpenspec && !options.enableOpenspec && !options.skipOpenspec) {
     const answer = (await ask("Install/configure OpenSpec for spec-driven changes via `npm install -g @fission-ai/openspec@latest` and project `openspec init/update`? Requires Node.js 20.19+. [y/N] ")).trim().toLowerCase();
     options.enableOpenspec = answer === "y" || answer === "yes";
     options.skipOpenspec = !options.enableOpenspec;
@@ -133,6 +151,12 @@ function parseOptions(argv: string[]): CliOptions {
       case "--skip-dcp":
         options.skipDcp = true;
         break;
+      case "--enable-codegraph":
+        options.enableCodegraph = true;
+        break;
+      case "--skip-codegraph":
+        options.skipCodegraph = true;
+        break;
       case "--enable-openspec":
         options.enableOpenspec = true;
         break;
@@ -184,6 +208,7 @@ Options:
   --force-model
   --enable-playwright | --skip-playwright
   --enable-dcp | --skip-dcp
+  --enable-codegraph | --skip-codegraph
   --enable-openspec | --skip-openspec
   --plugin <name>
   --json`);

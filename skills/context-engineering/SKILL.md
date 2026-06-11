@@ -231,6 +231,8 @@ Search evidence answers: where should I look?
 
 It does not replace: I inspected the code I am about to change.
 
+Optional CodeGraph evidence may supplement this protocol when available and useful for non-trivial locality discovery: files, symbols, callers, callees, peer patterns, related tests, or impact areas. Keep it optional, summarize it into compact anchors, fall back to normal search/read when stale or unavailable, and never treat graph output as a substitute for final file/diff/test/document inspection.
+
 ## Broad Search Context Isolation
 
 Do not dump broad repository search into MainAgent context.

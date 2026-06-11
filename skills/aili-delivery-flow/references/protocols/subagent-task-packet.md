@@ -17,6 +17,7 @@ Subagent task packet:
 - Forbidden scope:
 - Edit permission / allowed edits:
 - Evidence required:
+- Optional evidence provider request: CodeGraph if available/useful, or N/A
 - Expected return format:
 - Placement / artifact rules:
 - Coverage expectations:
@@ -36,6 +37,7 @@ Subagent task packet:
 - Forbidden scope: files, commands, subsystems, or decisions that are out of bounds.
 - Edit permission: `read-only`, `may edit listed files`, or `ask before edits`.
 - Evidence required: anchors, tests, compact evidence packs, command summaries, or inspected sections required for ROSE to reconcile; request minimal key failure excerpts instead of raw logs.
+- Optional evidence provider request: CodeGraph may be requested only for eligible lane-local discovery; it must remain optional, compact, fallback-capable, and separate from final proof.
 - Expected return format: normally the canonical `subagent-result.md` format, `compact-evidence-pack.md`, or a named compact variant.
 - Placement / artifact rules: where generated artifacts go, or `no files`; raw evidence artifacts require an explicit repository-local placement and are not created by default.
 - Coverage expectations: what must be checked before returning.
@@ -52,5 +54,6 @@ Subagent task packet:
 - Non-trivial repository work is subagent-first unless the current task explicitly opts out; clear paths, short context, and DCP summaries are not opt-outs.
 - Worker increments are dynamically sized by verifiability, reviewability, lack of parallel conflicts, and clean handoff boundaries.
 - Workers return compact reports and evidence only. They do not write `progress.txt` and do not issue final PASS/FAIL/`Unverified` judgments.
+- CodeGraph, when requested or provided, is discovery evidence only; workers must fall back to normal search/read if it is unavailable, stale, noisy, or unhelpful, and acting edit/review/test/doc lanes must still inspect final targets before conclusions.
 - A subagent packet is a scope boundary, not a license to broaden work.
 - ROSE remains responsible for reconciliation, verification judgment, and final acceptance.

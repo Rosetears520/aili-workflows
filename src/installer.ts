@@ -20,6 +20,8 @@ export interface InstallOptions {
   skipPlaywright?: boolean;
   enableDcp?: boolean;
   skipDcp?: boolean;
+  enableCodegraph?: boolean;
+  skipCodegraph?: boolean;
   enableOpenspec?: boolean;
   skipOpenspec?: boolean;
   plugins: string[];
@@ -33,6 +35,7 @@ interface OptionalSummary {
   command?: string;
   reason?: string;
   recovery?: string;
+  nextStep?: string;
 }
 
 export interface InstallSummary {
@@ -45,11 +48,15 @@ export interface InstallSummary {
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
   dcp: OptionalSummary;
+  codegraph: OptionalSummary;
   openspec: OptionalSummary;
   plugins: Array<{ name: string; status: "skipped" | "unverified"; reason: string; source?: string }>;
 }
 
 const DCP_COMMAND = ["opencode", "plugin", "@tarquinen/opencode-dcp@latest", "--global"];
+const CODEGRAPH_INSTALL_COMMAND = ["npm", "install", "-g", "@colbymchenry/codegraph@latest"];
+const CODEGRAPH_OPENCODE_COMMAND = ["codegraph", "install", "--target=opencode", "--yes"];
+const CODEGRAPH_RESTART_STEP = "Restart OpenCode so it loads the CodeGraph OpenCode integration.";
 const OPENSPEC_INSTALL_COMMAND = ["npm", "install", "-g", "@fission-ai/openspec@latest"];
 const MIN_OPENSPEC_NODE = [20, 19, 0] as const;
 
@@ -62,6 +69,7 @@ export async function runInstall(command: "install" | "update", options: Install
   validateOpenCodeHome(options.opencodeHome);
   const manifest = await loadManifest(options.ailiHome);
   await validateManifestAllowlist(options.ailiHome, manifest);
+  await validateInstallerSources(options.ailiHome);
   const playwright = findMcp(manifest, "playwright");
   const shouldConfigurePlaywright = Boolean(options.enablePlaywright && !options.skipPlaywright);
   const pluginStatuses = validatePlugins(manifest, options.plugins);
@@ -88,6 +96,7 @@ export async function runInstall(command: "install" | "update", options: Install
   const componentInstall = await runCompatibilityInstaller(options);
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
   const dcp = await runDcpInstall(options);
+  const codegraph = await runCodeGraphInstall(options);
   const openspec = await runOpenSpecInstall(options);
 
   return {
@@ -100,6 +109,7 @@ export async function runInstall(command: "install" | "update", options: Install
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
     optionalDecisions: buildOptionalDecisions(options, shouldConfigurePlaywright),
     dcp,
+    codegraph,
     openspec,
     plugins: pluginStatuses
   };
@@ -139,6 +149,14 @@ function buildOptionalDecisions(options: InstallOptions, shouldConfigurePlaywrig
       nextStep: "rose-aili install --enable-dcp"
     });
   }
+  if (!options.enableCodegraph) {
+    decisions.push({
+      name: "CodeGraph",
+      status: "skipped",
+      reason: options.skipCodegraph ? "explicitly skipped" : "not configured in this install",
+      nextStep: "rose-aili install --enable-codegraph"
+    });
+  }
   if (!options.enableOpenspec) {
     decisions.push({
       name: "OpenSpec",
@@ -164,6 +182,35 @@ async function runDcpInstall(options: InstallOptions): Promise<OptionalSummary> 
     reason: result.detail || `command exited with ${result.code ?? "unknown status"}`,
     recovery: "Install DCP manually with: opencode plugin @tarquinen/opencode-dcp@latest --global"
   };
+}
+
+async function runCodeGraphInstall(options: InstallOptions): Promise<OptionalSummary> {
+  const installCommand = CODEGRAPH_INSTALL_COMMAND.join(" ");
+  const opencodeCommand = CODEGRAPH_OPENCODE_COMMAND.join(" ");
+  const command = `${installCommand} && ${opencodeCommand}`;
+  if (!options.enableCodegraph || options.skipCodegraph) {
+    return { status: "skipped", command, reason: "CodeGraph is explicit opt-in only; run rose-aili install --enable-codegraph." };
+  }
+  if (options.dryRun) return { status: "planned", command, nextStep: CODEGRAPH_RESTART_STEP };
+  const installResult = await spawnOptional(CODEGRAPH_INSTALL_COMMAND[0], CODEGRAPH_INSTALL_COMMAND.slice(1), options);
+  if (installResult.code !== 0) {
+    return {
+      status: "failed",
+      command: installCommand,
+      reason: installResult.detail || `command exited with ${installResult.code ?? "unknown status"}`,
+      recovery: "Install CodeGraph manually with: npm install -g @colbymchenry/codegraph@latest"
+    };
+  }
+  const opencodeResult = await spawnOptional(CODEGRAPH_OPENCODE_COMMAND[0], CODEGRAPH_OPENCODE_COMMAND.slice(1), options);
+  if (opencodeResult.code !== 0) {
+    return {
+      status: "failed",
+      command: opencodeCommand,
+      reason: opencodeResult.detail || `command exited with ${opencodeResult.code ?? "unknown status"}`,
+      recovery: "Run CodeGraph OpenCode setup manually with: codegraph install --target=opencode --yes, then restart OpenCode."
+    };
+  }
+  return { status: "configured", command, nextStep: CODEGRAPH_RESTART_STEP };
 }
 
 async function runOpenSpecInstall(options: InstallOptions): Promise<OptionalSummary> {
@@ -314,6 +361,10 @@ async function isGitRepository(ailiHome: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function validateInstallerSources(ailiHome: string): Promise<void> {
+  await access(path.join(ailiHome, "templates", "opencode-global-AGENTS.md"), constants.F_OK);
 }
 
 export function validateOpenCodeHome(opencodeHome: string): void {

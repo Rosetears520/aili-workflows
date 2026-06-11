@@ -79,6 +79,8 @@ Do not paste large file excerpts, full grep dumps, long logs, or exploratory dea
 
 Search evidence is a map. The editing, reviewing, testing, securing, or documenting agent must still read final target files before acting.
 
+Optional CodeGraph evidence may be requested in any eligible ROSE-directed lane when it reduces missed-file or impact risk: broad scouting, implementation call-chain checks, review residual impact checks, test scope discovery, or doc/spec claims tied to code anchors. It is not mandatory and not proof. Require fallback to normal search/read when unavailable, stale, noisy, or no-result, and mark material graph gaps as `Unverified`.
+
 ## Execution Ownership Gate
 
 Assign every delegated todo and task packet one explicit owner: `ROSE`, `user`, `subagent:research`, `subagent:edit`, `subagent:review`, or `subagent:test`. Preserve owner prefixes when copying, splitting, reconciling, or reporting todos/task packets.
@@ -154,6 +156,7 @@ Subagent task packet:
 - Forbidden scope:
 - Edit permission:
 - Evidence required:
+- Optional evidence provider request: CodeGraph if available/useful, or N/A
 - Expected return format:
 - Stop conditions:
 ```
@@ -164,6 +167,7 @@ Guidelines:
 - State whether the subagent may edit, may only inspect, or must ask before edits.
 - Forbid nested agent calls unless the repository explicitly changes its orchestration rules.
 - Require concrete evidence, not just conclusions.
+- Ask for graph-assisted evidence only as compact locality anchors; forbid raw graph dumps and final proof claims based solely on graph output.
 
 ## Reconciliation and Verification
 

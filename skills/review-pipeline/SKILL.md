@@ -42,6 +42,8 @@ Dispatch only relevant read-only reviewers:
 - `security-auditor`: auth, permissions, secrets, command execution, network, dependency, deployment, schema, or data risk
 - `code-scout`: context mining only when a reviewer reports missing repository context
 
+When the changed surface is cross-file, high-risk, or likely to miss callers/consumers/tests, ROSE may request optional CodeGraph-assisted residual impact evidence from the relevant review/test lane or scout. Treat it as scope discovery only; reviewers and testers must still inspect the diff, critical files, tests, commands, or behavior before conclusions, and absence/staleness/noise only becomes `Unverified` when material to confidence.
+
 Do not ask reviewers to edit files. Do not let reviewers spawn nested agents except where their own agent contract explicitly allows `code-scout`.
 
 ### Phase 3: Reconcile
@@ -62,6 +64,7 @@ Name conflicts between reviewers and resolve them with evidence. If evidence is 
 | A finding has no concrete evidence | Mark `Unverified` and ask for bounded evidence if it affects acceptance | Treat reviewer confidence as proof |
 | A security/test lane reports missing context | Dispatch `code-scout` or a focused re-check for that context | Let ROSE invent context or waive the gate silently |
 | Fix verification passes but reviewer concern remains plausible | Re-run only the relevant reviewer lane with the new diff and evidence | Claim PASS from the command result alone |
+| Graph-assisted residual scan finds high-risk targets not inspected | Inspect or dispatch the responsible lane for those targets, or mark them `Unverified` | Treat graph output alone as proof of impact or safety |
 
 ### Phase 4: Fix Loop
 

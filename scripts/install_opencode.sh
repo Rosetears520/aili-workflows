@@ -216,6 +216,23 @@ copy_entry() {
   cp -R "$source" "$target"
 }
 
+install_global_agents() {
+  local action="$1"
+  local source="$AILI_HOME/templates/opencode-global-AGENTS.md"
+  local target="$OPENCODE_HOME/AGENTS.md"
+
+  if [ ! -f "$source" ]; then
+    if [ "$DRY_RUN" = "true" ]; then
+      log "DRY RUN: would install global AGENTS from expected source: $source -> $target"
+      return
+    fi
+    log "Missing global AGENTS source: $source"
+    exit 2
+  fi
+
+  "$action" "$source" "$target"
+}
+
 install_entries() {
   local action="$1"
   if [ "$DRY_RUN" = "true" ]; then
@@ -234,6 +251,8 @@ install_entries() {
   else
     mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
   fi
+
+  install_global_agents "$action"
 
   local file name target dir
   for file in "$AILI_HOME"/agents/*.md; do
@@ -272,10 +291,12 @@ managed_directory() {
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
     log "DRY RUN: would replace agents, skills, and commands with directory symlinks from $AILI_HOME"
+    install_global_agents link_entry
     return
   fi
 
   mkdir -p "$OPENCODE_HOME"
+  install_global_agents link_entry
   backup_conflict "$OPENCODE_HOME/agents"
   backup_conflict "$OPENCODE_HOME/skills"
   backup_conflict "$OPENCODE_HOME/commands"
