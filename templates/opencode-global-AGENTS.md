@@ -84,6 +84,8 @@ Acceptable evidence includes focused tests, related test suites, typecheck, lint
 
 - Use MiMo-style checkpoint-first continuity for long tasks: before context compression, idle continuation, or any step that depends on compressed/raw history, refresh the active contract, changed files, open decisions, verification path, and next action from repository artifacts.
 - Treat roughly 50/70/85 context pressure as workflow checkpoint signals owned by ROSE/AILI documents, not as DCP plugin configuration. Recommended DCP opt-in config is late-stage compression only (`compress.minContextLimit: "65%"`, `compress.maxContextLimit: "85%"`).
+- Do not proactively run manual context compression below 65% context pressure; manual `compress` requires explicit user intent, phase closure, or another clear continuity need, not a checkpoint signal alone.
+- Treat ambiguous "archive" or "归档" requests as target-ambiguous: ask whether the user means docs/artifacts, OpenSpec archive, `progress.txt`, memory, or ending the task before compressing context or writing files.
 - Do not rely on stale memory, old logs, raw context percentages, or ungrounded summaries for the next edit/review/ship step.
 - When a project defines `progress.txt`, use it for current progress, user feedback/corrections, checkpoint ledger, worker dispatches, evidence references, verification/review/security state, blockers, ROSE decisions, and next action.
 - For approved spec-backed implementation, use `implementation-notes.html` only to explain spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a chat log, model-drift transcript, user-feedback ledger, or progress ledger.
