@@ -1,6 +1,6 @@
 ---
 name: change-interviewer
-description: Generate a source-grounded Chinese interview packet for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official or web sources when needed, and strategy-stress-test to ask high-value questions; let the user fill the packet, then incorporate confirmed answers into the agreed spec, design, tasks, or acceptance criteria.
+description: Generate a source-grounded Chinese requirements interview packet for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official or web sources before asking; grill only for decision-changing requirements/write-back readiness; stress-test packets and filled answers before writing confirmed answers into agreed artifacts.
 ---
 
 # Change Interviewer
@@ -37,6 +37,8 @@ Realistic trigger prompts:
 - "Use this Superpowers plan as input and ask what is missing before writing it back."
 - "Refine `docs/change.md` with questions first; do not guess requirements."
 - "Complete this OpenSpec change package after interviewing me."
+- "Grill this requirement / interview packet before write-back or BUILD readiness."
+- "I filled `interview.md`; check whether the answers are clear enough to write back."
 
 ## When Not to Use
 
@@ -44,6 +46,7 @@ Do not use this skill for:
 
 - implementing the change after requirements are clear
 - broad product brainstorming with no intent to produce a change package
+- pure plan, design, spec, review, or completion-claim stress-testing with no requirements-interview or write-back target; use `strategy-stress-test` directly
 - initializing project-level agent rules or OpenCode setup docs
 - rewriting a document without interviewing or preserving author intent
 - OpenSpec validation only, with no requirements refinement needed
@@ -80,7 +83,7 @@ Packet Mode defaults to file output, not chat-first output.
 
 ```text
 source-ground -> resolve placement -> draft packet -> 🔴 stress-test -> repair -> persist -> concise summary
-filled answers -> incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
+filled answers -> disk re-read -> answer classification -> 🔴 stress-test -> readiness state -> incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
 ```
 
 Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for chat-only output, writing is blocked by permissions or missing workspace access, or the user chooses chat-only output after the placement question.
@@ -119,6 +122,7 @@ Chat response after persistence should include only:
 - source files reviewed
 - number of questions
 - unresolved `Open Question` / `Unverified` count
+- interview readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
 - suggested next action
 
 ## Interview Modes
@@ -172,7 +176,16 @@ Common gaps:
 - missing security, privacy, reliability, performance, or observability requirements
 - acceptance criteria that are not executable or verifiable
 
-Do not start writing final content until the interview packet is complete unless the user explicitly says to write with current information.
+Do not start writing final content until the interview packet is complete. If the user explicitly says to write with current information, proceed only with unresolved material items labeled as `Open Question`, explicitly `WAIVED`, or accepted as named `UNVERIFIED`; never mark the interview gate `READY` from unresolved material ambiguity.
+
+## Readiness States
+
+Report the interview gate with exactly one state whenever a packet is persisted, filled answers are ingested, or write-back / BUILD readiness is discussed:
+
+- `READY`: material questions are answered, answers are coherent with evidence, and acceptance/testability is sufficient for implementation.
+- `BLOCKED`: material ambiguity, contradiction, incomplete answer, evidence conflict, unsupported default, out-of-scope answer, or untestable acceptance remains. Use `BLOCKED_FOR_CLARIFICATION` as the detailed reason when the next action is another interview round.
+- `WAIVED`: the user explicitly waived the interview gate or a named question despite the missing information.
+- `UNVERIFIED`: the user explicitly accepted named unresolved or unverifiable items as `UNVERIFIED`; do not describe those items as confirmed.
 
 ## Phase B: Draft Interview Packet
 
@@ -190,11 +203,12 @@ The packet must include:
 
 1. `资料来源与证据`
 2. `当前理解`
-3. `需要你填写的问题`
-4. `设计漏洞 / 证据缺口 / 反例`
-5. `填写说明`
-6. `后续写回映射`
-7. `答案吸收记录`
+3. `覆盖矩阵与状态`
+4. `需要你填写的问题`
+5. `设计漏洞 / 证据缺口 / 反例`
+6. `填写说明`
+7. `后续写回映射`
+8. `答案吸收记录`
 
 Use this template:
 
@@ -216,19 +230,43 @@ Use this template:
 - 暂定非目标：
 - 仍不确定的地方：
 
-## 3. 需要你填写的问题
+## 3. 覆盖矩阵与状态
 
-| ID | 问题 | 为什么要问 | 推荐默认答案 | 取舍影响 | 你的填写 | 写回位置 |
-|---|---|---|---|---|---|---|
-| Q1 | ... | 会影响 scope / design / tasks / acceptance | ... | 选 A 会...；选 B 会... |  | `proposal.md` |
+状态只能使用：`Confirmed by evidence`、`Not applicable`、`Needs question`、`Open Question`、`Unverified`。
 
-## 4. 设计漏洞 / 证据缺口 / 反例
+| 维度 | 状态 | 证据 / 原因 | 关联问题 | 写回目标 |
+|---|---|---|---|---|
+| goal/success | ... | ... | Q? / N/A | `proposal.md` / `test-plan.md` |
+| scope/non-goals | ... | ... | Q? / N/A | `proposal.md` |
+| roles/permissions | ... | ... | Q? / N/A | `design.md` / specs |
+| happy path | ... | ... | Q? / N/A | `design.md` / specs |
+| failure path | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
+| retries/rollback | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
+| boundary conditions | ... | ... | Q? / N/A | specs / `test-plan.md` |
+| data lifecycle | ... | ... | Q? / N/A | `design.md` / specs |
+| state transitions | ... | ... | Q? / N/A | `design.md` / specs |
+| API/CLI/UI contracts | ... | ... | Q? / N/A | specs / `tasks.md` |
+| compatibility/migration | ... | ... | Q? / N/A | `design.md` / `tasks.md` |
+| security/privacy | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
+| performance/reliability | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
+| observability | ... | ... | Q? / N/A | `design.md` / `tasks.md` |
+| acceptance/testability | ... | ... | Q? / N/A | specs / `test-plan.md` |
+| rollout/rollback | ... | ... | Q? / N/A | `proposal.md` / `design.md` |
+| explicit non-goals | ... | ... | Q? / N/A | `proposal.md` |
+
+## 4. 需要你填写的问题
+
+| ID | 问题 | 为什么要问 | 影响的 artifact / decision | 有证据支撑的推荐默认答案 | 后果 / 取舍 | 你的填写 | 写回位置 |
+|---|---|---|---|---|---|---|---|
+| Q1 | ... | ... | scope / design / tasks / acceptance / tests / risk / implementation safety | ...（证据：`<path>`） | 选 A 会...；选 B 会... |  | `proposal.md` |
+
+## 5. 设计漏洞 / 证据缺口 / 反例
 
 | ID | 类型 | 说明 | 建议处理方式 | 状态 |
 |---|---|---|---|---|
 | L1 | Missing evidence | ... | 查代码 / 查官方文档 / 问用户 / Open Question | open |
 
-## 5. 填写说明
+## 6. 填写说明
 
 - 可以直接在“你的填写”列里写答案。
 - 不确定的地方写“不确定”即可。
@@ -236,29 +274,54 @@ Use this template:
 - 不进入本次 scope 的内容，写“本次不做”。
 - 未填写内容不会被写成事实，只会保留为 `Open Question`。
 - 无证据支撑但暂时保留的内容会标为 `Unverified`。
+- 如果填写内容仍有歧义、互相矛盾、不可测试、与证据冲突或超出 scope，会进入追问轮，不会直接写回为事实。
 
-## 6. 后续写回映射
+## 7. 后续写回映射
 
-| 用户答案 | 将写回到 | 写回方式 |
-|---|---|---|
-| Q1 | `proposal.md` | scope / non-goal |
+| 用户答案 | 将写回到 | 写回方式 | 写回前门禁 |
+|---|---|---|---|
+| Q1 | `proposal.md` | scope / non-goal | confirmed / waived / accepted `UNVERIFIED` |
 
-## 7. 答案吸收记录
+## 8. 答案吸收记录
 
 _用户填写后由模型补充。_
 
-| 问题 | 用户答案 | 形成的决策 | 已写回位置 | 剩余不确定 |
-|---|---|---|---|---|
+| 问题 | 用户答案 | 分类 | 形成的决策 | 已写回位置 | 剩余不确定 / 追问 |
+|---|---|---|---|---|---|
 ```
 
-Question coverage:
+Coverage matrix dimensions for non-trivial changes:
 
-1. Goals and success: who benefits, what pain is solved, what measurable result matters?
-1. Scope boundaries: what is in scope, out of scope, MVP, and follow-up?
-1. Key flows: happy path, failure behavior, retries, rollback, permissions, and edge cases.
-1. Data and interfaces: entities, fields, APIs, events, ownership, validation, and error handling.
-1. Architecture and trade-offs: where logic lives, alternatives rejected, compatibility, scaling, and constraints.
-1. Risks and acceptance: risk register, test strategy, manual checks, rollout, and executable acceptance criteria.
+1. goal/success: who benefits, what pain is solved, what measurable result matters?
+2. scope/non-goals and explicit non-goals: what is in scope, out of scope, MVP, follow-up, and deliberately excluded?
+3. roles/permissions: actors, owners, authorization, approval, and access boundaries.
+4. happy path and failure path: normal flow, error flow, user-visible failures, and recovery expectations.
+5. retries/rollback and rollout/rollback: retry/backoff, undo, operational rollback, release boundaries, and safe stop points.
+6. boundary conditions: limits, empty/loading/error states, invalid inputs, concurrency, ordering, platform/version boundaries, and edge cases.
+7. data lifecycle: creation, validation, retention, cleanup, migration, ownership, privacy class, and audit needs.
+8. state transitions: lifecycle states, allowed transitions, blocked transitions, idempotency, and stale-state handling.
+9. API/CLI/UI contracts: command syntax, request/response shape, UI copy, compatibility, errors, and versioning.
+10. compatibility/migration: backward compatibility, deprecation, upgrade path, and affected existing users or artifacts.
+11. security/privacy: secrets, permissions, data exposure, trust boundaries, compliance, and fail-closed behavior.
+12. performance/reliability: latency, scale, resource usage, availability, retries, and degradation behavior.
+13. observability: logs, metrics, audit trail, user-visible status, debugging evidence, and failure reports.
+14. acceptance/testability: executable scenarios, verification commands, manual checks, and acceptance thresholds.
+
+For every dimension, choose one status only:
+
+- `Confirmed by evidence`: current repo/docs/specs/tests/configs/official docs answer it; cite the evidence.
+- `Not applicable`: the dimension does not apply; give a short reason.
+- `Needs question`: a decision-changing user answer is required; add or link a question.
+- `Open Question`: still unresolved and must not be written as fact.
+- `Unverified`: retained only as a named unverified item, preferably after user acceptance.
+
+Material question threshold:
+
+- Ask only if the answer can change scope, design, tasks, acceptance criteria, tests, risk handling, rollout, or implementation safety.
+- Each question must include why asked, affected artifact/decision, evidence-backed recommended default when available, consequences/trade-offs, answer slot, and write-back target.
+- If a candidate question is generic or would not change implementation readiness, omit it or convert it to a non-blocking note.
+- If the answer is discoverable from current repository files, tests, configs, specs, docs, or official sources, gather and cite evidence instead of asking.
+- If no evidence-backed default exists, mark the default as `Open Question` or `Unverified`; do not present a guess as a recommendation.
 
 In Packet Mode, include questions immediately when mentioned:
 
@@ -268,7 +331,7 @@ In Packet Mode, include questions immediately when mentioned:
 - UI/UX: empty/loading/error states, permission-denied copy, accessibility, i18n
 - agent workflow changes: primary/subagent boundaries, skill routing, verification, memory, and no nested orchestration
 
-If the user says `先这样`, `按目前信息写回`, or equivalent, stop asking and proceed with unresolved items recorded as open questions.
+If the user says `先这样`, `按目前信息写回`, or equivalent, stop asking only after classifying unresolved material items. Proceed with write-back only when unresolved items are recorded as `Open Question`, explicitly `WAIVED`, or accepted as named `UNVERIFIED`; do not write unresolved material answers as facts or report `READY` until clarified.
 
 ## Phase C: Stress-Test the Interview Packet
 
@@ -313,18 +376,27 @@ During the interview:
 
 After the user fills the interview packet:
 
-1. Read the filled answers.
-2. Convert confirmed answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, and Verification commands.
-3. Keep unanswered, ambiguous, or conflicting answers as `Open Question`.
-4. Keep unverifiable external claims as `Unverified`.
-5. Do not silently resolve conflicts.
-6. Build an incorporation log before write-back.
+1. Re-read the filled packet from disk first; conversation summaries are stale until confirmed against the saved artifact.
+2. Classify every material answer as one of: `confirmed`, `ambiguous`, `contradictory`, `incomplete`, `untestable`, `evidence-conflicting`, `out-of-scope`, or `Unverified`.
+3. Convert only `confirmed`, explicitly waived, or user-accepted `Unverified` answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, and Verification commands.
+4. Keep unanswered, ambiguous, contradictory, incomplete, untestable, evidence-conflicting, or out-of-scope answers out of factual write-back.
+5. Generate a follow-up question round for each material blocker, including why it blocks, affected artifact/decision, recommended default if evidence supports one, consequences/trade-offs, answer slot, and write-back target.
+6. Keep unverifiable external claims as `Unverified` only when named and explicitly accepted by the user; otherwise classify them as blocking or `Open Question`.
+7. Do not silently resolve conflicts or treat a filled answer slot as confirmation when the answer remains unclear.
+8. Build an incorporation log before write-back that records answer classification, evidence checked, follow-up needed, and readiness state.
+9. Use `strategy-stress-test` after answer classification and before write-back to check for unsafe ingestion, missed follow-up questions, evidence conflicts, unsupported defaults, untestable acceptance, or unmarked `Open Question` / `Unverified` items.
+
+If the answer-set stress-test finds material ambiguity, contradiction, incompleteness, untestable acceptance, evidence conflict, or out-of-scope expansion, report readiness as `BLOCKED` / `BLOCKED_FOR_CLARIFICATION`, persist or present the follow-up round according to the placement contract, and do not write the affected answers into proposal, design, tasks, specs, acceptance criteria, or test plans until clarified, waived, or accepted as `UNVERIFIED`.
+
+If the user explicitly says to proceed despite named unresolved items, record whether the gate is `WAIVED` or `UNVERIFIED`, list the accepted items, and keep the risk visible in write-back and completion reports. Do not call it `READY`.
 
 ## Phase E: Write Back
 
 Write only to the agreed target files.
 
-🔴 STOP before write-back when the target file is not explicitly agreed, answers conflict, existing content would need replacement instead of merge, or a confirmed answer would change scope/design/tasks beyond the agreed package. Ask or report the conflict instead of overwriting.
+🔴 STOP before write-back when the target file is not explicitly agreed, the interview gate is `BLOCKED`, answers conflict, existing content would need replacement instead of merge, or a confirmed answer would change scope/design/tasks beyond the agreed package. Ask or report the conflict instead of overwriting.
+
+BUILD readiness rule: a change package may proceed from the interview gate only when the state is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED` with named unresolved items. A merely completed form is not enough.
 
 General write-back rules:
 
@@ -362,5 +434,6 @@ Report:
 - Source reviewed
 - Questions asked and key answers incorporated
 - Files changed
+- Interview readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
 - Open questions left unresolved
 - Validation command or inspection result

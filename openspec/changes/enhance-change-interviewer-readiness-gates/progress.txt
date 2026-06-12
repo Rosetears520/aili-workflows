@@ -1,0 +1,29 @@
+BUILD progress for enhance-change-interviewer-readiness-gates
+
+Goal marker:
+- goal_id: build-enhance-change-interviewer-readiness-gates-20260612
+- backend/change target: OpenSpec change `enhance-change-interviewer-readiness-gates`
+- repository root: `/mnt/d/works/aili-workflow`
+- scope boundary: implement the approved `change-interviewer` multi-round readiness-gate protocol; update adjacent docs/policy only if stale or conflicting; do not add public commands, dependencies, lockfiles, installer changes, memory schema changes, or unrelated edits.
+- evaluator criteria: OpenSpec validation passes; final skill prompt covers the approved coverage matrix, question quality, answer classification, follow-up rounds, dual stress-test gates, and explicit readiness states; review/test lanes find no blocking issues.
+- loop budget: one implementation pass plus bounded repair if review/test finds blockers.
+- stop conditions: unresolved readiness evidence, scope expansion, high-risk operation requiring approval, failing required verification that cannot be repaired in scope, or missing target evidence.
+- permission policy: current-task file edits only; no destructive commands, file deletes/moves/renames, dependency or lockfile changes, pushes, merges, tags, or history rewrites.
+
+Package queue:
+1. COMPLETE - Update `skills/change-interviewer/SKILL.md` with the approved protocol overhaul.
+2. COMPLETE - Decide adjacent docs/policy updates from evidence. `questionnaire-policy.md` is already consistent; README has unrelated dirty edits and was not required, so no adjacent file was changed.
+3. COMPLETE - Update OpenSpec task/progress notes and run BUILD gates. Initial test lane passed; review found wording/artifact reconciliation issues; repairs were applied and focused re-review passed.
+
+Evidence so far:
+- Read `context.md`, `tasks.md`, `design.md`, `test-plan.md`, `specs/change-interviewer/spec.md`, `specs/aili-four-command-lifecycle/spec.md`, `skills/change-interviewer/SKILL.md`, and `skills/aili-delivery-flow/references/questionnaire-policy.md` before editing.
+- Scoped git status after package 1 shows `M skills/change-interviewer/SKILL.md`; README remains a pre-existing unrelated modified file.
+- Package 1 changed only `skills/change-interviewer/SKILL.md` and did not add new reference files.
+- Package 1 subagent reported `openspec validate enhance-change-interviewer-readiness-gates --strict` PASS and `python scripts/harness_fixture_check.py` PASS; ROSE still needs final reconciliation gates.
+- BUILD test lane reported PASS for OpenSpec strict validation, harness fixture check, AGENTS compliance, Python py_compile, and static acceptance checklist.
+- Code review found old “write with current information / 先这样” wording could conflict with ambiguity blocking; patched to allow proceeding only with unresolved material items labeled `Open Question`, explicitly `WAIVED`, or named `UNVERIFIED`, and never as `READY`.
+- Fresh ROSE commands passed: `openspec validate enhance-change-interviewer-readiness-gates --strict`, `python scripts/harness_fixture_check.py`, `python scripts/agents_md.py check --project .`, and `python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py`.
+- Focused code re-review passed after repair; security review found no scoped security blockers.
+
+Residual Unverified:
+- Future model compliance with the prompt cannot be fully automated; final confidence relies on static/manual review plus future runtime use.
