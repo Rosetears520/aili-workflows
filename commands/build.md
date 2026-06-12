@@ -23,7 +23,8 @@ Required behavior:
 - Confirm target files, forbidden scope, acceptance criteria, verification command, and review lanes for each synthesized or user-provided package before editing that package.
 - Work package-by-package until all in-scope packages are complete, blocked by an allowed stop condition, or repair limits are reached; any automatic continuation must be gated by a structured evaluator state of `done`, `continue`, `blocked`, or `unverified` plus a ROSE-owned decision prompt.
 - Implement only in-scope packages and update task state as work completes with evidence.
-- Maintain `implementation-notes.html` during approved spec-backed implementation as the compact drift log for spec deviations, temporary decisions, unresolved assumptions, verification pointers, and required DEFINE write-back.
+- Maintain `progress.txt` as the ROSE-owned progress/checkpoint ledger for current progress, user feedback/corrections, worker dispatches, evidence references, verification/review/security status, blockers, decisions, and next action.
+- Maintain `implementation-notes.html` during approved spec-backed implementation only for spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; do not use it as a user-feedback log, model-drift transcript, or progress ledger.
 - Run local BUILD gates: code review, test verification, and security review when security surfaces are present.
 
 Hard stops:

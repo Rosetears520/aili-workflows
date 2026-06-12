@@ -30,7 +30,7 @@ async function main(argv: string[]): Promise<void> {
   }
   if (command === "install" || command === "update") {
     await applyInteractivePrompts(options, command === "install"
-      ? { includeCoreConfig: true }
+      ? { includeCoreConfig: false, includeDcp: false, includeOpenspec: false }
       : { includeCoreConfig: false, includePlaywright: false, includeDcp: false, includeCodegraph: true, includeOpenspec: false });
     const summary = await runInstall(command, options);
     print(summary, options.json);
@@ -65,11 +65,11 @@ async function applyInteractivePrompts(options: CliOptions, promptOptions: Promp
 }
 
 async function applyPromptDecisions(options: CliOptions, config: Record<string, any> | undefined, ask: PromptAsk, promptOptions: PromptDecisionOptions = {}): Promise<void> {
-  const includeCoreConfig = promptOptions.includeCoreConfig ?? true;
+  const includeCoreConfig = promptOptions.includeCoreConfig ?? false;
   const includePlaywright = promptOptions.includePlaywright ?? true;
-  const includeDcp = promptOptions.includeDcp ?? true;
+  const includeDcp = promptOptions.includeDcp ?? false;
   const includeCodegraph = promptOptions.includeCodegraph ?? true;
-  const includeOpenspec = promptOptions.includeOpenspec ?? true;
+  const includeOpenspec = promptOptions.includeOpenspec ?? false;
   if (includeCoreConfig && !options.setDefaultRose) {
     const currentDefault = config?.default_agent;
     const prompt = currentDefault && currentDefault !== "rose"
@@ -139,6 +139,9 @@ function parseOptions(argv: string[]): CliOptions {
       case "--force-model":
         options.forceModel = true;
         break;
+      case "--skip-opencode-config":
+        options.skipOpenCodeConfig = true;
+        break;
       case "--enable-playwright":
         options.enablePlaywright = true;
         break;
@@ -206,10 +209,11 @@ Options:
   --model <provider/model>
   --force-default-agent
   --force-model
+  --skip-opencode-config
   --enable-playwright | --skip-playwright
-  --enable-dcp | --skip-dcp
+  --enable-dcp | --skip-dcp       (DCP defaults to enabled; skip disables)
   --enable-codegraph | --skip-codegraph
-  --enable-openspec | --skip-openspec
+  --enable-openspec | --skip-openspec (OpenSpec defaults to enabled; skip disables)
   --plugin <name>
   --json`);
 }

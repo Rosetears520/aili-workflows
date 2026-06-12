@@ -20,12 +20,25 @@ export interface ConfigResult {
   skipped: string[];
 }
 
+export interface DcpConfigOptions {
+  opencodeHome: string;
+  dryRun: boolean;
+}
+
 export async function configPathFor(opencodeHome: string): Promise<string> {
   const jsonc = path.join(opencodeHome, "opencode.jsonc");
   const json = path.join(opencodeHome, "opencode.json");
   if (await pathExists(jsonc)) return jsonc;
   if (await pathExists(json)) return json;
   return json;
+}
+
+export async function dcpConfigPathFor(opencodeHome: string): Promise<string> {
+  const jsonc = path.join(opencodeHome, "dcp.jsonc");
+  const json = path.join(opencodeHome, "dcp.json");
+  if (await pathExists(jsonc)) return jsonc;
+  if (await pathExists(json)) return json;
+  return jsonc;
 }
 
 export function parseConfigText(text: string, label = "OpenCode config"): unknown {
@@ -97,6 +110,58 @@ export async function mergeOpenCodeConfig(options: ConfigOptions): Promise<Confi
   }
   await atomicWriteFile(current.configPath, text);
   return { configPath: current.configPath, changed, backupPath, actions, skipped };
+}
+
+export async function mergeDcpConfig(options: DcpConfigOptions): Promise<ConfigResult> {
+  const configPath = await dcpConfigPathFor(options.opencodeHome);
+  await assertWritableConfigTarget(configPath);
+  const existsOnDisk = await pathExists(configPath);
+  const currentText = existsOnDisk ? await readFile(configPath, "utf8") : "{}\n";
+  parseConfigText(currentText, configPath);
+
+  let text = currentText;
+  const formattingOptions = { insertSpaces: true, tabSize: 2, eol: "\n" };
+  const entries: Array<{ path: Array<string>; value: string | number | boolean }> = [
+    { path: ["enabled"], value: true },
+    { path: ["pruneNotification"], value: "minimal" },
+    { path: ["pruneNotificationType"], value: "toast" },
+    { path: ["turnProtection", "enabled"], value: true },
+    { path: ["turnProtection", "turns"], value: 4 },
+    { path: ["compress", "mode"], value: "range" },
+    { path: ["compress", "permission"], value: "allow" },
+    { path: ["compress", "showCompression"], value: false },
+    { path: ["compress", "minContextLimit"], value: "65%" },
+    { path: ["compress", "maxContextLimit"], value: "85%" },
+    { path: ["compress", "summaryBuffer"], value: false },
+    { path: ["compress", "nudgeFrequency"], value: 4 },
+    { path: ["compress", "iterationNudgeThreshold"], value: 12 },
+    { path: ["compress", "nudgeForce"], value: "soft" },
+    { path: ["compress", "protectTags"], value: true },
+    { path: ["compress", "protectUserMessages"], value: false },
+    { path: ["strategies", "deduplication", "enabled"], value: true },
+    { path: ["strategies", "purgeErrors", "enabled"], value: true },
+    { path: ["strategies", "purgeErrors", "turns"], value: 6 }
+  ];
+
+  for (const entry of entries) {
+    text = applyEdits(text, modify(text, entry.path, entry.value, { formattingOptions }));
+  }
+
+  const changed = text !== currentText;
+  const actions = changed ? ["wrote recommended DCP config"] : ["kept recommended DCP config"];
+  const skipped: string[] = [];
+  if (!changed || options.dryRun) {
+    return { configPath, changed, actions, skipped };
+  }
+
+  await mkdir(path.dirname(configPath), { recursive: true });
+  let backupPath: string | undefined;
+  if (existsOnDisk) {
+    backupPath = `${configPath}.backup.${timestamp()}`;
+    await writeFile(backupPath, currentText, { encoding: "utf8", flag: "wx" });
+  }
+  await atomicWriteFile(configPath, text);
+  return { configPath, changed, backupPath, actions, skipped };
 }
 
 function requestsConfigWrite(options: ConfigOptions): boolean {

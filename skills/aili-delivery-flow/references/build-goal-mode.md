@@ -92,10 +92,12 @@ ROSE must maintain the active context and progress ledgers when the backend cont
 - for OpenSpec, use `openspec/changes/<change-id>/context.md` and `openspec/changes/<change-id>/progress.txt`;
 - for non-OpenSpec, resolve repository-local context/progress placement through the backend adapter or ask once before writing;
 - only ROSE writes/appends `progress.txt`; workers return reports and evidence references for ROSE to reconcile;
-- ledger entries record objective, worker dispatches, evidence, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action;
+- ledger entries record objective, current progress, user feedback/corrections, checkpoint ledger, worker dispatches, evidence, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action;
 - never put secrets, raw logs, full transcripts, full file contents, or long dumps in `context.md` or `progress.txt`.
 
-For approved spec-backed implementation, ROSE also maintains `implementation-notes.html` beside the active change artifacts as a compact drift log. Record model drift, spec deviations, temporary decisions, unresolved assumptions, verification evidence pointers, and required DEFINE write-back; keep raw transcripts, secrets, full logs, full file contents, and private data out of the file.
+Before long continuation, idle resume, or expected DCP compression, update `progress.txt` first so the current BUILD state can be recovered without raw chat history.
+
+For approved spec-backed implementation, ROSE also maintains `implementation-notes.html` beside the active change artifacts as a compact drift log. Record only spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; keep user feedback/corrections, progress ledger entries, raw transcripts, secrets, full logs, full file contents, and private data out of the file.
 
 ## Evaluator-Gated Continuation
 
