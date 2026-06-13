@@ -628,7 +628,7 @@ Recommended `dcp.jsonc` snippet:
 }
 ```
 
-DCP is only the late-stage compression mechanism. It is not the task-continuity ledger and does not own the 50/70/85 workflow gates. ROSE/AILI should run checkpoint-first continuity instead: treat roughly 50/70/85 context pressure as workflow signals to refresh the active contract, update `progress.txt` for current progress, user feedback/corrections, checkpoint ledger, evidence, and next action, and update `implementation-notes.html` only for spec-backed drift/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, or required DEFINE write-back.
+DCP is only the late-stage compression mechanism. It is not the task-continuity ledger and does not own the 50/70/85 workflow gates. ROSE/AILI should run checkpoint-first continuity instead: treat roughly 50/70/85 context pressure as workflow signals to refresh the active contract, update `progress.txt` for current progress, user feedback/corrections, checkpoint ledger, evidence, and next action, and update `implementation-notes.html` only for spec-backed drift/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, or required DEFINE write-back. Below 65% context pressure, manual `compress` requires an explicit user request; phase closure, command completion, or a checkpoint signal alone is not enough. Never compress active, adjacent, recent, or still-evolving discussion.
 
 Do not add unsupported keys such as `warn`, `force_compress`, or `target_after_compress`; the DCP schema only accepts documented keys and warns on unknown properties.
 

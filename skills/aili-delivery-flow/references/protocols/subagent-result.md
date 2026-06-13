@@ -25,6 +25,10 @@ OBSERVED FACTS:
 EVIDENCE ANCHORS:
 - path:line / command / source - why it matters
 
+FALSIFICATION / NEGATIVE CHECKS:
+- check attempted to disprove the finding, find counterexamples, or confirm absence - result
+- N/A if none possible within scope, with reason
+
 INFERENCES:
 - inference - evidence basis - risk/confidence
 - N/A if none
@@ -35,6 +39,12 @@ RECOMMENDATIONS:
 
 UNKNOWNS / GAPS:
 - unknown, conflict, or missing evidence
+
+RESIDUAL UNCERTAINTY:
+- remaining uncertainty after checks - impact on ROSE/user decision
+
+DECISION NEEDED FROM ROSE/USER:
+- decision, approval, prioritization, or follow-up needed; N/A if no decision is needed
 
 SKIPPED WORK:
 - skipped item - reason - risk
@@ -55,11 +65,13 @@ STOP CONDITIONS HIT:
 ## Required separation
 
 - Observed facts must include evidence anchors and freshness whenever relevant.
+- Falsification / negative checks should say what was tried to disprove the conclusion, find counterexamples, or confirm absence; if not possible, say why.
 - Inferences must state the evidence basis and risk.
 - Recommendations are proposals only; ROSE may accept, reject, or revise them after reading the target files and running verification.
 - Unknowns remain `Unknown`, `Open Question`, or `Unverified`; do not convert them into facts.
 - `STATUS: DONE` means the worker completed its assigned packet and returned evidence. It is not a final PASS/FAIL/ready verdict for the package or change.
-- Workers must not claim final PASS, final FAIL, or final `Unverified` status. ROSE owns final reconciliation, progress-ledger entries, and user-facing acceptance judgment.
+- Workers must not claim final PASS, final FAIL, final `Unverified`, approve, reject, ship, complete, accepted, or ready status for the package or change. ROSE/user owns final reconciliation, progress-ledger entries, and user-facing acceptance judgment.
+- Results should make residual uncertainty and any decision needed from ROSE/user explicit instead of hiding them inside the recommendation.
 - CodeGraph evidence is optional discovery evidence. It must be summarized as anchors, labeled when stale/noisy/no-result, and must not replace final file, diff, test, command, or document inspection by the responsible lane.
 
 ## Compact scout variant
