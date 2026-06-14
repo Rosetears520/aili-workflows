@@ -1,6 +1,6 @@
 ---
 name: change-interviewer
-description: Generate a source-grounded Chinese requirements interview packet for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official or web sources before asking; grill only for decision-changing requirements/write-back readiness; stress-test packets and filled answers before writing confirmed answers into agreed artifacts.
+description: Generate a source-grounded Chinese requirements interview packet or evidence-backed方案 discussion for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official/API docs, current web/prior-art sources before asking; require no-objection/approval, waiver, or accepted UNVERIFIED items before BUILD/implementation when research-first planning triggers; grill only for decision-changing requirements/write-back readiness; stress-test packets and filled answers before writing confirmed answers into agreed artifacts.
 ---
 
 # Change Interviewer
@@ -31,6 +31,8 @@ Before persisting an interview packet to the repository, follow the repository's
 
 Use this skill when the user wants to refine a change before implementation, especially when the source material is ambiguous, incomplete, or spread across files.
 
+This skill owns user-facing clarification,方案 discussion, no-objection/approval capture, waiver capture, and write-back readiness. It does not own the evidence lanes themselves: official/API docs route to `source-driven-development`, mature public-project prior art routes to `mature-project-pattern-research`, local repository facts route to `repo-evidence-first`, and test-plan artifacts route to `test-document-generator`.
+
 Realistic trigger prompts:
 
 - "Interview me and turn this rough idea into tasks/design/acceptance criteria."
@@ -39,6 +41,8 @@ Realistic trigger prompts:
 - "Complete this OpenSpec change package after interviewing me."
 - "Grill this requirement / interview packet before write-back or BUILD readiness."
 - "I filled `interview.md`; check whether the answers are clear enough to write back."
+- "Research/docs first, then give me a方案 before implementation."
+- Any DEFINE/BUILD readiness discussion where official/API docs, fast-changing/version-sensitive sources, model uncertainty, explicit user-requested research, or industry/GitHub similar projects materially affect the方案.
 
 ## When Not to Use
 
@@ -160,10 +164,13 @@ Before generating questions:
 2. If the source is an OpenSpec change directory, inventory `tasks.md` or `task.md`, `proposal.md`, `design.md`, and `specs/` files.
 3. If the source is a plan, issue, ticket, PR description, or custom file, identify existing sections, task markers, requirements, acceptance criteria, and unresolved assumptions.
 4. If repository evidence is needed and the search would be broad or noisy, dispatch `code-scout` as a read-only evidence locator.
-5. If external behavior matters, inspect official docs or current web sources before asking the user.
-6. Build a concise evidence table that separates Observed Fact, External Source, Inference, Assumption, Open Question, and Unverified.
+5. If external behavior matters, route official/API documentation through `source-driven-development` and current/prior-art sources through the appropriate research lane before asking the user.
+6. If the planning gate is triggered by fast-changing/version-sensitive docs and APIs, provider docs such as DeepSeek, SDK/framework/changelog-sensitive behavior, model uncertainty, explicit user-requested research, or industry/GitHub similar-project research, synthesize an evidence-backed方案 before implementation.
+7. Build a concise evidence table that separates Observed Fact, External Source, Inference, Assumption, Open Question, and Unverified.
 
 Do not ask the user for information that can be reliably discovered from current code, docs, specs, tests, configs, or official sources.
+
+Research-first planning sequence: gather docs/evidence, investigate, synthesize方案 with tradeoffs and `Unverified` items, discuss/confirm no objection or approval, then allow implementation only when the方案 is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED`. A completed packet or confident model answer is not enough.
 
 Common gaps:
 

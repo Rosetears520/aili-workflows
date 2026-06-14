@@ -2,7 +2,7 @@
 
 ## General
 
-- Prefer read-before-edit and smallest scoped change.
+- Prefer read-before-edit and complete, appropriately scoped changes.
 - Do not invoke network for this work package.
 - Do not install packages or add dependencies for fixture validation.
 - Do not edit secrets, memory DB/schema, lockfiles, or forbidden harness areas outside approved package scope.

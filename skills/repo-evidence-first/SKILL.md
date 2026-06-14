@@ -1,6 +1,6 @@
 ---
 name: repo-evidence-first
-description: 在非平凡规划、编辑、审查或完成声明前，先用仓库证据锚点确认项目事实；无证据的项目判断必须标为 Hypothesis、Open Question、Unverified、委托调查或 blocked。
+description: 在非平凡规划、方案、编辑、审查或完成声明前，先用仓库证据锚点确认项目事实；当本地约定、peer pattern、测试、配置或现有实现会影响方案/implementation 时必须先取证；无证据的项目判断必须标为 Hypothesis、Open Question、Unverified、委托调查或 blocked。
 ---
 
 # Repo Evidence First
@@ -17,6 +17,7 @@ description: 在非平凡规划、编辑、审查或完成声明前，先用仓�
 - completion claim：complete、fixed、passing、verified、ready
 - 需要判断 active/current/stale/archived/generated 的证据
 - 需要项目约定、peer pattern、上下游、测试覆盖或验证路径
+- research-first planning gate 中需要本地仓库事实支撑方案：现有实现、docs、tests、configs、schemas、generated/source-of-truth、peer pattern、验证命令
 
 Direct allowlist 小改可以跳过完整 evidence pack，但必须说明为什么满足 direct 条件且 subagent 不会节省上下文。
 
@@ -82,6 +83,16 @@ Unsupported project facts must become `Hypothesis`, delegated evidence work, use
 - External official/current behavior: `web-researcher`
 - Test coverage or verification strategy: `test-engineer`
 - Secrets, auth, permissions, tool policy, install/hooks, trust model: `security-auditor`
+
+Planning gate ownership:
+
+- This skill owns local repository evidence only. It should supply current repo facts, existing patterns, constraints, verification paths, and unknowns for the方案.
+- Official/API docs, fast-changing provider behavior, SDK/framework docs, and changelog-sensitive facts route to `source-driven-development` or external/current evidence lanes.
+- Industry/GitHub/mature project prior art routes to `mature-project-pattern-research`.
+- User-facing方案 discussion, no-objection/approval, waiver, and write-back readiness route to `change-interviewer` or the active lifecycle workflow.
+- Test-document artifacts route to `test-document-generator`.
+
+When local evidence is part of a research-first planning gate, return facts in a form that can be merged with official-doc and prior-art lanes: official facts `N/A`, local facts, applicable/rejected local patterns, assumptions, `Unverified` gaps, and verification commands. Do not proceed from local evidence directly to implementation when the gate also requires user acceptance of the方案.
 
 Use the lightest specialist that can return compact anchors. Do not paste raw grep dumps or long logs into MainAgent context.
 

@@ -18,7 +18,7 @@ Use this skill for Flutter/Dart apps, widgets, Riverpod/Bloc, GoRouter, Flutter 
 
 1. **Inspect project shape**: identify Flutter version, `pubspec.yaml` dependencies, state package, router, existing feature folders, and nearest tests before editing.
 2. **Choose the pattern** using the decision tables below; do not introduce Riverpod, Bloc, GoRouter, or Hooks into a project that already uses another working pattern unless the task explicitly asks for that migration.
-3. **Implement the smallest vertical slice**: model/state first, route or widget entry point second, UI states third (`loading`, `empty`, `error`, `success`), then platform-specific hooks only if required.
+3. **Implement the complete vertical slice**: model/state first, route or widget entry point second, UI states third (`loading`, `empty`, `error`, `success`), then platform-specific hooks only if required.
 4. **Verify locally**: run the narrowest available command first, usually `flutter test <target>` for logic/widgets, then `flutter analyze`, then `flutter run --profile` only for performance work.
 5. **Report evidence**: name changed widgets/providers/routes, state the verification command, and mark any skipped platform check as `Unverified`.
 

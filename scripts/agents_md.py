@@ -26,16 +26,9 @@ REQUIRED_SECTIONS = [
     "## Project Overview",
     "## Setup Commands",
     "## Architecture and Project Structure",
-    "## Agent Operating Discipline",
     "## Project-Specific Rules",
-    "## Coding Conventions",
-    "## Testing and Verification",
-    "## Security Rules",
-    "## Git Rules",
-    "## Documentation Rules",
-    "## Dependency Rules",
-    "## Generated and Vendor Files",
-    "## Final Response Requirements",
+    "## Project-Specific Testing and Artifact Placement",
+    "## Local Overrides",
 ]
 
 
@@ -68,6 +61,11 @@ def backup(path: Path) -> Path:
 
 def managed_blocks(text: str) -> dict[str, str]:
     return {match.group("name"): match.group(0) for match in BLOCK_RE.finditer(text)}
+
+
+def template_version(text: str) -> str | None:
+    match = VERSION_RE.search(text)
+    return match.group(1) if match else None
 
 
 def replace_managed_blocks(target_text: str, template_text: str) -> tuple[str, list[str]]:
@@ -140,9 +138,15 @@ def command_check(args: argparse.Namespace) -> int:
     template = read_text(template_path())
     template_blocks = managed_blocks(template)
     target_blocks = managed_blocks(text)
+    current_version = template_version(text)
+    expected_version = template_version(template)
 
-    if not VERSION_RE.search(text):
+    if current_version is None:
         errors.append("missing AILI_AGENTS_TEMPLATE_VERSION marker")
+    elif expected_version is None:
+        errors.append("template missing AILI_AGENTS_TEMPLATE_VERSION marker")
+    elif current_version != expected_version:
+        errors.append(f"template version mismatch: AGENTS.md has {current_version}, template has {expected_version}")
     if SOURCE_MARKER not in text:
         errors.append("missing AILI_AGENTS_TEMPLATE_SOURCE marker")
     if MODE_MARKER not in text:
@@ -157,6 +161,8 @@ def command_check(args: argparse.Namespace) -> int:
             errors.append(f"missing managed block: {name}")
         elif target_blocks[name] != block:
             errors.append(f"managed block differs from template: {name}")
+    for name in sorted(target_blocks.keys() - template_blocks.keys()):
+        errors.append(f"stale managed block not present in template: {name}")
 
     if not args.allow_placeholders and PLACEHOLDER_RE.search(text):
         errors.append("unfilled placeholder remains; replace TODO/fill comments with project facts or 'unknown'")

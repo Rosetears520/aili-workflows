@@ -39,7 +39,7 @@ Initialize a project-local `AGENTS.md`:
 python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py init --project .
 ```
 
-Update only AILI managed blocks:
+Update an existing generated project `AGENTS.md` against the current template-managed content:
 
 ```bash
 python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py update --project .
@@ -56,7 +56,7 @@ If the global installed path is unavailable but the current repository contains 
 ## Workflow
 
 1. Run `init` when the target project has no `AGENTS.md`.
-2. If `AGENTS.md` already exists, do not overwrite it silently. Use `update` for managed blocks, or ask before using `init --strategy backup-overwrite`.
+2. If `AGENTS.md` already exists, do not overwrite it silently. Use `update` for template-managed compatibility updates, or ask before using `init --strategy backup-overwrite`.
 
    🛑 **STOP before overwrite or backup-overwrite:** show the existing path, state that project-local content may be replaced outside managed blocks, and wait for explicit human approval.
 
@@ -65,8 +65,16 @@ If the global installed path is unavailable but the current repository contains 
    - `Setup Commands`
    - `Architecture and Project Structure`
    - `Project-Specific Rules`
-4. Do not remove or weaken the `Agent Operating Discipline` managed block.
-5. Run `check` before completion.
+   - `Project-Specific Testing and Artifact Placement`
+   - `Local Overrides`
+4. Do not copy broad global workflow/safety rules into the project file unless the project intentionally strengthens or specializes them.
+5. Check CodeGraph readiness for the same target project after confirming the repository root:
+   - run or request `codegraph status` for the target project
+   - if CodeGraph is not initialized, ask whether to run `codegraph init -i` in that repository
+   - if approved, run `codegraph init -i` and then `codegraph status`
+   - if CodeGraph is unavailable, skipped, or not approved, report it as a non-blocking follow-up
+   - do not initialize multiple repositories and do not run `openspec init` as part of this flow
+6. Run `check` before completion.
 
 ## Fallbacks and Stop Conditions
 
@@ -76,6 +84,7 @@ If the global installed path is unavailable but the current repository contains 
 | `references/agents_md.py` is missing or not executable by Python | Stop and report the expected bundled script path and command attempted | Ask the user to restore/reinstall the skill; do not create a replacement script in the target project |
 | Installed skill path is unavailable but a repository checkout is present | Use `skills/agents-md-initialization/references/agents_md.py` from the checkout | If neither installed nor repo-local bundled script exists, stop and ask for the AILI workflow checkout path |
 | Existing `AGENTS.md` has unrecognized local content outside managed blocks | Prefer `update`; summarize preserved local sections before editing | Require explicit approval before any backup-overwrite strategy |
+| CodeGraph is not installed, unavailable, or user declines initialization | Report CodeGraph as skipped/unavailable/not approved | Do not block `AGENTS.md` completion; do not claim code-map coverage |
 | `check` fails after init/update | Report the failing output and inspect only the relevant sections | Do not claim completion until `check` passes or the failure is marked unresolved |
 
 ## CI / Pre-Commit Gate
@@ -107,4 +116,5 @@ Report:
 - whether `init`, `update`, or `check` was used
 - whether an existing `AGENTS.md` was backed up
 - which project-specific sections were filled
+- CodeGraph status: initialized / initialized this run / skipped / unavailable / not approved
 - the final `check` result

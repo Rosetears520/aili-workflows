@@ -16,6 +16,8 @@ Purpose:
 
 Required behavior:
 - Select backend: OpenSpec, Superpowers-style plan, custom files, or conservative auto-detection.
+- Before freezing a multi-unit plan, expose proactive parallelism analysis: shared scaffold/source-of-truth work, safe lanes, serial dependencies, ownership boundaries, join point, blockers, or a no-parallel reason.
+- If the research-first planning gate is triggered, gather official/API, local repository, or mature prior-art evidence before writing the implementation方案, then record approval, waiver, or `UNVERIFIED` state before BUILD readiness.
 - For OpenSpec-backed changes, create or update:
   - `openspec/changes/<change-id>/proposal.md`;
   - `openspec/changes/<change-id>/design.md`;
@@ -34,5 +36,5 @@ Hard stops:
 Output contract:
 - selected mode and backend;
 - artifacts created, updated, required, or blocked;
-- unresolved questions and test-plan coverage summary;
+- unresolved questions, evidence-backed方案 status, and test-plan coverage summary;
 - gate state and BUILD readiness: `READY` / `BLOCKED` / `WAIVED` / `UNVERIFIED`.

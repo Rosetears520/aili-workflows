@@ -65,7 +65,7 @@ Task arrives
 These behaviors apply at all times, across all skills. ROSE’s canonical guardrails live in `agents/rose.md`; this skill only summarizes them so the routing guidance does not duplicate long operating rules.
 
 - **Think before coding**: understand the goal, constraints, assumptions, and existing patterns before editing. If requirements or sources conflict, stop and ask instead of guessing.
-- **Simplicity first**: choose the boring, smallest design that satisfies the accepted contract; avoid abstractions that do not earn their complexity.
+- **Simplicity first**: choose the boring, simplest complete design that satisfies the accepted contract; avoid abstractions that do not earn their complexity.
 - **Surgical changes**: touch only the files needed for the task, preserve existing names/APIs/patterns, and report unrelated findings rather than fixing them opportunistically.
 - **Goal-driven execution**: keep progress tied to the user’s requested outcome; push back on clearly harmful approaches with concrete tradeoffs, then respect an informed decision.
 - **Verify, don’t assume**: every skill ends with evidence such as targeted tests, build/lint output, diff inspection, or a clear manual verification path.
@@ -160,7 +160,7 @@ These are the subtle errors that look like productivity but create problems:
 
 Do not duplicate the full delivery lifecycle here. If the user invokes `/ideate`, `/define`, `/build`, `/ship`, or asks for AILI lifecycle routing, hand control to `aili-delivery-flow` and let that skill own mode transitions, gates, and final routing.
 
-For ordinary non-lifecycle work, choose only the smallest applicable chain. Example: a bug fix might need `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`; a completed non-trivial diff might go directly to `review-pipeline`.
+For ordinary non-lifecycle work, choose only the narrowest applicable chain. Example: a bug fix might need `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`; a completed non-trivial diff might go directly to `review-pipeline`.
 
 Use `strategy-stress-test` conditionally whenever a material artifact or claim exists and risk warrants it, such as before accepting a spec, plan, review, reconciliation, or completion claim. If the skill is not available in the current runtime, perform the same compact check directly instead of skipping the guardrail.
 

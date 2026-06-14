@@ -21,7 +21,7 @@ Build production-quality user interfaces that are accessible, performant, and vi
 
 1. **Inspect existing patterns:** find the nearest component, design tokens, state pattern, tests, and accessibility conventions before editing.
 2. **Define UI states:** list loading, empty, error, disabled, focused, active, and success states that the component must render.
-3. **Implement the smallest slice:** build the component/page using project primitives and the existing design system before adding custom styling.
+3. **Implement the complete focused slice:** build the component/page using project primitives and the existing design system before adding custom styling.
 4. **Run accessibility gates:** verify semantic HTML, labels, focus order, keyboard interaction, contrast, and screen-reader structure.
 5. **Run responsive gates:** check mobile-first behavior at project-defined breakpoints; if none exist, use 320px, 768px, 1024px, and 1440px.
 6. **Verify evidence:** use the closest automated test, story, browser check, or manual runbook and report any unverified states.

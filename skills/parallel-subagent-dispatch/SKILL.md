@@ -29,7 +29,9 @@ Executable dispatch rules:
 
 - When user asks for repository work and it is non-trivial, dispatch a scoped subagent unless the direct allowlist or explicit opt-out applies; if staying direct, say which one applies.
 - After decomposing non-trivial work, actively look for independent lanes instead of only deciding whether ROSE should work directly or delegate.
+- When decomposition yields two or more independently actionable work units, perform visible proactive parallelism analysis before dispatching or serializing: name shared scaffold/source-of-truth work, safe parallel lanes, serial dependencies, concurrent research/review/test/search lanes, ownership boundaries, join points, and blockers.
 - When two or more independent evidence-returning slices can proceed without each other's outputs, do not share mutable edits/state, and can return structured evidence-only results, dispatch them in parallel; if they share mutable state or sequencing, split sequentially instead.
+- Preserve already separated package or lane boundaries through packets, todos, and join reporting unless dependency, ownership overlap, verification coupling, safety risk, missing/failed evidence, or explicit current-task user direction requires merging, serializing, or reassignment; state the reason when boundaries change.
 - When implementation is non-trivial, normally run separate review and test/verification evidence lanes afterward; add a security lane when the changed surface includes auth, permissions, secrets, shell/installers, dependencies, network, storage, or other security-sensitive behavior.
 - When a subagent returns evidence, reconcile anchors before deciding; do not copy the recommendation as ROSE's final verdict.
 
@@ -42,6 +44,10 @@ After decomposing non-trivial work, ROSE should identify all safe independent la
 - documentation, test, review, and security lanes that can inspect the same completed diff or distinct artifacts without mutating shared state
 
 Use fan-out/fan-in when lanes can start now, do not need each other's outputs, avoid shared mutable edits/state, and can return structured evidence-only results. Dispatch one subagent per lane in parallel, wait for all lanes, reconcile conflicts, missing evidence, and duplicated work, then decide the next action as ROSE or ask the user.
+
+If no parallel lane is safe after two or more independently actionable units are identified, record the no-parallel reason visibly, such as `1 must complete before 2/3/4 can parallelize`, `1/2/3/4 must run strictly serially`, overlapping editable scope, shared mutable state, a missing scaffold, or a user-directed order. Keep any later fan-out candidates visible after the blocking scaffold or dependency join point.
+
+Once ROSE has identified independent lanes, keep each lane's scope and owner visible even when execution becomes serial. Do not collapse separate packages, research directions, review/test/security lanes, or implementation slices into one opaque task unless new evidence shows the split is unsafe, dependent, unverifiable, or out of user scope.
 
 Good single-subagent uses:
 - residual marker scans across many files
@@ -102,7 +108,7 @@ Optional CodeGraph evidence may be requested in any eligible ROSE-directed lane 
 
 ## Execution Ownership Gate
 
-Assign every delegated todo and task packet one explicit owner: `ROSE`, `user`, `subagent:research`, `subagent:edit`, `subagent:review`, or `subagent:test`. Preserve owner prefixes when copying, splitting, reconciling, or reporting todos/task packets.
+Assign every delegated todo and task packet one explicit owner: `ROSE`, `subagent:research`, `subagent:edit`, `subagent:review`, or `subagent:test`. Do not create `user:` todos; when user input, approval, or a decision is needed, ROSE owns the todo to ask the user and record the gate result. Preserve owner prefixes when copying, splitting, reconciling, or reporting todos/task packets.
 
 User-requested subagent ownership is binding for the current task. If the user asks a subagent to 修改, 补强, 完成, do, update, or implement, use `subagent:edit`; if the user asks a subagent to 复核, review, or audit, use `subagent:review`; if the user asks a subagent to 看一下, 调研, find evidence, or scout, use `subagent:research` only; if the user asks a subagent to test, verify, run tests, coverage, 测试, 验证, or 跑测试, use `subagent:test`.
 
@@ -151,8 +157,28 @@ Before dispatching, ROSE must verify:
 4. Any edit permissions are isolated and non-overlapping.
 5. Each subagent can return enough evidence for ROSE to merge results.
 6. The join contract names expected evidence per lane, conflict/missing-evidence handling, final decision owner, and stop conditions.
+7. Existing package/lane boundaries from the user, DEFINE artifacts, BUILD package queue, or prior ROSE plan are preserved, or every merge/serialization/reassignment has an explicit dependency, ownership, verification, safety, missing-evidence, failed-result, or user-scope reason.
 
 If any item fails, run the work sequentially or narrow the task packets until independence is true.
+
+## Join Contract Completeness
+
+For parallel or multi-lane work, define the join contract before dispatch and reconcile it before integration or final reporting.
+
+The join contract must list, per lane:
+
+- lane id or work package id
+- owner (`ROSE` or `subagent:*`)
+- expected evidence and return format
+- editable scope or read-only evidence source
+- status vocabulary: `completed`, `partial`, `blocked`, `skipped`, or `unverified`
+- blocker and stop conditions
+- conflict handling and missing/empty-evidence handling
+- final decision owner, normally ROSE, plus any required user approval/decision gate
+
+Missing, empty, or status-less lane output is not completion evidence. Do not infer a lane is complete from file state, adjacent successful lanes, or ROSE's own inspection. If required evidence is missing, request a bounded evidence-only follow-up, mark the lane `partial`/`blocked`/`unverified`, or reassign only with explicit current-task approval when ownership rules require it.
+
+Join reports must name every lane and include its status, changed or inspected scope, verification result or skipped-verification reason, remaining blockers, and any missing evidence before ROSE integrates results or claims completion.
 
 ## Delegation Safety Check
 
@@ -163,7 +189,7 @@ Before dispatching, ask:
 3. Are likely errors reversible, bounded, or caught by verification/review?
 4. Does the subagent packet contain enough context, scope, stop conditions, and forbidden scope?
 5. Does the requested output require fixed evidence anchors, artifacts, commands, or residual uncertainty?
-6. Is the final decision owner ROSE/user, not the subagent?
+6. Is the final decision owner ROSE, not the subagent, with any required user approval/decision gate explicit?
 
 If any answer is no, narrow the packet, make the lane read-only, run the work sequentially, or stop for clarification.
 
@@ -184,7 +210,7 @@ For harness-sensitive work, use `skills/aili-delivery-flow/references/protocols/
 
 ```text
 Subagent task packet:
-- Owner: ROSE | user | subagent:research | subagent:edit | subagent:review | subagent:test
+- Owner: ROSE | subagent:research | subagent:edit | subagent:review | subagent:test
 - Goal:
 - Context:
 - Allowed scope:
@@ -204,6 +230,7 @@ Guidelines:
 - Forbid nested agent calls unless the repository explicitly changes its orchestration rules.
 - Require concrete evidence, not just conclusions.
 - For parallel lanes, include the join contract: expected evidence for that lane, conflict or missing-evidence handling, final decision owner, and stop conditions.
+- For multi-lane packets, preserve the lane/package id, owner, editable scope or read-only source, expected evidence, status vocabulary, blocker conditions, and missing/empty-evidence handling so ROSE can join without guessing.
 - Ask for graph-assisted evidence only as compact locality anchors; forbid raw graph dumps and final proof claims based solely on graph output.
 
 ## Reconciliation and Verification
@@ -212,9 +239,10 @@ After subagents return:
 
 1. Compare conclusions against the evidence each subagent supplied.
 2. Identify conflicts, duplicated work, missing evidence, and unresolved risks.
-3. Decide whether follow-up work is sequential, parallel, or blocked.
-4. Run or request fresh verification before claiming completion.
-5. Summarize findings by work package and separate verified facts from recommendations.
+3. List every expected lane with status (`completed`, `partial`, `blocked`, `skipped`, or `unverified`) and do not treat missing or empty evidence as completion.
+4. Decide whether follow-up work is sequential, parallel, or blocked.
+5. Run or request fresh verification before claiming completion.
+6. Summarize findings by work package and separate verified facts from recommendations.
 
 🔴 CHECKPOINT before reconciliation: every accepted conclusion must have evidence anchors and an owner. ROSE owns evidence reconciliation, routing, and final acceptance gates, but must not fabricate, redo, or silently replace subagent-owned edit/review/test work; if ownership must change, get explicit user approval first.
 
@@ -222,6 +250,7 @@ After subagents return:
 |---|---|---|
 | Subagents conflict on a fact or recommendation | Read the cited evidence and request one focused follow-up if needed | If evidence remains split, mark `Unverified`; do not claim PASS |
 | A result lacks file/line, command, log, or source evidence | Ask for a bounded evidence-only follow-up or exclude the claim | If the claim is required for acceptance, block completion |
+| An expected lane returns empty output, no status, or no usable evidence | Keep the lane named in the join report and request focused evidence, mark `partial`/`blocked`/`unverified`, or reassign only with explicit current-task approval | Do not infer completion from file state or adjacent lanes |
 | A required reviewer/test/security lane was missed | Dispatch the missing lane before final acceptance | If dispatch is unavailable, report `NEEDS_REVIEW` |
 | Parallel edit work produced overlap or ordering ambiguity | Stop new edits; reconcile ownership and verify the combined diff sequentially | If ownership cannot be made safe, block and ask the user |
 

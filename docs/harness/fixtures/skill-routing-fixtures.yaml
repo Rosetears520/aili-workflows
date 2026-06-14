@@ -1,6 +1,6 @@
 {
   "fixture": "skill-routing",
-  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "trigger", "non-trigger"],
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
   "cases": [
     {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
     {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
@@ -13,6 +13,10 @@
     {"id": "mature-project-github-others", "skill": "mature-project-pattern-research", "input": "GitHub 上别人怎么做", "expected": "trigger"},
     {"id": "mature-project-look-others", "skill": "mature-project-pattern-research", "input": "look at how others do it", "expected": "trigger"},
     {"id": "mature-project-reference-projects", "skill": "mature-project-pattern-research", "input": "reference mature projects", "expected": "trigger"},
+    {"id": "source-driven-official-api-docs", "skill": "source-driven-development", "input": "Check official/API docs before planning this SDK integration", "expected": "trigger"},
+    {"id": "source-driven-deepseek-fast-changing", "skill": "source-driven-development", "input": "DeepSeek API docs and provider changelog may be fast-changing", "expected": "trigger"},
+    {"id": "source-driven-model-uncertainty", "skill": "source-driven-development", "input": "I am uncertain about this framework version behavior", "expected": "trigger"},
+    {"id": "git-workflow-cleanup-gate", "skill": "git-workflow-and-versioning", "input": "before closeout inspect branch/status, classify dirty paths, prepare the cleanup package, and keep approval-gated cleanup", "expected": "trigger"},
     {"id": "mature-project-local-review", "skill": "mature-project-pattern-research", "input": "review this local code implementation", "expected": "non-trigger"},
     {"id": "mature-project-github-issue-pr-triage", "skill": "mature-project-pattern-research", "input": "triage this GitHub issue and PR for evidence", "expected": "non-trigger"}
   ]

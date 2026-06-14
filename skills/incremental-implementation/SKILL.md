@@ -7,7 +7,7 @@ description: Delivers changes incrementally. Use when implementing any feature o
 
 ## Overview
 
-Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
+Build in thin vertical slices — implement one complete in-scope piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
 
 ## When to Use
 
@@ -16,7 +16,7 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 - Refactoring existing code
 - Any time you're tempted to write more than ~100 lines before testing
 
-**When NOT to use:** Single-file, single-function changes where the scope is already minimal.
+**When NOT to use:** Single-file, single-function changes where the scope is already tightly bounded.
 
 ## The Increment Cycle
 
@@ -35,10 +35,10 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 
 For each slice:
 
-1. **Implement** the smallest complete piece of functionality
+1. **Implement** a focused complete piece of functionality
 2. **Test** — run the test suite (or write a test if none exists)
 3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit / Savepoint** -- save progress with a commit, or a savepoint report when commits are forbidden (see `git-workflow-and-versioning` for atomic commit guidance)
+4. **Commit / Savepoint** -- save progress with a commit when current task/project rules explicitly allow task-scoped verified commits, or a savepoint report otherwise (see `git-workflow-and-versioning` for atomic commit guidance)
 5. **Move to the next slice** — carry forward, don't restart
 
 🔴 CHECKPOINT / 🛑 STOP: Before starting a slice, write the slice gate in one sentence: observable behavior, files in scope, verification command, and savepoint policy. If the slice cannot produce visible behavior or a targeted verification result, split it again.
@@ -65,9 +65,9 @@ Slice 4: Delete a task (delete + API + UI + confirmation)
 
 Each slice delivers working end-to-end functionality.
 
-Do not use horizontal slicing as the default. A slice should produce observable behavior, targeted verification, and a savepoint commit on a non-main task branch before the next slice begins.
+Do not use horizontal slicing as the default. A slice should produce observable behavior, targeted verification, and, when task/project rules allow task-scoped verified commits, a savepoint commit on a non-main task branch before the next slice begins.
 
-If commits are forbidden by the user/task contract, replace the commit with an explicit savepoint report: changed files, verification result, and rollback note. Do not violate a no-commit contract to satisfy this skill.
+If commits are not explicitly allowed by the user/task contract or project rules, replace the commit with an explicit savepoint report: changed files, verification result, and rollback note. Do not violate a no-commit contract to satisfy this skill.
 
 ### Contract-First Slicing
 
@@ -96,10 +96,10 @@ If Slice 1 fails, you discover it before investing in Slices 2 and 3.
 
 ### Rule 0: Simplicity First
 
-Before writing any code, ask: "What is the simplest thing that could work?"
+Before writing any code, ask: "What is the simplest complete thing that could work?"
 
 After writing code, review it against these checks:
-- Can this be done in fewer lines?
+- Can this be clearer without losing required behavior?
 - Are these abstractions earning their complexity?
 - Would a staff engineer look at this and say "why didn't you just..."?
 - Am I building for hypothetical future requirements, or the current task?
@@ -184,7 +184,7 @@ export function createTask(data: TaskInput, options?: { notify?: boolean }) {
 Each increment should be independently revertable:
 
 - Additive changes (new files, new functions) are easy to revert
-- Modifications to existing code should be minimal and focused
+- Modifications to existing code should be focused and traceable
 - Database migrations should have corresponding rollback migrations
 - Avoid deleting something in one commit and replacing it in the same commit — separate them
 
@@ -214,7 +214,7 @@ After each increment, verify:
 - [ ] Type checking passes (`npx tsc --noEmit`)
 - [ ] Linting passes (`npm run lint`)
 - [ ] The new functionality works as expected
-- [ ] The change is committed with a descriptive message, or a savepoint report exists when commits are forbidden
+- [ ] The change is committed with a descriptive message only when current task/project rules explicitly allow task-scoped verified commits; otherwise a savepoint report exists
 
 ## Fallbacks
 
@@ -222,8 +222,8 @@ After each increment, verify:
 |---|---|---|
 | Tests fail after a slice | Stop next-slice work; identify whether failure is from this slice or pre-existing | Revert or narrow the slice; report unrelated failures instead of piling on fixes |
 | Working tree is dirty before a slice | Inspect status and separate task-related from unrelated changes | Ask whether to continue, branch/worktree, or pause; do not mix unrelated edits silently |
-| Slice grows past the planned behavior/files | Stop and cut scope to the smallest observable behavior | Return the oversized remainder to the task queue; do not finish it in the same increment |
-| No automated test exists | Add the smallest focused test when practical | Use a documented manual/static check and mark the gap `Unverified` |
+| Slice grows past the planned behavior/files | Stop and cut scope to a focused independently verifiable complete behavior | Return the oversized remainder to the task queue; do not finish it in the same increment |
+| No automated test exists | Add the most relevant focused test when practical | Use a documented manual/static check and mark the gap `Unverified` |
 
 ## Common Rationalizations
 
@@ -251,7 +251,7 @@ After each increment, verify:
 
 After completing all increments for a task:
 
-- [ ] Each increment was individually tested and committed, or documented with a savepoint report when commits are forbidden
+- [ ] Each increment was individually tested and committed when active rules allow task-scoped verified commits, or documented with a savepoint report otherwise
 - [ ] The full test suite passes
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified

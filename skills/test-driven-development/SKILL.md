@@ -25,7 +25,7 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 ```
     RED                GREEN              REFACTOR
- Write a test    Write minimal code    Clean up the
+ Write a test    Write scoped code     Clean up the
  that fails  ──→  to make it pass  ──→  implementation  ──→  (repeat)
       │                  │                    │
       ▼                  ▼                    ▼
@@ -45,14 +45,14 @@ Do not write all tests first and then all implementation.
 Use one behavior slice at a time:
 1. Write one test for one observable behavior.
 2. Confirm it fails for the right reason.
-3. Write the minimum implementation.
+3. Write the complete scoped implementation for that behavior.
 4. Confirm it passes.
-5. Commit the verified slice on a non-main branch, or write a savepoint report when the active task forbids commits.
+5. Commit the verified slice only when current task/project rules explicitly allow task-scoped verified commits; otherwise write a savepoint report.
 6. Repeat.
 
 Tests should verify behavior through public interfaces. They should survive internal refactors.
 
-If commits are forbidden by the user or task contract, do not commit to satisfy this skill. Record a savepoint report instead: changed files, verification evidence, and rollback notes.
+If commits are not explicitly allowed by the user, task contract, or project rules, do not commit to satisfy this skill. Record a savepoint report instead: changed files, verification evidence, and rollback notes.
 
 Avoid:
 - testing private methods
@@ -77,12 +77,12 @@ describe('TaskService', () => {
 
 ### Step 2: GREEN — Make It Pass
 
-Write the minimum code to make the test pass. Don't over-engineer:
+Write the simplest complete code for the behavior under test. Don't over-engineer:
 
-🔴 CHECKPOINT / 🛑 STOP before fix: Name the smallest code path that can make the RED test pass. If the fix requires unrelated files, new dependencies, schema/API changes, or broad refactors, stop and ask for scope approval instead of expanding TDD silently.
+🔴 CHECKPOINT / 🛑 STOP before fix: Name the focused code path that can make the RED test pass completely. If the fix requires unrelated files, new dependencies, schema/API changes, or broad refactors, stop and ask for scope approval instead of expanding TDD silently.
 
 ```typescript
-// GREEN: Minimal implementation
+// GREEN: Scoped implementation
 export async function createTask(input: { title: string }): Promise<Task> {
   const task = {
     id: generateId(),
@@ -369,11 +369,11 @@ Implementing agent: Verifies the test fails, then implements the fix,
 then verifies the test passes.
 ```
 
-If delegation is unavailable, disallowed, or would violate user-requested ownership, the current agent writes the smallest reproduction test directly before implementing the fix. The goal is independence of evidence, not bypassing ROSE routing or runtime constraints.
+If delegation is unavailable, disallowed, or would violate user-requested ownership, the current agent writes a focused reproduction test directly before implementing the fix. The goal is independence of evidence, not bypassing ROSE routing or runtime constraints.
 
 ## See Also
 
-Use the patterns above as the local source of truth for behavior-focused tests, DAMP test data, minimal mocks, Arrange-Act-Assert structure, and reproduction-first bug fixes. For browser runtime verification, route to `browser-testing-with-devtools` when applicable.
+Use the patterns above as the local source of truth for behavior-focused tests, DAMP test data, limited mocks, Arrange-Act-Assert structure, and reproduction-first bug fixes. For browser runtime verification, route to `browser-testing-with-devtools` when applicable.
 
 ## Common Rationalizations
 

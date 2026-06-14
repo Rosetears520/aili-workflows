@@ -1,6 +1,6 @@
 ---
 name: mature-project-pattern-research
-description: Research mature public project patterns for IDEATE or ordinary chat prior-art requests such as "看看别人怎么做", "GitHub 上别人怎么做", "look at how others do it", "reference mature projects", "how do mature projects handle this?", or "compare prior art"; wraps read-only web-researcher evidence and does not trigger for GitHub issue/PR triage, local code-only review, implementation, or command creation.
+description: Research mature public project patterns before方案/implementation for IDEATE, DEFINE, BUILD planning, or ordinary chat prior-art needs such as "看看别人怎么做", "GitHub 上别人怎么做", "look at how others do it", "reference mature projects", "how do mature projects handle this?", "compare prior art", industry/GitHub similar projects, or explicit user-requested research; wraps read-only web-researcher evidence and does not trigger for GitHub issue/PR triage, local code-only review, implementation, or command creation.
 ---
 
 # Mature Project Pattern Research
@@ -8,6 +8,8 @@ description: Research mature public project patterns for IDEATE or ordinary chat
 ## Purpose
 
 Use this skill when a user needs source-grounded prior art from mature public projects before choosing a design, workflow, API shape, repository convention, or implementation pattern.
+
+It owns the industry/GitHub/mature-project prior-art lane of the research-first planning gate. Official/API documentation belongs to `source-driven-development`; local repository facts belong to `repo-evidence-first`; user-facing方案 clarification/write-back belongs to `change-interviewer`; test-plan artifacts belong to `test-document-generator`.
 
 This is a skill-first workflow. It coordinates research through the existing read-only `web-researcher` subagent when external evidence is needed. It does not add a `/research` command, GitHub MCP dependency, dedicated agent, or vendored external skill content.
 
@@ -23,7 +25,12 @@ Use for requests like:
 - "Find prior art for this workflow before we design it."
 - "Compare established patterns in public projects."
 - "What patterns should we copy or avoid from mature tools?"
+- "Research industry/GitHub similar projects before we decide."
+- BUILD or implementation planning where mature examples can materially change the方案, architecture, UX, workflow, packaging, or implementation pattern.
+- Any explicit user request to research, compare, or source public-project approaches before implementation.
 - IDEATE-stage exploration that needs evidence from public projects.
+
+External public-project lookup is allowed only when the current user request, task packet, or project contract allows source lookup. Never send secrets, private data, proprietary code, or sensitive repository context to external search; if external lookup is not allowed, use local/offline evidence and mark remaining prior-art gaps `Unverified`.
 
 Do not use for:
 
@@ -68,8 +75,9 @@ Mark any unavailable signal as `[UNVERIFIED]`; do not infer maturity from popula
 5. Compare at least two mature public examples when practical. If only one credible example is found, label the result `PARTIAL`.
 6. Extract patterns, not vendor text: describe the approach in your own words and cite evidence anchors.
 7. Separate applicable patterns from not-recommended patterns and explain fit for the current project or decision context.
-8. State license, security, maintenance, complexity, and adoption risks.
-9. Recommend the next decision or follow-up question.
+8. Feed the evidence into an evidence-backed方案: applicable patterns, rejected patterns, fit rationale, risks, assumptions, and `UNVERIFIED` gaps.
+9. State license, security, maintenance, complexity, and adoption risks.
+10. Recommend the next decision or follow-up question; do not proceed to implementation until the方案 is accepted, waived, or explicitly accepted as `UNVERIFIED` by the user.
 
 See `references/research-rubric.md` for the compact scoring rubric and delegation packet.
 

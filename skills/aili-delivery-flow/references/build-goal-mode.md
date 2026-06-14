@@ -67,18 +67,22 @@ When the user did not provide an explicit package, synthesize an ordered queue f
 4. `test-plan.md` or verification artifacts;
 5. repository evidence and existing patterns.
 
+Before dispatching a queue with two or more independently actionable packages or lanes, add a concise parallelism analysis. Classify shared scaffold/source-of-truth work, safe parallel lanes, serial dependencies, concurrent read-only/research/review/test/search lanes, ownership boundaries, join points, expected evidence, blockers, and no-parallel reasons. Do not collapse existing package or lane boundaries without a dependency, ownership, verification, high-risk, missing-evidence, or current user-scope reason.
+
 Each package must include:
 
 - goal and acceptance criteria;
 - likely allowed files or edit surface;
 - forbidden scope and high-risk gates;
 - evidence source;
+- parallelism role: shared scaffold/source-of-truth, safe parallel lane, serial dependency, research/review/test/search lane, blocked item, or no-parallel reason;
 - owner/delegation plan;
 - scoped subagent packet fields when delegated: allowed scope, forbidden scope, edit permission, high-risk stop gates, required evidence, and commit allowance;
 - verification command or inspection path;
 - code-review, test, and security lane trigger or skip condition;
 - repair limit and rollback or pause condition;
-- whether commits are allowed by the active contract.
+- whether commits are allowed by the active contract;
+- packaging target/platform and package/build command when packaging is requested.
 
 Preserve task dependencies. Prefer packages small enough to review and repair independently. Worker increments are dynamic: split by verifiable acceptance slice, clean ownership boundary, no parallel edit conflict, and clean handoff point rather than fixed file counts.
 
@@ -92,12 +96,32 @@ ROSE must maintain the active context and progress ledgers when the backend cont
 - for OpenSpec, use `openspec/changes/<change-id>/context.md` and `openspec/changes/<change-id>/progress.txt`;
 - for non-OpenSpec, resolve repository-local context/progress placement through the backend adapter or ask once before writing;
 - only ROSE writes/appends `progress.txt`; workers return reports and evidence references for ROSE to reconcile;
-- ledger entries record objective, current progress, user feedback/corrections, checkpoint ledger, worker dispatches, evidence, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action;
+- ledger entries record objective, worker dispatches, evidence, current progress, user feedback/corrections, checkpoint ledger, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action;
 - never put secrets, raw logs, full transcripts, full file contents, or long dumps in `context.md` or `progress.txt`.
 
 Before long continuation, idle resume, or expected DCP compression, update `progress.txt` first so the current BUILD state can be recovered without raw chat history.
 
 For approved spec-backed implementation, ROSE also maintains `implementation-notes.html` beside the active change artifacts as a compact drift log. Record only spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; keep user feedback/corrections, progress ledger entries, raw transcripts, secrets, full logs, full file contents, and private data out of the file.
+
+## Research-First Planning Gate
+
+Before BUILD dispatch for unfamiliar stacks, official/API behavior, fast-changing or version-sensitive sources, packaging/distribution, platform/runtime behavior, security or permission surfaces, external integrations, UI/animation/product-form decisions, material model uncertainty, user-requested research/source verification, or industry/GitHub similar-project patterns, gather enough planning evidence to avoid guessing. Use the lightest appropriate route: source-driven official/API docs, mature-project/prior-art evidence, local repository evidence, or specialist research/search/security lanes.
+
+The planning evidence must separate official facts, local facts, prior-art patterns, assumptions, rejected options, risks, applicability, and `Unverified` gaps. Present an evidence-backed 方案 and pause before implementation until the 方案 is confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`. Existing current evidence may satisfy the gate when it directly answers the planning question and is cited.
+
+## User-Requested Packaging Flow
+
+When the user requests a packaged deliverable, treat packaging as an explicit delivery step in the BUILD loop:
+
+1. confirm the package target and platform when missing;
+2. run the most relevant focused tests/checks first;
+3. repair in-scope failures before packaging;
+4. run the package/build command as separate evidence;
+5. classify package-time failures as package-specific, prior implementation defects, environment/tooling gaps, or blocked high-risk requirements;
+6. repair in-scope issues, rerun affected tests, and retry packaging within the approved repair limit;
+7. report the artifact path, skipped verification waiver, `UNVERIFIED` risk, or blocker.
+
+Pause before signing, notarization, platform certificates, dependency or lockfile changes, external publishing, destructive cleanup, secret handling, or unsupported platform assumptions unless the current task explicitly approves the exact operation.
 
 ## Evaluator-Gated Continuation
 
@@ -132,13 +156,19 @@ For each package:
 
 1. Hydrate relevant artifacts, memory/checkpoints, progress, drift notes, and repository state.
 2. Confirm scope boundaries from evidence.
-3. Delegate non-trivial implementation to `implementer` using dynamically sized worker increments, or edit directly only when direct-work rules apply.
-4. Run focused verification.
-5. Run independent local review lanes: code review and test verification for non-trivial BUILD work, plus security review when security-sensitive surfaces are present; record explicit skip reasons.
-6. Apply bounded repairs and rerun affected checks.
-7. Update `progress.txt` or backend task state only after ROSE reconciles evidence.
+3. Apply the research-first planning gate when it is triggered; do not dispatch implementation until evidence-backed 方案 confirmation, waiver, or `UNVERIFIED` acceptance is recorded.
+4. Delegate non-trivial implementation to `implementer` using dynamically sized worker increments, or edit directly only when direct-work rules apply.
+5. Run focused verification.
+6. If packaging is requested, follow the verification-first packaging flow before reporting a deliverable artifact.
+7. Run independent local review lanes: code review and test verification for non-trivial BUILD work, plus security review when security-sensitive surfaces are present; record explicit skip reasons.
+8. Apply bounded repairs and rerun affected checks.
+9. Update `progress.txt` or backend task state only after ROSE reconciles evidence.
 
 After the queue, run aggregate freshness checks for changed scope and report completed packages, blocked packages, verification, skipped lanes, residual risks, and whether `/ship` is appropriate.
+
+## Task-End Branch/Worktree Hygiene
+
+Before non-trivial package or queue closeout, inspect `git status --short --branch` in the target repository and classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown. Remove only safe task-owned, non-user-visible scratch artifacts created by the current task. Propose cleanup for remaining residue, and ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.
 
 ## Stop Conditions
 
@@ -148,7 +178,8 @@ Stop automatic continuation, report, or ask before continuing when:
 - approval/readiness evidence is missing and not waived by the current active contract;
 - a continuation lacks the scoped BUILD goal marker or the evaluator returns `done`, `blocked`, or `unverified`;
 - the target repository root is not canonicalized as the intended workspace/repository, or is outside the current workspace or allowed external directories without explicit approval;
-- the package requires destructive commands, file deletes/moves/renames, dependency or lockfile changes, schema/migration changes, auth/permission/security weakening, pushes, merges, tags, or history rewrites;
+- the package requires destructive commands, file deletes/moves/renames, dependency or lockfile changes, schema/migration changes, auth/permission/security weakening, pushes, merges, tags, history rewrites, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts;
+- packaging requires signing/notarization credentials, external publishing, secret handling, destructive cleanup, or unsupported platform assumptions without explicit approval;
 - scope expands beyond approved artifacts;
 - acceptance criteria cannot be verified;
 - required independent review, test, or security lanes are unavailable;

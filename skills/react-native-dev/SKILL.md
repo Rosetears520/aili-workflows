@@ -34,7 +34,7 @@ Consult these resources as needed:
 
 1. **Inspect runtime mode**: determine Expo managed, Expo prebuild/dev client, or bare React Native; record SDK/RN versions, router, state libraries, native modules, and nearest tests.
 2. **Choose the path** with the Expo/RN decision table; keep the existing runtime mode unless the task explicitly requires migration.
-3. **Implement the smallest slice**: route/screen shell, state/data layer, native capability permission path, loading/error/empty states, then release configuration only if requested.
+3. **Implement the complete focused slice**: route/screen shell, state/data layer, native capability permission path, loading/error/empty states, then release configuration only if requested.
 4. **Verify in layers**: run targeted Jest/RNTL tests, TypeScript/lint if present, `npx expo start` or platform build only when native/runtime behavior changed.
 5. **Report evidence**: list emulator/device/runtime mode, command results, and any store/EAS checks left `Unverified`.
 

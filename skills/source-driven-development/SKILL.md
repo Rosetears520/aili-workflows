@@ -1,6 +1,6 @@
 ---
 name: source-driven-development
-description: Grounds every implementation decision in official documentation. Use when you want authoritative, source-cited code free from outdated patterns. Use when building with any framework or library where correctness matters.
+description: Grounds every implementation decision in official/API documentation. Use when you want authoritative, source-cited code free from outdated patterns; when official/API docs such as DeepSeek, SDK/provider references, framework docs, changelog-sensitive behavior, fast-changing/version-sensitive sources, model uncertainty, or explicit user-requested verification can materially affect a方案 before implementation.
 ---
 
 # Source-Driven Development
@@ -17,12 +17,26 @@ Every framework-specific code decision must be backed by official documentation.
 - Implementing features where the framework's recommended approach matters (forms, routing, data fetching, state management, auth)
 - Reviewing or improving code that uses framework-specific patterns
 - Any time you are about to write framework-specific code from memory
+- Planning a方案 or implementation where official/API documentation can materially change the approach, including provider APIs such as DeepSeek, SDK/API references, packaging/runtime/platform constraints, changelog-sensitive behavior, or model uncertainty
+- The user explicitly asks to research, verify, source, compare, or confirm current API behavior before implementation
 
 **When NOT to use:**
 
 - Correctness does not depend on a specific version (renaming variables, fixing typos, moving files)
 - Pure logic that works the same across all versions (loops, conditionals, data structures)
 - The user explicitly wants speed over verification ("just do it quickly") and the task does not involve version-sensitive framework/API/library behavior
+
+## Planning Evidence Gate Ownership
+
+This skill owns the official/API documentation lane of the research-first planning gate. It does not own local repository evidence, mature public-project prior art, test-plan generation, or lifecycle orchestration:
+
+- local repository facts and peer patterns belong to `repo-evidence-first`
+- industry/GitHub/mature project patterns belong to `mature-project-pattern-research`
+- user-facing方案 clarification and write-back readiness belong to `change-interviewer`
+- testability and durable test-plan artifacts belong to `test-document-generator`
+- lifecycle timing stays with the active delivery workflow; do not create a new public command or standalone lifecycle-owner skill
+
+When this gate triggers, gather official/current evidence first, summarize the evidence-backed方案 with risks and `UNVERIFIED` items, then implement only after the方案 is accepted, waived, or explicitly accepted as `UNVERIFIED` by the user. Use external web or Context7 lookup only when the current user, task, or project contract allows source lookup, and never send secrets or sensitive context; when external lookup is not allowed, use local/offline docs and mark remaining source gaps `UNVERIFIED`.
 
 ## The Process
 
@@ -64,7 +78,7 @@ If versions are missing or ambiguous, **ask the user**. Don't guess — the vers
 
 Fetch the specific documentation page for the feature you're implementing. Not the homepage, not the full docs — the relevant page.
 
-For library/API documentation, setup commands, framework examples, or version-sensitive code, prefer Context7 when it is installed in the current OpenCode environment. Do not require the user to manually say "use context7" each time. Do not assume Context7 is installed; if it is unavailable, fall back to official docs, package documentation, and source references. Do not add or rely on a repository-local Context7 skill.
+For library/API documentation, setup commands, framework examples, provider behavior such as DeepSeek APIs, SDK references, packaging/runtime/platform constraints, changelog-sensitive behavior, or version-sensitive code, prefer Context7 when it is installed in the current OpenCode environment. Do not require the user to manually say "use context7" each time. Do not assume Context7 is installed; if it is unavailable, fall back to official docs, package documentation, and source references. Do not add or rely on a repository-local Context7 skill.
 
 Speed requests may reduce citation verbosity, but they do not remove the required source/evidence check for version-sensitive framework, API, or library behavior. If correctness depends on the detected version, verify the source first and then summarize citations briefly.
 
@@ -211,7 +225,9 @@ After implementing with source-driven development:
 
 - [ ] Framework and library versions were identified from the dependency file
 - [ ] Official documentation was fetched for framework-specific patterns
+- [ ] Official/API docs were checked when provider, SDK, platform, packaging, changelog-sensitive, fast-changing, uncertain, or user-requested verification could affect the方案
 - [ ] All sources are official documentation, not blog posts or training data
+- [ ] Evidence-backed方案 was discussed/accepted, waived, or marked `UNVERIFIED` before implementation when the planning gate triggered
 - [ ] Code follows the patterns shown in the current version's documentation
 - [ ] Non-trivial decisions include source citations with full URLs
 - [ ] No deprecated APIs are used (checked against migration guides)

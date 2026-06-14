@@ -9,7 +9,8 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 3. Run security review when the package touches auth, permissions, secrets, shell/installer behavior, dependencies, network, storage, or other security-sensitive surfaces.
 4. Classify findings as must-fix, should-fix, accepted risk, out-of-scope, or unverified.
 5. Apply only in-scope repairs and rerun affected verification/review lanes.
-6. Return BUILD evidence with passed, skipped, blocked, and `Unverified` lanes; cite compact evidence packs instead of raw dumps when evidence is noisy, and never treat CodeGraph evidence as completion proof by itself.
+6. For non-trivial closeout, inspect branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, remove only safe task-owned non-user-visible scratch artifacts, and propose cleanup for residue.
+7. Return BUILD evidence with passed, skipped, blocked, and `Unverified` lanes; cite compact evidence packs instead of raw dumps when evidence is noisy, and never treat CodeGraph evidence as completion proof by itself.
 
 ## SHIP Release-Readiness Gates
 
@@ -19,7 +20,8 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 4. Audit release-blocker concerns: user-impacting regressions, security or permission exposure, unsafe/destructive workflow behavior, data-loss risk, documentation or artifact inconsistency, unresolved findings, rollback plan, commit/PR/release readiness, approval state, and unverified acceptance criteria.
 5. Classify findings as `release-blocking`, `important`, `accepted risk`, `out-of-scope`, or `Unverified`. Resolve, disprove with fresh evidence, or obtain explicit risk acceptance from the user or current active contract owner for every `release-blocking` finding before a ready verdict.
 6. Apply only approved in-scope repairs and rerun affected checks.
-7. Produce a detailed repository-local Markdown closeout document with audited scope, compact fresh evidence, existing feature impact, remaining risks, `Unverified` items, recommendation, and next steps. The CLI response may be concise, but it must include the document path and verdict summary.
+7. Inspect branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, remove only safe task-owned non-user-visible scratch artifacts, and record cleanup approvals needed.
+8. Produce a detailed repository-local Markdown closeout document with audited scope, compact fresh evidence, existing feature impact, branch/worktree hygiene status, remaining risks, `Unverified` items, recommendation, and next steps. The CLI response may be concise, but it must include the document path and verdict summary.
 
 ## Hard Gates
 
@@ -32,7 +34,7 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 - No exhaustive whole-codebase no-bugs claim; report scanned scope, skipped lanes, evidence limits, and residual `Unverified` items.
 - No silent scope expansion during repair.
 - No chat-only SHIP closeout; every SHIP run must write or update the required repository-local Markdown closeout document, or explicitly block/mark `Unverified` if the document path or write is unavailable.
-- No push, publish, archive, or durable memory promotion unless explicitly approved.
+- No push, publish, OpenSpec archive, durable memory promotion, destructive clean/reset, branch deletion, worktree removal, stashing unrelated changes, or user-visible artifact deletion unless explicitly approved.
 
 ## Change Revision Decision
 

@@ -18,6 +18,7 @@ Default locations:
 - Completed scope:
 - Changed files:
 - BUILD gate status:
+- Branch/worktree hygiene status:
 - Approval/archive status:
 
 ## 2. 变更摘要
@@ -71,7 +72,14 @@ Default locations:
 - Out-of-scope findings:
 - `Unverified` items:
 
-## 7. 验证证据
+## 7. 分支 / 工作区清理门
+
+- Branch/status inspected:
+- Dirty path classification（task-scoped / unrelated-pre-existing / generated-ignored / scratch / unknown）:
+- Safe task-owned scratch removed:
+- Cleanup proposed / approval required:
+
+## 8. 验证证据
 
 - Verification run:
 - Evidence anchors:
@@ -79,13 +87,13 @@ Default locations:
 - 未运行的检查及原因：
 - 证据新鲜度说明：
 
-## 8. 剩余风险与未验证项
+## 9. 剩余风险与未验证项
 
 - Remaining risks:
 - `Unverified` items:
 - 需要人工确认的问题：
 
-## 9. 建议与下一步
+## 10. 建议与下一步
 
 - Recommendation: archive | needs repair | needs more verification | accepted risk
 - Follow-up package:

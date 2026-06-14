@@ -60,12 +60,13 @@ Prefer executable rules over abstract-only advice: write "when user asks X, do Y
 
 ### 3. Simplicity First
 
-- Implement the smallest complete change that satisfies the accepted task.
+- Implement the complete, appropriately scoped change that satisfies the accepted task.
+- Do not sacrifice correctness, completeness, user goals, or long-term maintainability to minimize the diff.
 - Do not add features, abstractions, dependencies, configuration knobs, broad error handling, extension points, or future-proofing unless explicitly requested.
 - Prefer existing project conventions and utilities over new helpers.
-- If the implementation grows larger than the problem, simplify before finalizing.
+- If the implementation grows broader than the accepted scope, simplify before finalizing.
 
-### 4. Surgical Changes
+### 4. Task-Scoped Changes
 
 - Touch only files and lines required by the user request, accepted task contract, root cause, or required verification.
 - Do not clean up adjacent code, rename unrelated symbols, reformat files, remove pre-existing dead code, or fix unrelated bugs.
@@ -77,7 +78,7 @@ Prefer executable rules over abstract-only advice: write "when user asks X, do Y
 
 - Translate the task into verifiable goals before implementation.
 - Prefer focused behavior tests or reproductions for logic changes and bug fixes.
-- Run the smallest useful verification first, then broaden only as needed.
+- Run the most relevant focused verification first, then broaden only as needed.
 - Do not claim complete, fixed, passing, verified, ready, or accepted without fresh evidence.
 - If verification is partial, unavailable, or failing for unrelated reasons, report the exact limitation and remaining risk.
 
@@ -123,7 +124,7 @@ When stopped, report the ambiguity or risk, concrete options, a recommended opti
 - Do not write directly on `main`, `master`, or `trunk` unless the user explicitly permits that exact workflow.
 - Before writing files, inspect branch/status. If unrelated uncommitted changes are present, ask how to proceed unless the user has already approved continuing in the current tree.
 - Stage and commit only task-scoped files when commits are explicitly requested or allowed.
-- Before committing, inspect status, staged diff, and recent history; run the smallest relevant verification; check for secrets and unrelated/generated files.
+- Before committing, inspect status, staged diff, and recent history; run the most relevant focused verification; check for secrets and unrelated/generated files.
 - Do not push, merge, amend, rebase shared history, reset hard, clean destructively, delete branches/worktrees, skip hooks, or create releases without explicit approval.
 
 ## Documentation, Dependencies, and Generated Files
@@ -139,7 +140,7 @@ When stopped, report the ambiguity or risk, concrete options, a recommended opti
 Before reporting success, confirm:
 
 - the implementation matches the user request
-- the diff is surgical and non-speculative
+- the diff is task-scoped and non-speculative
 - relevant verification ran, or skipped checks are explained
 - remaining risks, assumptions, and follow-up items are reported
 

@@ -1,6 +1,6 @@
 ---
 name: test-document-generator
-description: Generate a repository-local, evidence-grounded Markdown test document from specs, proposals, plans, issues, or user descriptions; ask only for missing product decisions, map requirements to test cases, and persist the test plan before summarizing.
+description: Generate a repository-local, evidence-grounded Markdown test document from specs, proposals, evidence-backed方案, plans, issues, or user descriptions; ask only for missing product decisions, map requirements/research risks/UNVERIFIED planning gaps to test cases, and persist the test plan before summarizing.
 ---
 
 # Test Document Generator
@@ -13,6 +13,8 @@ This skill writes testing documentation. It does not replace `test-driven-develo
 
 In the AILI lifecycle, `aili-delivery-flow` owns when DEFINE must produce or confirm a test document before BUILD. This skill owns only the test-document artifact generation rules.
 
+For the research-first planning gate, this skill owns testability mapping only. Official/API evidence belongs to `source-driven-development`; mature public-project prior art belongs to `mature-project-pattern-research`; local repository facts belong to `repo-evidence-first`; user-facing方案 approval/waiver belongs to `change-interviewer` or the active lifecycle workflow.
+
 ## When to Use
 
 Use this skill when the user asks for:
@@ -23,6 +25,7 @@ Use this skill when the user asks for:
 - acceptance test matrix
 - regression checklist
 - test cases derived from a spec, plan, issue, PR, or feature description
+- a test plan derived from an evidence-backed方案, including official-doc constraints, prior-art risks, rejected patterns, assumptions, and `Unverified` items that need verification coverage
 
 ## Inputs
 
@@ -87,8 +90,8 @@ Chat response after persistence should include only:
 
 1. Read the user-provided spec, plan, proposal, issue, PR description, or pasted description.
 2. If the source is an OpenSpec change, read `proposal.md`, `design.md`, `tasks.md`, and `specs/` when present.
-3. When needed, inspect related code, existing tests, README, package scripts, CI docs, or API contracts to ground testability.
-4. Build an evidence table that separates observed facts, inferences, assumptions, open questions, and unverified claims.
+3. When needed, inspect related code, existing tests, README, package scripts, CI docs, API contracts, official-doc evidence, or prior-art research summaries to ground testability.
+4. Build an evidence table that separates observed facts, official/API facts, prior-art patterns, rejected patterns, inferences, assumptions, open questions, and unverified claims.
 5. Do not ask the user for information that reliable source grounding can answer.
 
 ### Phase B: Clarification
@@ -106,7 +109,7 @@ Small gaps can be recorded as `Open Question` without blocking document generati
 
 ### Phase C: Generate Test Document
 
-Generate a complete Markdown draft using the template below or `references/test-document-template.md`. Every test point must map back to a requirement, risk, decision, or evidence source. Keep facts, inferences, assumptions, and unverified items separate.
+Generate a complete Markdown draft using the template below or `references/test-document-template.md`. Every test point must map back to a requirement, risk, decision, official-doc constraint, prior-art pattern, rejected option, assumption, `Unverified` item, or evidence source. Keep facts, inferences, assumptions, and unverified items separate.
 
 The document is both a plan and the durable execution ledger. Include sections for automation commands, manual checks, run history, defect/fix/retest closure, and change history even when they start empty.
 

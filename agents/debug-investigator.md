@@ -115,7 +115,7 @@ RECENT_CHANGES_CHECKED:
 - <git diff/log/status evidence, or "not checked" with reason>
 
 PROPOSED_FIX:
-- <smallest scoped fix for ROSE/implementer, or diagnostic edit needed>
+- <complete, appropriately scoped fix for ROSE/implementer, or diagnostic edit needed>
 
 VERIFICATION_COMMAND:
 - <command or manual check that should verify the fix>

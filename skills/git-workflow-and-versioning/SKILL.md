@@ -44,7 +44,7 @@ Branch naming:
 Small changes:
 - Use a task branch in the current working tree.
 - Create the branch with `git switch -c <type>/<task-slug>` so the working tree actually moves to the new branch.
-- Commit each verified increment.
+- Create task-scoped savepoint commits only when current task/project rules explicitly allow verified commits; otherwise keep a reviewed savepoint report.
 
 Large or risky changes:
 - Use a task branch in a separate git worktree.
@@ -54,12 +54,19 @@ Large or risky changes:
 - Create the isolated branch and checkout together with `git worktree add -b <type>/<task-slug> ../<repo>-<task-slug> <base-branch>`.
 
 Savepoint commits:
-- After each small, verified increment, commit.
+- After each complete, verified increment, create a task-scoped savepoint commit only when current task/project rules explicitly allow verified commits.
 - A commit should represent one logical change.
-- Run the smallest useful verification before committing.
+- Run the most relevant focused verification before committing.
 - Inspect `git diff` and `git diff --staged` before committing.
-- Do not commit secrets, unrelated edits, generated output, or broken intermediate states unless explicitly creating a marked `wip:` checkpoint.
-- `wip:` checkpoints are allowed only on private task branches and must not be merged as-is.
+- Do not commit secrets, unrelated edits, generated output, or broken intermediate states.
+- `wip:` checkpoints are allowed only when the current task explicitly approves a private unverified checkpoint on a private task branch; they must not be merged as-is.
+
+Task-end branch/worktree hygiene for non-trivial changes:
+1. Run `git status --short --branch` in the target repository and inspect the relevant diff.
+2. Classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown.
+3. Remove only safe task-owned, non-user-visible scratch artifacts created by the current task.
+4. Propose cleanup for remaining residue, and ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts.
+5. If savepoint commits are not explicitly allowed by current task/project rules, ask once with the cleanup package instead of committing proactively.
 
 Never:
 - commit on `main`, `master`, or `trunk`
@@ -67,6 +74,7 @@ Never:
 - merge without explicit user approval
 - rebase shared history without explicit user approval
 - run destructive git commands without explicit user approval
+- delete branches, remove worktrees, archive OpenSpec changes, stash unrelated changes, or delete user-visible artifacts without explicit approval
 - stage unrelated files or unreviewed generated output
 
 ## Commit Architecture Mode
@@ -118,16 +126,16 @@ Rules:
 
 Decision matrix:
 
-| Task type | Branch | Worktree | Commit |
+| Task type | Branch | Worktree | Savepoint commit |
 |---|---:|---:|---:|
 | Read-only explanation or review | No | No | No |
-| Small docs change | Required | Usually no | After completion |
-| Small code fix | Required | Usually no | After fix and verification |
-| Multi-file feature | Required | Recommended | Each vertical slice |
-| Large refactor or migration | Required | Required | Each verified phase |
-| Parallel subagent or multi-approach exploration | Required | Required | Independently per approach |
-| Current workspace has unrelated changes | Required | Required | Avoid mixing existing edits |
-| User says not to pollute the current branch | Required | Usually required | Only in isolated branch/worktree |
+| Small docs change | Required | Usually no | Only when current task/project rules allow |
+| Small code fix | Required | Usually no | Only when current task/project rules allow |
+| Multi-file feature | Required | Recommended | Per complete verified slice when allowed |
+| Large refactor or migration | Required | Required | Per complete verified phase when allowed |
+| Parallel subagent or multi-approach exploration | Required | Required | Independently per approach when allowed |
+| Current workspace has unrelated changes | Required | Required | Avoid mixing existing edits; ask first |
+| User says not to pollute the current branch | Required | Usually required | Only in isolated branch/worktree and when allowed |
 
 ## Core Principles
 
@@ -147,19 +155,19 @@ This is the recommended default. Teams using gitflow or long-lived branches can 
 - **Release branches are acceptable.** When you need to stabilize a release while main moves forward.
 - **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks.
 
-### 1. Commit Early, Commit Often
+### 1. Use Savepoints When Allowed
 
-Each successful increment gets its own commit. Don't accumulate large uncommitted changes.
+When current task/project rules explicitly allow task-scoped verified commits, each successful increment can get its own savepoint commit. Otherwise, record the verified increment in the cleanup package and ask once instead of committing proactively. Don't accumulate large unreviewed changes.
 
 ```
 Work pattern:
-  Implement slice → Test → Verify → Commit → Next slice
+  Implement slice → Test → Verify → Commit if allowed / report savepoint → Next slice
 
 Not this:
   Implement everything → Hope it works → Giant commit
 ```
 
-Commits are save points. If the next change breaks something, you can revert to the last known-good state instantly.
+Allowed commits are save points. If the next change breaks something, use an approved recovery path to return to the last known-good state. When commits are not allowed, preserve the verified state in the cleanup package and ask for the next git action.
 
 ### 2. Atomic Commits
 
@@ -226,12 +234,12 @@ git commit -m "refactor validation and add phone number field"
 
 ### 5. Size Your Changes
 
-Target ~100 lines per commit/PR. Changes over ~1000 lines should be split. See the splitting strategies in `code-review-and-quality` for how to break down large changes.
+Prefer coherent, reviewable commits over artificial line-count targets. Changes over ~1000 lines should be split by behavior, risk, or ownership. See the splitting strategies in `code-review-and-quality` for how to break down large changes.
 
 ```
-~100 lines  → Easy to review, easy to revert
-~300 lines  → Acceptable for a single logical change
-~1000 lines → Split into smaller changes
+Focused complete change → Easy to review, easy to revert
+Single logical change    → Acceptable when scoped and verified
+Oversized mixed change   → Split into smaller changes
 ```
 
 ## Branching Strategy
@@ -295,11 +303,11 @@ Benefits:
 Agent starts work
     │
     ├── Makes a change
-    │   ├── Test passes? → Commit → Continue
+    │   ├── Test passes? → Commit if allowed; otherwise note in cleanup package → Continue
     │   └── Test fails? → Revert to last commit → Investigate
     │
     ├── Makes another change
-    │   ├── Test passes? → Commit → Continue
+    │   ├── Test passes? → Commit if allowed; otherwise note in cleanup package → Continue
     │   └── Test fails? → Revert to last commit → Investigate
     │
     └── Feature complete → All commits form a clean history
@@ -338,12 +346,12 @@ git diff --staged
 # 2. Ensure no secrets
 git diff --staged | grep -i "password\|secret\|api_key\|token"
 
-# 3. Discover and run the smallest relevant project command
+# 3. Discover and run the most relevant focused project command
 # Prefer AGENTS.md, README, Makefile, package scripts, pyproject, Cargo.toml,
 # or CI config over generic npm examples.
 ```
 
-If the project documents exact commands, use those commands. If no command is documented, state the discovery path and run the narrowest safe verification available before committing.
+If the project documents exact commands, use those commands. If no command is documented, state the discovery path and run the most relevant focused verification available before committing.
 
 Automate checks with project-approved hooks only; do not add hook tooling or dependencies unless the task explicitly asks:
 
@@ -387,7 +395,7 @@ git log --grep="validation" --oneline
 
 | Rationalization | Reality |
 |---|---|
-| "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Commit each slice. |
+| "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Create verified slice savepoints when allowed; otherwise ask once with the cleanup package. |
 | "The message doesn't matter" | Messages are documentation. Future you (and future agents) will need to understand what changed and why. |
 | "I'll squash it all later" | Squashing destroys the development narrative. Prefer clean incremental commits from the start. |
 | "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |

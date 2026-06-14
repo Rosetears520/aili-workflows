@@ -122,7 +122,7 @@ $CLI edit replace-text --input in.docx --output out.docx --find "OLD" --replace 
 $CLI edit fill-placeholders --input in.docx --output out.docx --data '{"name":"John"}'
 ```
 
-Then run the **validation pipeline**. Also run diff to verify minimal changes:
+Then run the **validation pipeline**. Also run diff to verify intended content changes:
 ```bash
 $CLI diff --before in.docx --after out.docx
 ```

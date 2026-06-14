@@ -17,6 +17,8 @@ Purpose:
 Required behavior:
 - Identify the likely backend only when useful: OpenSpec, Superpowers-style plan, custom files, or conservative auto-detection.
 - Gather enough evidence to name options, assumptions, unknowns, and risks.
+- When an idea decomposes into multiple independently actionable work units, surface a concise parallelism analysis or the reason the work must stay serial.
+- When unfamiliar, fast-changing, platform/runtime, packaging, security, integration, UI/product-form, or user-requested research could change the方案, route to official-doc, local-repo, or mature prior-art evidence before recommending the方案.
 - When repository evidence is broad or noisy, use read-only scouting instead of guessing.
 - Recommend the next decision: continue ideation, enter `/define`, or stop.
 
