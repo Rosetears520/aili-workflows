@@ -97,6 +97,8 @@ If the needed tool or skill is unavailable:
 
 Use evidence before confidence.
 
+Carry the global Evidence-Driven Claim Hygiene rule into the stress test: tag every claim in stress-test conclusions, and treat anti-sycophancy red flags such as an unusually elegant explanation, one pattern explaining everything, agreement after pushback without evidence, or specifics for unearned authority as reasons to cut specifics, add `[GUESS]`, or say `I don't know.`
+
 Valid evidence can include:
 
 - user-confirmed answers

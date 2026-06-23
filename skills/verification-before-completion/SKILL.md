@@ -19,6 +19,8 @@ This skill adapts Superpowers-style "evidence before claims" discipline to this 
 
 🔴 GATE: No completion wording until the claim is mapped to fresh evidence and the evidence actually proves that exact claim.
 
+Apply the global Evidence-Driven Claim Hygiene rule to the completion report: tag every completion, verification, readiness, repo-state, and risk claim, or downgrade it to `I don't know.`, `Open Question`, `Unverified`, or `[GUESS]`.
+
 Before making a completion claim:
 
 1. Identify the claim.

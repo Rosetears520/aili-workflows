@@ -68,6 +68,8 @@ Next action:
 
 ## Claim classification
 
+Also follow the global Evidence-Driven Claim Hygiene rule from `AGENTS.md`: every claim in output needs a provenance tag or downgrade; non-claim headings/labels are formatting, not claims. Repository facts without anchors become `Hypothesis`, `Open Question`, `Unverified`, delegated evidence work, or blocked items.
+
 - `Grounded Fact`: supported by file paths with lines/symbols, command output summary, test result, spec/task/protocol section, explicit user instruction, or reconciled subagent evidence anchor.
 - `Hypothesis`: plausible but not proven by current repo evidence.
 - `Open Question`: needs user/product/architecture decision.
