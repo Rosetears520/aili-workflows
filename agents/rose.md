@@ -55,6 +55,12 @@ permission:
     "implementer": allow
     "debug-investigator": allow
     "code-reviewer": allow
+    "test-coverage-reviewer": allow
+    "pr-test-analyzer": allow
+    "ai-regression-scout": allow
+    "silent-failure-reviewer": allow
+    "browser-qa-runner": allow
+    "e2e-artifact-runner": allow
     "test-engineer": allow
     "security-auditor": allow
     "explore": allow
@@ -207,6 +213,19 @@ Current user instruction and active task context override stale memory. Memory s
 Do not claim complete, fixed, passing, verified, ready, or accepted without fresh evidence. Use `verification-before-completion` before final claims when available, or perform the equivalent compact evidence-gap check directly.
 
 Prefer targeted verification first, then broaden only as needed. If verification cannot run or remains partial, say why and mark the affected claim `Unverified`.
+
+## Specialized QA/Test Lanes
+
+Use these lanes only when the changed surface makes them relevant; they are not always-on review requirements.
+
+- `test-coverage-reviewer` (`subagent:review`): read-only coverage adequacy, untested-path, and verification sufficiency review.
+- `pr-test-analyzer` (`subagent:review`): read-only PR/diff test impact, changed-test, CI-log, and focused command-matrix analysis.
+- `ai-regression-scout` (`subagent:test`): read-only AI prompt/agent/skill/routing regression scenario scouting.
+- `silent-failure-reviewer` (`subagent:review`): read-only false-success, swallowed-error, skipped-gate, and stale-evidence review.
+- `browser-qa-runner` (`subagent:test`): browser-rendered UI checks, local DOM/accessibility/console/network evidence, and screenshots when repo-local artifact placement is approved.
+- `e2e-artifact-runner` (`subagent:test`): E2E traces, videos, screenshots, reports, and failure bundles after repo-local artifact placement is approved.
+
+Browser and E2E lanes must avoid production data mutation. If a task may create user-visible screenshots, traces, videos, reports, or failure bundles, ROSE must provide a repository-local artifact path or keep the evidence ephemeral/inline and report the limitation.
 
 ## Minimal router
 

@@ -1,16 +1,25 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { chmod, cp, lstat, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readlink, rm, stat, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { applyPromptDecisions } from "../dist/cli.js";
 import { mergeDcpConfig, mergeOpenCodeConfig } from "../dist/config.js";
+import { loadManifest, repoInstallTargets, repoSourcePaths } from "../dist/manifest.js";
 
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, "dist", "cli.js");
 const SKIP_DEFAULT_ADDONS = ["--skip-dcp", "--skip-openspec"];
 const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? false : "OpenSpec install success paths require Node.js 20.19.0+";
+const SPECIALIZED_QA_LANES = [
+  { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing or modifying tests: use `test-engineer`" },
+  { agent: "pr-test-analyzer", skill: "pr-test-analysis", owner: "subagent:review", nearMiss: "General code correctness review: `code-reviewer`" },
+  { agent: "ai-regression-scout", skill: "ai-regression-scout", owner: "subagent:test", nearMiss: "Product-code behavior regression: use `test-engineer` or `debug-investigator`" },
+  { agent: "silent-failure-reviewer", skill: "silent-failure-hunting", owner: "subagent:review", nearMiss: "Coverage adequacy: `coverage-review`" },
+  { agent: "browser-qa-runner", skill: "browser-qa", owner: "subagent:test", nearMiss: "Persistent E2E report/trace packaging: `e2e-artifact-handling`" },
+  { agent: "e2e-artifact-runner", skill: "e2e-artifact-handling", owner: "subagent:test", nearMiss: "Browser manual QA without durable artifacts: `browser-qa`" }
+];
 
 test("dry-run install reports operations without mutating OpenCode home", async () => {
   const fixture = await fixtureAiliHome();
@@ -862,26 +871,85 @@ test("unknown plugins are rejected and not installed", async () => {
   await fixture.cleanup();
 });
 
-test("doctor reports required components and optional Playwright separately", async () => {
+test("doctor reports required components and optional project CodeGraph separately", async () => {
   const fixture = await fixtureAiliHome();
+  const binDir = path.join(fixture.root, "bin");
+  const logPath = path.join(fixture.root, "commands.log");
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
+  await writeStub(binDir, "codegraph", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--model", "anthropic/claude-sonnet-4-5", ...SKIP_DEFAULT_ADDONS, "--json"]);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
+    cwd: projectDir,
+    env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
+  });
   const summary = JSON.parse(result.stdout);
 
   assert.equal(summary.ok, true);
   assert.equal(summary.defaultAgent, "rose");
   assert.equal(summary.roseModel, "anthropic/claude-sonnet-4-5");
   assert.equal(summary.playwright, "missing-optional");
-  assert.equal(summary.codegraph, "missing-optional");
+  assert.equal(summary.codegraph.opencodeMcp, "missing-optional");
+  assert.equal(summary.codegraph.projectIndex.status, "not-initialized-optional");
+  assert.equal(summary.codegraph.projectIndex.root, projectDir);
+  assert.equal(summary.codegraph.projectIndex.marker, path.join(projectDir, ".codegraph"));
+  assert.match(summary.codegraph.projectIndex.nextStep, /codegraph init -i/);
+  assert.match(summary.codegraph.projectIndex.nextStep, /codegraph status/);
+  assert.equal(summary.install.ok, true);
+  assert.equal(summary.source.sharedSkills.status, "ready");
+  assert.equal(summary.source.manifestDrift.ok, true);
+  assert.equal(summary.source.agentsMd.status, "missing");
   assert.ok(summary.required.some((entry) => entry.type === "global" && entry.name === "AGENTS.md" && entry.installed));
   assert.ok(summary.required.some((entry) => entry.type === "agent" && entry.name === "rose" && entry.installed));
+  await assert.rejects(readFile(logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("doctor reports repo source drift without failing core OpenCode install", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+  await writeFile(path.join(fixture.ailiHome, "agents", "unmanifested-agent.md"), "# extra\n", "utf8");
+  await rm(path.join(fixture.ailiHome, ".agents", "skills", "rose-memory", "SKILL.md"));
+  const templateAgents = await readFile(path.join(fixture.ailiHome, "templates", "AGENTS.md"), "utf8");
+  await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents.replace(/AILI_AGENTS_TEMPLATE_VERSION:\s*\d+/, "AILI_AGENTS_TEMPLATE_VERSION: 0"), "utf8");
+
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.ok, true);
+  assert.equal(summary.install.ok, true);
+  assert.equal(summary.source.ok, false);
+  assert.deepEqual(summary.source.manifestDrift.agents.unmanifested, ["unmanifested-agent"]);
+  assert.ok(summary.source.manifestDrift.skills.missing.includes("rose-memory"));
+  assert.equal(summary.source.agentsMd.status, "stale");
+  assert.match(summary.source.agentsMd.issues.join("\n"), /template version mismatch/);
+  await fixture.cleanup();
+});
+
+test("doctor reports missing shared skill source separately from installed OpenCode targets", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+  await rm(path.join(fixture.ailiHome, ".agents", "skills"), { recursive: true, force: true });
+
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.ok, true);
+  assert.equal(summary.source.sharedSkills.status, "missing");
+  assert.ok(summary.source.manifestDrift.skills.missing.includes("rose-memory"));
   await fixture.cleanup();
 });
 
 test("doctor reports configured CodeGraph when OpenCode config has CodeGraph MCP", async () => {
   const fixture = await fixtureAiliHome();
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(projectDir);
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
   const configPath = path.join(opencodeHome, "opencode.json");
@@ -889,10 +957,28 @@ test("doctor reports configured CodeGraph when OpenCode config has CodeGraph MCP
   config.mcp = { ...(config.mcp ?? {}), codegraph: { type: "local", command: ["codegraph", "serve", "--mcp"], enabled: true } };
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
   const summary = JSON.parse(result.stdout);
 
-  assert.equal(summary.codegraph, "configured");
+  assert.equal(summary.codegraph.opencodeMcp, "configured");
+  assert.equal(summary.codegraph.projectIndex.status, "not-initialized-optional");
+  await fixture.cleanup();
+});
+
+test("doctor reports initialized project CodeGraph index when .codegraph exists", async () => {
+  const fixture = await fixtureAiliHome();
+  const projectDir = path.join(fixture.root, "target-project");
+  await mkdir(path.join(projectDir, ".codegraph"), { recursive: true });
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.codegraph.projectIndex.status, "initialized");
+  assert.equal(summary.codegraph.projectIndex.root, projectDir);
+  assert.equal(summary.codegraph.projectIndex.marker, path.join(projectDir, ".codegraph"));
+  assert.equal(summary.codegraph.projectIndex.nextStep, undefined);
   await fixture.cleanup();
 });
 
@@ -912,6 +998,98 @@ test("packaged non-git install copies files instead of symlinking transient sour
   assert.match(await readFile(roseTarget, "utf8"), /ROSE Runtime Charter/);
   assert.match(await readFile(skillTarget, "utf8"), /rose-memory/);
   assert.match(await readFile(globalAgentsTarget, "utf8"), /installer-owned-global-file/);
+  await fixture.cleanup();
+});
+
+test("selective Bash install links OpenCode skills from .agents/skills and preserves parent directories", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const skillsParent = path.join(opencodeHome, "skills");
+  const preserved = path.join(skillsParent, "local-note.txt");
+  await mkdir(skillsParent, { recursive: true });
+  await writeFile(preserved, "keep\n", "utf8");
+
+  await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv() });
+
+  const skillTarget = path.join(opencodeHome, "skills", "rose-memory");
+  assert.equal((await lstat(skillsParent)).isDirectory(), true);
+  assert.equal(await readFile(preserved, "utf8"), "keep\n");
+  assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
+  assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
+  await fixture.cleanup();
+});
+
+test("selective Bash dry-run reports .agents skill source without mutating OpenCode home", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "dry-run-opencode");
+
+  const result = await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--dry-run"
+  ], { env: installerEnv() });
+
+  assert.match(result.stderr, /DRY RUN: would link entry: .*\/skills\/rose-memory -> .*\/\.agents\/skills\/rose-memory/);
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("direct Bash install rejects unmanifested manifest drift before mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await writeFile(path.join(fixture.ailiHome, "agents", "extra-agent.md"), "# extra\n", "utf8");
+  await writeFile(path.join(fixture.ailiHome, "commands", "extra-command.md"), "# extra\n", "utf8");
+  await mkdir(path.join(fixture.ailiHome, ".agents", "skills", "extra-skill"), { recursive: true });
+  await writeFile(path.join(fixture.ailiHome, ".agents", "skills", "extra-skill", "SKILL.md"), "---\nname: extra-skill\n---\n", "utf8");
+
+  try {
+    await execFileP("bash", [
+      path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "selective",
+      "--aili-home", fixture.ailiHome,
+      "--opencode-home", opencodeHome,
+      "--dry-run"
+    ], { env: installerEnv() });
+    assert.fail("expected unmanifested direct Bash components to be rejected");
+  } catch (error) {
+    assert.match(error.stderr, /Unmanifested agents component\(s\): extra-agent/);
+    assert.match(error.stderr, /Unmanifested commands component\(s\): extra-command/);
+    assert.match(error.stderr, /Unmanifested skills component\(s\): extra-skill/);
+  }
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("direct Bash install rejects missing manifest components before mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await rm(path.join(fixture.ailiHome, "agents", "rose.md"));
+  await rm(path.join(fixture.ailiHome, "commands", "build.md"));
+  await rm(path.join(fixture.ailiHome, ".agents", "skills", "rose-memory", "SKILL.md"));
+
+  try {
+    await execFileP("bash", [
+      path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "copy",
+      "--aili-home", fixture.ailiHome,
+      "--opencode-home", opencodeHome,
+      "--dry-run"
+    ], { env: installerEnv() });
+    assert.fail("expected missing direct Bash components to be rejected");
+  } catch (error) {
+    assert.match(error.stderr, /Manifest agents component\(s\) missing from AILI_HOME: rose/);
+    assert.match(error.stderr, /Manifest commands component\(s\) missing from AILI_HOME: build/);
+    assert.match(error.stderr, /Manifest skills component\(s\) missing from AILI_HOME: rose-memory/);
+  }
+  await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
 });
 
@@ -939,6 +1117,44 @@ test("json mode preserves compatibility installer stderr on failure", async () =
   await fixture.cleanup();
 });
 
+test("OpenCode home traversal resolving to tmp root is rejected before mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", path.join(os.tmpdir(), "subdir", ".."), "--yes", "--json"], { reject: false });
+
+  assert.notEqual(result.code, 0);
+  assert.match(result.stderr, /Refusing unsafe OPENCODE_HOME/);
+  assert.equal(result.stdout, "");
+  await fixture.cleanup();
+});
+
+test("install summary uses canonical OpenCode home path", async () => {
+  const fixture = await fixtureAiliHome();
+  const rawOpenCodeHome = path.join(fixture.root, "parent", "child", "..", "opencode");
+  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", rawOpenCodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.opencodeHome, path.resolve(rawOpenCodeHome));
+  await assert.rejects(stat(path.resolve(rawOpenCodeHome)));
+  await fixture.cleanup();
+});
+
+test("Bash installer canonicalizes OpenCode home before unsafe path validation", async () => {
+  const fixture = await fixtureAiliHome();
+  try {
+    await execFileP("bash", [
+      path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "selective",
+      "--aili-home", fixture.ailiHome,
+      "--opencode-home", path.join(os.tmpdir(), "subdir", ".."),
+      "--dry-run"
+    ], { env: installerEnv() });
+    assert.fail("expected unsafe OpenCode home to be rejected");
+  } catch (error) {
+    assert.match(error.stderr, /Refusing unsafe OPENCODE_HOME: \/tmp/);
+  }
+  await fixture.cleanup();
+});
+
 test("relative OpenCode home is rejected before component mutation", async () => {
   const fixture = await fixtureAiliHome();
   const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", "relative-opencode", "--yes", "--json"], { reject: false });
@@ -954,8 +1170,8 @@ test("unmanifested repo components abort install before mutation", async () => {
   const opencodeHome = path.join(fixture.root, "opencode");
   await writeFile(path.join(fixture.ailiHome, "agents", "extra-agent.md"), "# extra\n", "utf8");
   await writeFile(path.join(fixture.ailiHome, "commands", "extra-command.md"), "# extra\n", "utf8");
-  await mkdir(path.join(fixture.ailiHome, "skills", "extra-skill"), { recursive: true });
-  await writeFile(path.join(fixture.ailiHome, "skills", "extra-skill", "SKILL.md"), "---\nname: extra-skill\n---\n", "utf8");
+  await mkdir(path.join(fixture.ailiHome, ".agents", "skills", "extra-skill"), { recursive: true });
+  await writeFile(path.join(fixture.ailiHome, ".agents", "skills", "extra-skill", "SKILL.md"), "---\nname: extra-skill\n---\n", "utf8");
 
   const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], { reject: false });
 
@@ -963,6 +1179,101 @@ test("unmanifested repo components abort install before mutation", async () => {
   assert.match(result.stderr, /Unmanifested agents component\(s\): extra-agent/);
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
+});
+
+test("manifest skills declare canonical shared source and OpenCode install targets", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const skill = manifest.components.skills.find((entry) => entry.name === "rose-memory");
+  assert.ok(skill, "expected rose-memory skill manifest entry");
+
+  assert.equal(skill.path, ".agents/skills/rose-memory");
+  assert.deepEqual(repoSourcePaths(skill), [".agents/skills/rose-memory"]);
+  assert.deepEqual(repoInstallTargets(skill), [
+    { kind: "shared", path: ".agents/skills/rose-memory" },
+    { kind: "opencode", path: "skills/rose-memory" }
+  ]);
+  await stat(path.join(repoRoot, ".agents", "skills", "rose-memory", "SKILL.md"));
+});
+
+test("manifest registers specialized QA agents and skills", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const agentNames = new Set(manifest.components.agents.map((entry) => entry.name));
+  const skillNames = new Set(manifest.components.skills.map((entry) => entry.name));
+  const roseText = await readFile(path.join(repoRoot, "agents", "rose.md"), "utf8");
+  const reviewPipelineText = await readFile(path.join(repoRoot, ".agents", "skills", "review-pipeline", "SKILL.md"), "utf8");
+
+  for (const { agent: name, owner } of SPECIALIZED_QA_LANES) {
+    assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
+    await stat(path.join(repoRoot, "agents", `${name}.md`));
+    assert.ok(roseText.includes(`"${name}": allow`));
+    assert.ok(roseText.includes(`- \`${name}\` (\`${owner}\`):`));
+    assert.ok(reviewPipelineText.includes(`- \`${name}\`:`));
+  }
+
+  for (const { agent, skill: name, nearMiss } of SPECIALIZED_QA_LANES) {
+    assert.ok(skillNames.has(name), `expected manifest skill ${name}`);
+    const skill = manifest.components.skills.find((entry) => entry.name === name);
+    assert.equal(skill.path, `.agents/skills/${name}`);
+    assert.deepEqual(repoInstallTargets(skill), [
+      { kind: "shared", path: `.agents/skills/${name}` },
+      { kind: "opencode", path: `skills/${name}` }
+    ]);
+    const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
+    assert.match(skillText, new RegExp(`---\\nname: ${name}\\n`));
+    assert.ok(skillText.includes(`Agent: \`${agent}\``));
+    assert.match(skillText, new RegExp(escapeRegExp(nearMiss)));
+  }
+});
+
+test("manifest registers DeerFlow clean-room pattern skills", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const skillNames = new Set(manifest.components.skills.map((entry) => entry.name));
+
+  for (const name of [
+    "academic-paper-review",
+    "systematic-literature-review",
+    "newsletter-generation",
+    "consulting-analysis",
+    "data-analysis",
+    "chart-visualization"
+  ]) {
+    assert.ok(skillNames.has(name), `expected manifest skill ${name}`);
+    const skill = manifest.components.skills.find((entry) => entry.name === name);
+    assert.equal(skill.path, `.agents/skills/${name}`);
+    assert.deepEqual(repoInstallTargets(skill), [
+      { kind: "shared", path: `.agents/skills/${name}` },
+      { kind: "opencode", path: `skills/${name}` }
+    ]);
+    await stat(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"));
+  }
+});
+
+test("manifest rejects unsafe source and install target paths before mutation", async () => {
+  const sourceFixture = await fixtureAiliHome();
+  const sourceOpenCodeHome = path.join(sourceFixture.root, "opencode");
+  const sourceManifestPath = path.join(sourceFixture.ailiHome, "manifests", "rose-aili.components.json");
+  const sourceManifest = JSON.parse(await readFile(sourceManifestPath, "utf8"));
+  sourceManifest.components.skills[0].sourcePath = "../unsafe-source";
+  await writeFile(sourceManifestPath, `${JSON.stringify(sourceManifest, null, 2)}\n`, "utf8");
+
+  const sourceResult = await runCli(["install", "--dry-run", "--aili-home", sourceFixture.ailiHome, "--opencode-home", sourceOpenCodeHome, "--yes", "--json"], { reject: false });
+  assert.notEqual(sourceResult.code, 0);
+  assert.match(sourceResult.stderr, /Invalid manifest source path/);
+  await assert.rejects(stat(sourceOpenCodeHome));
+  await sourceFixture.cleanup();
+
+  const targetFixture = await fixtureAiliHome();
+  const targetOpenCodeHome = path.join(targetFixture.root, "opencode");
+  const targetManifestPath = path.join(targetFixture.ailiHome, "manifests", "rose-aili.components.json");
+  const targetManifest = JSON.parse(await readFile(targetManifestPath, "utf8"));
+  targetManifest.components.skills[0].installTargets[0].path = "../unsafe-target";
+  await writeFile(targetManifestPath, `${JSON.stringify(targetManifest, null, 2)}\n`, "utf8");
+
+  const targetResult = await runCli(["install", "--dry-run", "--aili-home", targetFixture.ailiHome, "--opencode-home", targetOpenCodeHome, "--yes", "--json"], { reject: false });
+  assert.notEqual(targetResult.code, 0);
+  assert.match(targetResult.stderr, /Invalid manifest install target/);
+  await assert.rejects(stat(targetOpenCodeHome));
+  await targetFixture.cleanup();
 });
 
 test("environment AILI_HOME is ignored unless passed by flag", async () => {
@@ -1053,14 +1364,17 @@ test("package exposes executable rose-aili bin at dist/cli.js with shebang", asy
   assert.equal(packageJson.name, "rose-aili");
   assert.equal(packageJson.private, undefined);
   assert.deepEqual(packageJson.bin, { "rose-aili": "dist/cli.js" });
+  assert.ok(packageJson.files.includes(".agents/"));
+  assert.equal(packageJson.files.includes("skills/"), false);
   assert.match(cliText, /^#!\/usr\/bin\/env node/);
   assert.ok((cliStat.mode & 0o111) !== 0, `expected ${cliPath} to be executable`);
 });
 
-test("root gitignore excludes CodeGraph local index", async () => {
+test("root gitignore excludes local generated browser and index residue", async () => {
   const gitignore = await readFile(path.join(repoRoot, ".gitignore"), "utf8");
 
   assert.match(gitignore, /^\.codegraph\/$/m);
+  assert.match(gitignore, /^\.playwright-mcp\/$/m);
 });
 
 test("packed package keeps CLI bin executable", async () => {
@@ -1075,10 +1389,18 @@ test("packed package keeps CLI bin executable", async () => {
   const packedText = await readFile(packedCli, "utf8");
   const packedGlobalAgentsText = await readFile(packedGlobalAgents, "utf8");
   const packedStat = await stat(packedCli);
+  const packedEntries = (await execFileP("tar", ["-tzf", tarball])).stdout.split(/\r?\n/).filter(Boolean);
 
   assert.match(packedText, /^#!\/usr\/bin\/env node/);
   assert.match(packedGlobalAgentsText, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE/);
   assert.ok((packedStat.mode & 0o111) !== 0, `expected ${packedCli} to be executable`);
+  assert.ok(packedEntries.includes("package/manifests/rose-aili.components.json"));
+  assert.ok(packedEntries.includes("package/agents/rose.md"));
+  assert.ok(packedEntries.includes("package/commands/build.md"));
+  assert.ok(packedEntries.includes("package/.agents/skills/rose-memory/SKILL.md"));
+  assert.equal(packedEntries.some((entry) => entry.startsWith("package/skills/")), false);
+  assert.equal(packedEntries.some((entry) => entry.startsWith("package/.codegraph/")), false);
+  assert.equal(packedEntries.some((entry) => entry.startsWith("package/.playwright-mcp/")), false);
   await rm(root, { recursive: true, force: true });
 });
 
@@ -1106,7 +1428,7 @@ async function fixtureAiliHome() {
   const safeRoot = path.join(repoRoot, ".opencode", "test-fixtures", path.basename(root));
   const ailiHome = path.join(root, "aili-home");
   await mkdir(ailiHome, { recursive: true });
-  for (const entry of ["agents", "commands", "skills", "manifests", "scripts", "templates"]) {
+  for (const entry of ["agents", ".agents", "commands", "manifests", "scripts", "templates"]) {
     await cp(path.join(repoRoot, entry), path.join(ailiHome, entry), { recursive: true });
   }
   return {
@@ -1148,6 +1470,18 @@ function execFileP(file, args, options = {}) {
       else resolve({ stdout, stderr });
     });
   });
+}
+
+function installerEnv() {
+  return {
+    ...process.env,
+    OPENCODE_ALLOW_CUSTOM_HOME: "yes",
+    AILI_ALLOW_PACKAGE_HOME: "yes"
+  };
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function supportsOpenSpecSuccessNode(version) {

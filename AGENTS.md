@@ -12,47 +12,47 @@ Do not copy broad global operating rules into this file unless this project inte
 
 ## Project Overview
 
-- Project purpose: Personal OpenCode workflow repository containing agents, skills, delivery commands, templates, docs, and helper scripts.
-- Primary language/runtime: Markdown plus Python 3 and Bash helper scripts.
-- Package manager: None for the tracked repository; `.opencode/package*.json` is ignored local OpenCode runtime state.
-- Main application entry points: `commands/{ideate,define,build,ship}.md`, `agents/rose.md`, `skills/*/SKILL.md`, `scripts/install_opencode.sh`, and `scripts/agents_md.py`.
-- Main test framework: Python stdlib smoke checks via `scripts/harness_fixture_check.py` and `scripts/agents_md.py check`.
-- Important directories: `agents/`, `commands/`, `skills/`, `templates/`, `scripts/`, `docs/`, `tests/`, and `manifests/`.
-- Generated/build output directories: none documented; `memory/`, `.opencode/`, `openspec/`, `__pycache__/`, and `*.py[cod]` are ignored local/runtime outputs.
-- Deployment/runtime environment: OpenCode global config installed through `scripts/install_opencode.sh`; repository scripts run on Linux/macOS/WSL shells with Python 3.
+- Project purpose: Personal OpenCode workflow repository containing the `rose-aili` TypeScript/Node CLI, agents, skills, delivery commands, templates, docs, and helper scripts.
+- Primary language/runtime: TypeScript on Node.js 20+, Markdown, Python 3, and Bash helper scripts.
+- Package manager: npm with tracked `package.json` and `package-lock.json`; install dependencies with `npm ci`.
+- Main application entry points: `src/cli.ts`, `src/installer.ts`, `src/doctor.ts`, `commands/{ideate,define,build,ship}.md`, `agents/rose.md`, `.agents/skills/*/SKILL.md`, `scripts/install_opencode.sh`, and `scripts/agents_md.py`.
+- Main test framework: Node's built-in test runner via `tests/rose-aili.test.mjs`, plus Python stdlib smoke checks via `scripts/harness_fixture_check.py` and `scripts/agents_md.py check`.
+- Important directories: `src/`, `agents/`, `.agents/skills/`, `commands/`, `templates/`, `scripts/`, `docs/`, `tests/`, and `manifests/`.
+- Generated/build output directories: `dist/`, `node_modules/`, `memory/`, `.opencode/`, `.codegraph/`, `.playwright-mcp/`, `openspec/`, `__pycache__/`, and `*.py[cod]` are ignored local/runtime outputs.
+- Deployment/runtime environment: `rose-aili` runs through npm/npx or a local Node build; OpenCode global config is installed through the CLI or `scripts/install_opencode.sh`; repository scripts run on Linux/macOS/WSL shells with Node.js 20+, npm, Python 3, and Bash.
 
 ## Setup Commands
 
-- Install dependencies: no tracked dependency install documented.
+- Install dependencies: `npm ci`.
 - Start development server: not applicable; this is an OpenCode workflow/config repository.
-- Build: no build command documented.
+- Build: `npm run build`.
 - Lint: `bash -n scripts/install_opencode.sh` for the installer shell syntax.
-- Typecheck: `python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py`.
-- Test all: `python scripts/harness_fixture_check.py` and `python scripts/agents_md.py check --project .`.
-- Test focused: `python scripts/agents_md.py check --project .` for AGENTS template compliance.
+- Typecheck: `npm run typecheck` and `python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py`.
+- Test all: `npm test`, `python scripts/harness_fixture_check.py`, and `python scripts/agents_md.py check --project .`.
+- Test focused: `python scripts/agents_md.py check --project .` for AGENTS template compliance; `npm run build && node --test tests/*.test.mjs` for Node CLI behavior.
 - Format: no formatter command documented.
 - Clean: no clean command documented.
 
 ## Architecture and Project Structure
 
-- `src/`: no `src/` directory is present.
-- `tests/`: present but no tracked tests were found during initialization.
+- `src/`: TypeScript source for the `rose-aili` CLI, installer/update/doctor flows, manifest handling, and OpenCode config merge helpers.
+- `tests/`: tracked Node test suite covering CLI/install/config/manifest behavior.
 - `docs/`: OpenCode setup and harness architecture/fixture documentation.
-- `scripts/`: Python and Bash utilities for AGENTS generation/checking, harness fixture smoke checks, and OpenCode installation.
-- Configuration files: `.gitignore`, `workflow.components.yaml`, `templates/AGENTS.md`, command prompts, agent prompts, and skill definitions.
-- CI/CD files: no `.github/workflows/` or `Makefile` was found during initialization.
+- `scripts/`: Python, Bash, and Node utilities for AGENTS generation/checking, harness fixture smoke checks, OpenCode installation, and CLI executable packaging.
+- Configuration files: `package.json`, `package-lock.json`, `tsconfig.json`, `.gitignore`, `workflow.components.yaml`, `manifests/rose-aili.components.json`, `templates/AGENTS.md`, command prompts, agent prompts, and skill definitions.
+- CI/CD files: `.github/workflows/ci.yml` and `.github/workflows/release.yml`; no `Makefile` is present.
 - Generated files: project-local `AGENTS.md` is generated from `templates/AGENTS.md`; runtime/local state is ignored in `memory/`, `.opencode/`, and `openspec/`.
-- External integrations: OpenCode global config, GitHub repository URL in `scripts/install_opencode.sh`, and optional skills with third-party provenance listed in `README.md`.
+- External integrations: OpenCode global config, npm package execution/publishing, GitHub repository URL in `scripts/install_opencode.sh`, optional DCP/OpenSpec/CodeGraph setup, and optional skills with third-party provenance listed in `README.md`.
 
 ## Project-Specific Rules
 
 - Keep `/ideate`, `/define`, `/build`, and `/ship` as the only top-level delivery command entrypoints.
-- Project `AGENTS.md` must remain generated from `templates/AGENTS.md`; validate template compliance with `scripts/agents_md.py`.
+- Root `AGENTS.md` is repo-specific and must keep the v2 template markers/section schema without copying global rules; validate compliance with `scripts/agents_md.py`.
 
 ## Project-Specific Testing and Artifact Placement
 
-- Unit tests: no convention documented.
-- Integration tests: no convention documented.
+- Unit tests: Node test files under `tests/` using `node --test` after `npm run build`.
+- Integration tests: CLI/install behavior is covered by `tests/rose-aili.test.mjs` with temporary OpenCode homes.
 - CLI tests: use repository scripts under `scripts/` and harness fixtures under `docs/harness/fixtures/`.
 - API / contract tests: no API test convention documented.
 - GUI / browser / Playwright tests: no browser test convention documented.

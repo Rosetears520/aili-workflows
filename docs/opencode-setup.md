@@ -12,7 +12,7 @@ Do not replace `~/.config/opencode/agents`, `~/.config/opencode/skills`, or `~/.
 
 - `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`
 - `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`
-- `~/.config/opencode/skills/<skill> -> <repo>/skills/<skill>`
+- `~/.config/opencode/skills/<skill> -> <repo>/.agents/skills/<skill>`
 - `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`
 
 Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/`, `skills/`, and `commands/` directories.
@@ -124,16 +124,18 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/code-reviewer.md` - code review subagent.
 - `agents/security-auditor.md` - security review subagent.
 - `agents/test-engineer.md` - testing subagent.
-- `skills/*/SKILL.md` - OpenCode skills.
+- `agents/test-coverage-reviewer.md`, `agents/pr-test-analyzer.md`, `agents/ai-regression-scout.md`, and `agents/silent-failure-reviewer.md` - relevant-triggered read-only QA review/scouting subagents.
+- `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
+- `.agents/skills/*/SKILL.md` - repository source for OpenCode skills.
 - `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
-- `skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
-- `skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
+- `.agents/skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
+- `.agents/skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
 - `templates/opencode-global-AGENTS.md` - installer-owned source for reusable global OpenCode `AGENTS.md` rules.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
 - `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global AGENTS rules, agents, skills, and commands.
 
-Slash commands are optional entrypoints. This repository ships only `/ideate`, `/define`, `/build`, and `/ship`, mapped to `commands/{ideate,define,build,ship}.md` and backed by `skills/aili-delivery-flow`; internal stages such as research, questionnaire, test-plan, implement, fix, debug, review, and evolve are not shipped as top-level commands.
+Slash commands are optional entrypoints. This repository ships only `/ideate`, `/define`, `/build`, and `/ship`, mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; internal stages such as research, questionnaire, test-plan, implement, fix, debug, review, and evolve are not shipped as top-level commands.
 
 ## Installation Decision Rule
 
@@ -284,7 +286,7 @@ for file in "$AILI_HOME"/agents/*.md; do
   ln -sfn "$file" "$target"
 done
 
-for dir in "$AILI_HOME"/skills/*; do
+for dir in "$AILI_HOME"/.agents/skills/*; do
   [ -d "$dir" ] || continue
   [ -f "$dir/SKILL.md" ] || continue
   name="$(basename "$dir")"
@@ -322,7 +324,7 @@ Result examples:
 ~/.config/opencode/skills/
   caveman/
   caveman-commit/
-  rose-memory -> $AILI_HOME/skills/rose-memory
+  rose-memory -> $AILI_HOME/.agents/skills/rose-memory
 
 ~/.config/opencode/commands/
   ideate.md -> $AILI_HOME/commands/ideate.md
@@ -369,7 +371,7 @@ if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; the
 fi
 
 ln -sfn "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
-ln -sfn "$AILI_HOME/skills" "$OPENCODE_HOME/skills"
+ln -sfn "$AILI_HOME/.agents/skills" "$OPENCODE_HOME/skills"
 ln -sfn "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
 ln -sfn "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
 ```
@@ -402,7 +404,7 @@ if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; the
 fi
 
 cp -R "$AILI_HOME/agents/"*.md "$OPENCODE_HOME/agents/"
-cp -R "$AILI_HOME/skills/"* "$OPENCODE_HOME/skills/"
+cp -R "$AILI_HOME/.agents/skills/"* "$OPENCODE_HOME/skills/"
 cp -R "$AILI_HOME/commands/"*.md "$OPENCODE_HOME/commands/"
 cp -R "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
 ```
@@ -453,7 +455,7 @@ Get-ChildItem "$AiliHome\agents" -Filter "*.md" | ForEach-Object {
   New-Item -ItemType SymbolicLink -Path $Target -Target $_.FullName | Out-Null
 }
 
-Get-ChildItem "$AiliHome\skills" -Directory | ForEach-Object {
+Get-ChildItem "$AiliHome\.agents\skills" -Directory | ForEach-Object {
   $Target = Join-Path "$OpenCodeHome\skills" $_.Name
 
   if ((Test-Path $Target) -and -not ((Get-Item $Target).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
@@ -702,7 +704,7 @@ This repository follows an agent-driven model similar to `addyosmani/agent-skill
 
 - Skills are selected automatically by intent.
 - `AGENTS.md` or the active primary agent should require skill usage when a skill applies.
-- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin entrypoints to `skills/aili-delivery-flow`; no internal stage commands are shipped.
+- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin entrypoints to `.agents/skills/aili-delivery-flow`; no internal stage commands are shipped.
 - The user can work naturally: "implement this", "fix this bug", "review this", "plan this change".
 
 Typical intent mapping:

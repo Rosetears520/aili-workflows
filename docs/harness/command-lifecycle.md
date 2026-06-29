@@ -23,6 +23,6 @@ Each public command remains a thin entrypoint but should name:
 - output contract.
 - any command-visible proactive planning, research-first, or packaging gate that would otherwise be hidden inside skill references.
 
-Detailed lifecycle authority remains in `skills/aili-delivery-flow` references.
+Detailed lifecycle authority remains in `.agents/skills/aili-delivery-flow` source references in this repository; installed OpenCode homes receive those skills under `skills/aili-delivery-flow`.
 
 The command prompts should stay thin: name the gates and expected evidence shape, but do not copy the full workflow from lifecycle skills or protocols.

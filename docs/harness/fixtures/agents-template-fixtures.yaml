@@ -5,7 +5,7 @@
     {
       "id": "agents-template-lifecycle-pointer-smoke",
       "input": "Project template references installed AILI lifecycle commands.",
-      "expected": "templates/AGENTS.md keeps only a short smoke pointer to /ideate, /define, /build, /ship and routes lifecycle authority to skills/aili-delivery-flow."
+      "expected": "templates/AGENTS.md keeps only a short smoke pointer to /ideate, /define, /build, /ship and routes lifecycle authority to .agents/skills/aili-delivery-flow."
     },
     {
       "id": "test-document-placement-smoke",

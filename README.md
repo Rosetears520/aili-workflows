@@ -10,6 +10,70 @@
 aili-workflows/
 ├── AGENTS.md                  # OpenCode repo-level thin control plane
 ├── .gitignore
+├── .agents/
+│   └── skills/
+│       ├── academic-paper-review/
+│       ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
+│       ├── ai-regression-scout/
+│       ├── aili-delivery-flow/
+│       ├── android-native-dev/
+│       ├── api-and-interface-design/
+│       ├── browser-testing-with-devtools/
+│       ├── browser-qa/
+│       ├── change-interviewer/
+│       ├── chart-visualization/
+│       ├── ci-cd-and-automation/
+│       ├── code-review-and-quality/
+│       ├── code-simplification/
+│       ├── consulting-analysis/
+│       ├── context-engineering/
+│       ├── coverage-review/
+│       ├── data-analysis/
+│       ├── debugging-and-error-recovery/
+│       ├── deprecation-and-migration/
+│       ├── documentation-and-adrs/
+│       ├── e2e-artifact-handling/
+│       ├── evidence-scoped-retrospective/
+│       ├── explain-by-allegory/
+│       ├── flutter-dev/
+│       ├── frontend-dev/
+│       ├── frontend-ui-engineering/
+│       ├── fullstack-dev/
+│       ├── git-workflow-and-versioning/
+│       ├── github-evidence-triage/
+│       ├── harness-evolution/
+│       ├── harness-issue-triage/
+│       ├── idea-refine/
+│       ├── incremental-implementation/
+│       ├── ios-application-dev/
+│       ├── mature-project-pattern-research/
+│       ├── minimax-docx/
+│       ├── minimax-pdf/
+│       ├── minimax-xlsx/
+│       ├── newsletter-generation/
+│       ├── parallel-subagent-dispatch/
+│       ├── performance-optimization/
+│       ├── planning-and-task-breakdown/
+│       ├── pptx-generator/
+│       ├── pr-test-analysis/
+│       ├── react-native-dev/
+│       ├── repo-evidence-first/
+│       ├── rose-memory/             # ROSE project-local SQLite memory skill
+│       ├── review-pipeline/
+│       ├── security-and-hardening/
+│       ├── session-handoff/
+│       ├── shader-dev/
+│       ├── shipping-and-launch/
+│       ├── silent-failure-hunting/
+│       ├── skill-authoring-and-validation/
+│       ├── source-driven-development/
+│       ├── spec-driven-development/
+│       ├── strategy-stress-test/
+│       ├── systematic-literature-review/
+│       ├── test-document-generator/
+│       ├── test-driven-development/
+│       ├── using-agent-skills/
+│       └── verification-before-completion/
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
 │   ├── code-scout.md            # 只读代码侦察 subagent
@@ -20,7 +84,13 @@ aili-workflows/
 │   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
-│   └── test-engineer.md         # 测试与覆盖率 subagent
+│   ├── test-engineer.md         # 测试与覆盖率 subagent
+│   ├── test-coverage-reviewer.md # 只读覆盖率充分性 review subagent
+│   ├── pr-test-analyzer.md      # 只读 PR 测试影响分析 subagent
+│   ├── ai-regression-scout.md   # 只读 AI 回归场景侦察 subagent
+│   ├── silent-failure-reviewer.md # 只读静默失败审查 subagent
+│   ├── browser-qa-runner.md     # 浏览器 QA 验证 subagent
+│   └── e2e-artifact-runner.md   # E2E 证据 artifact subagent
 ├── commands/
 │   ├── ideate.md                # /ideate：进入 aili-delivery-flow IDEATE
 │   ├── define.md                # /define：进入 aili-delivery-flow DEFINE
@@ -35,53 +105,6 @@ aili-workflows/
 │   ├── agents_md.py             # 从模板生成/更新/检查项目 AGENTS.md
 │   └── install_opencode.sh      # 安全安装全局 AGENTS/agents/skills/commands 到 OpenCode 配置
 ├── src/                          # rose-aili CLI source
-├── skills/
-│   ├── agents-md-initialization/ # 项目 AGENTS.md 初始化 workflow
-│   ├── android-native-dev/
-│   ├── api-and-interface-design/
-│   ├── browser-testing-with-devtools/
-│   ├── change-interviewer/
-│   ├── ci-cd-and-automation/
-│   ├── code-review-and-quality/
-│   ├── code-simplification/
-│   ├── context-engineering/
-│   ├── debugging-and-error-recovery/
-│   ├── deprecation-and-migration/
-│   ├── documentation-and-adrs/
-│   ├── evidence-scoped-retrospective/
-│   ├── explain-by-allegory/
-│   ├── flutter-dev/
-│   ├── frontend-dev/
-│   ├── frontend-ui-engineering/
-│   ├── fullstack-dev/
-│   ├── git-workflow-and-versioning/
-│   ├── github-evidence-triage/
-│   ├── harness-issue-triage/
-│   ├── idea-refine/
-│   ├── incremental-implementation/
-│   ├── ios-application-dev/
-│   ├── mature-project-pattern-research/
-│   ├── minimax-docx/
-│   ├── minimax-pdf/
-│   ├── minimax-xlsx/
-│   ├── parallel-subagent-dispatch/
-│   ├── performance-optimization/
-│   ├── planning-and-task-breakdown/
-│   ├── pptx-generator/
-│   ├── react-native-dev/
-│   ├── rose-memory/             # ROSE project-local SQLite memory skill
-│   ├── review-pipeline/
-│   ├── security-and-hardening/
-│   ├── shader-dev/
-│   ├── shipping-and-launch/
-│   ├── skill-authoring-and-validation/
-│   ├── source-driven-development/
-│   ├── spec-driven-development/
-│   ├── strategy-stress-test/
-│   ├── test-document-generator/
-│   ├── test-driven-development/
-│   ├── using-agent-skills/
-│   └── verification-before-completion/
 ├── templates/
 │   ├── AGENTS.md                # 项目 AGENTS.md 的瘦模板源：只放项目事实/本地例外
 │   └── opencode-global-AGENTS.md # rose-aili 安装到 OpenCode home 的全局规则源
@@ -103,6 +126,12 @@ aili-workflows/
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |
 | `agents/security-auditor.md` | 做安全审计、威胁建模和漏洞检查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/security-auditor.md`，遵循 MIT License |
 | `agents/test-engineer.md` | 做测试策略、测试补充和覆盖率分析 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/test-engineer.md`，遵循 MIT License |
+| `agents/test-coverage-reviewer.md` | 只读覆盖率充分性、未测路径和验证证据审查 | Rosetears 个人工作流内容 |
+| `agents/pr-test-analyzer.md` | 只读 PR / diff 测试影响、CI 日志和最小测试矩阵分析 | Rosetears 个人工作流内容 |
+| `agents/ai-regression-scout.md` | 只读 agents / prompts / skills / routing 回归场景侦察 | Rosetears 个人工作流内容 |
+| `agents/silent-failure-reviewer.md` | 只读静默失败、误报成功、跳过 gate 和 stale evidence 审查 | Rosetears 个人工作流内容 |
+| `agents/browser-qa-runner.md` | 本地浏览器 QA 验证；写截图、trace、报告前要求仓库内 artifact 落点，禁止生产数据变更 | Rosetears 个人工作流内容 |
+| `agents/e2e-artifact-runner.md` | E2E trace、video、screenshot、report、failure bundle 证据收集；要求仓库内 artifact 落点，禁止生产数据变更 | Rosetears 个人工作流内容 |
 
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
@@ -114,15 +143,21 @@ aili-workflows/
 |---|---|
 | `agents-md-initialization` | 从 `templates/AGENTS.md` 初始化、更新和检查项目级 `AGENTS.md` |
 | `aili-delivery-flow` | AILI 交付生命周期权威：IDEATE、DEFINE、BUILD、SHIP 四模式、后端 adapter、artifact gate、review/repair/closeout |
+| `ai-regression-scout` | 当 agents、prompts、skills、routing 或输出契约变更时，路由到只读 AI 回归场景侦察 |
+| `browser-qa` | 浏览器 QA 路由；截图、trace、报告等用户可见 artifact 必须先确认仓库内落点，并避免生产数据变更 |
 | `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
+| `coverage-review` | 覆盖率充分性、未测路径和验证证据的只读 QA review 路由 |
+| `e2e-artifact-handling` | E2E trace、video、screenshot、report、failure bundle 的仓库内 artifact 落点与证据处理路由 |
 | `evidence-scoped-retrospective` | 基于显式提供或批准的 session exports、git history、implementation notes 等证据做安全的 report-first 工作流复盘，不假设全局历史、不提交 raw sessions |
 | `explain-by-allegory` | 用寓言、故事、类比或隐喻解释复杂概念，并映射回正式概念、边界和误区 |
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
 | `mature-project-pattern-research` | 在 IDEATE 或普通聊天中研究成熟公开项目的 prior art，输出来源、成熟度信号、可借鉴/不推荐模式、风险、不确定性和下一步决策 |
+| `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
 | `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
+| `silent-failure-hunting` | 静默失败、误报成功、吞错、跳过 gate 或 stale evidence 风险的只读 review 路由 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
 | `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
 | `test-document-generator` | 根据 spec、方案、issue、描述或 OpenSpec change 生成详细测试文档、测试矩阵、回归范围和验收清单，默认写入仓库内 Markdown 文件 |
@@ -188,20 +223,39 @@ aili-workflows/
 
 未纳入 `vision-analysis`、`gif-sticker-maker`、`minimax-multimodal-toolkit`、`minimax-music-gen`、`minimax-music-playlist`、`buddy-sings`，因为它们更偏 MiniMax API key 驱动的视觉、多模态或音乐娱乐工作流，不属于当前默认个人 OpenCode 工作流范围。
 
+### 来自 bytedance/deer-flow 的 clean-room pattern absorption
+
+以下 skills / skill 增量以 clean-room 方式吸收 [bytedance/deer-flow](https://github.com/bytedance/deer-flow) 公共 skill 的工作流模式，原项目许可为 MIT License，版权归 Bytedance Ltd. and/or its affiliates 与 DeerFlow Authors 所有。本仓库没有 vendoring DeerFlow 运行时、工具、路径、provider 配置或品牌文本；除本节来源说明外，新增内容均按 AILI/OpenCode 约束重写，不复制上游 skill 正文。
+
+| Skill / 内容 | 说明 |
+|---|---|
+| provenance | Clean-room pattern absorption from [bytedance/deer-flow](https://github.com/bytedance/deer-flow); MIT License, Bytedance Ltd. and/or its affiliates / DeerFlow Authors; no DeerFlow runtime, provider configuration, tool paths, or upstream skill正文 are vendored. |
+| `academic-paper-review` | 单篇论文的来源锚定综述、方法/证据/可复现性 critique |
+| `systematic-literature-review` | 多论文系统综述、检索策略、纳排标准、证据矩阵和 synthesis-over-listing |
+| `newsletter-generation` | 从来源材料生成 newsletter / digest，并显式区分事实、编辑角度和未验证项 |
+| `consulting-analysis` | 咨询式问题拆解、假设/选项/风险/建议输出，禁止无来源商业断言 |
+| `data-analysis` | 数据分析前置真实性检查、质量剖析、清洗说明、限制和发现输出 |
+| `chart-visualization` | 图表选择、误导性图表审查、可访问性和数据映射规范 |
+| `skill-authoring-and-validation` 增量 | 强化 progressive disclosure、trigger eval、外部 skill provenance 和 runtime-assumption 清理 |
+| `mature-project-pattern-research` / `github-evidence-triage` / `documentation-and-adrs` 增量 | 强化 synthesis-over-listing、证据分组、来源锚定文档和 `Unverified` 标记 |
+| `frontend-ui-engineering` / `browser-testing-with-devtools` 增量 | 强化 anti-generic UI、runtime UI audit、事实性 proof-point 检查和 browser evidence 记录 |
+
+未纳入 DeerFlow provider/media/deploy/runtime 类 skills，也未引入外部依赖、provider API 调用、DeerFlow 专用路径或工具假设。
+
 ### 思想来源
 
-- `agents/rose.md` 和 `skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
-- `skills/explain-by-allegory/SKILL.md` 概念上参考了 Amanda Askell-style allegory / analogy prompting 的解释方式（见 [Amanda Askell](https://askell.io/) 个人页面作为人物来源线索），本仓库仅保留“先讲故事、再映射正式概念、再说明类比失效点”的工作流结构，未复制外部 prompt 文本。
-- `skills/evidence-scoped-retrospective/SKILL.md` 概念上参考了 Vaibhav / VB / Codex-style self-improvement prompting 的“回看近期工作并提出流程改进”方向，但改为 OpenCode 可证据化版本：只分析用户显式提供或批准的证据，不声称可见全局历史，且先报告再走既有变更门禁；未复制外部 prompt 文本。
-- `skills/evidence-scoped-retrospective/SKILL.md` 的 failure-pattern taxonomy 和 `templates/AGENTS.md` 的 selected guardrails 概念上参考了用户提供的 Mnilax / Karpathy / Forrest Chang-style coding-agent discipline summary。用户请求使用 [Mnilax X 链接](https://x.com/Mnilax/status/2053116311132155938) 作为 attribution；direct X content 在本次实现中未直接抓取，按 conceptual / user-provided source 标注，未复制原文。
-- `skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
-- `skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
-- `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`skills/review-pipeline/SKILL.md`、`skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（上游现名 `oh-my-openagent`，曾用名 `oh-my-opencode`；如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
+- `agents/rose.md` 和 `.agents/skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
+- `.agents/skills/explain-by-allegory/SKILL.md` 概念上参考了 Amanda Askell-style allegory / analogy prompting 的解释方式（见 [Amanda Askell](https://askell.io/) 个人页面作为人物来源线索），本仓库仅保留“先讲故事、再映射正式概念、再说明类比失效点”的工作流结构，未复制外部 prompt 文本。
+- `.agents/skills/evidence-scoped-retrospective/SKILL.md` 概念上参考了 Vaibhav / VB / Codex-style self-improvement prompting 的“回看近期工作并提出流程改进”方向，但改为 OpenCode 可证据化版本：只分析用户显式提供或批准的证据，不声称可见全局历史，且先报告再走既有变更门禁；未复制外部 prompt 文本。
+- `.agents/skills/evidence-scoped-retrospective/SKILL.md` 的 failure-pattern taxonomy 和 `templates/AGENTS.md` 的 selected guardrails 概念上参考了用户提供的 Mnilax / Karpathy / Forrest Chang-style coding-agent discipline summary。用户请求使用 [Mnilax X 链接](https://x.com/Mnilax/status/2053116311132155938) 作为 attribution；direct X content 在本次实现中未直接抓取，按 conceptual / user-provided source 标注，未复制原文。
+- `.agents/skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
+- `.agents/skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
+- `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`.agents/skills/review-pipeline/SKILL.md`、`.agents/skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（上游现名 `oh-my-openagent`，曾用名 `oh-my-opencode`；如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
 - 若干 workflow 纪律在现有 skills 中概念上吸收了 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 方向，包括 zoom-out、prototype、to-issues、grill-with-docs、diagnose、tdd、write-a-skill、improve-codebase-architecture 等。当前仓库没有新增 Matt 风格 skill，也未 vendored 上游文件；如后续复制上游文本或文件，请保留其 MIT License 版权声明。
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
 
 ### OpenCode 设置
 
@@ -278,18 +332,18 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
 2. 让 OpenCode 发现 `agents/` 中的自定义 agent。
-3. 让 OpenCode 通过安装脚本链接后的全局 `~/.config/opencode/skills/` 发现本仓库 `skills/` 中的 SKILL.md 工作流。
+3. 让 OpenCode 通过安装脚本链接后的全局 `~/.config/opencode/skills/` 发现本仓库 `.agents/skills/` 中的 SKILL.md 工作流。
 4. 可选使用全局 `~/.config/opencode/commands/` 中的 `/ideate`、`/define`、`/build`、`/ship` 入口。
 5. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
 ```
 
 新增、删除或重命名 skill 或 command 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 discovery 刷新。
 
-`docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会发现并加载被链接的 `skills/*`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
+`docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在全局 `skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 
-`rose-memory` 是随 `skills/rose-memory/` 分发的全局 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
+`rose-memory` 是随 `.agents/skills/rose-memory/` 分发、安装到 OpenCode 全局 `skills/rose-memory` 目标下的 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
 
-`frontend-dev` 可用于纯前端设计、实现和动画工作；只有主动使用其中的媒体生成能力时才可能需要额外 MiniMax API key、CLI 或运行时依赖。使用前请阅读对应 skill 目录内的 `SKILL.md`、`README.md`、`scripts/` 或 `references/`。
+`frontend-dev` 可用于纯前端设计、实现和动画工作；只有主动使用其中的媒体生成能力时才可能需要额外 MiniMax API key、CLI 或运行时依赖。使用前请阅读对应 `.agents/skills/frontend-dev/` 目录内的 `SKILL.md`、`README.md`、`scripts/` 或 `references/`。
 
 ## 第三方声明
 
@@ -302,6 +356,7 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 | Addy Osmani | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT License | Copyright (c) 2025 Addy Osmani |
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
 | Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
+| Bytedance / DeerFlow Authors | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT License；clean-room pattern absorption only in this repository | Copyright Bytedance Ltd. and/or its affiliates and DeerFlow Authors; no DeerFlow runtime, provider config, tool paths, branding text, or upstream skill正文 vendored |
 | Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
 | Amanda Askell | [askell.io](https://askell.io/) | 概念性参考；未纳入上游文本 | allegory / analogy prompting 方向参考 |
 | Vaibhav / VB / Codex-style prompting | 用户提供的概念方向 | 概念性参考；未纳入上游文本 | evidence-scoped self-improvement prompting 方向参考；本仓库不声称可见全局历史 |

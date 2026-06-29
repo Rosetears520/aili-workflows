@@ -13,17 +13,17 @@ REQUIRED_FILES = [
     "agents/rose.md",
     "agents/implementer.md",
     "agents/code-scout.md",
-    "skills/parallel-subagent-dispatch/SKILL.md",
-    "skills/repo-evidence-first/SKILL.md",
-    "skills/session-handoff/SKILL.md",
-    "skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
-    "skills/aili-delivery-flow/references/artifact-contracts.md",
-    "skills/aili-delivery-flow/references/build-goal-mode.md",
-    "skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
-    "skills/aili-delivery-flow/references/protocols/subagent-result.md",
-    "skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md",
-    "skills/mature-project-pattern-research/SKILL.md",
-    "skills/mature-project-pattern-research/references/research-rubric.md",
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md",
+    ".agents/skills/repo-evidence-first/SKILL.md",
+    ".agents/skills/session-handoff/SKILL.md",
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
+    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
+    ".agents/skills/aili-delivery-flow/references/build-goal-mode.md",
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
+    ".agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md",
+    ".agents/skills/mature-project-pattern-research/SKILL.md",
+    ".agents/skills/mature-project-pattern-research/references/research-rubric.md",
 ]
 
 CONTENT_CHECKS = {
@@ -69,7 +69,7 @@ CONTENT_CHECKS = {
         "Freshness",
         "CONCLUSION",
     ],
-    "skills/parallel-subagent-dispatch/SKILL.md": [
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
         "Execution Ownership Gate",
         "User-requested subagent ownership",
         "subagent:research",
@@ -88,7 +88,7 @@ CONTENT_CHECKS = {
         "subagent-result.md",
         "explicit current-task subagent opt-out",
     ],
-    "skills/repo-evidence-first/SKILL.md": [
+    ".agents/skills/repo-evidence-first/SKILL.md": [
         "REPO EVIDENCE STATUS",
         "Grounded Fact",
         "Hypothesis",
@@ -101,7 +101,7 @@ CONTENT_CHECKS = {
         "test-engineer",
         "security-auditor",
     ],
-    "skills/session-handoff/SKILL.md": [
+    ".agents/skills/session-handoff/SKILL.md": [
         "只有用户明确要求",
         "openspec/changes/<change-id>/handoff.md",
         "## Goal",
@@ -122,7 +122,7 @@ CONTENT_CHECKS = {
         "secrets",
         "durable memory",
     ],
-    "skills/aili-delivery-flow/references/direct-vs-delegated-work.md": [
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": [
         "Subagent-first default",
         "Direct allowlist",
         "explicit current-task opt-out",
@@ -132,7 +132,7 @@ CONTENT_CHECKS = {
         "2+ search passes",
         "materially pollute or consume MainAgent context",
     ],
-    "skills/aili-delivery-flow/references/artifact-contracts.md": [
+    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": [
         "Context, Inbox, and Progress Ledgers",
         "ideas/workflow-inbox.md",
         "context.md",
@@ -141,7 +141,7 @@ CONTENT_CHECKS = {
         "Workers return compact evidence reports for ROSE to reconcile",
         "objective, worker dispatches, evidence references",
     ],
-    "skills/aili-delivery-flow/references/build-goal-mode.md": [
+    ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
         "Supervisor Harness",
         "ROSE remains Supervisor and owns final status",
         "context.md",
@@ -165,7 +165,7 @@ CONTENT_CHECKS = {
         "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
         "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
     ],
-    "skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": [
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": [
         "Execution Ownership Gate",
         "User-requested subagent ownership",
         "test/verify/run tests/coverage/测试/验证/跑测试 maps to `subagent:test`",
@@ -183,7 +183,7 @@ CONTENT_CHECKS = {
         "- Known exclusions:",
         "- Stop conditions:",
     ],
-    "skills/aili-delivery-flow/references/protocols/subagent-result.md": [
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": [
         "CONFIDENCE",
         "INSPECTED SCOPE",
         "OBSERVED FACTS",
@@ -196,7 +196,7 @@ CONTENT_CHECKS = {
         "STOP CONDITIONS HIT",
         "not authority",
     ],
-    "skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md": [
+    ".agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md": [
         "Compact evidence pack:",
         "Evidence id:",
         "Source:",
@@ -215,7 +215,7 @@ CONTENT_CHECKS = {
         "tokens",
         "production-sensitive data",
     ],
-    "skills/mature-project-pattern-research/SKILL.md": [
+    ".agents/skills/mature-project-pattern-research/SKILL.md": [
         "Mature Project Pattern Research",
         "read-only `web-researcher` subagent",
         "does not add a `/research` command",
@@ -225,7 +225,7 @@ CONTENT_CHECKS = {
         "Compare at least two mature public examples when practical",
         "Mark any unavailable signal as `[UNVERIFIED]`",
     ],
-    "skills/mature-project-pattern-research/references/research-rubric.md": [
+    ".agents/skills/mature-project-pattern-research/references/research-rubric.md": [
         "Delegation Packet for `web-researcher`",
         "Read-only public web research only",
         "No GitHub MCP, write APIs, comments, labels, command creation, dependencies, or implementation",
@@ -242,7 +242,7 @@ FORBIDDEN_CODE_SCOUT_BASH = [
     '"ls*": allow',
 ]
 
-CANONICAL_PROTOCOL_PATH = "skills/aili-delivery-flow/references/protocols/"
+CANONICAL_PROTOCOL_PATH = ".agents/skills/aili-delivery-flow/references/protocols/"
 
 
 def main() -> int:

@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
-import { access, readdir, stat } from "node:fs/promises";
+import { access, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configPathFor, dcpConfigPathFor, mergeDcpConfig, mergeOpenCodeConfig } from "./config.js";
-import { ComponentManifest, findMcp, findPlugin, loadManifest } from "./manifest.js";
+import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestAllowlist } from "./manifest.js";
 
 export interface InstallOptions {
   dryRun: boolean;
@@ -68,8 +68,8 @@ export function defaultAiliHome(): string {
   return path.resolve(here, "..");
 }
 
-export async function runInstall(command: "install" | "update", options: InstallOptions): Promise<InstallSummary> {
-  validateOpenCodeHome(options.opencodeHome);
+export async function runInstall(command: "install" | "update", rawOptions: InstallOptions): Promise<InstallSummary> {
+  const options = { ...rawOptions, opencodeHome: validateOpenCodeHome(rawOptions.opencodeHome) };
   const manifest = await loadManifest(options.ailiHome);
   await validateManifestAllowlist(options.ailiHome, manifest);
   await validateInstallerSources(options.ailiHome);
@@ -457,70 +457,14 @@ async function validateInstallerSources(ailiHome: string): Promise<void> {
   await access(path.join(ailiHome, "templates", "opencode-global-AGENTS.md"), constants.F_OK);
 }
 
-export function validateOpenCodeHome(opencodeHome: string): void {
+export function validateOpenCodeHome(opencodeHome: string): string {
   if (!opencodeHome) throw new Error("Refusing empty OPENCODE_HOME.");
   if (!path.isAbsolute(opencodeHome)) throw new Error(`Refusing relative OPENCODE_HOME: ${opencodeHome}`);
   const resolved = path.resolve(opencodeHome);
   if (resolved === path.parse(resolved).root) throw new Error(`Refusing unsafe OPENCODE_HOME: ${opencodeHome}`);
   if (resolved === path.resolve(os.homedir())) throw new Error(`Refusing unsafe OPENCODE_HOME: ${opencodeHome}`);
-}
-
-async function validateManifestAllowlist(ailiHome: string, manifest: ComponentManifest): Promise<void> {
-  const agents = manifest.components.agents.map((entry) => validateRepoEntry("agents", entry.name, entry.path, `agents/${entry.name}.md`));
-  const commands = manifest.components.commands.map((entry) => validateRepoEntry("commands", entry.name, entry.path, `commands/${entry.name}.md`));
-  const skills = manifest.components.skills.map((entry) => validateRepoEntry("skills", entry.name, entry.path, `skills/${entry.name}`));
-  await assertCompleteAllowlist("agents", agents, await listAgentNames(ailiHome));
-  await assertCompleteAllowlist("commands", commands, await listCommandNames(ailiHome));
-  await assertCompleteAllowlist("skills", skills, await listSkillNames(ailiHome));
-}
-
-function validateRepoEntry(type: string, name: string, entryPath: string, expectedPath: string): string {
-  if (!name) throw new Error(`Invalid manifest ${type} entry without name.`);
-  if (path.isAbsolute(entryPath) || entryPath.split(/[\\/]/).includes("..")) {
-    throw new Error(`Invalid manifest ${type} path for ${name}: ${entryPath}`);
-  }
-  if (entryPath !== expectedPath) {
-    throw new Error(`Invalid manifest ${type} path for ${name}: expected ${expectedPath}, got ${entryPath}`);
-  }
-  return name;
-}
-
-async function assertCompleteAllowlist(type: string, manifestNames: string[], diskNames: string[]): Promise<void> {
-  const manifestSet = new Set(manifestNames);
-  if (manifestSet.size !== manifestNames.length) throw new Error(`Duplicate manifest ${type} entry.`);
-  const extra = diskNames.filter((name) => !manifestSet.has(name));
-  const missing = manifestNames.filter((name) => !diskNames.includes(name));
-  if (extra.length > 0) throw new Error(`Unmanifested ${type} component(s): ${extra.join(", ")}`);
-  if (missing.length > 0) throw new Error(`Manifest ${type} component(s) missing from AILI_HOME: ${missing.join(", ")}`);
-}
-
-async function listAgentNames(ailiHome: string): Promise<string[]> {
-  return (await readdir(path.join(ailiHome, "agents"), { withFileTypes: true }))
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
-    .map((entry) => path.basename(entry.name, ".md"))
-    .sort();
-}
-
-async function listCommandNames(ailiHome: string): Promise<string[]> {
-  return (await readdir(path.join(ailiHome, "commands"), { withFileTypes: true }))
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
-    .map((entry) => path.basename(entry.name, ".md"))
-    .sort();
-}
-
-async function listSkillNames(ailiHome: string): Promise<string[]> {
-  const entries = await readdir(path.join(ailiHome, "skills"), { withFileTypes: true });
-  const names: string[] = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    try {
-      await access(path.join(ailiHome, "skills", entry.name, "SKILL.md"), constants.F_OK);
-      names.push(entry.name);
-    } catch {
-      // Non-skill directories match the Bash installer skip behavior.
-    }
-  }
-  return names.sort();
+  if (resolved === path.resolve(os.tmpdir())) throw new Error(`Refusing unsafe OPENCODE_HOME: ${opencodeHome}`);
+  return resolved;
 }
 
 function validatePlugins(manifest: ComponentManifest, plugins: string[]): InstallSummary["plugins"] {

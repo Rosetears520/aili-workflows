@@ -1,10 +1,11 @@
 {
   "fixture": "verification-claim",
-  "required_markers": ["sufficient-evidence", "insufficient-evidence", "Unverified", "release-blocking"],
+  "required_markers": ["sufficient-evidence", "insufficient-evidence", "Unverified", "release-blocking", "spec coverage check", "Open Question"],
   "cases": [
     {"id": "sufficient-evidence", "claim": "fixture runner passed", "evidence": ["python scripts/harness_fixture_check.py: PASS"], "expected": "accept"},
     {"id": "insufficient-evidence", "claim": "all good", "evidence": [], "expected": "reject"},
     {"id": "unverified-handling", "claim": "manual UI not checked", "evidence": ["Unverified: browser not available"], "expected": "needs-review"},
-    {"id": "release-blocking-unresolved", "claim": "ready to ship", "evidence": ["release-blocking finding remains unresolved"], "expected": "reject"}
+    {"id": "release-blocking-unresolved", "claim": "ready to ship", "evidence": ["release-blocking finding remains unresolved"], "expected": "reject"},
+    {"id": "spec-coverage-uncovered", "claim": "formal change ready", "evidence": ["spec coverage check found uncovered requirement", "Open Question: target artifact undecided", "Unverified: no verification evidence yet"], "expected": "reject"}
   ]
 }

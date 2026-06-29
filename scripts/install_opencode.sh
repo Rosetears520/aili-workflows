@@ -35,6 +35,10 @@ json_escape() {
   printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
 
+canonicalize_path() {
+  python3 -c 'import os,sys; print(os.path.realpath(os.path.abspath(sys.argv[1])))' "$1"
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --mode)
@@ -111,7 +115,7 @@ guard_paths() {
 }
 
 guard_opencode_home() {
-  local default_home="$HOME/.config/opencode"
+  local default_home
 
   if [ -z "$OPENCODE_HOME" ]; then
     log "Refusing empty OPENCODE_HOME."
@@ -119,16 +123,19 @@ guard_opencode_home() {
   fi
 
   case "$OPENCODE_HOME" in
-    /|"$HOME"|"$HOME"/|/tmp|/tmp/)
-      log "Refusing unsafe OPENCODE_HOME: $OPENCODE_HOME"
+    /*) ;;
+    *)
+      log "Refusing relative OPENCODE_HOME: $OPENCODE_HOME"
       exit 2
       ;;
   esac
 
+  OPENCODE_HOME="$(canonicalize_path "$OPENCODE_HOME")"
+  default_home="$(canonicalize_path "$HOME/.config/opencode")"
+
   case "$OPENCODE_HOME" in
-    /*) ;;
-    *)
-      log "Refusing relative OPENCODE_HOME: $OPENCODE_HOME"
+    /|"$HOME"|"$HOME"/|/tmp|/tmp/)
+      log "Refusing unsafe OPENCODE_HOME: $OPENCODE_HOME"
       exit 2
       ;;
   esac
@@ -160,7 +167,7 @@ ensure_repo() {
       log "Updating repository: $AILI_HOME"
       git -C "$AILI_HOME" pull --ff-only >&2
     fi
-  elif [ -e "$AILI_HOME" ] && [ "${AILI_ALLOW_PACKAGE_HOME:-}" = "yes" ] && [ -d "$AILI_HOME/agents" ] && [ -d "$AILI_HOME/skills" ] && [ -d "$AILI_HOME/commands" ]; then
+  elif [ -e "$AILI_HOME" ] && [ "${AILI_ALLOW_PACKAGE_HOME:-}" = "yes" ] && [ -d "$AILI_HOME/agents" ] && { [ -d "$AILI_HOME/.agents/skills" ] || [ -d "$AILI_HOME/skills" ]; } && [ -d "$AILI_HOME/commands" ]; then
     log "Using existing packaged AILI_HOME without git update: $AILI_HOME"
   elif [ -e "$AILI_HOME" ]; then
     log "Refusing to use existing non-git path: $AILI_HOME"
@@ -233,8 +240,127 @@ install_global_agents() {
   "$action" "$source" "$target"
 }
 
+skill_source_root() {
+  if [ ! -d "$AILI_HOME/.agents/skills" ]; then
+    log "Missing canonical skills source: $AILI_HOME/.agents/skills"
+    exit 2
+  fi
+  printf '%s\n' "$AILI_HOME/.agents/skills"
+}
+
+validate_manifest_allowlist() {
+  python3 - "$AILI_HOME" <<'PY'
+import json
+import os
+import pathlib
+import sys
+
+home = pathlib.Path(sys.argv[1])
+manifest_path = home / "manifests" / "rose-aili.components.json"
+
+def fail(message):
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
+def validate_relative(label, value):
+    if not value or pathlib.PurePosixPath(value).is_absolute() or ".." in pathlib.PurePosixPath(value).parts:
+        fail(f"Invalid manifest {label} path: {value}")
+
+try:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+except FileNotFoundError:
+    fail(f"Missing component manifest: {manifest_path}")
+except json.JSONDecodeError as exc:
+    fail(f"Invalid component manifest JSON: {manifest_path}: {exc}")
+
+if manifest.get("name") != "rose-aili" or manifest.get("schemaVersion") != 1:
+    fail(f"Unsupported component manifest: {manifest_path}")
+
+components = manifest.get("components", {})
+
+def validate_install_targets(kind, name, targets, expected_targets):
+    if len(targets) != len(expected_targets):
+        fail(f"Invalid manifest {kind} installTargets for {name}: expected {len(expected_targets)}, got {len(targets)}")
+    actual = {(target.get("kind"), target.get("path")) for target in targets}
+    for target in targets:
+        validate_relative(f"install target for {name}", target.get("path"))
+        if target.get("kind") not in {"shared", "opencode"}:
+            fail(f"Invalid install target kind for {name}: {target.get('kind')}")
+    for expected in expected_targets:
+        if (expected[0], expected[1]) not in actual:
+            fail(f"Invalid manifest {kind} installTargets for {name}: missing {expected[0]}:{expected[1]}")
+
+def manifest_names(kind):
+    names = []
+    for entry in components.get(kind, []):
+        name = entry.get("name")
+        if not name:
+            fail(f"Invalid manifest {kind} entry without name.")
+        if kind == "agents":
+            expected_path = f"agents/{name}.md"
+            expected_targets = [("opencode", expected_path)]
+        elif kind == "commands":
+            expected_path = f"commands/{name}.md"
+            expected_targets = [("opencode", expected_path)]
+        else:
+            expected_path = f".agents/skills/{name}"
+            expected_targets = [("shared", expected_path), ("opencode", f"skills/{name}")]
+
+        path_value = entry.get("path")
+        validate_relative(f"{kind} for {name}", path_value)
+        if path_value != expected_path:
+            fail(f"Invalid manifest {kind} path for {name}: expected {expected_path}, got {path_value}")
+        source_paths = [entry.get("sourcePath"), *(entry.get("sourceFallbackPaths") or []), path_value]
+        for source_path in dict.fromkeys(value for value in source_paths if value):
+            validate_relative(f"{kind} source for {name}", source_path)
+        if kind == "skills":
+            source_path = entry.get("sourcePath")
+            if source_path and source_path != expected_path:
+                fail(f"Invalid manifest {kind} sourcePath for {name}: expected {expected_path}, got {source_path}")
+        validate_install_targets(kind, name, entry.get("installTargets") or [{"kind": "opencode", "path": path_value}], expected_targets)
+        names.append(name)
+    if len(set(names)) != len(names):
+        fail(f"Duplicate manifest {kind} entry.")
+    return sorted(names)
+
+def disk_agents():
+    root = home / "agents"
+    return sorted(path.stem for path in root.glob("*.md") if path.is_file()) if root.is_dir() else []
+
+def disk_commands():
+    root = home / "commands"
+    return sorted(path.stem for path in root.glob("*.md") if path.is_file()) if root.is_dir() else []
+
+def disk_skills():
+    root = home / ".agents" / "skills"
+    if not root.is_dir():
+        return []
+    return sorted(path.name for path in root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file())
+
+disk_by_kind = {"agents": disk_agents(), "commands": disk_commands(), "skills": disk_skills()}
+errors = []
+for kind in ("agents", "commands", "skills"):
+    expected = manifest_names(kind)
+    actual = disk_by_kind[kind]
+    extras = [name for name in actual if name not in expected]
+    missing = [name for name in expected if name not in actual]
+    if extras:
+        errors.append(f"Unmanifested {kind} component(s): {', '.join(extras)}")
+    if missing:
+        errors.append(f"Manifest {kind} component(s) missing from AILI_HOME: {', '.join(missing)}")
+
+if errors:
+    for error in errors:
+        print(error, file=sys.stderr)
+    raise SystemExit(2)
+PY
+}
+
 install_entries() {
   local action="$1"
+  local skills_source
+  skills_source="$(skill_source_root)"
+  validate_manifest_allowlist
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
   else
@@ -262,7 +388,7 @@ install_entries() {
     "$action" "$file" "$target"
   done
 
-  for dir in "$AILI_HOME"/skills/*; do
+  for dir in "$skills_source"/*; do
     [ -d "$dir" ] || continue
     if [ ! -f "$dir/SKILL.md" ]; then
       log "Skipping non-skill directory without SKILL.md: $dir"
@@ -282,6 +408,10 @@ install_entries() {
 }
 
 managed_directory() {
+  local skills_source
+  skills_source="$(skill_source_root)"
+  validate_manifest_allowlist
+
   if [ "${CONFIRM_MANAGED_DIRECTORY:-}" != "yes" ]; then
     log "Refusing managed directory mode without explicit confirmation."
     log "Set CONFIRM_MANAGED_DIRECTORY=yes only after the user approves replacing whole agents/, skills/, and commands/ directories."
@@ -310,7 +440,7 @@ managed_directory() {
     unlink "$OPENCODE_HOME/commands"
   fi
   ln -s "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
-  ln -s "$AILI_HOME/skills" "$OPENCODE_HOME/skills"
+  ln -s "$skills_source" "$OPENCODE_HOME/skills"
   ln -s "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
 }
 

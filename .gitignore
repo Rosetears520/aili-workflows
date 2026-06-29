@@ -4,6 +4,8 @@ __pycache__/
 docs/research/
 .opencode/
 .codegraph/
+# Ephemeral browser/MCP residue; do not commit.
+.playwright-mcp/
 openspec/
 data/
 node_modules/

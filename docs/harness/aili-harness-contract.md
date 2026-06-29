@@ -11,7 +11,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 - **Delivery flow skill**: lifecycle state machine and backend adapter routing.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
-- **Protocols**: reusable artifact and subagent evidence contracts under `skills/aili-delivery-flow/references/protocols/`.
+- **Protocols**: reusable artifact and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/protocols/` in this repository.
 - **Fixtures and runner**: static smoke coverage for routing and evidence claims.
 
 ## Lifecycle Gates
@@ -25,15 +25,15 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 
 ## Artifact Authority
 
-- Lifecycle: `skills/aili-delivery-flow/references/lifecycle.md`.
-- BUILD goal mode: `skills/aili-delivery-flow/references/build-goal-mode.md` and `skills/aili-delivery-flow/references/implementation-packages.md`.
-- Planning evidence shape: `skills/aili-delivery-flow/references/protocols/research-evidence-pack.md`, plus official-doc and prior-art skills where they are the lighter source.
-- Backend adapters: `docs/harness/backend-adapters.md` and `skills/aili-delivery-flow/references/backend-routing.md`.
-- DEFINE interview/test artifacts: `skills/change-interviewer/SKILL.md`, `skills/test-document-generator/SKILL.md`, and `skills/aili-delivery-flow/references/artifact-contracts.md`.
-- Harness issue localization: `skills/harness-issue-triage/SKILL.md` and `skills/harness-issue-triage/references/*`.
-- Harness governance: `docs/harness/harness-change-report-template.md` and `skills/harness-evolution/references/*`.
-- Subagent packet/result: `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`, `skills/aili-delivery-flow/references/protocols/subagent-result.md`.
-- Verification closeout: `skills/aili-delivery-flow/references/protocols/closeout-report.md`, `docs/harness/fixtures/verification-claim-fixtures.yaml`.
+- Lifecycle: `.agents/skills/aili-delivery-flow/references/lifecycle.md`.
+- BUILD goal mode: `.agents/skills/aili-delivery-flow/references/build-goal-mode.md` and `.agents/skills/aili-delivery-flow/references/implementation-packages.md`.
+- Planning evidence shape: `.agents/skills/aili-delivery-flow/references/protocols/research-evidence-pack.md`, plus official-doc and prior-art skills where they are the lighter source.
+- Backend adapters: `docs/harness/backend-adapters.md` and `.agents/skills/aili-delivery-flow/references/backend-routing.md`.
+- DEFINE interview/test artifacts: `.agents/skills/change-interviewer/SKILL.md`, `.agents/skills/test-document-generator/SKILL.md`, and `.agents/skills/aili-delivery-flow/references/artifact-contracts.md`.
+- Harness issue localization: `.agents/skills/harness-issue-triage/SKILL.md` and `.agents/skills/harness-issue-triage/references/*`.
+- Harness governance: `docs/harness/harness-change-report-template.md` and `.agents/skills/harness-evolution/references/*`.
+- Subagent packet/result: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`, `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`.
+- Verification closeout: `.agents/skills/aili-delivery-flow/references/protocols/closeout-report.md`, `docs/harness/fixtures/verification-claim-fixtures.yaml`.
 
 ## Stop Rules
 

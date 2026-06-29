@@ -13,8 +13,8 @@
   "files": [
     "dist/",
     "agents/",
+    ".agents/",
     "commands/",
-    "skills/",
     "manifests/",
     "templates/opencode-global-AGENTS.md",
     "scripts/install_opencode.sh",

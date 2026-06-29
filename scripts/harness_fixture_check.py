@@ -63,7 +63,7 @@ REQUIRED = {
         "min_cases": 3,
     },
     "verification-claim-fixtures.yaml": {
-        "markers": ["sufficient-evidence", "insufficient-evidence", "Unverified", "release-blocking"],
+        "markers": ["sufficient-evidence", "insufficient-evidence", "Unverified", "release-blocking", "spec coverage check", "Open Question"],
         "case_key": "cases",
         "min_cases": 3,
     },
@@ -517,6 +517,23 @@ def validate_verification_claims(cases: list, name: str) -> list[str]:
     if "ready" not in str(case.get("claim", "")):
         errors.append(f"{name}: release-blocking-unresolved claim should exercise a ready claim")
 
+    coverage_cases = [
+        case
+        for case in cases
+        if isinstance(case, dict) and case.get("id") == "spec-coverage-uncovered"
+    ]
+    if not coverage_cases:
+        errors.append(f"{name}: missing spec-coverage-uncovered case")
+    else:
+        coverage_case = coverage_cases[0]
+        if coverage_case.get("expected") != "reject":
+            errors.append(f"{name}: spec-coverage-uncovered expected must be 'reject'")
+        coverage_evidence = coverage_case.get("evidence")
+        if not isinstance(coverage_evidence, list) or not contains_marker(coverage_evidence, "spec coverage check"):
+            errors.append(f"{name}: spec-coverage-uncovered evidence must mention 'spec coverage check'")
+        if not contains_marker(coverage_evidence, "Open Question") or not contains_marker(coverage_evidence, "Unverified"):
+            errors.append(f"{name}: spec-coverage-uncovered evidence must label uncovered items Open Question and Unverified")
+
     return errors
 
 
@@ -685,12 +702,12 @@ def validate_command_contracts() -> list[str]:
 def validate_define_artifact_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
-        "skills/aili-delivery-flow/SKILL.md": [
+        ".agents/skills/aili-delivery-flow/SKILL.md": [
             "change-interviewer",
             "test-document-generator",
             "Unverified",
         ],
-        "skills/aili-delivery-flow/references/lifecycle.md": [
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "change-interviewer",
             "test-document-generator",
             "READY",
@@ -699,28 +716,28 @@ def validate_define_artifact_contracts() -> list[str]:
             "UNVERIFIED",
             "Change Revision Decision",
         ],
-        "skills/aili-delivery-flow/references/backend-routing.md": [
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": [
             "interview.md",
             "test-plan.md",
             "change-interviewer",
             "test-document-generator",
             "asks once",
         ],
-        "skills/aili-delivery-flow/references/artifact-contracts.md": [
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": [
             "interview.md",
             "test-plan.md",
             "change-interviewer",
             "test-document-generator",
             "BUILD Readiness",
         ],
-        "skills/aili-delivery-flow/references/questionnaire-policy.md": [
+        ".agents/skills/aili-delivery-flow/references/questionnaire-policy.md": [
             "Artifact Freshness Gate",
             "Conversation context is stale",
             "disk wins",
             "interview.md",
             "change-interviewer",
         ],
-        "skills/aili-delivery-flow/references/test-document-policy.md": [
+        ".agents/skills/aili-delivery-flow/references/test-document-policy.md": [
             "Artifact Freshness Gate",
             "Conversation context is stale",
             "disk wins",
@@ -770,28 +787,28 @@ def validate_build_goal_mode_contracts() -> list[str]:
             "allowed external directories",
             "Do not ask for manual package approval",
         ],
-        "skills/aili-delivery-flow/SKILL.md": [
+        ".agents/skills/aili-delivery-flow/SKILL.md": [
             "references/build-goal-mode.md",
             "resolved ready target",
             "synthesize a package queue",
         ],
-        "skills/aili-delivery-flow/references/lifecycle.md": [
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "autonomous goal mode",
             "synthesize an ordered implementation package queue",
             "current active contract",
             "allowed external directories",
         ],
-        "skills/aili-delivery-flow/references/backend-routing.md": [
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": [
             "autonomous package queue synthesis",
             "canonicalizes the target repository root",
             "allowed external directories",
         ],
-        "skills/aili-delivery-flow/references/implementation-packages.md": [
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
             "synthesize an ordered package queue",
             "scoped subagent packet",
             "missing manual package text is not a stop condition",
         ],
-        "skills/aili-delivery-flow/references/build-goal-mode.md": [
+        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
             "BUILD goal mode",
             "Target and Repository Root Resolution",
             "Package Queue Synthesis",
@@ -812,6 +829,67 @@ def validate_build_goal_mode_contracts() -> list[str]:
         for marker in markers:
             if marker not in text:
                 errors.append(f"{relative}: missing BUILD goal-mode marker {marker!r}")
+
+    return errors
+
+
+def validate_traceability_contracts() -> list[str]:
+    errors: list[str] = []
+
+    traceability_markers = {
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
+            "traceability mapping from source requirement, decision, or risk to task/package",
+            "target files or artifacts",
+            "verification command or inspection",
+            "Open Question",
+            "Unverified",
+        ],
+        ".agents/skills/aili-delivery-flow/references/protocols/implementation-package.md": [
+            "Source requirement/decision/risk:",
+            "Target files/artifacts:",
+            "Traceability mapping:",
+            "coverage status: covered | Open Question | Unverified",
+        ],
+        ".agents/skills/aili-delivery-flow/references/test-document-policy.md": [
+            "traceability matrix for formal changes",
+            "task/package",
+            "file/artifact",
+            "verification command or inspection",
+            "Open Question",
+            "Unverified",
+        ],
+        ".agents/skills/test-document-generator/SKILL.md": [
+            "requirements/decisions/risks traceability matrix is mandatory",
+            "task/package",
+            "file/artifact",
+            "verification/evidence",
+            "Open Question",
+            "Unverified",
+        ],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
+            "map each package from source requirement/decision/risk to task/package",
+            "changed files/artifacts mapped to requirements/decisions/risks",
+            "spec coverage check for formal changes",
+            "Open Question",
+            "Unverified",
+        ],
+        ".agents/skills/aili-delivery-flow/references/review-repair-loop.md": [
+            "Run a spec coverage check for formal changes",
+            "requirements/tasks/test-plan items",
+            "implementation, verification, review, and security evidence",
+            "Open Question",
+            "Unverified",
+        ],
+        ".agents/skills/verification-before-completion/SKILL.md": [
+            "spec coverage check mapping requirements/tasks/test-plan items",
+            "implementation, verification, review, and security evidence",
+            "Open Question",
+            "Unverified",
+        ],
+    }
+
+    for relative, markers in traceability_markers.items():
+        errors.extend(require_text_markers(relative, markers, "traceability contract"))
 
     return errors
 
@@ -840,12 +918,12 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "Implement complete package behavior inside the accepted scope",
             "not artificially tiny or partial patches",
         ],
-        "skills/aili-delivery-flow/references/lifecycle.md": [
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "require complete implementation for accepted scope",
             "not artificially tiny patches",
             "run the most relevant focused verification first",
         ],
-        "skills/aili-delivery-flow/references/build-goal-mode.md": [
+        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
             "run the most relevant focused tests/checks first",
             "Run focused verification.",
         ],
@@ -890,9 +968,9 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         else:
             errors.extend(require_absent_in_section("templates/opencode-global-AGENTS.md", verification, ["smallest relevant", "minimal verification", "minimum verification"], "verification-order wording"))
 
-    build_goal_text = read_repo_text("skills/aili-delivery-flow/references/build-goal-mode.md") if (ROOT / "skills/aili-delivery-flow/references/build-goal-mode.md").exists() else ""
+    build_goal_text = read_repo_text(".agents/skills/aili-delivery-flow/references/build-goal-mode.md") if (ROOT / ".agents/skills/aili-delivery-flow/references/build-goal-mode.md").exists() else ""
     if "run the smallest relevant tests/checks first" in build_goal_text:
-        errors.append("skills/aili-delivery-flow/references/build-goal-mode.md: packaging flow must use most relevant focused tests/checks wording")
+        errors.append(".agents/skills/aili-delivery-flow/references/build-goal-mode.md: packaging flow must use most relevant focused tests/checks wording")
 
     active_agents_markers = [
         "<!-- AILI_AGENTS_TEMPLATE_VERSION: 2 -->",
@@ -923,14 +1001,14 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "## Local Overrides",
     ]
     errors.extend(require_text_markers("scripts/agents_md.py", agents_checker_markers, "AGENTS checker"))
-    errors.extend(require_text_markers("skills/agents-md-initialization/references/agents_md.py", agents_checker_markers, "bundled AGENTS checker"))
+    errors.extend(require_text_markers(".agents/skills/agents-md-initialization/references/agents_md.py", agents_checker_markers, "bundled AGENTS checker"))
 
     agents_template_markers = [
         "## Project-Specific Testing and Artifact Placement",
         "## Local Overrides",
     ]
     errors.extend(require_text_markers("templates/AGENTS.md", agents_template_markers, "project AGENTS template"))
-    errors.extend(require_text_markers("skills/agents-md-initialization/references/agents-template.md", agents_template_markers, "bundled project AGENTS template"))
+    errors.extend(require_text_markers(".agents/skills/agents-md-initialization/references/agents-template.md", agents_template_markers, "bundled project AGENTS template"))
 
     git_workflow_markers = [
         "task-scoped savepoint commits only when current task/project rules explicitly allow verified commits",
@@ -938,7 +1016,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
         "`wip:` checkpoints are allowed only when the current task explicitly approves a private unverified checkpoint",
     ]
-    errors.extend(require_text_markers("skills/git-workflow-and-versioning/SKILL.md", git_workflow_markers, "commit allowance"))
+    errors.extend(require_text_markers(".agents/skills/git-workflow-and-versioning/SKILL.md", git_workflow_markers, "commit allowance"))
 
     external_lookup_markers = [
         "Use external web/Context7/public-project lookup only when the current user, task, or project contract allows source lookup",
@@ -946,17 +1024,17 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "External public-project lookup is allowed only when the current user request, task packet, or project contract allows source lookup",
         "Never send secrets, private data, proprietary code, or sensitive repository context to external search",
     ]
-    errors.extend(require_text_markers("skills/aili-delivery-flow/references/lifecycle.md", external_lookup_markers[:2], "research-first external lookup gate"))
-    errors.extend(require_text_markers("skills/mature-project-pattern-research/SKILL.md", external_lookup_markers[2:], "mature-project external lookup gate"))
-    if (ROOT / "skills/git-workflow-and-versioning/SKILL.md").exists():
-        git_workflow_text = read_repo_text("skills/git-workflow-and-versioning/SKILL.md")
+    errors.extend(require_text_markers(".agents/skills/aili-delivery-flow/references/lifecycle.md", external_lookup_markers[:2], "research-first external lookup gate"))
+    errors.extend(require_text_markers(".agents/skills/mature-project-pattern-research/SKILL.md", external_lookup_markers[2:], "mature-project external lookup gate"))
+    if (ROOT / ".agents/skills/git-workflow-and-versioning/SKILL.md").exists():
+        git_workflow_text = read_repo_text(".agents/skills/git-workflow-and-versioning/SKILL.md")
         commit_matrix = section_between(git_workflow_text, "Decision matrix:", "## Core Principles")
         if not commit_matrix:
-            errors.append("skills/git-workflow-and-versioning/SKILL.md: missing decision matrix section")
+            errors.append(".agents/skills/git-workflow-and-versioning/SKILL.md: missing decision matrix section")
         else:
             errors.extend(
                 require_absent_in_section(
-                    "skills/git-workflow-and-versioning/SKILL.md",
+                    ".agents/skills/git-workflow-and-versioning/SKILL.md",
                     commit_matrix,
                     ["After completion", "After fix and verification", "Each vertical slice", "Each verified phase"],
                     "commit matrix allowance wording",
@@ -964,11 +1042,11 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             )
         savepoint_principle = section_between(git_workflow_text, "### 1. Use Savepoints When Allowed", "### 2. Atomic Commits")
         if not savepoint_principle:
-            errors.append("skills/git-workflow-and-versioning/SKILL.md: missing qualified savepoint principle section")
+            errors.append(".agents/skills/git-workflow-and-versioning/SKILL.md: missing qualified savepoint principle section")
         else:
             errors.extend(
                 require_absent_in_section(
-                    "skills/git-workflow-and-versioning/SKILL.md",
+                    ".agents/skills/git-workflow-and-versioning/SKILL.md",
                     savepoint_principle,
                     ["Each successful increment gets its own commit", "Commit → Continue"],
                     "savepoint principle allowance wording",
@@ -987,7 +1065,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "commit allowance:",
         "savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
     ]
-    errors.extend(require_text_markers("skills/aili-delivery-flow/references/protocols/implementation-package.md", implementation_package_markers, "task-end hygiene"))
+    errors.extend(require_text_markers(".agents/skills/aili-delivery-flow/references/protocols/implementation-package.md", implementation_package_markers, "task-end hygiene"))
 
     cleanup_gate_markers = {
         "commands/build.md": [
@@ -1004,14 +1082,14 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
             "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
         ],
-        "skills/aili-delivery-flow/references/lifecycle.md": [
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "inspect `git status --short --branch`",
             "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",
             "Propose cleanup for remaining residue",
             "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
             "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
         ],
-        "skills/aili-delivery-flow/references/build-goal-mode.md": [
+        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
             "inspect `git status --short --branch`",
             "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",
             "Propose cleanup for remaining residue",
@@ -1033,6 +1111,7 @@ def main() -> int:
     errors.extend(validate_command_contracts())
     errors.extend(validate_define_artifact_contracts())
     errors.extend(validate_build_goal_mode_contracts())
+    errors.extend(validate_traceability_contracts())
     errors.extend(validate_complete_scoped_work_contracts())
 
     if errors:
