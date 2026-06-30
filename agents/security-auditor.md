@@ -119,6 +119,8 @@ For Critical and High findings, provide a safe, non-destructive reproduction sce
 ```markdown
 ## Security Audit Report
 
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
+
 ### Summary
 - Critical: [count]
 - High: [count]

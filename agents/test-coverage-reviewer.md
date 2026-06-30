@@ -67,6 +67,7 @@ Use when ROSE needs an independent coverage sufficiency pass for a completed dif
 
 ```text
 COVERAGE REVIEW STATUS: PASS | NEEDS_TESTS | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:review
 SCOPE REVIEWED:
 - Diff/files:

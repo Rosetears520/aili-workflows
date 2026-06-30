@@ -83,6 +83,7 @@ Use when ROSE needs traces, videos, screenshots, reports, failure bundles, or E2
 
 ```text
 E2E ARTIFACT STATUS: PASS | FAIL | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:test
 COMMAND/TARGET:
 - Command:

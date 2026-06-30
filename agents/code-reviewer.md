@@ -144,6 +144,8 @@ Categorize every finding:
 ```markdown
 ## Review Summary
 
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
+
 **Verdict:** APPROVE | CONDITIONAL | REQUEST CHANGES
 
 **Overview:** [1-2 sentences summarizing the change and overall assessment]

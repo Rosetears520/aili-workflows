@@ -126,6 +126,7 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/test-engineer.md` - testing subagent.
 - `agents/test-coverage-reviewer.md`, `agents/pr-test-analyzer.md`, `agents/ai-regression-scout.md`, and `agents/silent-failure-reviewer.md` - relevant-triggered read-only QA review/scouting subagents.
 - `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
+- `agents/spec-miner.md`, `agents/agent-evaluator.md`, and `agents/opensource-sanitizer.md` - relevant-triggered read-only spec-mining, agent-output evaluation, and OSS/public exposure review subagents.
 - `.agents/skills/*/SKILL.md` - repository source for OpenCode skills.
 - `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
 - `.agents/skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.

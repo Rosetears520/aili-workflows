@@ -21,6 +21,20 @@ const SPECIALIZED_QA_LANES = [
   { agent: "e2e-artifact-runner", skill: "e2e-artifact-handling", owner: "subagent:test", nearMiss: "Browser manual QA without durable artifacts: `browser-qa`" }
 ];
 
+const ECC_SELECTED_AGENTS = [
+  { name: "spec-miner", owner: "subagent:research" },
+  { name: "agent-evaluator", owner: "subagent:review" },
+  { name: "opensource-sanitizer", owner: "subagent:review" }
+];
+
+const ECC_SELECTED_SKILLS = [
+  "comment-accuracy-review",
+  "oss-release-readiness",
+  "build-failure-repair",
+  "code-review-quality-gates",
+  "harness-optimization-audit"
+];
+
 test("dry-run install reports operations without mutating OpenCode home", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
@@ -1225,6 +1239,88 @@ test("manifest registers specialized QA agents and skills", async () => {
   }
 });
 
+test("manifest registers ECC-derived selected agents and skills", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const agentNames = new Set(manifest.components.agents.map((entry) => entry.name));
+  const skillNames = new Set(manifest.components.skills.map((entry) => entry.name));
+  const roseText = await readFile(path.join(repoRoot, "agents", "rose.md"), "utf8");
+  const reviewPipelineText = await readFile(path.join(repoRoot, ".agents", "skills", "review-pipeline", "SKILL.md"), "utf8");
+
+  for (const { name, owner } of ECC_SELECTED_AGENTS) {
+    const agent = manifest.components.agents.find((entry) => entry.name === name);
+    assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
+    assert.equal(agent.path, `agents/${name}.md`);
+    assert.equal(agent.defaultInstalled, true);
+    await stat(path.join(repoRoot, "agents", `${name}.md`));
+    assert.ok(roseText.includes(`"${name}": allow`));
+    assert.ok(roseText.includes(`- \`${name}\` (\`${owner}\`):`));
+  }
+
+  assert.ok(reviewPipelineText.includes("- `agent-evaluator`:"));
+  assert.ok(reviewPipelineText.includes("- `opensource-sanitizer`:"));
+  assert.ok(reviewPipelineText.includes("- `code-review-quality-gates`:"));
+
+  for (const name of ECC_SELECTED_SKILLS) {
+    assert.ok(skillNames.has(name), `expected manifest skill ${name}`);
+    const skill = manifest.components.skills.find((entry) => entry.name === name);
+    assert.equal(skill.path, `.agents/skills/${name}`);
+    assert.equal(skill.defaultInstalled, true);
+    assert.deepEqual(repoInstallTargets(skill), [
+      { kind: "shared", path: `.agents/skills/${name}` },
+      { kind: "opencode", path: `skills/${name}` }
+    ]);
+    const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
+    assert.match(skillText, new RegExp(`---\\nname: ${name}\\n`));
+  }
+});
+
+test("ECC-derived components preserve safety boundaries and exclusions", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const componentNames = new Set([
+    ...manifest.components.agents.map((entry) => entry.name),
+    ...manifest.components.skills.map((entry) => entry.name)
+  ]);
+  const roseText = await readFile(path.join(repoRoot, "agents", "rose.md"), "utf8");
+  const reviewPipelineText = await readFile(path.join(repoRoot, ".agents", "skills", "review-pipeline", "SKILL.md"), "utf8");
+
+  for (const forbidden of ["type-design-analyzer", "typescript-reviewer", "python-reviewer", "general-reviewer"]) {
+    assert.equal(componentNames.has(forbidden), false, `unexpected forbidden component ${forbidden}`);
+    assert.doesNotMatch(roseText, new RegExp(`"${escapeRegExp(forbidden)}":\\s*allow`));
+  }
+
+  for (const { name } of ECC_SELECTED_AGENTS) {
+    const agentText = await readFile(path.join(repoRoot, "agents", `${name}.md`), "utf8");
+    assert.ok(agentText.includes("edit: deny"));
+    assert.ok(agentText.includes("task: deny"));
+    assert.ok(agentText.includes("external_directory: deny"));
+    assert.ok(agentText.includes('"git status --short --branch": allow'));
+    assert.doesNotMatch(agentText, /"git diff[^"]*": allow/);
+    assert.doesNotMatch(agentText, /"git show[^"]*": allow/);
+    assert.doesNotMatch(agentText, /"git log[^"]*": allow/);
+    assert.doesNotMatch(agentText, /"git ls-files[^"]*": allow/);
+  }
+
+  const sanitizerText = await readFile(path.join(repoRoot, "agents", "opensource-sanitizer.md"), "utf8");
+  assert.ok(sanitizerText.includes("Do not edit, delete, move, rename, publish, unpublish"));
+  assert.ok(sanitizerText.includes("report only `path:line`, type, and `<redacted>`"));
+
+  const expectedSkillBoundaries = new Map([
+    ["comment-accuracy-review", "General correctness, architecture, performance, or security review"],
+    ["oss-release-readiness", "Actual publishing, tagging, release creation, deletion, history rewrite"],
+    ["build-failure-repair", "Dependency upgrades, lockfile regeneration, toolchain migration, or CI redesign"],
+    ["code-review-quality-gates", "do not invent a new code-review agent"],
+    ["harness-optimization-audit", "Do not edit core harness controls from this skill"]
+  ]);
+
+  for (const [name, marker] of expectedSkillBoundaries) {
+    const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
+    assert.ok(skillText.includes(marker), `expected ${name} to include boundary marker`);
+  }
+
+  assert.ok(reviewPipelineText.includes("only for disputed, critical, acceptance-blocking, or user-requested agent/subagent outputs"));
+  assert.ok(reviewPipelineText.includes("- `oss-release-readiness`:"));
+});
+
 test("manifest registers DeerFlow clean-room pattern skills", async () => {
   const manifest = await loadManifest(repoRoot);
   const skillNames = new Set(manifest.components.skills.map((entry) => entry.name));
@@ -1398,6 +1494,16 @@ test("packed package keeps CLI bin executable", async () => {
   assert.ok(packedEntries.includes("package/agents/rose.md"));
   assert.ok(packedEntries.includes("package/commands/build.md"));
   assert.ok(packedEntries.includes("package/.agents/skills/rose-memory/SKILL.md"));
+  const manifest = await loadManifest(repoRoot);
+  for (const agent of manifest.components.agents) {
+    assert.ok(packedEntries.includes(`package/${agent.path}`), `expected packed agent ${agent.path}`);
+  }
+  for (const command of manifest.components.commands) {
+    assert.ok(packedEntries.includes(`package/${command.path}`), `expected packed command ${command.path}`);
+  }
+  for (const skill of manifest.components.skills) {
+    assert.ok(packedEntries.includes(`package/${skill.path}/SKILL.md`), `expected packed skill ${skill.path}`);
+  }
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/skills/")), false);
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/.codegraph/")), false);
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/.playwright-mcp/")), false);

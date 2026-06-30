@@ -66,6 +66,7 @@ Use when changed code or workflow can report success despite skipped work, swall
 
 ```text
 SILENT FAILURE REVIEW STATUS: PASS | NEEDS_FIXES | NEEDS_TESTS | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:review
 SURFACE REVIEWED:
 - Files/gates:

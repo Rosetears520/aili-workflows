@@ -116,7 +116,7 @@ Return compact results in this exact shape. Use `N/A` or `unknown` for locality 
 
 ```text
 STATUS: GROUNDED | PARTIAL | NOT_FOUND | BLOCKED
-CONFIDENCE: high | medium | low
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 SCOPE INSPECTED:
 - paths/tools searched or inspected, compact only
 
@@ -158,6 +158,7 @@ Never return raw grep dumps or long excerpts.
 ## Hard Rules
 
 - Keep the final answer short enough for a parent agent to use directly.
+- Use internal English claim tags and canonical confidence labels in scout results; keep unsupported items as `UNKNOWNS`, `Unverified`, `[GUESS]`, or `PARTIAL` instead of smoothing them into facts.
 - Do not paste long file contents.
 - Do not return raw grep dumps, long logs, or exploratory dead ends.
 - Do not use shell commands to read denied secret or config files.

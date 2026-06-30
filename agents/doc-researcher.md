@@ -84,7 +84,7 @@ Return compact results in this shape:
 
 ```text
 STATUS: FOUND | PARTIAL | NOT_FOUND | BLOCKED
-CONFIDENCE: high | medium | low
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 QUESTION:
 - <what was researched>
@@ -113,3 +113,4 @@ CALLER ACTION:
 - Do not call nested agents.
 - Do not paste long document excerpts.
 - Do not turn local guidance into a final product decision when the user must decide.
+- Use internal English claim tags and canonical confidence labels in doc research results; keep unsupported claims under `UNVERIFIED`, `[GUESS]`, or `PARTIAL` instead of smoothing them into facts.

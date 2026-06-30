@@ -132,6 +132,9 @@ aili-workflows/
 | `agents/silent-failure-reviewer.md` | 只读静默失败、误报成功、跳过 gate 和 stale evidence 审查 | Rosetears 个人工作流内容 |
 | `agents/browser-qa-runner.md` | 本地浏览器 QA 验证；写截图、trace、报告前要求仓库内 artifact 落点，禁止生产数据变更 | Rosetears 个人工作流内容 |
 | `agents/e2e-artifact-runner.md` | E2E trace、video、screenshot、report、failure bundle 证据收集；要求仓库内 artifact 落点，禁止生产数据变更 | Rosetears 个人工作流内容 |
+| `agents/spec-miner.md` | 只读 spec mining subagent，从现有代码、测试、文档和 OpenSpec artifact 提炼候选 requirements / scenarios，不批准或编写 specs | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
+| `agents/agent-evaluator.md` | 只读 agent / subagent 输出评估 subagent，检查任务匹配、证据质量、claim hygiene、约束遗漏、overclaiming 和 handoff 可用性 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
+| `agents/opensource-sanitizer.md` | 只读 OSS / npm / public-release 暴露面审查 subagent，报告 secrets/private data/package/prompt/provenance 风险且必须脱敏 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
@@ -145,7 +148,10 @@ aili-workflows/
 | `aili-delivery-flow` | AILI 交付生命周期权威：IDEATE、DEFINE、BUILD、SHIP 四模式、后端 adapter、artifact gate、review/repair/closeout |
 | `ai-regression-scout` | 当 agents、prompts、skills、routing 或输出契约变更时，路由到只读 AI 回归场景侦察 |
 | `browser-qa` | 浏览器 QA 路由；截图、trace、报告等用户可见 artifact 必须先确认仓库内落点，并避免生产数据变更 |
+| `build-failure-repair` | build、typecheck、lint、test 或 CI gate 失败时的 root-cause-first 最小修复 workflow；不得跳过 gate 或擅自改依赖/lockfile |
 | `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
+| `code-review-quality-gates` | 代码审查质量 gate、severity/risk/evidence rubric、negative test case、fixture/golden drift 和中文评审报告 profile；不新增重复 reviewer agent |
+| `comment-accuracy-review` | 评论、JSDoc、TODO、README 与代码事实一致性审查，以及中文注释/变量名适当性检查 |
 | `coverage-review` | 覆盖率充分性、未测路径和验证证据的只读 QA review 路由 |
 | `e2e-artifact-handling` | E2E trace、video、screenshot、report、failure bundle 的仓库内 artifact 落点与证据处理路由 |
 | `evidence-scoped-retrospective` | 基于显式提供或批准的 session exports、git history、implementation notes 等证据做安全的 report-first 工作流复盘，不假设全局历史、不提交 raw sessions |
@@ -153,7 +159,9 @@ aili-workflows/
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
+| `harness-optimization-audit` | 只读 report-first harness routing、context cost、subagent parallelism、review fan-out、false PASS 和 evidence-loss 审计；批准修改后转 `harness-evolution` |
 | `mature-project-pattern-research` | 在 IDEATE 或普通聊天中研究成熟公开项目的 prior art，输出来源、成熟度信号、可借鉴/不推荐模式、风险、不确定性和下一步决策 |
+| `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
 | `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
@@ -241,6 +249,23 @@ aili-workflows/
 | `frontend-ui-engineering` / `browser-testing-with-devtools` 增量 | 强化 anti-generic UI、runtime UI audit、事实性 proof-point 检查和 browser evidence 记录 |
 
 未纳入 DeerFlow provider/media/deploy/runtime 类 skills，也未引入外部依赖、provider API 调用、DeerFlow 专用路径或工具假设。
+
+### 来自 ECC / review-skill prior art 的 clean-room pattern absorption
+
+以下 agents / skills 以 clean-room 方式吸收 [affaan-m/ECC](https://github.com/affaan-m/ECC) agent 角色与若干公开 review-skill prior art 的工作流模式。本仓库没有 vendoring ECC 运行时、工具配置或上游 prompt 正文；新增内容按 AILI/OpenCode 权限、证据、claim hygiene 和 lifecycle 约束重写。
+
+| 内容 | 说明 |
+|---|---|
+| `agents/spec-miner.md` | 吸收 spec-mining 角色边界，改写为只读候选 requirement / scenario 证据提炼 subagent |
+| `agents/agent-evaluator.md` | 吸收 agent-output evaluator 角色边界，改写为只读任务适配、证据质量、claim hygiene、overclaiming 和 handoff 可用性审查 |
+| `agents/opensource-sanitizer.md` | 吸收 open-source sanitizer 角色边界，改写为只读、脱敏、非发布、非删除的 OSS/npm/public exposure 审查 |
+| `comment-accuracy-review` | 吸收 comment analyzer 思路，改写为 comment/JSDoc/TODO/docs-to-code fact-check skill |
+| `oss-release-readiness` | 吸收 open-source sanitizer / packager 方向，改写为非破坏性 OSS/npm release readiness checklist |
+| `build-failure-repair` | 吸收 build-error-resolver 方向，改写为先调查、再最小修复、禁止跳过 gate 的 workflow skill |
+| `harness-optimization-audit` | 吸收 harness optimizer 方向，改写为 report-first harness routing/cost/quality audit，批准编辑转 `harness-evolution` |
+| `code-review-quality-gates` | Clean-room 吸收 [sanyuan0704/sanyuan-skills](https://github.com/sanyuan0704/sanyuan-skills/tree/main/skills/code-review-expert)、[alirezarezvani/claude-skills](https://alirezarezvani.github.io/claude-skills/skills/engineering-team/code-reviewer/) 和 [laolaoshiren/claude-code-skills-zh](https://github.com/laolaoshiren/claude-code-skills-zh/tree/main/skills/zh-code-reviewer) 的 review quality patterns，作为 rubric/test-enhancement skill 而非重复 reviewer agent |
+
+未纳入 ECC 语言专用 reviewer swarm、`type-design-analyzer`、破坏性 open-source forker/publisher 或重复 general code-review agent。
 
 ### 思想来源
 
@@ -357,6 +382,10 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
 | Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
 | Bytedance / DeerFlow Authors | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT License；clean-room pattern absorption only in this repository | Copyright Bytedance Ltd. and/or its affiliates and DeerFlow Authors; no DeerFlow runtime, provider config, tool paths, branding text, or upstream skill正文 vendored |
+| affaan-m / ECC contributors | [affaan-m/ECC](https://github.com/affaan-m/ECC) | 未验证；pattern-only reference；no copied text | Agent role patterns only; no ECC runtime, tool config, or upstream prompt正文 vendored |
+| sanyuan0704 | [sanyuan-skills](https://github.com/sanyuan0704/sanyuan-skills/tree/main/skills/code-review-expert) | 未验证；pattern-only reference；no copied text | Review-quality rubric patterns only; no upstream skill正文 vendored |
+| Alireza Rezvani | [claude-skills](https://alirezarezvani.github.io/claude-skills/skills/engineering-team/code-reviewer/) | 未验证；pattern-only reference；no copied text | Review-quality and fixture/golden-output patterns only; no upstream skill正文 vendored |
+| laolaoshiren | [claude-code-skills-zh](https://github.com/laolaoshiren/claude-code-skills-zh/tree/main/skills/zh-code-reviewer) | 未验证；pattern-only reference；no copied text | Chinese review-output profile patterns only; no upstream skill正文 vendored |
 | Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
 | Amanda Askell | [askell.io](https://askell.io/) | 概念性参考；未纳入上游文本 | allegory / analogy prompting 方向参考 |
 | Vaibhav / VB / Codex-style prompting | 用户提供的概念方向 | 概念性参考；未纳入上游文本 | evidence-scoped self-improvement prompting 方向参考；本仓库不声称可见全局历史 |

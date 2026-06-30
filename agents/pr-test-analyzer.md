@@ -66,6 +66,7 @@ Use for pull requests, staged diffs, package diffs, CI logs, or review packets w
 
 ```text
 PR TEST ANALYSIS STATUS: PASS | NEEDS_TESTS | NEEDS_COMMANDS | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:review
 DIFF/PR REVIEWED:
 - Files:

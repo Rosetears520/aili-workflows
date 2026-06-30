@@ -251,6 +251,8 @@ When analyzing test coverage:
 ```markdown
 ## Test Coverage Analysis
 
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
+
 ### Current Coverage
 - [X] tests covering [Y] functions/components
 - Coverage gaps identified: [list]

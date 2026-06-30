@@ -4,10 +4,12 @@ Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/
 
 Subagent output is evidence for ROSE to reconcile, not authority. Separate facts from interpretation and recommendations.
 
+Use internal English claim tags and canonical confidence labels in this protocol. Overall confidence must be `HIGH`, `MED`, `LOW`, `VERY LOW`, or `UNKNOWN`; `[GUESS]` and real-world `[FRAME]` claims cap confidence at `LOW`.
+
 ```text
 TRACE ID:
 STATUS: DONE | NEEDS_REVISION | BLOCKED | PARTIAL | NOT_FOUND
-CONFIDENCE: high | medium | low
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 SUMMARY:
 
 INSPECTED SCOPE:
@@ -23,7 +25,7 @@ LANE / JOIN STATUS:
 - lane id / owner / status (`completed`, `partial`, `blocked`, `skipped`, `unverified`) - expected evidence present/missing - blockers or N/A
 
 OBSERVED FACTS:
-- path:line-or-symbol - fact - freshness(active/current/stale/archived/generated/unknown) - confidence
+- path:line-or-symbol - [claim tag] fact - freshness(active/current/stale/archived/generated/unknown) - confidence
 
 EVIDENCE ANCHORS:
 - path:line / command / source - why it matters
@@ -33,7 +35,7 @@ FALSIFICATION / NEGATIVE CHECKS:
 - N/A if none possible within scope, with reason
 
 INFERENCES:
-- inference - evidence basis - risk/confidence
+- [claim tag] inference - evidence basis - risk/confidence
 - N/A if none
 
 RECOMMENDATIONS:
@@ -68,6 +70,7 @@ STOP CONDITIONS HIT:
 ## Required separation
 
 - Observed facts must include evidence anchors and freshness whenever relevant.
+- Results must use internal English claim tags for factual, interpretive, verification, readiness, uncertainty, and recommendation claims unless the caller provides a stricter compatible format.
 - Lane / join status must be present for parallel or multi-lane work. It must name the lane/work package id, owner, status, expected evidence presence, and blockers so ROSE can join without guessing.
 - Falsification / negative checks should say what was tried to disprove the conclusion, find counterexamples, or confirm absence; if not possible, say why.
 - Inferences must state the evidence basis and risk.
@@ -84,6 +87,7 @@ STOP CONDITIONS HIT:
 
 Small read-only scouts may return a shorter result, but they must still distinguish:
 
+- overall status and canonical confidence
 - facts with anchors
 - recommendations or caller actions
 - unknowns / not found items

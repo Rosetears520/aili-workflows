@@ -83,6 +83,8 @@ See `references/research-rubric.md` for the compact scoring rubric and delegatio
 
 ## Research Synthesis Discipline
 
+- Internal research packets and results must use English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; keep unsupported source or fit claims marked `[UNVERIFIED]` instead of smoothing them into facts.
+
 - Start from the decision the research should change; do not collect links without a decision target.
 - Prefer a small comparison set with strong evidence over a broad list of weak sources.
 - Synthesize recurring patterns, disagreements, and fit constraints; do not report one source summary after another unless the user asked for an annotated bibliography.
@@ -102,7 +104,7 @@ See `references/research-rubric.md` for the compact scoring rubric and delegatio
 
 ```text
 STATUS: FOUND | PARTIAL | NOT_FOUND | BLOCKED
-CONFIDENCE: high | medium | low
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 QUESTION:
 - <research question and decision context>

@@ -38,6 +38,7 @@ Direct allowlist 小改可以跳过完整 evidence pack，但必须说明为什�
 
 ```text
 REPO EVIDENCE STATUS: GROUNDED | PARTIAL | NOT_FOUND | CONFLICTING | BLOCKED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 Active contract:
 - ...
@@ -69,6 +70,8 @@ Next action:
 ## Claim classification
 
 Also follow the global Evidence-Driven Claim Hygiene rule from `AGENTS.md`: every claim in output needs a provenance tag or downgrade; non-claim headings/labels are formatting, not claims. Repository facts without anchors become `Hypothesis`, `Open Question`, `Unverified`, delegated evidence work, or blocked items.
+
+For internal evidence packs and ROSE/subagent handoffs, use English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`. For user-facing summaries, keep prose in the user's input language and localize tags/confidence labels when a mapping exists; do not remove `Unverified` or localized equivalents without new evidence.
 
 - `Grounded Fact`: supported by file paths with lines/symbols, command output summary, test result, spec/task/protocol section, explicit user instruction, or reconciled subagent evidence anchor.
 - `Hypothesis`: plausible but not proven by current repo evidence.

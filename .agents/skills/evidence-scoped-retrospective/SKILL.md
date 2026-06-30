@@ -43,7 +43,7 @@ Stop and surface the gate before continuing when any of these conditions appear:
 
 ## Failure-Pattern Taxonomy
 
-Classify observed patterns with evidence anchors and confidence:
+Classify observed patterns with evidence anchors and evidence strength:
 
 - silent assumptions or hidden uncertainty;
 - over-engineering or speculative abstractions;
@@ -59,7 +59,9 @@ Classify observed patterns with evidence anchors and confidence:
 
 If a pattern lacks evidence, label it `Unverified` instead of presenting it as a finding.
 
-## Evidence Confidence
+## Evidence Strength and Claim Hygiene
+
+Use `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN` for the overall internal report confidence. The labels below classify retrospective evidence strength, not the global confidence scale.
 
 Use these labels consistently:
 
@@ -121,6 +123,8 @@ Return a report with these sections:
 ```text
 Evidence Scope:
 - <what was inspected and what was not>
+
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 Safety Handling:
 - <redaction / non-commit / untrusted-transcript notes>

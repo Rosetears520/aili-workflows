@@ -17,6 +17,7 @@ Subagent task packet:
 - Forbidden scope:
 - Edit permission / allowed edits:
 - Evidence required:
+- Claim hygiene / confidence requirements:
 - Optional evidence provider request: CodeGraph if available/useful, or N/A
 - Expected return format:
 - Join contract for parallel lanes:
@@ -39,6 +40,7 @@ Subagent task packet:
 - Forbidden scope: files, commands, subsystems, or decisions that are out of bounds.
 - Edit permission: `read-only`, `may edit listed files`, or `ask before edits`.
 - Evidence required: anchors, tests, compact evidence packs, command summaries, or inspected sections required for ROSE to reconcile; request minimal key failure excerpts instead of raw logs.
+- Claim hygiene / confidence requirements: for results containing facts, inferences, recommendations, verification claims, readiness claims, or unknowns, require internal English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; require unknowns and unsupported claims to remain `Unknown`, `Open Question`, `Unverified`, `[GUESS]`, or the relevant protocol field instead of being smoothed into facts.
 - Optional evidence provider request: CodeGraph may be requested only for eligible lane-local discovery; it must remain optional, compact, fallback-capable, and separate from final proof.
 - Expected return format: normally the canonical `subagent-result.md` format, `compact-evidence-pack.md`, or a named compact variant.
 - Join contract for parallel lanes: expected evidence for this lane, lane owner, editable scope or read-only source, status vocabulary, blocker conditions, how ROSE will handle conflicts or missing/empty evidence, ROSE final decision ownership, any required user approval/decision gate, and stop conditions that block reconciliation.
@@ -89,6 +91,7 @@ If any check fails, narrow the scope, make the work read-only, dispatch sequenti
 - Non-trivial repository work is subagent-first unless the current task explicitly opts out; clear paths, short context, and DCP summaries are not opt-outs.
 - Worker increments are dynamically sized by verifiability, reviewability, lack of parallel conflicts, and clean handoff boundaries.
 - Workers return compact reports and evidence only. They do not write `progress.txt` and do not issue final PASS/FAIL/`Unverified` judgments.
+- Worker packets for harness-sensitive or decision-relevant work must carry the English internal claim-tag and canonical confidence requirement instead of relying on implicit main-context inheritance.
 - CodeGraph, when requested or provided, is discovery evidence only; workers must fall back to normal search/read if it is unavailable, stale, noisy, or unhelpful, and acting edit/review/test/doc lanes must still inspect final targets before conclusions.
 - A subagent packet is a scope boundary, not a license to broaden work.
 - Package/lane ids, owners, allowed scopes, and expected evidence are boundary markers and must survive dispatch and reconciliation unless ROSE records an approved boundary-change reason.

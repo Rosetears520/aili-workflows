@@ -1,6 +1,6 @@
 ---
 name: review-pipeline
-description: Orchestrates post-implementation review before final PASS. Use after non-trivial changes to fan out only relevant code, test, security, coverage, PR-test, AI-regression, silent-failure, browser-QA, or E2E-artifact lanes, reconcile findings, run a bounded fix loop, and gate completion without pushing or merging.
+description: Orchestrates post-implementation review before final PASS. Use after non-trivial changes to fan out only relevant code, test, security, coverage, PR-test, AI-regression, silent-failure, browser-QA, E2E-artifact, agent-output, or OSS-sanitizer lanes, reconcile findings, run a bounded fix loop, and gate completion without pushing or merging.
 ---
 
 # Review Pipeline
@@ -10,6 +10,8 @@ description: Orchestrates post-implementation review before final PASS. Use afte
 Use this skill after non-trivial implementation and before ROSE claims `PASS`, `ready`, or equivalent acceptance.
 
 It is an orchestration workflow, not a reviewer persona. ROSE owns dispatch, reconciliation, and final acceptance.
+
+Apply the global Evidence-Driven Claim Hygiene rule while reconciling review lanes: internal lane packets/results use English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; user-facing review/readiness conclusions use the user's language with localized tags/confidence labels when available. Do not remove `Unverified` or localized uncertainty without new evidence.
 
 In the AILI lifecycle, this skill is normally entered from `aili-delivery-flow` SHIP mode; keep lifecycle gates there and keep this file focused on review orchestration.
 
@@ -47,6 +49,10 @@ Dispatch only relevant review/test lanes; none are always-on:
 - `silent-failure-reviewer`: false-success, swallowed-error, skipped-gate, partial-artifact, stale-evidence, or misleading-report risk review
 - `browser-qa-runner`: local browser UI, DOM/accessibility, console/network, and screenshot evidence when UI/browser behavior changed
 - `e2e-artifact-runner`: E2E trace, video, screenshot, report, or failure-bundle evidence when durable artifacts are needed
+- `agent-evaluator`: quality, evidence, claim-hygiene, scope-fit, and handoff-usability review only for disputed, critical, acceptance-blocking, or user-requested agent/subagent outputs; do not evaluate every lane by default
+- `opensource-sanitizer`: public/npm/open-source exposure, prompt exposure, package exposure, secrets/private-data redaction, and provenance risk review for public or release-facing changes
+- `oss-release-readiness`: non-destructive public/npm release checklist for package metadata, provenance, included files, dry-run evidence, and consumer readiness when the user asks whether a repository/package is ready to publish or open-source
+- `code-review-quality-gates`: optional rubric overlay for severity, evidence anchors, negative test cases, Chinese review profile, and fixture/golden-output drift classification; it is not a separate final reviewer
 - `code-scout`: context mining only when a reviewer reports missing repository context
 
 When the changed surface is cross-file, high-risk, or likely to miss callers/consumers/tests, ROSE may request optional CodeGraph-assisted residual impact evidence from the relevant review/test lane or scout. Treat it as scope discovery only; reviewers and testers must still inspect the diff, critical files, tests, commands, or behavior before conclusions, and absence/staleness/noise only becomes `Unverified` when material to confidence.
@@ -94,12 +100,16 @@ Never push, create PRs, merge, delete branches, or clean worktrees from this ski
 
 ```text
 REVIEW PIPELINE STATUS: PASS | NEEDS_FIXES | BLOCKED | SKIPPED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 REVIEW TARGET:
 - Diff/files:
 - User goal:
 - Traceability/spec coverage:
 - Verification already run:
+
+SKIPPED CHECKS:
+- <check/lane not run> - <explicit reason or N/A>
 
 FINDINGS:
 - [Critical|Important|Suggestion] source - finding - evidence - required action

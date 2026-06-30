@@ -21,6 +21,8 @@ This skill adapts Superpowers-style "evidence before claims" discipline to this 
 
 Apply the global Evidence-Driven Claim Hygiene rule to the completion report: tag every completion, verification, readiness, repo-state, and risk claim, or downgrade it to `I don't know.`, `Open Question`, `Unverified`, or `[GUESS]`.
 
+Use the global language boundary: internal completion evidence uses English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; user-facing completion/readiness/verification claims use the user's language and localized confidence/tags when available. Do not remove `Unverified` or localized uncertainty without new evidence.
+
 Before making a completion claim:
 
 1. Identify the claim.
@@ -79,6 +81,7 @@ Do not treat stale output, assumptions, or partial logs as proof.
 
 ```text
 - Claim:
+- Confidence: HIGH | MED | LOW | VERY LOW | UNKNOWN
 - Evidence source:
 - Command / inspection:
 - Exit code / result:

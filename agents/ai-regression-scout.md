@@ -67,6 +67,7 @@ Use when prompts, agents, skills, routing rules, model/tool policies, harness fi
 
 ```text
 AI REGRESSION SCOUT STATUS: PASS | NEEDS_CASES | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:test
 SURFACE REVIEWED:
 - Prompts/skills/fixtures:

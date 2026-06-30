@@ -1,0 +1,74 @@
+[KNOWN] # BUILD Progress: classify-ecc-agents-for-aili
+
+[KNOWN] ## Active Contract
+
+[KNOWN] Mode: BUILD.
+[KNOWN] Backend: OpenSpec.
+[KNOWN] Goal: implement the approved selected ECC-derived package as default-installed AILI workflow components.
+[KNOWN] Approved components: `spec-miner`, `agent-evaluator`, `opensource-sanitizer`, `comment-accuracy-review`, `oss-release-readiness`, `build-failure-repair`, `code-review-quality-gates`, and `harness-optimization-audit`.
+[KNOWN] Scope exclusions: `type-design-analyzer`, dedicated per-language default agent swarm, duplicate general code-review agents, raw ECC/upstream prompt import, destructive release/publish/delete behavior, dependency/lockfile changes, commit/push/archive without explicit approval.
+
+[KNOWN] ## Checkpoint Ledger
+
+- [KNOWN] 2026-06-29: BUILD approval recorded from user for the 8 default-installed components on `main`.
+- [KNOWN] 2026-06-29: CodeGraph unavailable because this repository has no initialized CodeGraph index; no initialization requested or performed.
+- [KNOWN] 2026-06-29: Scaffold evidence identified manifest, ROSE routing, review-pipeline routing, README/provenance, tests, and OpenSpec artifacts as integration targets.
+- [KNOWN] 2026-06-29: Parallel component implementation lanes added 3 agents and 5 skills; each lane reported `python scripts/harness_fixture_check.py` passing.
+- [KNOWN] 2026-06-30: ROSE integration updated `manifests/rose-aili.components.json`, `agents/rose.md`, `.agents/skills/review-pipeline/SKILL.md`, `README.md`, `tests/rose-aili.test.mjs`, `tasks.md`, and this progress ledger.
+
+[KNOWN] ## Changed Files / Artifacts
+
+- [KNOWN] New agents: `agents/spec-miner.md`, `agents/agent-evaluator.md`, `agents/opensource-sanitizer.md`.
+- [KNOWN] New skills: `.agents/skills/comment-accuracy-review/SKILL.md`, `.agents/skills/oss-release-readiness/SKILL.md`, `.agents/skills/build-failure-repair/SKILL.md`, `.agents/skills/code-review-quality-gates/SKILL.md`, `.agents/skills/harness-optimization-audit/SKILL.md`.
+- [KNOWN] Integration files: `manifests/rose-aili.components.json`, `agents/rose.md`, `.agents/skills/review-pipeline/SKILL.md`, `README.md`, `tests/rose-aili.test.mjs`.
+- [KNOWN] OpenSpec files: `openspec/changes/classify-ecc-agents-for-aili/tasks.md`, `openspec/changes/classify-ecc-agents-for-aili/test-plan.md`, `openspec/changes/classify-ecc-agents-for-aili/progress.txt`, and `openspec/changes/classify-ecc-agents-for-aili/implementation-notes.html`.
+
+[KNOWN] ## Verification Plan
+
+- [KNOWN] `openspec validate classify-ecc-agents-for-aili --strict`.
+- [KNOWN] `openspec validate add-shared-agents-skills-qa-traceability --strict`.
+- [KNOWN] `npm run typecheck`.
+- [KNOWN] `npm run build`.
+- [KNOWN] `npm test`.
+- [KNOWN] `python scripts/harness_fixture_check.py`.
+- [KNOWN] `python scripts/agents_md.py check --project .`.
+- [KNOWN] `python scripts/delegation_protocols_check.py`.
+- [KNOWN] `bash -n scripts/install_opencode.sh`.
+- [KNOWN] `git diff --check` and scoped status/diff inspection.
+
+[KNOWN] ## Verification Evidence
+
+- [KNOWN] 2026-06-30: `openspec validate classify-ecc-agents-for-aili --strict` passed with `Change 'classify-ecc-agents-for-aili' is valid`.
+- [KNOWN] 2026-06-30: `openspec validate add-shared-agents-skills-qa-traceability --strict` passed with `Change 'add-shared-agents-skills-qa-traceability' is valid`.
+- [KNOWN] 2026-06-30: `npm run typecheck` passed.
+- [KNOWN] 2026-06-30: `npm run build` passed during the combined `npm run build && npm test` command before the 120s tool timeout; that partial test run was superseded by a 300s `npm test` rerun.
+- [KNOWN] 2026-06-30: `npm test` was rerun with a 300s timeout before review fixes and passed: 72 tests, 71 pass, 1 skipped, 0 fail.
+- [KNOWN] 2026-06-30: `npm test` was rerun after boundary/regression fixes and passed: 73 tests, 72 pass, 1 skipped, 0 fail.
+- [KNOWN] 2026-06-30: `python scripts/harness_fixture_check.py` passed with `harness fixture check: PASS (5 fixture files + command contracts)`.
+- [KNOWN] 2026-06-30: `python scripts/agents_md.py check --project .` passed.
+- [KNOWN] 2026-06-30: `python scripts/delegation_protocols_check.py` passed with `Checked 14 files`.
+- [KNOWN] 2026-06-30: `bash -n scripts/install_opencode.sh` passed with no output.
+- [KNOWN] 2026-06-30: `git diff --check` and `git diff --cached --check` passed with no output.
+
+[KNOWN] ## Review / Security State
+
+- [KNOWN] Code review lane returned PASS with one Suggestion to keep the prior staged OpenSpec closeout out of an eventual commit unless ROSE treats it as part of the same bundle.
+- [KNOWN] Coverage review lane returned PASS with one Suggestion to ensure untracked production agent/skill files are included/tracked before any eventual commit or ship handoff.
+- [KNOWN] Initial security review found Important issues around broad git-content permissions and provenance license wording; fixes restricted new agents to `git status --short --branch`, clarified README prior-art license status as unverified pattern-only/no-copied-text, added dry-run lifecycle-script caution, and added regression assertions.
+- [KNOWN] Security second re-review returned PASS with no findings.
+- [KNOWN] Initial AI-regression review found Important routing/test/doc risks; fixes narrowed `agent-evaluator`, added `oss-release-readiness` review-pipeline routing, added boundary/exclusion tests, and updated `docs/opencode-setup.md`.
+- [KNOWN] AI-regression re-review returned PASS with no findings.
+- [KNOWN] Initial silent-failure review found Important execution-record drift; fixes recorded the 120s partial run and latest 73-test rerun in `test-plan.md` and `progress.txt`.
+- [KNOWN] Silent-failure second re-review returned PASS with no findings.
+
+[KNOWN] ## Blockers and Unverified Items
+
+- [KNOWN] No current implementation blocker.
+- [UNVERIFIED] Live OpenCode runtime routing is not yet verified in an actual OpenCode session.
+- [UNVERIFIED] CodeGraph-assisted residual impact scan is unavailable because the repository is not initialized for CodeGraph and the task explicitly avoids initializing it.
+- [UNVERIFIED] Full legal review of upstream ECC and review-skill prompt text is not complete; this BUILD uses clean-room pattern absorption and no raw prompt import.
+- [UNVERIFIED] Production agent/skill files are currently untracked in git status until an eventual commit/staging step; do not omit them from any future commit for this BUILD.
+
+[KNOWN] ## Next Action
+
+[KNOWN] Perform final status/diff inspection, memory writeback, and completion-gate report; do not commit, push, archive, or clean without explicit approval.

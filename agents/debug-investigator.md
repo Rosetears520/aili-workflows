@@ -98,6 +98,7 @@ Return exactly this structure:
 
 ```text
 STATUS: ROOT_CAUSE_FOUND | NEED_MORE_EVIDENCE | BLOCKED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 SYMPTOM:
 - <what failed, where, and how it was observed>

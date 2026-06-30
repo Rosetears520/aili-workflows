@@ -81,6 +81,7 @@ Use for browser-rendered UI changes, accessibility-tree checks, console/network 
 
 ```text
 BROWSER QA STATUS: PASS | FAIL | BLOCKED | UNVERIFIED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 OWNER: subagent:test
 TARGET:
 - URL/environment:

@@ -70,6 +70,7 @@ Return exactly this structure:
 
 ```text
 STATUS: PASS | NEEDS_REVISION | BLOCKED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 CONTRACT CHECK:
 - User goal covered: yes | no | partial

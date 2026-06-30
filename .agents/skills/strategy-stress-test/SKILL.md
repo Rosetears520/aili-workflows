@@ -97,7 +97,7 @@ If the needed tool or skill is unavailable:
 
 Use evidence before confidence.
 
-Carry the global Evidence-Driven Claim Hygiene rule into the stress test: tag every claim in stress-test conclusions, and treat anti-sycophancy red flags such as an unusually elegant explanation, one pattern explaining everything, agreement after pushback without evidence, or specifics for unearned authority as reasons to cut specifics, add `[GUESS]`, or say `I don't know.`
+Carry the global Evidence-Driven Claim Hygiene rule into the stress test: tag every claim in stress-test conclusions, use `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN` for internal reports, localize user-facing tags/confidence labels when available, and treat anti-sycophancy red flags such as an unusually elegant explanation, one pattern explaining everything, agreement after pushback without evidence, or specifics for unearned authority as reasons to cut specifics, add `[GUESS]`, or say `I don't know.`
 
 Valid evidence can include:
 
@@ -136,7 +136,7 @@ Fallback: downgrade confidence, mark the affected item `Open Question` or `Unver
 Return this structure when reporting the stress-test result:
 
 ```text
-Confidence: high | medium | low
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
 
 Current artifact / claim:
 - ...
@@ -181,7 +181,7 @@ Input artifact:
 
 Stress-test result:
 
-- Confidence: medium
+- CONFIDENCE: MED
 - Material loophole: Verification gap - plan does not name the callback error cases or tests.
 - Fix applied: add tasks for invalid state, expired code, provider error, and existing callback test file inspection.
 - Remaining unverified: exact test command until package scripts are inspected.
