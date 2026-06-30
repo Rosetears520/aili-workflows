@@ -13,13 +13,13 @@ Do not copy broad global operating rules into this file unless this project inte
 ## Project Overview
 
 - Project purpose: Personal OpenCode workflow repository containing the `rose-aili` TypeScript/Node CLI, agents, skills, delivery commands, templates, docs, and helper scripts.
-- Primary language/runtime: TypeScript on Node.js 20+, Markdown, Python 3, and Bash helper scripts.
+- Primary language/runtime: TypeScript on Node.js 20.19+, Markdown, Python 3, and Bash helper scripts.
 - Package manager: npm with tracked `package.json` and `package-lock.json`; install dependencies with `npm ci`.
 - Main application entry points: `src/cli.ts`, `src/installer.ts`, `src/doctor.ts`, `commands/{ideate,define,build,ship}.md`, `agents/rose.md`, `.agents/skills/*/SKILL.md`, `scripts/install_opencode.sh`, and `scripts/agents_md.py`.
 - Main test framework: Node's built-in test runner via `tests/rose-aili.test.mjs`, plus Python stdlib smoke checks via `scripts/harness_fixture_check.py` and `scripts/agents_md.py check`.
 - Important directories: `src/`, `agents/`, `.agents/skills/`, `commands/`, `templates/`, `scripts/`, `docs/`, `tests/`, and `manifests/`.
 - Generated/build output directories: `dist/`, `node_modules/`, `memory/`, `.opencode/`, `.codegraph/`, `.playwright-mcp/`, `openspec/`, `__pycache__/`, and `*.py[cod]` are ignored local/runtime outputs.
-- Deployment/runtime environment: `rose-aili` runs through npm/npx or a local Node build; OpenCode global config is installed through the CLI or `scripts/install_opencode.sh`; repository scripts run on Linux/macOS/WSL shells with Node.js 20+, npm, Python 3, and Bash.
+- Deployment/runtime environment: `rose-aili` runs through npm/npx or a local Node build; OpenCode global config is installed through the CLI or `scripts/install_opencode.sh`; repository scripts run on Linux/macOS/WSL shells with Node.js 20.19+, npm, Python 3, and Bash.
 
 ## Setup Commands
 
