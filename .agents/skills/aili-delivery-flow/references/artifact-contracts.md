@@ -42,7 +42,7 @@ context.md
 ```
 
 - `proposal.md`, `design.md`, `tasks.md`, and `specs/**/spec.md` follow the OpenSpec backend.
-- `interview.md` is generated or updated through `change-interviewer`.
+- `interview.md` is generated or updated through `requirements-grilling`.
 - `test-plan.md` is generated or updated through `test-document-generator`.
 - `context.md` records maintained user intent, confirmed decisions, rejected options, unresolved questions, and drift-check anchors for the formal change.
 - Non-OpenSpec artifacts require one placement decision before writing, then the selected locations become part of the active change context.

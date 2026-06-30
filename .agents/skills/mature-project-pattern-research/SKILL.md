@@ -9,7 +9,7 @@ description: Research mature public project patterns before方案/implementation
 
 Use this skill when a user needs source-grounded prior art from mature public projects before choosing a design, workflow, API shape, repository convention, or implementation pattern.
 
-It owns the industry/GitHub/mature-project prior-art lane of the research-first planning gate. Official/API documentation belongs to `source-driven-development`; local repository facts belong to `repo-evidence-first`; user-facing方案 clarification/write-back belongs to `change-interviewer`; test-plan artifacts belong to `test-document-generator`.
+It owns the industry/GitHub/mature-project prior-art lane of the research-first planning gate. Official/API documentation belongs to `source-driven-development`; local repository facts belong to `repo-evidence-first`; user-facing方案 clarification/write-back belongs to `requirements-grilling`; test-plan artifacts belong to `test-document-generator`.
 
 This is a skill-first workflow. It coordinates research through the existing read-only `web-researcher` subagent when external evidence is needed. It does not add a `/research` command, GitHub MCP dependency, dedicated agent, or vendored external skill content.
 

@@ -20,7 +20,6 @@ aili-workflows/
 │       ├── api-and-interface-design/
 │       ├── browser-testing-with-devtools/
 │       ├── browser-qa/
-│       ├── change-interviewer/
 │       ├── chart-visualization/
 │       ├── ci-cd-and-automation/
 │       ├── code-review-and-quality/
@@ -58,6 +57,7 @@ aili-workflows/
 │       ├── pr-test-analysis/
 │       ├── react-native-dev/
 │       ├── repo-evidence-first/
+│       ├── requirements-grilling/
 │       ├── rose-memory/             # ROSE project-local SQLite memory skill
 │       ├── review-pipeline/
 │       ├── security-and-hardening/
@@ -149,7 +149,6 @@ aili-workflows/
 | `ai-regression-scout` | 当 agents、prompts、skills、routing 或输出契约变更时，路由到只读 AI 回归场景侦察 |
 | `browser-qa` | 浏览器 QA 路由；截图、trace、报告等用户可见 artifact 必须先确认仓库内落点，并避免生产数据变更 |
 | `build-failure-repair` | build、typecheck、lint、test 或 CI gate 失败时的 root-cause-first 最小修复 workflow；不得跳过 gate 或擅自改依赖/lockfile |
-| `change-interviewer` | 为 OpenSpec、Superpowers、用户文本或自定义文件中的 change draft 生成证据驱动中文问卷包，吸收用户答案后写回目标文件 |
 | `code-review-quality-gates` | 代码审查质量 gate、severity/risk/evidence rubric、negative test case、fixture/golden drift 和中文评审报告 profile；不新增重复 reviewer agent |
 | `comment-accuracy-review` | 评论、JSDoc、TODO、README 与代码事实一致性审查，以及中文注释/变量名适当性检查 |
 | `coverage-review` | 覆盖率充分性、未测路径和验证证据的只读 QA review 路由 |
@@ -164,13 +163,14 @@ aili-workflows/
 | `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
 | `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
+| `requirements-grilling` | AILI DEFINE 的 canonical requirements grilling skill；保留 `interview.md` artifact，兼容旧 `change-interviewer`/interview packet 触发，并吸收用户答案后写回目标文件 |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `silent-failure-hunting` | 静默失败、误报成功、吞错、跳过 gate 或 stale evidence 风险的只读 review 路由 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
 | `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
 | `test-document-generator` | 根据 spec、方案、issue、描述或 OpenSpec change 生成详细测试文档、测试矩阵、回归范围和验收清单，默认写入仓库内 Markdown 文件 |
 
-`change-interviewer` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
+`requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
 ### 来自 obra/superpowers
 
@@ -276,7 +276,7 @@ aili-workflows/
 - `.agents/skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
 - `.agents/skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
 - `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`.agents/skills/review-pipeline/SKILL.md`、`.agents/skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（上游现名 `oh-my-openagent`，曾用名 `oh-my-opencode`；如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
-- 若干 workflow 纪律在现有 skills 中概念上吸收了 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 方向，包括 zoom-out、prototype、to-issues、grill-with-docs、diagnose、tdd、write-a-skill、improve-codebase-architecture 等。当前仓库没有新增 Matt 风格 skill，也未 vendored 上游文件；如后续复制上游文本或文件，请保留其 MIT License 版权声明。
+- `requirements-grilling` 直接复制/改编 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 中 `grilling` 与 `domain-modeling` 的核心行为和 `ADR-FORMAT.md` / `CONTEXT-FORMAT.md` 参考格式，按上游 MIT License 保留来源说明，并加上 AILI/OpenSpec 的 `interview.md`、`context.md`、`adr.md`、readiness gate 与无新增 `/grill` 命令约束。其他 workflow 纪律仍仅概念上参考 zoom-out、prototype、to-issues、diagnose、tdd、write-a-skill、improve-codebase-architecture 等方向，未复制上游文本。
 
 ## 使用说明
 

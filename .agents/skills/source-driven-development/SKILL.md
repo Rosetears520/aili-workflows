@@ -32,7 +32,7 @@ This skill owns the official/API documentation lane of the research-first planni
 
 - local repository facts and peer patterns belong to `repo-evidence-first`
 - industry/GitHub/mature project patterns belong to `mature-project-pattern-research`
-- user-facing方案 clarification and write-back readiness belong to `change-interviewer`
+- user-facing方案 clarification and write-back readiness belong to `requirements-grilling`
 - testability and durable test-plan artifacts belong to `test-document-generator`
 - lifecycle timing stays with the active delivery workflow; do not create a new public command or standalone lifecycle-owner skill
 

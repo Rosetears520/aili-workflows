@@ -443,11 +443,12 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         if define_case.get("expected_scope") != "artifact-fan-out":
             errors.append(f"{name}: DEFINE expected_scope must be 'artifact-fan-out'")
         errors.extend(require_checks(define_case, "expected_artifacts", ["interview.md", "test-plan.md"], name, "DEFINE"))
+        errors.extend(require_checks(define_case, "expected_forbidden_artifacts", ["grill.md", "requirements-grilling.md"], name, "DEFINE"))
         errors.extend(
             require_checks(
                 define_case,
                 "expected_skills",
-                ["change-interviewer", "test-document-generator"],
+                ["requirements-grilling", "test-document-generator"],
                 name,
                 "DEFINE",
             )
@@ -683,7 +684,7 @@ def validate_command_contracts() -> list[str]:
 
     define_text = read_repo_text("commands/define.md") if (command_dir / "define.md").exists() else ""
     for marker in [
-        "change-interviewer",
+        "requirements-grilling",
         "test-document-generator",
         "interview.md",
         "test-plan.md",
@@ -703,12 +704,12 @@ def validate_define_artifact_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
         ".agents/skills/aili-delivery-flow/SKILL.md": [
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "Unverified",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "READY",
             "BLOCKED",
@@ -719,14 +720,14 @@ def validate_define_artifact_contracts() -> list[str]:
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": [
             "interview.md",
             "test-plan.md",
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "asks once",
         ],
         ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": [
             "interview.md",
             "test-plan.md",
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "BUILD Readiness",
         ],
@@ -735,7 +736,7 @@ def validate_define_artifact_contracts() -> list[str]:
             "Conversation context is stale",
             "disk wins",
             "interview.md",
-            "change-interviewer",
+            "requirements-grilling",
         ],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": [
             "Artifact Freshness Gate",
@@ -744,21 +745,65 @@ def validate_define_artifact_contracts() -> list[str]:
             "test-plan.md",
             "test-document-generator",
         ],
-        "docs/harness/backend-adapters.md": [
+        ".agents/skills/requirements-grilling/SKILL.md": [
             "change-interviewer",
+            "interview packet",
+            "interview.md",
+            "Round 2+",
+            "Re-read the filled packet from disk",
+            "ambiguous",
+            "BLOCKED",
+            "evidence-backed recommended answer",
+            "Domain-Modeling Discipline",
+            "CONTEXT-FORMAT.md",
+            "ADR-FORMAT.md",
+            "INTERVIEW-PACKET-FORMAT.md",
+            "MIT-LICENSE-MATT-POCOCK.md",
+            "Status: Proposed",
+            "do not add `/grill`, `/grill-me`, or `/interview`",
+            "do not create `grill.md`, `grilling.md`, or `requirements-grilling.md`",
+        ],
+        ".agents/skills/requirements-grilling/references/INTERVIEW-PACKET-FORMAT.md": [
+            "# 需求拷问包：<change-name>",
+            "资料来源与证据",
+            "覆盖矩阵与状态",
+            "术语 / 领域模型挑战",
+            "答案吸收记录",
+        ],
+        ".agents/skills/requirements-grilling/references/CONTEXT-FORMAT.md": [
+            "## Language",
+            "_Avoid_",
+            "project-specific terms only",
+            "implementation decisions",
+            "context.md` remains beside `interview.md`",
+        ],
+        ".agents/skills/requirements-grilling/references/ADR-FORMAT.md": [
+            "Status: Proposed",
+            "hard to reverse",
+            "surprising without context",
+            "real trade-off",
+            "beside `interview.md`",
+        ],
+        ".agents/skills/requirements-grilling/references/MIT-LICENSE-MATT-POCOCK.md": [
+            "MIT License",
+            "Copyright (c) 2026 Matt Pocock",
+            "substantial portions of the Software",
+        ],
+        "docs/harness/backend-adapters.md": [
+            "requirements-grilling",
             "test-document-generator",
             "interview.md",
             "test-plan.md",
             "UNVERIFIED",
         ],
         "docs/harness/command-lifecycle.md": [
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "required behavior",
             "output contract",
         ],
         "docs/harness/aili-harness-contract.md": [
-            "change-interviewer",
+            "requirements-grilling",
             "test-document-generator",
             "Unverified",
         ],

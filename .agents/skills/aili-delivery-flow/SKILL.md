@@ -44,7 +44,7 @@ Stop immediately and report the missing next action when:
 2. Select the backend adapter: OpenSpec, Superpowers-style plan, custom files, or conservative auto-detection.
 3. Apply the mode gate before any work:
    - IDEATE explores options and uncertainty; do not edit production code.
-   - DEFINE produces or updates spec, questionnaire/interview, and test document artifacts; for OpenSpec-backed changes it routes `interview.md` through `change-interviewer` and `test-plan.md` through `test-document-generator`; stop before implementation until the user confirms, explicitly waives, or explicitly accepts `Unverified` gates.
+   - DEFINE produces or updates spec, questionnaire/interview, and test document artifacts; for OpenSpec-backed changes it routes `interview.md` through `requirements-grilling` and `test-plan.md` through `test-document-generator`; stop before implementation until the user confirms, explicitly waives, or explicitly accepts `Unverified` gates.
    - BUILD requires explicit approval plus either a scoped implementation package or a resolved ready target with enough evidence to synthesize a package queue, then runs automated local implementation quality gates.
    - SHIP requires full release-readiness review/repair, fresh verification evidence, a spec coverage check for formal changes, and closeout before claiming ready.
 4. Use the artifact contract for user-facing output and record unknowns instead of guessing.

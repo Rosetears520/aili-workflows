@@ -17,7 +17,7 @@ Questionnaires prevent ambiguous work from entering BUILD.
 
 ## Gate
 
-DEFINE may draft questions and incorporate answers. For OpenSpec-backed changes, DEFINE writes `openspec/changes/<change-id>/interview.md` through `change-interviewer`. BUILD must stop until blocking answers are confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
+DEFINE may draft questions and incorporate answers. For OpenSpec-backed changes, DEFINE writes `openspec/changes/<change-id>/interview.md` through `requirements-grilling`. BUILD must stop until blocking answers are confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
 
 ## Artifact Freshness Gate
 

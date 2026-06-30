@@ -1,15 +1,28 @@
 ---
-name: change-interviewer
-description: Generate a source-grounded Chinese requirements interview packet or evidence-backed方案 discussion for unclear changes, specs, plans, issues, or user-provided drafts; use repository code/docs, existing specs, official/API docs, current web/prior-art sources before asking; require no-objection/approval, waiver, or accepted UNVERIFIED items before BUILD/implementation when research-first planning triggers; grill only for decision-changing requirements/write-back readiness; stress-test packets and filled answers before writing confirmed answers into agreed artifacts.
+name: requirements-grilling
+description: Canonical AILI requirements-grilling workflow for evidence-first requirements clarification, change-interviewer compatibility, Chinese interview packet generation, OpenSpec interview.md write-back readiness, domain-modeling, ADR gating, and grill/interview packet trigger phrases before BUILD.
 ---
 
-# Change Interviewer
+# Requirements Grilling
 
 ## Purpose
 
-Use this skill to turn an incomplete change idea or draft into an implementable, reviewable change package.
+Use this skill to turn an incomplete change idea or draft into an implementable, reviewable change package by grilling the requirements, sharpening domain language, and preserving AILI DEFINE artifacts.
 
 The input can be an OpenSpec change directory, a Superpowers-style plan, a user-pasted paragraph, an issue, a ticket, or one or more custom files. The output should preserve the user's intent, clarify unknowns through interview questions, and persist refined content only to the agreed target files.
+
+`requirements-grilling` is the canonical capability name. Old terms such as `change-interviewer`, “interview packet”, and “change interview” are compatibility trigger phrases only; they route to this same flow and must not create a second user-facing skill or artifact contract.
+
+## Provenance
+
+This skill is the AILI adaptation of upstream Matt Pocock skills `grilling` and `domain-modeling`, copied/adapted under the upstream MIT License. It combines their questioning and domain-modeling disciplines with AILI/OpenSpec artifact placement, `interview.md` compatibility, `context.md` Language handling, `adr.md` gating, answer ingestion, and readiness states.
+
+Upstream-originated reference formats are preserved by name in this skill's `references/` directory:
+
+- `references/CONTEXT-FORMAT.md`
+- `references/ADR-FORMAT.md`
+- `references/INTERVIEW-PACKET-FORMAT.md`
+- `references/MIT-LICENSE-MATT-POCOCK.md`
 
 ## Interview Packet Language
 
@@ -29,9 +42,9 @@ Before persisting an interview packet to the repository, follow the repository's
 
 ## When to Use
 
-Use this skill when the user wants to refine a change before implementation, especially when the source material is ambiguous, incomplete, or spread across files.
+Use this skill when the user wants to refine, grill, challenge, interview, or write back a change before implementation, especially when source material is ambiguous, incomplete, or spread across files.
 
-This skill owns user-facing clarification,方案 discussion, no-objection/approval capture, waiver capture, and write-back readiness. It does not own the evidence lanes themselves: official/API docs route to `source-driven-development`, mature public-project prior art routes to `mature-project-pattern-research`, local repository facts route to `repo-evidence-first`, and test-plan artifacts route to `test-document-generator`.
+This skill owns user-facing clarification,方案 discussion, no-objection/approval capture, waiver capture, write-back readiness, and `interview.md` answer ingestion. It does not own the evidence lanes themselves: official/API docs route to `source-driven-development`, mature public-project prior art routes to `mature-project-pattern-research`, local repository facts route to `repo-evidence-first`, and test-plan artifacts route to `test-document-generator`.
 
 Realistic trigger prompts:
 
@@ -42,7 +55,7 @@ Realistic trigger prompts:
 - "Grill this requirement / interview packet before write-back or BUILD readiness."
 - "I filled `interview.md`; check whether the answers are clear enough to write back."
 - "Research/docs first, then give me a方案 before implementation."
-- Any DEFINE/BUILD readiness discussion where official/API docs, fast-changing/version-sensitive sources, model uncertainty, explicit user-requested research, or industry/GitHub similar projects materially affect the方案.
+- Any old `change-interviewer` request, interview packet request, or DEFINE/BUILD readiness discussion where official/API docs, fast-changing/version-sensitive sources, model uncertainty, explicit user-requested research, or industry/GitHub similar projects materially affect the方案.
 
 ## When Not to Use
 
@@ -50,9 +63,9 @@ Do not use this skill for:
 
 - implementing the change after requirements are clear
 - broad product brainstorming with no intent to produce a change package
-- pure plan, design, spec, review, or completion-claim stress-testing with no requirements-interview or write-back target; use `strategy-stress-test` directly
+- pure plan, design, spec, review, or completion-claim stress-testing with no requirements-grilling or write-back target; use `strategy-stress-test` directly
 - initializing project-level agent rules or OpenCode setup docs
-- rewriting a document without interviewing or preserving author intent
+- rewriting a document without grilling, interviewing, or preserving author intent
 - OpenSpec validation only, with no requirements refinement needed
 
 Non-trigger prompt:
@@ -87,7 +100,7 @@ Packet Mode defaults to file output, not chat-first output.
 
 ```text
 source-ground -> resolve placement -> draft packet -> 🔴 stress-test -> repair -> persist -> concise summary
-filled answers -> disk re-read -> answer classification -> 🔴 stress-test -> readiness state -> incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
+filled answers -> disk re-read -> answer classification -> domain-language/ADR check -> 🔴 stress-test -> readiness state -> follow-up round or incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
 ```
 
 Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for chat-only output, writing is blocked by permissions or missing workspace access, or the user chooses chat-only output after the placement question.
@@ -126,16 +139,17 @@ Chat response after persistence should include only:
 - source files reviewed
 - number of questions
 - unresolved `Open Question` / `Unverified` count
-- interview readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
+- requirements-grilling readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
 - suggested next action
 
 ## Interview Modes
 
 Use Packet Mode by default for non-trivial changes:
 
-- generate the Chinese interview packet
+- generate the Chinese interview packet at `interview.md` for OpenSpec sources
 - let the user fill it
-- ingest answers later
+- ingest answers later from disk
+- append Round 2+ follow-up sections in the same artifact when material blockers remain
 
 Use Interactive Mode only when:
 
@@ -147,6 +161,54 @@ In Interactive Mode, ask one question at a time.
 
 In Packet Mode, do not interrupt the packet with chat-style single-question turns unless a blocking target or persistence decision is missing.
 
+## Grilling Discipline
+
+The upstream `grilling` discipline is part of this flow:
+
+```text
+Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+
+Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering.
+
+If a question can be answered by exploring the codebase, explore the codebase instead.
+```
+
+AILI adaptations:
+
+- In Interactive Mode, ask one material question at a time and wait.
+- In Packet Mode, group the initial question set in `interview.md`, but preserve dependency order and make Round 2+ follow-ups one decision branch at a time when answers diverge.
+- For each question, explain why it matters, name the affected artifact or decision, provide an evidence-backed recommended answer when available, state the tradeoff, include an answer slot, and name the write-back target.
+- If the answer can be discovered from code, docs, specs, tests, configs, or official sources, inspect those sources instead of asking.
+- If no evidence-backed default exists, use `Open Question` or `Unverified`; do not present a model guess as a recommendation.
+
+## Domain-Modeling Discipline
+
+Apply domain-modeling as an active discipline, not as passive glossary lookup.
+
+During grilling:
+
+- challenge conflicts with existing glossary terms, artifact names, lifecycle terms, source-of-truth ownership, readiness states, or code/docs language
+- sharpen fuzzy or overloaded terms into project-specific canonical language
+- discuss concrete happy-path, failure-path, boundary, stale-state, partial-answer, contradiction, waiver, and unverified scenarios
+- cross-reference current code, docs, specs, tests, configs, and approved source evidence before accepting domain claims
+- update the change-local `context.md` `## Language` section only when project-specific terms or conflicts are discovered and resolved
+- keep `context.md` Language glossary-like: tight definitions, `_Avoid_` alternatives, and project-specific terms only
+- keep implementation decisions, trade-offs, scratchpad notes, generic programming terms, and architecture rationale out of Language; use `design.md`, `adr.md`, tasks, specs, or `implementation-notes.html` as appropriate
+
+Use `references/CONTEXT-FORMAT.md` for Language structure. For OpenSpec changes, `context.md` remains beside `interview.md` unless a future accepted change says otherwise.
+
+## ADR Handling
+
+Offer an ADR sparingly and only when all three are true:
+
+1. The decision is hard to reverse.
+2. The decision would be surprising without context.
+3. The decision is the result of a real trade-off.
+
+Use `references/ADR-FORMAT.md` for structure. ADRs for an OpenSpec change live as `openspec/changes/<change-id>/adr.md` beside `interview.md` unless a future accepted change says otherwise.
+
+Keep ADRs short. The value is recording the decision and why; status, options, and consequences are optional when useful. Use `Status: Proposed` unless the user or accepted change authority explicitly confirms the decision as accepted.
+
 ## Non-Negotiables
 
 - Do not fill in requirements, design, or acceptance criteria by guessing.
@@ -155,18 +217,21 @@ In Packet Mode, do not interrupt the packet with chat-style single-question turn
 - If restructuring is necessary, keep original text under `## Appendix: Original Draft` in the same file.
 - Never record unconfirmed information as fact. Use `Assumption:` only when the user has accepted it as a working assumption.
 - Keep source-specific formats intact, especially OpenSpec requirement headers and scenarios.
+- Keep `/ideate`, `/define`, `/build`, and `/ship` as the only public top-level delivery commands; do not add `/grill`, `/grill-me`, or `/interview`.
+- Keep the artifact name `interview.md`; do not create `grill.md`, `grilling.md`, or `requirements-grilling.md` for the same OpenSpec clarification flow.
 
 ## Phase A: Source Grounding
 
 Before generating questions:
 
 1. Read the user-provided source text or files.
-2. If the source is an OpenSpec change directory, inventory `tasks.md` or `task.md`, `proposal.md`, `design.md`, and `specs/` files.
+2. If the source is an OpenSpec change directory, inventory `tasks.md` or `task.md`, `proposal.md`, `design.md`, `context.md`, `adr.md`, and `specs/` files.
 3. If the source is a plan, issue, ticket, PR description, or custom file, identify existing sections, task markers, requirements, acceptance criteria, and unresolved assumptions.
 4. If repository evidence is needed and the search would be broad or noisy, dispatch `code-scout` as a read-only evidence locator.
 5. If external behavior matters, route official/API documentation through `source-driven-development` and current/prior-art sources through the appropriate research lane before asking the user.
 6. If the planning gate is triggered by fast-changing/version-sensitive docs and APIs, provider docs such as DeepSeek, SDK/framework/changelog-sensitive behavior, model uncertainty, explicit user-requested research, or industry/GitHub similar-project research, synthesize an evidence-backed方案 before implementation.
 7. Build a concise evidence table that separates Observed Fact, External Source, Inference, Assumption, Open Question, and Unverified.
+8. Build or refine the domain model: candidate terms, conflicting names, boundary examples, source-of-truth owners, and code/doc contradictions.
 
 Do not ask the user for information that can be reliably discovered from current code, docs, specs, tests, configs, or official sources.
 
@@ -179,19 +244,20 @@ Common gaps:
 - incomplete happy path, failure path, retry, rollback, or migration flow
 - undefined interfaces, API shapes, events, auth, errors, or versioning
 - unclear data model, ownership, lifecycle, validation, or constraints
+- fuzzy, conflicting, or overloaded domain terms
 - missing architecture decisions, trade-offs, dependencies, or alternatives
 - missing security, privacy, reliability, performance, or observability requirements
 - acceptance criteria that are not executable or verifiable
 
-Do not start writing final content until the interview packet is complete. If the user explicitly says to write with current information, proceed only with unresolved material items labeled as `Open Question`, explicitly `WAIVED`, or accepted as named `UNVERIFIED`; never mark the interview gate `READY` from unresolved material ambiguity.
+Do not start writing final content until the interview packet is complete. If the user explicitly says to write with current information, proceed only with unresolved material items labeled as `Open Question`, explicitly `WAIVED`, or accepted as named `UNVERIFIED`; never mark the requirements-grilling gate `READY` from unresolved material ambiguity.
 
 ## Readiness States
 
-Report the interview gate with exactly one state whenever a packet is persisted, filled answers are ingested, or write-back / BUILD readiness is discussed:
+Report the requirements-grilling gate with exactly one state whenever a packet is persisted, filled answers are ingested, follow-up rounds are appended, or write-back / BUILD readiness is discussed:
 
-- `READY`: material questions are answered, answers are coherent with evidence, and acceptance/testability is sufficient for implementation.
-- `BLOCKED`: material ambiguity, contradiction, incomplete answer, evidence conflict, unsupported default, out-of-scope answer, or untestable acceptance remains. Use `BLOCKED_FOR_CLARIFICATION` as the detailed reason when the next action is another interview round.
-- `WAIVED`: the user explicitly waived the interview gate or a named question despite the missing information.
+- `READY`: material questions are answered, answers are coherent with evidence, domain language is not contradictory, and acceptance/testability is sufficient for implementation.
+- `BLOCKED`: material ambiguity, contradiction, incomplete answer, evidence conflict, unsupported default, out-of-scope answer, fuzzy domain term, source-of-truth conflict, or untestable acceptance remains. Use `BLOCKED_FOR_CLARIFICATION` as the detailed reason when the next action is another grilling round.
+- `WAIVED`: the user explicitly waived the gate or a named question despite the missing information.
 - `UNVERIFIED`: the user explicitly accepted named unresolved or unverifiable items as `UNVERIFIED`; do not describe those items as confirmed.
 
 ## Phase B: Draft Interview Packet
@@ -213,89 +279,12 @@ The packet must include:
 3. `覆盖矩阵与状态`
 4. `需要你填写的问题`
 5. `设计漏洞 / 证据缺口 / 反例`
-6. `填写说明`
-7. `后续写回映射`
-8. `答案吸收记录`
+6. `术语 / 领域模型挑战`
+7. `填写说明`
+8. `后续写回映射`
+9. `答案吸收记录`
 
-Use this template:
-
-```markdown
-# 变更采访包：<change-name>
-
-## 1. 资料来源与证据
-
-| 来源 | 已检查内容 | 观察到的事实 | 置信度 | 备注 |
-|---|---|---|---|---|
-| `<path>` | 现有实现 / 文档 / 测试 | ... | high / medium / low | ... |
-
-## 2. 当前理解
-
-- 目标：
-- 当前草稿表达的是：
-- 现有代码 / 文档显示：
-- 已确认约束：
-- 暂定非目标：
-- 仍不确定的地方：
-
-## 3. 覆盖矩阵与状态
-
-状态只能使用：`Confirmed by evidence`、`Not applicable`、`Needs question`、`Open Question`、`Unverified`。
-
-| 维度 | 状态 | 证据 / 原因 | 关联问题 | 写回目标 |
-|---|---|---|---|---|
-| goal/success | ... | ... | Q? / N/A | `proposal.md` / `test-plan.md` |
-| scope/non-goals | ... | ... | Q? / N/A | `proposal.md` |
-| roles/permissions | ... | ... | Q? / N/A | `design.md` / specs |
-| happy path | ... | ... | Q? / N/A | `design.md` / specs |
-| failure path | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
-| retries/rollback | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
-| boundary conditions | ... | ... | Q? / N/A | specs / `test-plan.md` |
-| data lifecycle | ... | ... | Q? / N/A | `design.md` / specs |
-| state transitions | ... | ... | Q? / N/A | `design.md` / specs |
-| API/CLI/UI contracts | ... | ... | Q? / N/A | specs / `tasks.md` |
-| compatibility/migration | ... | ... | Q? / N/A | `design.md` / `tasks.md` |
-| security/privacy | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
-| performance/reliability | ... | ... | Q? / N/A | `design.md` / `test-plan.md` |
-| observability | ... | ... | Q? / N/A | `design.md` / `tasks.md` |
-| acceptance/testability | ... | ... | Q? / N/A | specs / `test-plan.md` |
-| rollout/rollback | ... | ... | Q? / N/A | `proposal.md` / `design.md` |
-| explicit non-goals | ... | ... | Q? / N/A | `proposal.md` |
-
-## 4. 需要你填写的问题
-
-| ID | 问题 | 为什么要问 | 影响的 artifact / decision | 有证据支撑的推荐默认答案 | 后果 / 取舍 | 你的填写 | 写回位置 |
-|---|---|---|---|---|---|---|---|
-| Q1 | ... | ... | scope / design / tasks / acceptance / tests / risk / implementation safety | ...（证据：`<path>`） | 选 A 会...；选 B 会... |  | `proposal.md` |
-
-## 5. 设计漏洞 / 证据缺口 / 反例
-
-| ID | 类型 | 说明 | 建议处理方式 | 状态 |
-|---|---|---|---|---|
-| L1 | Missing evidence | ... | 查代码 / 查官方文档 / 问用户 / Open Question | open |
-
-## 6. 填写说明
-
-- 可以直接在“你的填写”列里写答案。
-- 不确定的地方写“不确定”即可。
-- 接受推荐默认答案时，写“同意默认”。
-- 不进入本次 scope 的内容，写“本次不做”。
-- 未填写内容不会被写成事实，只会保留为 `Open Question`。
-- 无证据支撑但暂时保留的内容会标为 `Unverified`。
-- 如果填写内容仍有歧义、互相矛盾、不可测试、与证据冲突或超出 scope，会进入追问轮，不会直接写回为事实。
-
-## 7. 后续写回映射
-
-| 用户答案 | 将写回到 | 写回方式 | 写回前门禁 |
-|---|---|---|---|
-| Q1 | `proposal.md` | scope / non-goal | confirmed / waived / accepted `UNVERIFIED` |
-
-## 8. 答案吸收记录
-
-_用户填写后由模型补充。_
-
-| 问题 | 用户答案 | 分类 | 形成的决策 | 已写回位置 | 剩余不确定 / 追问 |
-|---|---|---|---|---|---|
-```
+Use `references/INTERVIEW-PACKET-FORMAT.md` as the packet template. Keep the full Markdown skeleton out of `SKILL.md` so this file stays focused on routing, gates, and workflow rules.
 
 Coverage matrix dimensions for non-trivial changes:
 
@@ -309,10 +298,11 @@ Coverage matrix dimensions for non-trivial changes:
 8. state transitions: lifecycle states, allowed transitions, blocked transitions, idempotency, and stale-state handling.
 9. API/CLI/UI contracts: command syntax, request/response shape, UI copy, compatibility, errors, and versioning.
 10. compatibility/migration: backward compatibility, deprecation, upgrade path, and affected existing users or artifacts.
-11. security/privacy: secrets, permissions, data exposure, trust boundaries, compliance, and fail-closed behavior.
-12. performance/reliability: latency, scale, resource usage, availability, retries, and degradation behavior.
-13. observability: logs, metrics, audit trail, user-visible status, debugging evidence, and failure reports.
-14. acceptance/testability: executable scenarios, verification commands, manual checks, and acceptance thresholds.
+11. terminology/domain model: canonical terms, avoided terms, source-of-truth ownership, conflicting names, and boundary examples.
+12. security/privacy: secrets, permissions, data exposure, trust boundaries, compliance, and fail-closed behavior.
+13. performance/reliability: latency, scale, resource usage, availability, retries, and degradation behavior.
+14. observability: logs, metrics, audit trail, user-visible status, debugging evidence, and failure reports.
+15. acceptance/testability: executable scenarios, verification commands, manual checks, and acceptance thresholds.
 
 For every dimension, choose one status only:
 
@@ -324,7 +314,7 @@ For every dimension, choose one status only:
 
 Material question threshold:
 
-- Ask only if the answer can change scope, design, tasks, acceptance criteria, tests, risk handling, rollout, or implementation safety.
+- Ask only if the answer can change scope, design, tasks, acceptance criteria, tests, risk handling, rollout, terminology, domain model, or implementation safety.
 - Each question must include why asked, affected artifact/decision, evidence-backed recommended default when available, consequences/trade-offs, answer slot, and write-back target.
 - If a candidate question is generic or would not change implementation readiness, omit it or convert it to a non-blocking note.
 - If the answer is discoverable from current repository files, tests, configs, specs, docs, or official sources, gather and cite evidence instead of asking.
@@ -337,6 +327,7 @@ In Packet Mode, include questions immediately when mentioned:
 - security/privacy/compliance: data retention, audit logs, encryption, PII handling
 - UI/UX: empty/loading/error states, permission-denied copy, accessibility, i18n
 - agent workflow changes: primary/subagent boundaries, skill routing, verification, memory, and no nested orchestration
+- terminology or artifact-name changes: old/new names, compatibility aliases, user-visible vs invisible routing, and artifact contract boundaries
 
 If the user says `先这样`, `按目前信息写回`, or equivalent, stop asking only after classifying unresolved material items. Proceed with write-back only when unresolved items are recorded as `Open Question`, explicitly `WAIVED`, or accepted as named `UNVERIFIED`; do not write unresolved material answers as facts or report `READY` until clarified.
 
@@ -344,7 +335,7 @@ If the user says `先这样`, `按目前信息写回`, or equivalent, stop askin
 
 After generating the draft interview packet, use `strategy-stress-test` to stress-test and repair the draft packet.
 
-🔴 STOP before persistence if the stress-test found an unresolved missing question, unsupported default, non-executable acceptance criterion, or unmarked `Open Question` / `Unverified` item. Repair the packet first or report the blocker.
+🔴 STOP before persistence if the stress-test found an unresolved missing question, unsupported default, non-executable acceptance criterion, fuzzy domain term, missing boundary scenario, ADR misuse, or unmarked `Open Question` / `Unverified` item. Repair the packet first or report the blocker.
 
 Check:
 
@@ -354,30 +345,14 @@ Check:
 - Which user answer would lead to a completely different design?
 - Which acceptance criteria are not executable?
 - Which security, privacy, reliability, rollout, migration, compatibility, or observability risks are not covered?
+- Which terms conflict with project language or artifact names?
+- Which boundary scenario would break the current model?
+- Which potential ADR fails one of the three ADR gate criteria?
 - Which assumptions must be marked `Open Question` or `Unverified`?
 
 Apply fixes to the interview packet before sending it to the user.
 
 After Phase C, persist the final packet according to the Output Placement Contract. Only then present a concise chat summary.
-
-### Grilling Discipline
-
-In Interactive Mode, ask one question at a time when the answer materially changes design or implementation.
-
-For each question:
-- explain why it matters
-- provide the recommended answer
-- state the tradeoff
-- wait for the user's answer when the decision is product/domain/architecture-sensitive
-
-If the answer can be discovered from code or docs, inspect the code/docs instead of asking.
-
-During the interview:
-- call out conflicts with existing glossary terms
-- sharpen vague or overloaded terms into canonical project language
-- test domain claims with concrete edge scenarios
-- compare user statements against current code behavior
-- surface contradictions immediately
 
 ## Phase D: Ingest User Answers
 
@@ -385,15 +360,16 @@ After the user fills the interview packet:
 
 1. Re-read the filled packet from disk first; conversation summaries are stale until confirmed against the saved artifact.
 2. Classify every material answer as one of: `confirmed`, `ambiguous`, `contradictory`, `incomplete`, `untestable`, `evidence-conflicting`, `out-of-scope`, or `Unverified`.
-3. Convert only `confirmed`, explicitly waived, or user-accepted `Unverified` answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, and Verification commands.
-4. Keep unanswered, ambiguous, contradictory, incomplete, untestable, evidence-conflicting, or out-of-scope answers out of factual write-back.
+3. Convert only `confirmed`, explicitly waived, or user-accepted `Unverified` answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, Verification commands, Language updates, or ADR proposals.
+4. Keep unanswered, ambiguous, contradictory, incomplete, untestable, evidence-conflicting, out-of-scope, or terminology-conflicting answers out of factual write-back.
 5. Generate a follow-up question round for each material blocker, including why it blocks, affected artifact/decision, recommended default if evidence supports one, consequences/trade-offs, answer slot, and write-back target.
-6. Keep unverifiable external claims as `Unverified` only when named and explicitly accepted by the user; otherwise classify them as blocking or `Open Question`.
-7. Do not silently resolve conflicts or treat a filled answer slot as confirmation when the answer remains unclear.
-8. Build an incorporation log before write-back that records answer classification, evidence checked, follow-up needed, and readiness state.
-9. Use `strategy-stress-test` after answer classification and before write-back to check for unsafe ingestion, missed follow-up questions, evidence conflicts, unsupported defaults, untestable acceptance, or unmarked `Open Question` / `Unverified` items.
+6. Append Round 2+ follow-up rounds to the same `interview.md` artifact for OpenSpec sources; do not create `grill.md`, `requirements-grilling.md`, or a parallel artifact.
+7. Keep unverifiable external claims as `Unverified` only when named and explicitly accepted by the user; otherwise classify them as blocking or `Open Question`.
+8. Do not silently resolve conflicts or treat a filled answer slot as confirmation when the answer remains unclear.
+9. Build an incorporation log before write-back that records answer classification, evidence checked, domain-language changes, ADR gate result, follow-up needed, and readiness state.
+10. Use `strategy-stress-test` after answer classification and before write-back to check for unsafe ingestion, missed follow-up questions, evidence conflicts, unsupported defaults, untestable acceptance, domain-model contradictions, ADR misuse, or unmarked `Open Question` / `Unverified` items.
 
-If the answer-set stress-test finds material ambiguity, contradiction, incompleteness, untestable acceptance, evidence conflict, or out-of-scope expansion, report readiness as `BLOCKED` / `BLOCKED_FOR_CLARIFICATION`, persist or present the follow-up round according to the placement contract, and do not write the affected answers into proposal, design, tasks, specs, acceptance criteria, or test plans until clarified, waived, or accepted as `UNVERIFIED`.
+If the answer-set stress-test finds material ambiguity, contradiction, incompleteness, untestable acceptance, evidence conflict, terminology conflict, or out-of-scope expansion, report readiness as `BLOCKED` / `BLOCKED_FOR_CLARIFICATION`, persist or present the follow-up round according to the placement contract, and do not write the affected answers into proposal, design, tasks, specs, acceptance criteria, Language, ADR, or test plans until clarified, waived, or accepted as `UNVERIFIED`.
 
 If the user explicitly says to proceed despite named unresolved items, record whether the gate is `WAIVED` or `UNVERIFIED`, list the accepted items, and keep the risk visible in write-back and completion reports. Do not call it `READY`.
 
@@ -401,15 +377,15 @@ If the user explicitly says to proceed despite named unresolved items, record wh
 
 Write only to the agreed target files.
 
-🔴 STOP before write-back when the target file is not explicitly agreed, the interview gate is `BLOCKED`, answers conflict, existing content would need replacement instead of merge, or a confirmed answer would change scope/design/tasks beyond the agreed package. Ask or report the conflict instead of overwriting.
+🔴 STOP before write-back when the target file is not explicitly agreed, the requirements-grilling gate is `BLOCKED`, answers conflict, existing content would need replacement instead of merge, a confirmed answer would change scope/design/tasks beyond the agreed package, Language would absorb an implementation decision, or an ADR would be created without passing the ADR gate. Ask or report the conflict instead of overwriting.
 
-BUILD readiness rule: a change package may proceed from the interview gate only when the state is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED` with named unresolved items. A merely completed form is not enough.
+BUILD readiness rule: a change package may proceed from the requirements-grilling gate only when the state is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED` with named unresolved items. A merely completed form is not enough.
 
 General write-back rules:
 
 - Merge rather than overwrite.
 - Preserve headings, IDs, task markers, and existing conventions.
-- Put details closest to the file that owns them: proposal for why/scope, design for decisions/trade-offs, tasks for execution, specs or acceptance docs for testable behavior.
+- Put details closest to the file that owns them: proposal for why/scope, design for decisions/trade-offs, tasks for execution, specs or acceptance docs for testable behavior, `context.md` Language for resolved project-specific terms, and `adr.md` for gated hard-to-reverse trade-offs.
 - Add traceability where useful: requirement -> design decision -> task -> verification.
 
 For OpenSpec targets:
@@ -417,6 +393,7 @@ For OpenSpec targets:
 - Preserve required delta headers when present: `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, `## RENAMED Requirements`.
 - Preserve `### Requirement:` and `#### Scenario:` structure.
 - Keep at least one scenario per requirement when adding requirements.
+- Keep `interview.md`, `context.md`, and `adr.md` beside the change artifacts unless a future accepted change changes placement.
 
 For Superpowers-style plans or custom documents:
 
@@ -441,6 +418,6 @@ Report:
 - Source reviewed
 - Questions asked and key answers incorporated
 - Files changed
-- Interview readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
+- Requirements-grilling readiness state: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`
 - Open questions left unresolved
 - Validation command or inspection result

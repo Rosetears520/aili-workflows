@@ -94,7 +94,7 @@ Planning gate ownership:
 - This skill owns local repository evidence only. It should supply current repo facts, existing patterns, constraints, verification paths, and unknowns for the方案.
 - Official/API docs, fast-changing provider behavior, SDK/framework docs, and changelog-sensitive facts route to `source-driven-development` or external/current evidence lanes.
 - Industry/GitHub/mature project prior art routes to `mature-project-pattern-research`.
-- User-facing方案 discussion, no-objection/approval, waiver, and write-back readiness route to `change-interviewer` or the active lifecycle workflow.
+- User-facing方案 discussion, no-objection/approval, waiver, and write-back readiness route to `requirements-grilling` or the active lifecycle workflow.
 - Test-document artifacts route to `test-document-generator`.
 
 When local evidence is part of a research-first planning gate, return facts in a form that can be merged with official-doc and prior-art lanes: official facts `N/A`, local facts, applicable/rejected local patterns, assumptions, `Unverified` gaps, and verification commands. Do not proceed from local evidence directly to implementation when the gate also requires user acceptance of the方案.

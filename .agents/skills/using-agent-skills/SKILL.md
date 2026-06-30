@@ -22,7 +22,7 @@ Task arrives
     ├── Harness/workflow behavior complaint? → harness-issue-triage
     ├── Approved harness/process/ROSE/skill/command/subagent/memory/install change? → harness-evolution
     ├── Vague idea/need refinement? ──→ idea-refine
-    ├── Refining a change draft? ─────→ change-interviewer
+    ├── Grilling or refining a change draft? ─→ requirements-grilling
     ├── Generating test docs / QA plan / test matrix? ─→ test-document-generator
     ├── Triage GitHub issue/PR read-only? → github-evidence-triage
     ├── New project/feature/change? ──→ spec-driven-development
@@ -128,7 +128,7 @@ For every non-OpenSpec source, including a single source document with an obviou
 | Post-implementation review orchestration | `review-pipeline` | Use after non-trivial implementation to fan out relevant reviewer agents, reconcile findings, run a bounded fix loop, and gate final PASS. |
 | Read-only GitHub issue/PR triage | `github-evidence-triage` | Use when analyzing GitHub issues or PRs without comments, labels, reviews, merges, pushes, or other write actions. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
-| Clarifying or writing back change drafts | `change-interviewer` | Use when an existing spec, plan, issue, or change draft needs source-grounded interview questions or a Chinese interview packet for user-filled decisions before write-back. |
+| Clarifying, grilling, or writing back change drafts | `requirements-grilling` | Use when an existing spec, plan, issue, or change draft needs source-grounded requirements grilling, change-interviewer compatibility, or a Chinese interview packet for user-filled decisions before write-back. |
 | Test docs, QA plans, test matrices, or regression checklists | `test-document-generator` | Use when tests must be documented from specs/plans/descriptions without writing or running test code. |
 
 ## Failure Modes to Avoid
@@ -169,7 +169,7 @@ Use `strategy-stress-test` conditionally whenever a material artifact or claim e
 | Phase | Skill | One-Line Summary |
 |-------|-------|-----------------|
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
-| Define | change-interviewer | Interview to clarify and write back change drafts |
+| Define | requirements-grilling | Grill requirements, clarify, and write back change drafts while preserving `interview.md` |
 | Define | github-evidence-triage | Read-only GitHub issue/PR triage with evidence links |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Define | agents-md-initialization | Generate project AGENTS.md from the shared template |

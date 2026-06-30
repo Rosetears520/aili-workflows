@@ -13,7 +13,7 @@ This skill writes testing documentation. It does not replace `test-driven-develo
 
 In the AILI lifecycle, `aili-delivery-flow` owns when DEFINE must produce or confirm a test document before BUILD. This skill owns only the test-document artifact generation rules.
 
-For the research-first planning gate, this skill owns testability mapping only. Official/API evidence belongs to `source-driven-development`; mature public-project prior art belongs to `mature-project-pattern-research`; local repository facts belong to `repo-evidence-first`; user-facing方案 approval/waiver belongs to `change-interviewer` or the active lifecycle workflow.
+For the research-first planning gate, this skill owns testability mapping only. Official/API evidence belongs to `source-driven-development`; mature public-project prior art belongs to `mature-project-pattern-research`; local repository facts belong to `repo-evidence-first`; user-facing方案 approval/waiver belongs to `requirements-grilling` or the active lifecycle workflow.
 
 ## When to Use
 

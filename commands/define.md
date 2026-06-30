@@ -23,7 +23,7 @@ Required behavior:
   - `openspec/changes/<change-id>/design.md`;
   - `openspec/changes/<change-id>/tasks.md`;
   - `openspec/changes/<change-id>/specs/**/spec.md`;
-  - `openspec/changes/<change-id>/interview.md` through `change-interviewer`;
+  - `openspec/changes/<change-id>/interview.md` through `requirements-grilling`;
   - `openspec/changes/<change-id>/test-plan.md` through `test-document-generator`.
 - For non-OpenSpec backends, ask once where to place interview and test-plan artifacts, then record that decision in the active change context.
 - Before using or overwriting existing user-editable artifacts, apply the Artifact Freshness Gate: inspect working-tree state, re-read from disk, inspect diffs when available, and treat disk as source of truth.

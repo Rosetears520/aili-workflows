@@ -29,7 +29,7 @@ Use when the idea is unclear, broad, or competing options exist.
 Use when the goal is plausible but not ready to implement.
 
 - Inputs: idea brief, preserved idea capsule or inbox entry when relevant, issue/spec notes, code/docs evidence, and hydrated prior context.
-- Actions: draft or update spec, questionnaire/interview, acceptance test document, backend-specific `context.md`, and task/readiness artifacts. For OpenSpec-backed changes, use the OpenSpec backend for proposal/design/spec/tasks, route `interview.md` through `change-interviewer`, route `test-plan.md` through `test-document-generator`, and maintain `openspec/changes/<change-id>/context.md`.
+- Actions: draft or update spec, questionnaire/interview, acceptance test document, backend-specific `context.md`, and task/readiness artifacts. For OpenSpec-backed changes, use the OpenSpec backend for proposal/design/spec/tasks, route `interview.md` through `requirements-grilling`, route `test-plan.md` through `test-document-generator`, and maintain `openspec/changes/<change-id>/context.md`.
 - Outputs: confirmed scope, unresolved questions, confirmed decisions, rejected options, test expectations including the formal-change traceability matrix, artifacts created/updated, and build-readiness status: `READY`, `BLOCKED`, `WAIVED`, or `UNVERIFIED`.
 - Hard stop: do not implement until spec/questionnaire/test document gates are user-confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
 
