@@ -24,6 +24,8 @@ Use this reference when `requirements-grilling` drafts or appends an `interview.
 
 状态只能使用：`Confirmed by evidence`、`Not applicable`、`Needs question`、`Open Question`、`Unverified`。
 
+`Confirmed by evidence` 只能用于证据已经给出具体行为、边界、代码/测试/配置/文档等 source-of-truth 或明确 owner、以及可测试验收信号的维度；只出现“安全策略 / 幂等 / 回滚 / quota / audit / 清理策略”等词，不算 confirmed。
+
 | 维度 | 状态 | 证据 / 原因 | 关联问题 | 写回目标 |
 |---|---|---|---|---|
 | goal/success | ... | ... | Q? / N/A | `proposal.md` / `test-plan.md` |
@@ -50,6 +52,7 @@ Use this reference when `requirements-grilling` drafts or appends an `interview.
 | ID | 问题 | 为什么要问 | 影响的 artifact / decision | 有证据支撑的推荐默认答案 | 后果 / 取舍 | 你的填写 | 写回位置 |
 |---|---|---|---|---|---|---|---|
 | Q1 | ... | ... | scope / design / tasks / acceptance / tests / risk / implementation safety | ...（证据：`<path>`） | 选 A 会...；选 B 会... |  | `proposal.md` |
+| Q? | 只写了“写 audit / 按安全策略 / 走 quota”，但没有说明具体记录字段、禁止字段、失败行为、owner/source-of-truth 或验收标准。 | 泛化标签不能证明需求已确认，会影响实现、测试和安全审查。 | audit / security / quota / tests | Open Question：需要补具体策略；若代码/文档已有 source-of-truth，应先引用证据。 | 不追问会导致 false READY；追问会延长 DEFINE 但减少 BUILD 返工。 |  | `design.md` / `test-plan.md` |
 
 ## 5. 设计漏洞 / 证据缺口 / 反例
 
@@ -66,11 +69,13 @@ Use this reference when `requirements-grilling` drafts or appends an `interview.
 ## 7. 填写说明
 
 - 可以直接在“你的填写”列里写答案。
+- 如果在聊天里回答，模型也必须把问题、答案、分类和写回位置同步写回本文件或约定目标；聊天记录本身不是最终 source of truth。
 - 不确定的地方写“不确定”即可。
 - 接受推荐默认答案时，写“同意默认”。
 - 不进入本次 scope 的内容，写“本次不做”。
 - 未填写内容不会被写成事实，只会保留为 `Open Question`。
 - 无证据支撑但暂时保留的内容会标为 `Unverified`。
+- 只写“按安全策略”“按幂等”“走 quota”“正常回滚”“写 audit”这类泛化答案，不会被当成已确认；需要补充具体行为、边界、source-of-truth 和可测试验收标准，或在答案吸收记录 / readiness report 里明确标为 waived / accepted `UNVERIFIED`。注意：`WAIVED` 是 readiness/answer disposition，不是覆盖矩阵状态。
 - 如果填写内容仍有歧义、互相矛盾、不可测试、与证据冲突、术语冲突或超出 scope，会进入 Round 2+ 追问轮，不会直接写回为事实。
 
 ## 8. 后续写回映射

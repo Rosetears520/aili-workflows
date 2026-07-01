@@ -18,14 +18,14 @@ Each public delivery command SHALL state its mode purpose, required behavior, ha
 - **THEN** it contains standard frontmatter, the command heading, user input handling, required behavior, hard stops, and output expectations
 
 ### Requirement: DEFINE produces OpenSpec change-contract artifacts through dedicated skills
-For OpenSpec-backed changes, DEFINE SHALL create or update the implementation-readiness artifacts under `openspec/changes/<change-id>/`, including proposal, tasks, relevant specs, interview, and test-plan artifacts. Interview artifacts MUST be produced through the `requirements-grilling` contract, test-plan artifacts MUST be produced through the `test-document-generator` contract, and design artifacts MUST be created for each OpenSpec change according to the confirmed change policy.
+For OpenSpec-backed changes, DEFINE SHALL create or update the implementation-readiness artifacts under `openspec/changes/<change-id>/`, including proposal, tasks, relevant specs, interview, and test-plan artifacts. Interview artifacts MUST be produced through the `change-interviewer` contract, test-plan artifacts MUST be produced through the `test-document-generator` contract, and design artifacts MUST be created for each OpenSpec change according to the confirmed change policy.
 
 #### Scenario: DEFINE creates questionnaire and test plan by default
 - **WHEN** `/define` is run for an OpenSpec-backed change
-- **THEN** `interview.md` and `test-plan.md` are created or updated as part of the change contract through `requirements-grilling` and `test-document-generator` without requiring separate user prompts
+- **THEN** `interview.md` and `test-plan.md` are created or updated as part of the change contract through `change-interviewer` and `test-document-generator` without requiring separate user prompts
 
 ### Requirement: Non-OpenSpec DEFINE asks artifact placement once
-For non-OpenSpec backends, DEFINE SHALL ask once where questionnaire and test-plan artifacts should be placed before writing them, pass those locations to `requirements-grilling` and `test-document-generator`, then record the placement in the active change context.
+For non-OpenSpec backends, DEFINE SHALL ask once where questionnaire and test-plan artifacts should be placed before writing them, pass those locations to `change-interviewer` and `test-document-generator`, then record the placement in the active change context.
 
 #### Scenario: Placement decision is reused
 - **WHEN** a non-OpenSpec DEFINE flow continues after the user has selected artifact locations
@@ -41,7 +41,7 @@ Before using, merging, validating, or overwriting user-editable DEFINE artifacts
 ### Requirement: BUILD is gated by confirmed or waived DEFINE artifacts
 BUILD SHALL NOT start from DEFINE output unless the relevant spec, questionnaire, and test-plan gates are confirmed, explicitly waived, or marked with an explicit unverified status accepted by the user.
 
-For interview/questionnaire artifacts produced through `requirements-grilling`, a filled interview form alone SHALL NOT satisfy the questionnaire gate. The interview gate MUST remain blocking when material answers are ambiguous, contradictory, incomplete, untestable, unsupported by required evidence, or in conflict with repository/docs/spec evidence, unless the user explicitly waives the gate or accepts the named unresolved item as `UNVERIFIED`.
+For interview/questionnaire artifacts produced through `change-interviewer`, a filled interview form alone SHALL NOT satisfy the questionnaire gate. The interview gate MUST remain blocking when material answers are ambiguous, contradictory, incomplete, untestable, unsupported by required evidence, or in conflict with repository/docs/spec evidence, unless the user explicitly waives the gate or accepts the named unresolved item as `UNVERIFIED`.
 
 #### Scenario: Missing questionnaire blocks build
 - **WHEN** BUILD is requested and the questionnaire gate is still unresolved
