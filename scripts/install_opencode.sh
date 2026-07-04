@@ -15,11 +15,11 @@ Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-direct
 Default mode is selective.
 
 Modes:
-  selective           Preserve agents/, skills/, and commands/ directories; link entries inside them.
+  selective           Preserve OpenCode agents/ and commands/ directories; link skills into $HOME/.agents/skills.
   symlink             Alias for selective.
   copy                Copy entries instead of symlinking. Does not auto-sync later.
-  managed-directory  Replace whole agents/, skills/, and commands/ directories. Requires CONFIRM_MANAGED_DIRECTORY=yes.
-  repair             Restore agents/, skills/, and commands/ if they were replaced by directory-level symlinks.
+  managed-directory  Replace whole OpenCode agents/ and commands/ directories. Requires CONFIRM_MANAGED_DIRECTORY=yes.
+  repair             Restore agents/, legacy skills/, and commands/ if they were replaced by directory-level symlinks.
 
 Options:
   --dry-run           Print planned actions without writing OpenCode files or mutating directories.
@@ -248,6 +248,35 @@ skill_source_root() {
   printf '%s\n' "$AILI_HOME/.agents/skills"
 }
 
+shared_skill_install_root() {
+  local home_root root
+  if [ -z "${HOME:-}" ]; then
+    log "Refusing empty HOME for shared skill install root."
+    exit 2
+  fi
+  home_root="$(canonicalize_path "$HOME")"
+  case "$home_root" in
+    /|/tmp|/tmp/)
+      log "Refusing unsafe HOME for shared skill install root: $home_root"
+      exit 2
+      ;;
+  esac
+  root="$(canonicalize_path "$HOME/.agents/skills")"
+  case "$root" in
+    /|/tmp|/tmp/)
+      log "Refusing unsafe shared skill install root: $root"
+      exit 2
+      ;;
+  esac
+  case "$root" in
+    "$OPENCODE_HOME"|"$OPENCODE_HOME"/*)
+      log "Refusing shared skill install root under OPENCODE_HOME: $root"
+      exit 2
+      ;;
+  esac
+  printf '%s\n' "$root"
+}
+
 validate_manifest_allowlist() {
   python3 - "$AILI_HOME" <<'PY'
 import json
@@ -304,7 +333,7 @@ def manifest_names(kind):
             expected_targets = [("opencode", expected_path)]
         else:
             expected_path = f".agents/skills/{name}"
-            expected_targets = [("shared", expected_path), ("opencode", f"skills/{name}")]
+            expected_targets = [("shared", expected_path)]
 
         path_value = entry.get("path")
         validate_relative(f"{kind} for {name}", path_value)
@@ -360,22 +389,26 @@ install_entries() {
   local action="$1"
   local skills_source
   skills_source="$(skill_source_root)"
+  local skills_target_root
+  skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
+    log "DRY RUN: would ensure shared skills directory exists: $skills_target_root"
   else
     mkdir -p "$OPENCODE_HOME"
+    mkdir -p "$skills_target_root"
   fi
 
-  if [ -e "$OPENCODE_HOME" ] && { [ -L "$OPENCODE_HOME/agents" ] || [ -L "$OPENCODE_HOME/skills" ] || [ -L "$OPENCODE_HOME/commands" ]; }; then
-    log "Refusing selective/copy mode because agents, skills, or commands is a directory-level symlink. Run --mode repair first."
+  if [ -e "$OPENCODE_HOME" ] && { [ -L "$OPENCODE_HOME/agents" ] || [ -L "$OPENCODE_HOME/commands" ]; }; then
+    log "Refusing selective/copy mode because agents or commands is a directory-level symlink. Run --mode repair first."
     exit 2
   fi
 
   if [ "$DRY_RUN" = "true" ]; then
-    log "DRY RUN: would ensure OpenCode subdirectories exist: agents, skills, commands"
+    log "DRY RUN: would ensure OpenCode subdirectories exist: agents, commands"
   else
-    mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
+    mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands"
   fi
 
   install_global_agents "$action"
@@ -395,7 +428,7 @@ install_entries() {
       continue
     fi
     name="$(basename "$dir")"
-    target="$OPENCODE_HOME/skills/$name"
+    target="$skills_target_root/$name"
     "$action" "$dir" "$target"
   done
 
@@ -410,38 +443,57 @@ install_entries() {
 managed_directory() {
   local skills_source
   skills_source="$(skill_source_root)"
+  local skills_target_root
+  skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
 
   if [ "${CONFIRM_MANAGED_DIRECTORY:-}" != "yes" ]; then
     log "Refusing managed directory mode without explicit confirmation."
-    log "Set CONFIRM_MANAGED_DIRECTORY=yes only after the user approves replacing whole agents/, skills/, and commands/ directories."
+    log "Set CONFIRM_MANAGED_DIRECTORY=yes only after the user approves replacing whole agents/ and commands/ directories."
     exit 2
   fi
 
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
-    log "DRY RUN: would replace agents, skills, and commands with directory symlinks from $AILI_HOME"
+    log "DRY RUN: would replace agents and commands with directory symlinks from $AILI_HOME"
+    log "DRY RUN: would install shared skill entries into: $skills_target_root"
     install_global_agents link_entry
+    local dir name target
+    for dir in "$skills_source"/*; do
+      [ -d "$dir" ] || continue
+      [ -f "$dir/SKILL.md" ] || continue
+      name="$(basename "$dir")"
+      target="$skills_target_root/$name"
+      link_entry "$dir" "$target"
+    done
     return
   fi
 
   mkdir -p "$OPENCODE_HOME"
+  mkdir -p "$skills_target_root"
   install_global_agents link_entry
   backup_conflict "$OPENCODE_HOME/agents"
-  backup_conflict "$OPENCODE_HOME/skills"
   backup_conflict "$OPENCODE_HOME/commands"
   if [ -L "$OPENCODE_HOME/agents" ]; then
     unlink "$OPENCODE_HOME/agents"
-  fi
-  if [ -L "$OPENCODE_HOME/skills" ]; then
-    unlink "$OPENCODE_HOME/skills"
   fi
   if [ -L "$OPENCODE_HOME/commands" ]; then
     unlink "$OPENCODE_HOME/commands"
   fi
   ln -s "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
-  ln -s "$skills_source" "$OPENCODE_HOME/skills"
   ln -s "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
+
+  local dir name target
+  for dir in "$skills_source"/*; do
+    [ -d "$dir" ] || continue
+    if [ ! -f "$dir/SKILL.md" ]; then
+      log "Skipping non-skill directory without SKILL.md: $dir"
+      continue
+    fi
+    name="$(basename "$dir")"
+    target="$skills_target_root/$name"
+    link_entry "$dir" "$target"
+  done
 }
 
 repair_directory_symlinks() {

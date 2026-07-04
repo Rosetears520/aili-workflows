@@ -7,7 +7,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Roles
 
 - **ROSE runtime charter**: final responsibility, instruction precedence, safety, git, memory, subagent, and completion-claim gates.
-- **Commands**: thin user entrypoints for `/ideate`, `/define`, `/build`, `/ship` only.
+- **Commands**: thin user entrypoints for `/ideate`, `/define`, `/build`, and `/ship` delivery modes, plus `/local-review` as a standalone local audit command that does not replace SHIP or OpenCode's `/review`.
 - **Delivery flow skill**: lifecycle state machine and backend adapter routing.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
@@ -22,6 +22,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 | DEFINE | Produce/align spec, questions, tests, proactive parallelism analysis, and evidence-backed方案 state; OpenSpec interview/test artifacts route through `requirements-grilling` and `test-document-generator` | Stop before build until blockers are answered, waived, or explicitly accepted as `Unverified`. |
 | BUILD | Dispatch bounded implementation packages or synthesize a package queue from one resolved ready target, then run local quality gates and requested packaging gates | Stay inside approved scope and package boundaries; no BUILD pass without code-review/test evidence, security evidence or a skip reason, and package evidence or blocker when packaging was requested. |
 | SHIP | Verify release-readiness, run release-blocker audit, reconcile review/repair/verification lanes, and close out | No ready/pass claim without fresh release-readiness evidence, resolved/disproven/user-or-active-contract-accepted release blockers, complete join evidence for multi-lane SHIP work, and explicit `Unverified` gaps. |
+| LOCAL_REVIEW | Resolve local changes, base branch, commit, PR, or OpenSpec change target and produce a categorized local review report before optional repair | Do not override OpenCode's `/review`, do not mutate remote state, do not repair before a categorized report and explicit approval, and do not claim release or archive readiness. |
 
 ## Artifact Authority
 
@@ -38,7 +39,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Stop Rules
 
 - Do not rename the OpenSpec change directory without separate approval.
-- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, review, release-blocker audit, or evolve.
+- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, `/review`, release-blocker audit, or evolve; `/local-review` is the only AILI-owned public review command allowed by the local review gate contract.
 - Do not hide cross-entrypoint proactive parallel planning, research-first planning evidence, or requested packaging gates solely inside long protocol text when a thin command/ROSE surface needs to expose the stop condition.
 - Do not modify SQLite schema, lockfiles, dependency manifests, or memory DBs in this phase.
 - Do not apply core harness edits without approved scope and verification trigger.

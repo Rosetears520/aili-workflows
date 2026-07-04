@@ -1,6 +1,6 @@
 # Subagent Task Packet Protocol
 
-Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`. Installed OpenCode runtime target: `skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`.
+Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`. Installed runtime target: `$HOME/.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`.
 
 Use this packet for non-trivial, harness-sensitive, evidence-heavy, review, test, security, debugging, or implementation subagent work. Do not rely on a subagent inheriting the main conversation.
 
@@ -20,6 +20,7 @@ Subagent task packet:
 - Claim hygiene / confidence requirements:
 - Optional evidence provider request: CodeGraph if available/useful, or N/A
 - Expected return format:
+- Phase checkpoint: command | static check | artifact inspection | diff inspection | skipped reason with risk
 - Join contract for parallel lanes:
 - Placement / artifact rules:
 - Coverage expectations:
@@ -43,7 +44,9 @@ Subagent task packet:
 - Claim hygiene / confidence requirements: for results containing facts, inferences, recommendations, verification claims, readiness claims, or unknowns, require internal English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; require unknowns and unsupported claims to remain `Unknown`, `Open Question`, `Unverified`, `[GUESS]`, or the relevant protocol field instead of being smoothed into facts.
 - Optional evidence provider request: CodeGraph may be requested only for eligible lane-local discovery; it must remain optional, compact, fallback-capable, and separate from final proof.
 - Expected return format: normally the canonical `subagent-result.md` format, `compact-evidence-pack.md`, or a named compact variant.
+- Phase checkpoint: required for serial phases and recommended for review/implementation/test handoffs. Declare one focused boundary proof: command, static check, artifact inspection, diff inspection, or explicit skipped reason with risk. ROSE must reconcile this checkpoint before starting a dependent next phase unless the user accepts the risk.
 - Join contract for parallel lanes: expected evidence for this lane, lane owner, editable scope or read-only source, status vocabulary, blocker conditions, how ROSE will handle conflicts or missing/empty evidence, ROSE final decision ownership, any required user approval/decision gate, and stop conditions that block reconciliation.
+- Review/adversarial verification contract: for local-review or review-pipeline lanes, state whether findings are blocking or advisory, require evidence anchors for Critical/Important findings, require disproof checks against context/tests/types/guards before blocking, and fail closed on missing/status-less lane output.
 - Placement / artifact rules: where generated artifacts go, or `no files`; raw evidence artifacts require an explicit repository-local placement and are not created by default.
 - Coverage expectations: what must be checked before returning.
 - Known exclusions: secrets, raw logs, long dumps, full file dumps, unrelated cleanup, nested agents, commits, pushes.
@@ -72,9 +75,17 @@ If any check fails, narrow the scope, make the work read-only, dispatch sequenti
 ## Join completeness rules
 
 - Multi-lane or parallel packet sets must define the join contract before dispatch: lane id, owner, expected evidence, editable scope or read-only evidence source, status vocabulary (`completed`, `partial`, `blocked`, `skipped`, `unverified`), blocker conditions, conflict handling, missing/empty-evidence handling, ROSE final decision owner, and any required user approval/decision gate.
+- Parallel joins must reconcile every expected lane's status, evidence, skipped checks, conflicts, blockers, and missing evidence, then run or request verification over the merged output before later phases continue.
 - A missing, empty, status-less, or evidence-less lane result is not complete. ROSE must not infer completion from file state, adjacent lane success, or ROSE's own inspection.
 - If required lane evidence is missing, ROSE requests a bounded evidence-only follow-up, marks the lane `partial`/`blocked`/`unverified`, or reassigns only with explicit current-task approval when ownership rules require it.
-- Join reporting must list every expected lane with status, changed or inspected scope, verification result or skipped-verification reason, remaining blockers, and missing evidence before integration or completion claims.
+- Join reporting must list every expected lane with status, changed or inspected scope, verification result or skipped-verification reason, conflicts, remaining blockers, missing evidence, and merged-output verification before integration or completion claims.
+
+## Phase checkpoint rules
+
+- Each serial phase packet must declare a checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk.
+- ROSE must run, inspect, or delegate the checkpoint after the phase returns and before the next dependent phase starts.
+- If a checkpoint is skipped, blocked, failing, or materially unverified, ROSE records the reason and risk as `Open Question`, `Unverified`, waived, or accepted risk and must not claim complete verification for that phase.
+- Review and convergence lanes remain read-only. Repair after review is routed to separate edit/repair or edit/test lanes and then re-reviewed with fresh target identity and evidence.
 
 ## Hard rules
 

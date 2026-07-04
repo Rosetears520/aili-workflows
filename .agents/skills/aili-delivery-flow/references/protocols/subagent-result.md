@@ -1,6 +1,6 @@
 # Subagent Result Protocol
 
-Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`. Installed OpenCode runtime target: `skills/aili-delivery-flow/references/protocols/subagent-result.md`.
+Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`. Installed runtime target: `$HOME/.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`.
 
 Subagent output is evidence for ROSE to reconcile, not authority. Separate facts from interpretation and recommendations.
 

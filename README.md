@@ -45,6 +45,7 @@ aili-workflows/
 │       ├── idea-refine/
 │       ├── incremental-implementation/
 │       ├── ios-application-dev/
+│       ├── local-review-gate/
 │       ├── mature-project-pattern-research/
 │       ├── minimax-docx/
 │       ├── minimax-pdf/
@@ -83,6 +84,7 @@ aili-workflows/
 │   ├── implementer.md           # 单任务实现 subagent
 │   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
+│   ├── convergence-reviewer.md  # 只读交付收敛审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
 │   ├── test-engineer.md         # 测试与覆盖率 subagent
 │   ├── test-coverage-reviewer.md # 只读覆盖率充分性 review subagent
@@ -95,7 +97,8 @@ aili-workflows/
 │   ├── ideate.md                # /ideate：进入 aili-delivery-flow IDEATE
 │   ├── define.md                # /define：进入 aili-delivery-flow DEFINE
 │   ├── build.md                 # /build：进入 aili-delivery-flow BUILD
-│   └── ship.md                  # /ship：进入 aili-delivery-flow SHIP
+│   ├── ship.md                  # /ship：进入 aili-delivery-flow SHIP
+│   └── local-review.md          # /local-review：本地 report-first 审查入口，不覆盖 OpenCode /review
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
 ├── manifests/
@@ -280,12 +283,14 @@ aili-workflows/
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 delivery slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。另提供 `/local-review` 作为本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
 
 ### OpenCode 设置
 
 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
 安装会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`；项目级事实、命令、测试位置、产物落点和本地例外仍通过各项目自己的瘦 `AGENTS.md` 管理。
+
+安装/更新默认会写入 OpenCode 全局配置目录、共享 `$HOME/.agents/skills`，并 best-effort 检测/补装 DCP 与 OpenSpec；不需要这些全局或项目侧效果时，请使用下方 `--skip-*` 选项。
 
 ```bash
 npx -y rose-aili install
@@ -336,7 +341,7 @@ npx -y rose-aili update --skip-openspec
 
 非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 CodeGraph，也不会在未传 `--model` 时静默固定模型。`install` / `update` 会按默认行为检测/补装 DCP 和 OpenSpec；不需要它们时显式加 `--skip-dcp` / `--skip-openspec`。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
 
-DCP 在 `install` 和 `update` 中默认启用：安装器会先用 `opencode plugin list` best-effort 检测插件；未检测到或无法确认时才委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`，已安装则不重复安装。无论是否需要补装，都会在 `--opencode-home` 指向的目录写入/合并 `dcp.jsonc`/`dcp.json` 推荐配置（包含 `compress.minContextLimit: "65%"`、`compress.maxContextLimit: "85%"`、range compression、turn protection、deduplication 和 purgeErrors）。已有 `dcp.jsonc`/`dcp.json` 的无关键会尽量保留；符号链接或非普通文件会拒绝写入。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。DCP 只负责 late-stage compression；长任务采用 MiMo-style checkpoint-first，由 ROSE/AILI 在压缩前优先更新 `progress.txt`，并仅在 spec-backed drift/解释、临时决策、取舍、开放问题、未验证假设或需要 DEFINE 回写时更新 `implementation-notes.html`。具体配置见 [`docs/opencode-setup.md`](docs/opencode-setup.md)，重启后可用 `/dcp` 验证配置生效。
+DCP 在 `install` 和 `update` 中默认启用：安装器会先用 `opencode plugin list` best-effort 检测插件；未检测到或无法确认时才委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`，已安装则不重复安装。无论是否需要补装，都会在 `--opencode-home` 指向的目录写入/合并 `dcp.jsonc`/`dcp.json` 推荐配置（包含 `compress.minContextLimit: "65%"`、`compress.maxContextLimit: "85%"`、range compression、turn protection、deduplication 和 purgeErrors）。已有 `dcp.jsonc`/`dcp.json` 的无关键会尽量保留；符号链接或非普通文件会拒绝写入。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。DCP 只负责 late-stage compression；长任务采用 MiMo-style checkpoint-first，由 ROSE/AILI 在压缩前优先更新 `progress.txt`，并仅在 spec-backed drift/自我纠正、临时决策、取舍、开放问题、未验证假设或需要 DEFINE 回写时更新 `drift-log.md`；旧 `implementation-notes.html` 只作为迁移证据读取，除非当前活动契约明确要求旧 HTML 格式。具体配置见 [`docs/opencode-setup.md`](docs/opencode-setup.md)，重启后可用 `/dcp` 验证配置生效。
 
 CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
 
@@ -348,7 +353,7 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 
 安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装全局 `AGENTS.md`、agents、skills 和 commands。
 
-默认目标是 OpenCode 全局配置目录：Linux/macOS/WSL 为 `~/.config/opencode/`，Windows native 为 `%USERPROFILE%\.config\opencode\`。安装必须保留全局 `agents/`、`skills/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件、skill 目录和 command 文件。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+默认目标是 OpenCode 全局配置目录和共享 skill 目录：agents/commands 安装到 Linux/macOS/WSL 的 `~/.config/opencode/` 或 Windows native 的 `%USERPROFILE%\.config\opencode\`，skills 安装到 `$HOME/.agents/skills/`。安装必须保留全局 `agents/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件和 command 文件；skill 目录链接到共享 `.agents/skills` 位置。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
 
 项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -357,16 +362,16 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
 2. 让 OpenCode 发现 `agents/` 中的自定义 agent。
-3. 让 OpenCode 通过安装脚本链接后的全局 `~/.config/opencode/skills/` 发现本仓库 `.agents/skills/` 中的 SKILL.md 工作流。
+3. 让 OpenCode 通过安装脚本链接后的共享 `$HOME/.agents/skills/` 发现本仓库 `.agents/skills/` 中的 SKILL.md 工作流。
 4. 可选使用全局 `~/.config/opencode/commands/` 中的 `/ideate`、`/define`、`/build`、`/ship` 入口。
 5. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
 ```
 
 新增、删除或重命名 skill 或 command 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 discovery 刷新。
 
-`docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在全局 `skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
+`docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在共享 `$HOME/.agents/skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 
-`rose-memory` 是随 `.agents/skills/rose-memory/` 分发、安装到 OpenCode 全局 `skills/rose-memory` 目标下的 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
+`rose-memory` 是随 `.agents/skills/rose-memory/` 分发、安装到共享 `$HOME/.agents/skills/rose-memory` 目标下的 skill。它只提供操作接口，实际 memory state 固定写入当前项目的 `memory/memory.db`。
 
 `frontend-dev` 可用于纯前端设计、实现和动画工作；只有主动使用其中的媒体生成能力时才可能需要额外 MiniMax API key、CLI 或运行时依赖。使用前请阅读对应 `.agents/skills/frontend-dev/` 目录内的 `SKILL.md`、`README.md`、`scripts/` 或 `references/`。
 
@@ -382,11 +387,11 @@ OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-opens
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
 | Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
 | Bytedance / DeerFlow Authors | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT License；clean-room pattern absorption only in this repository | Copyright Bytedance Ltd. and/or its affiliates and DeerFlow Authors; no DeerFlow runtime, provider config, tool paths, branding text, or upstream skill正文 vendored |
-| affaan-m / ECC contributors | [affaan-m/ECC](https://github.com/affaan-m/ECC) | 未验证；pattern-only reference；no copied text | Agent role patterns only; no ECC runtime, tool config, or upstream prompt正文 vendored |
+| affaan-m / ECC contributors | [affaan-m/ECC](https://github.com/affaan-m/ECC) | MIT License | Copyright (c) 2026 Affaan Mustafa；local-review references adapt ECC review/orchestration/build-fix patterns with provenance; no ECC runtime, tool config, public ECC command, or upstream prompt正文 vendored |
 | sanyuan0704 | [sanyuan-skills](https://github.com/sanyuan0704/sanyuan-skills/tree/main/skills/code-review-expert) | 未验证；pattern-only reference；no copied text | Review-quality rubric patterns only; no upstream skill正文 vendored |
 | Alireza Rezvani | [claude-skills](https://alirezarezvani.github.io/claude-skills/skills/engineering-team/code-reviewer/) | 未验证；pattern-only reference；no copied text | Review-quality and fixture/golden-output patterns only; no upstream skill正文 vendored |
 | laolaoshiren | [claude-code-skills-zh](https://github.com/laolaoshiren/claude-code-skills-zh/tree/main/skills/zh-code-reviewer) | 未验证；pattern-only reference；no copied text | Chinese review-output profile patterns only; no upstream skill正文 vendored |
-| Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | 概念性参考；未纳入上游文件 | 如后续复制上游文本或文件，需保留 MIT License 与 Copyright (c) 2025 Matt Pocock |
+| Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT License | `requirements-grilling` 复制/改编 `grilling`、`domain-modeling` 核心行为和 `ADR-FORMAT.md` / `CONTEXT-FORMAT.md` 参考格式；Copyright (c) 2026 Matt Pocock |
 | Amanda Askell | [askell.io](https://askell.io/) | 概念性参考；未纳入上游文本 | allegory / analogy prompting 方向参考 |
 | Vaibhav / VB / Codex-style prompting | 用户提供的概念方向 | 概念性参考；未纳入上游文本 | evidence-scoped self-improvement prompting 方向参考；本仓库不声称可见全局历史 |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |

@@ -106,15 +106,15 @@ Use these labels consistently:
 - Do not promote durable memory from one-off chatter, raw logs, unsupported interpretations, or secret-bearing evidence.
 - Do not report workflow failure as fact without a safe anchor or an explicit `Unverified` label.
 
-## Implementation Notes as Evidence
+## Drift and Legacy Notes as Evidence
 
-When a retrospective reviews approved spec-backed implementation work, treat `implementation-notes.html` as a first-class evidence source when it exists:
+When a retrospective reviews approved spec-backed implementation work, inspect `drift-log.md` as the primary model-readable drift/self-correction evidence source when it exists, and treat legacy `implementation-notes.html` as migration evidence only:
 
-- OpenSpec: look for it at `openspec/changes/<change-id>/implementation-notes.html` beside `proposal.md`, `design.md`, and `tasks.md`.
+- OpenSpec: look for `openspec/changes/<change-id>/drift-log.md` beside `proposal.md`, `design.md`, and `tasks.md`; also read `openspec/changes/<change-id>/implementation-notes.html` if present as legacy evidence.
 - Superpowers-style plans or custom spec/task files: look beside the active spec/task artifacts when the location is obvious.
 - Unknown backend or unclear location: ask the user which repository-local artifact path should be inspected.
 
-This skill does not own the mandatory-notes rule; that belongs to the implementation operating discipline, such as `templates/AGENTS.md` or ROSE BUILD supervision. If notes are missing where the active project rules require them, report that as an evidence or process gap and route any rule change through `harness-evolution`.
+This skill does not own the mandatory-drift-artifact rule; that belongs to the implementation operating discipline, such as `templates/AGENTS.md` or ROSE BUILD supervision. If drift records are missing where the active project rules require them, report that as an evidence or process gap and route any rule change through `harness-evolution`.
 
 ## Report-First Output Contract
 

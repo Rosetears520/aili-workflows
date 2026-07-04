@@ -21,6 +21,7 @@ REQUIRED = {
             "/define",
             "/build",
             "/ship",
+            "/local-review",
             "code-scout",
             "implementer",
             "code-reviewer",
@@ -31,6 +32,30 @@ REQUIRED = {
             "external-repo-root",
             "release-readiness",
             "release-blocker-audit",
+            "local-review-gate",
+            "OpenCode-owned /review",
+            "categorized report",
+            "PASS_WITH_UNVERIFIED",
+            "gh api",
+            "redacted path:line/type evidence",
+            "user accepts each named Unverified item",
+            "report before repair",
+            "separate repair ownership",
+            "re-review after fixes",
+            "convergence-reviewer",
+            "provenance boundaries",
+            "ecc-code-review-adaptation.md",
+            "review-repair-lane-adaptation.md",
+            "orchestration-adaptation.md",
+            "addyosmani-code-review-rubric.md",
+            "codex-github-compatibility.md",
+            "five axes",
+            "Critical/Important/Suggestion",
+            "spec/task-first",
+            "concrete fixes",
+            "uncertainty/proof gates",
+            "Codex behavior-only",
+            "no official docs text copied",
             "parallelism analysis",
             "no-parallel reason",
             "package/lane preservation",
@@ -143,6 +168,15 @@ def require_checks(case: dict, field: str, required: list[str], name: str, case_
         if required_check not in checks:
             errors.append(f"{name}: {case_id} {field} missing {required_check!r}")
     return errors
+
+
+def require_exact_checks(case: dict, field: str, expected: list[str], name: str, case_id: str) -> list[str]:
+    checks = case.get(field)
+    if not isinstance(checks, list):
+        return [f"{name}: {case_id} missing list field {field}"]
+    if checks != expected:
+        return [f"{name}: {case_id} {field} must be exactly {expected!r}"]
+    return []
 
 
 def section_between(text: str, start_marker: str, end_marker: str) -> str:
@@ -480,6 +514,43 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         )
         errors.extend(require_checks(ship_case, "expected_conditional_checks", ["security-auditor"], name, "SHIP"))
 
+    local_review_cases = [
+        case
+        for case in cases
+        if isinstance(case, dict)
+        and case.get("expected_mode") == "LOCAL_REVIEW"
+        and case.get("trigger") is True
+    ]
+    if not local_review_cases:
+        errors.append(f"{name}: missing trigger case for LOCAL_REVIEW")
+    else:
+        target_modes = {case.get("target_mode") for case in local_review_cases}
+        for target_mode in ["default-local-changes", "base-branch", "commit", "pr", "OpenSpec change", "focus-adversarial", "repair"]:
+            if target_mode not in target_modes:
+                errors.append(f"{name}: missing /local-review target mode {target_mode!r}")
+        default_cases = [case for case in local_review_cases if case.get("target_mode") == "default-local-changes"]
+        if default_cases:
+            default_case = default_cases[0]
+            if default_case.get("expected_scope") != "local-review-gate":
+                errors.append(f"{name}: /local-review expected_scope must be 'local-review-gate'")
+            errors.extend(require_checks(default_case, "expected_targets", ["staged", "unstaged", "untracked"], name, "LOCAL_REVIEW default"))
+            errors.extend(require_checks(default_case, "expected_report", ["categorized report", "skipped lanes", "Unverified", "PASS_WITH_UNVERIFIED", "no secrets", "no raw logs", "redacted path:line/type evidence"], name, "LOCAL_REVIEW default"))
+            errors.extend(require_checks(default_case, "expected_forbidden", ["OpenCode-owned /review", "replace /ship", "remote mutation"], name, "LOCAL_REVIEW default"))
+        pr_cases = [case for case in local_review_cases if case.get("target_mode") == "pr"]
+        if pr_cases:
+            errors.extend(require_exact_checks(pr_cases[0], "expected_readonly_tools", ["gh pr view", "gh pr diff", "gh pr list --head"], name, "LOCAL_REVIEW pr"))
+            errors.extend(require_checks(pr_cases[0], "expected_forbidden", ["gh api", "gh pr checkout", "gh pr comment", "gh pr review", "gh pr merge", "gh pr create", "gh repo clone", "push", "merge", "comment", "review", "checkout", "clone", "equivalents"], name, "LOCAL_REVIEW pr"))
+        change_cases = [case for case in local_review_cases if case.get("target_mode") == "OpenSpec change"]
+        if change_cases:
+            errors.extend(require_checks(change_cases[0], "expected_artifacts", ["proposal.md", "design.md", "tasks.md", "specs", "interview.md", "test-plan.md", "context.md", "progress.txt", "drift-log.md", "legacy implementation-notes.html", "review-report.md"], name, "LOCAL_REVIEW change"))
+            errors.extend(require_checks(change_cases[0], "expected_acceptance", ["NEEDS_FIXES", "BLOCKED", "PASS_WITH_UNVERIFIED", "user accepts each named Unverified item"], name, "LOCAL_REVIEW change"))
+            errors.extend(require_checks(change_cases[0], "expected_lanes", ["convergence-reviewer"], name, "LOCAL_REVIEW change"))
+            errors.extend(require_checks(change_cases[0], "expected_provenance", ["provenance boundaries", "ecc-code-review-adaptation.md", "review-repair-lane-adaptation.md", "orchestration-adaptation.md", "addyosmani-code-review-rubric.md", "codex-github-compatibility.md", "Codex behavior-only", "no official docs text copied"], name, "LOCAL_REVIEW change"))
+            errors.extend(require_checks(change_cases[0], "expected_rubric", ["five axes", "Critical/Important/Suggestion", "spec/task-first", "concrete fixes", "uncertainty/proof gates"], name, "LOCAL_REVIEW change"))
+        repair_cases = [case for case in local_review_cases if case.get("target_mode") == "repair"]
+        if repair_cases:
+            errors.extend(require_checks(repair_cases[0], "expected_prerequisites", ["categorized report", "explicit authorization", "report before repair", "separate repair ownership", "re-review after fixes", "re-review"], name, "LOCAL_REVIEW repair"))
+
     for internal_command in ["/research", "/review", "/release-blocker-audit"]:
         matching = [case for case in cases if isinstance(case, dict) and case.get("input", "").startswith(internal_command)]
         if not matching:
@@ -636,6 +707,8 @@ def validate_command_contracts() -> list[str]:
     errors: list[str] = []
     command_dir = ROOT / "commands"
     allowed_delivery_commands = {"ideate.md", "define.md", "build.md", "ship.md"}
+    allowed_non_delivery_commands = {"local-review.md"}
+    allowed_public_commands = allowed_delivery_commands | allowed_non_delivery_commands
     internal_delivery_commands = {
         "questionnaire.md",
         "test-plan.md",
@@ -648,9 +721,9 @@ def validate_command_contracts() -> list[str]:
     }
 
     existing_commands = {path.name for path in command_dir.glob("*.md")}
-    unexpected_commands = sorted(existing_commands - allowed_delivery_commands)
+    unexpected_commands = sorted(existing_commands - allowed_public_commands)
     for name in unexpected_commands:
-        errors.append(f"commands/{name}: unexpected top-level delivery command; only ideate, define, build, and ship are allowed")
+        errors.append(f"commands/{name}: unexpected top-level command; only ideate, define, build, ship, and local-review are allowed")
 
     unexpected_internal = sorted(existing_commands & internal_delivery_commands)
     for name in unexpected_internal:
@@ -660,7 +733,10 @@ def validate_command_contracts() -> list[str]:
     for name in missing:
         errors.append(f"commands/{name}: missing public delivery command")
 
-    for name in sorted(allowed_delivery_commands & existing_commands):
+    for name in sorted(allowed_non_delivery_commands - existing_commands):
+        errors.append(f"commands/{name}: missing public local audit command")
+
+    for name in sorted(allowed_public_commands & existing_commands):
         relative = f"commands/{name}"
         text = read_repo_text(relative)
         if not text.startswith("---\n"):
@@ -678,9 +754,38 @@ def validate_command_contracts() -> list[str]:
                 errors.append(f"{relative}: frontmatter missing subtask: false")
         if f"# /{name.removesuffix('.md')}" not in text:
             errors.append(f"{relative}: missing command heading")
-        for marker in ["User input:", "Required behavior:", "Hard stops:", "Output contract:", "aili-delivery-flow"]:
+        for marker in ["User input:", "Required behavior:", "Hard stops:", "Output contract:"]:
             if marker not in text:
                 errors.append(f"{relative}: missing command contract marker {marker!r}")
+        if name in allowed_delivery_commands and "aili-delivery-flow" not in text:
+            errors.append(f"{relative}: missing delivery routing marker 'aili-delivery-flow'")
+
+    local_review_text = read_repo_text("commands/local-review.md") if (command_dir / "local-review.md").exists() else ""
+    for marker in [
+        "local review gate workflow",
+        "local-review-gate",
+        "--base <branch>",
+        "--commit <sha>",
+        "--pr <url|number>",
+        "--change <id|path>",
+        "--focus <text>",
+        "--repair",
+        "categorized report",
+        "OpenCode's built-in `/review`",
+        "Do not replace `/ship`",
+        "mutate remote state",
+        "PASS_WITH_UNVERIFIED",
+        "Unverified",
+        "exact read-only GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
+        "Do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`",
+        "Do not store or print secrets, tokens, private keys, cookies, raw logs, full transcripts, full file dumps, or private data in reports; use redacted path:line/type evidence instead.",
+        "read the conventional OpenSpec artifact paths directly",
+        "local OpenSpec artifacts may be git-ignored or absent from snapshot-style search indexes",
+        "`NEEDS_FIXES` and `BLOCKED` block BUILD continuation",
+        "`PASS_WITH_UNVERIFIED` permits continuation only after the user accepts each named `Unverified` item",
+    ]:
+        if marker not in local_review_text:
+            errors.append(f"commands/local-review.md: missing local-review contract marker {marker!r}")
 
     define_text = read_repo_text("commands/define.md") if (command_dir / "define.md").exists() else ""
     for marker in [
@@ -697,6 +802,210 @@ def validate_command_contracts() -> list[str]:
         if marker not in define_text:
             errors.append(f"commands/define.md: missing DEFINE contract marker {marker!r}")
 
+    return errors
+
+
+def validate_local_review_gate_contracts() -> list[str]:
+    errors: list[str] = []
+    required_markers = {
+        ".agents/skills/local-review-gate/SKILL.md": [
+            "name: local-review-gate",
+            "OpenCode's built-in `/review`",
+            "--base <branch>",
+            "--commit <sha>",
+            "--pr <url\\|number>",
+            "--change <id\\|path>",
+            "--focus <text>",
+            "--repair",
+            "categorized report",
+            "openspec/changes/<change-id>/review-report.md",
+            "BLOCKED",
+            "NEEDS_FIXES",
+            "NEEDS_REVIEW",
+            "PASS_WITH_UNVERIFIED",
+            "REREVIEW_REQUIRED",
+            "Review lanes remain read-only",
+            "separate edit/repair agent or edit/test lane",
+            "convergence-reviewer",
+            "phase checkpoint",
+            "skipped reason with risk",
+            "remote state",
+            "exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
+            "do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`",
+            "Do not store or print secrets, tokens, private keys, cookies, raw logs, full transcripts, full file dumps, or private data in reports; use redacted path:line/type evidence instead.",
+            "resolve the conventional artifact paths directly instead of relying only on broad glob/search output",
+            "omitted from snapshot-style indexes",
+            "`NEEDS_FIXES` and `BLOCKED` block BUILD continuation",
+            "`PASS_WITH_UNVERIFIED` may continue only after the user accepts each named `Unverified` item",
+        ],
+        ".agents/skills/local-review-gate/references/upstream-provenance.md": [
+            "provenance, trigger-fit, and OpenCode compatibility checks",
+            "active-reference",
+            "deferred",
+            "Do not copy/adapt ECC agents, ECC skills, orchestration commands, or addyosmani rubrics wholesale",
+            "5A.2",
+            "5A.8",
+            "active/completed",
+        ],
+        ".agents/skills/local-review-gate/references/ecc-code-review-adaptation.md": [
+            "## Provenance",
+            "Copy/adapt scope",
+            "MIT License, Copyright 2026 Affaan Mustafa",
+            "commands/code-review.md",
+            "2382c59968231c205f9cf9cffa9013f480899a9c",
+            "Activated AILI behavior",
+            "full-file",
+            "Do not activate `.claude` paths",
+            "Do not activate remote mutation defaults",
+        ],
+        ".agents/skills/local-review-gate/references/review-repair-lane-adaptation.md": [
+            "## Provenance",
+            "Copy/adapt scope",
+            "MIT License, Copyright 2026 Affaan Mustafa",
+            "agents/security-reviewer.md",
+            "agents/pr-test-analyzer.md",
+            "agents/build-error-resolver.md",
+            "commands/build-fix.md",
+            "Review lanes remain read-only",
+            "detect the build system",
+            "one error class at a time",
+        ],
+        ".agents/skills/local-review-gate/references/orchestration-adaptation.md": [
+            "## Provenance",
+            "Copy/adapt scope",
+            "commands/orch-review.md",
+            "commands/multi-plan.md",
+            "5216c7df157a9099214c122bc096e9693730ac77",
+            "b50912b1f0900ed34935228d973dd92902b97342",
+            "fail-closed",
+            "blocking and advisory",
+            "adversarial verification",
+            "Do not add public `multi-*` commands",
+        ],
+        ".agents/skills/local-review-gate/references/addyosmani-code-review-rubric.md": [
+            "## Provenance",
+            "Copy/adapt scope",
+            "MIT License, Copyright 2025 Addy Osmani",
+            "96cac1d79edca4a9231cbe6af50415b5e4d6cf42",
+            "5efda7afb5d0e4a5393c5a7da84e15b197f7b5b6",
+            "five axes: correctness, readability, architecture, security, and performance",
+            "Critical`, `Important`, and `Suggestion`",
+            "spec/task-first",
+            "concrete fix",
+            "uncertainty/proof gates",
+        ],
+        ".agents/skills/local-review-gate/references/codex-github-compatibility.md": [
+            "## Provenance",
+            "behavior-only guidance",
+            "No official documentation prose is copied",
+            "AGENTS.md",
+            "PR-style focus instructions",
+            "high-priority",
+            "review/fix parity",
+            "exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
+        ],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
+            "large or harness-sensitive `/local-review --change <id|path>` targets",
+            "`NEEDS_FIXES` and `BLOCKED` as BUILD blockers",
+            "`PASS_WITH_UNVERIFIED` only after the user accepts each named `Unverified` item",
+        ],
+        "agents/convergence-reviewer.md": [
+            "edit: deny",
+            "task: deny",
+            "proposal.md",
+            "design.md",
+            "tasks.md",
+            "interview.md",
+            "test-plan.md",
+            "context.md",
+            "progress.txt",
+            "drift-log.md",
+            "legacy `implementation-notes.html`",
+            "missing",
+            "partial",
+            "contradicts",
+            "unrequested",
+            "pseudo-complete",
+            "unchecked-task",
+            "stale-progress",
+            "evidence-gap",
+            "Merged-output verification evidence",
+        ],
+        ".agents/skills/review-pipeline/SKILL.md": [
+            "convergence-reviewer",
+            "formal-change, OpenSpec, multi-phase, or harness-sensitive convergence review",
+            "not final PASS authority",
+            "pseudo-complete",
+            "unchecked-task",
+            "stale-progress",
+            "evidence-gap",
+        ],
+        ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
+            "phase checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk",
+            "merged-output verification",
+            "statuses, evidence, conflicts, blockers, skipped checks, and missing evidence",
+        ],
+        ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": [
+            "Phase checkpoint: command | static check | artifact inspection | diff inspection | skipped reason with risk",
+            "Parallel joins must reconcile every expected lane's status, evidence, skipped checks, conflicts, blockers, and missing evidence",
+            "merged-output verification",
+            "Review and convergence lanes remain read-only",
+        ],
+        "agents/rose.md": [
+            '"convergence-reviewer": allow',
+            "Local review gate: `local-review-gate`",
+            "`convergence-reviewer` (`subagent:review`)",
+        ],
+        ".agents/skills/aili-delivery-flow/SKILL.md": [
+            "Only four top-level delivery commands are valid",
+            "`/local-review` is a standalone non-delivery local audit command owned by `local-review-gate`",
+            "do not route it through this delivery lifecycle skill as a fifth lifecycle mode",
+        ],
+    }
+
+    for relative, markers in required_markers.items():
+        errors.extend(require_text_markers(relative, markers, "local-review gate"))
+
+    active_reference_sections = {
+        ".agents/skills/local-review-gate/references/ecc-code-review-adaptation.md": section_between(read_repo_text(".agents/skills/local-review-gate/references/ecc-code-review-adaptation.md"), "## Activated AILI behavior", "## Rejected upstream behavior"),
+        ".agents/skills/local-review-gate/references/review-repair-lane-adaptation.md": section_between(read_repo_text(".agents/skills/local-review-gate/references/review-repair-lane-adaptation.md"), "## Activated AILI behavior", "## Deferred or rejected ECC lane candidates"),
+        ".agents/skills/local-review-gate/references/orchestration-adaptation.md": section_between(read_repo_text(".agents/skills/local-review-gate/references/orchestration-adaptation.md"), "## Activated AILI behavior", "## Rejected upstream behavior"),
+        ".agents/skills/local-review-gate/references/codex-github-compatibility.md": section_between(read_repo_text(".agents/skills/local-review-gate/references/codex-github-compatibility.md"), "## Activated AILI behavior", ""),
+    }
+    forbidden_active_markers = [".claude/", "Claude-only", "ccg-workflow", "Codex/Gemini runtime", "gh api", "gh pr comment", "gh pr review", "gh pr merge", "gh pr create", "gh repo clone"]
+    for relative, section in active_reference_sections.items():
+        if not section:
+            errors.append(f"{relative}: missing active AILI behavior section for upstream adaptation")
+        else:
+            errors.extend(require_absent_in_section(relative, section, forbidden_active_markers, "active upstream adaptation"))
+
+    local_review_text = read_repo_text("commands/local-review.md") if (ROOT / "commands/local-review.md").exists() else ""
+    for marker in [
+        "five axes — correctness, readability, architecture, security, and performance",
+        "Critical/Important findings",
+        "concrete fixes",
+        "zero findings is valid",
+        "fail-closed orchestration",
+    ]:
+        if marker not in local_review_text:
+            errors.append(f"commands/local-review.md: missing upstream review adaptation marker {marker!r}")
+
+    code_reviewer_text = read_repo_text("agents/code-reviewer.md") if (ROOT / "agents/code-reviewer.md").exists() else ""
+    for marker in [
+        "96cac1d79edca4a9231cbe6af50415b5e4d6cf42",
+        "af791188ac87321f749a96f140a85c739303f453",
+        "five dimensions",
+        "Critical and Important finding",
+        "zero findings",
+        "file:line, trigger/input/state, bad outcome",
+        "Do not add optional praise",
+        "If context is insufficient for a material acceptance claim",
+        "Secret-path safety",
+        "must not run content-emitting git commands",
+        "report only the redacted path/type",
+    ]:
+        if marker not in code_reviewer_text:
+            errors.append(f"agents/code-reviewer.md: missing upstream review rubric marker {marker!r}")
     return errors
 
 
@@ -749,6 +1058,11 @@ def validate_define_artifact_contracts() -> list[str]:
             "change-interviewer",
             "interview packet",
             "interview.md",
+            "unresolved readiness follow-up defaults to chat-first interaction with AI write-back",
+            "ask unresolved blocking follow-up questions in chat by default",
+            "write accepted answers, waivers, or accepted `UNVERIFIED` states back into the same artifact",
+            "re-read answers from disk before classification, readiness, or write-back",
+            "Do not call the packet `READY` from chat-only content",
             "Round 2+",
             "Re-read the filled packet from disk",
             "ambiguous",
@@ -1154,6 +1468,7 @@ def main() -> int:
         errors.extend(validate_fixture(name, spec))
     errors.extend(validate_agent_permissions())
     errors.extend(validate_command_contracts())
+    errors.extend(validate_local_review_gate_contracts())
     errors.extend(validate_define_artifact_contracts())
     errors.extend(validate_build_goal_mode_contracts())
     errors.extend(validate_traceability_contracts())

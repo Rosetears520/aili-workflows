@@ -17,7 +17,15 @@ Questionnaires prevent ambiguous work from entering BUILD.
 
 ## Gate
 
-DEFINE may draft questions and incorporate answers. For OpenSpec-backed changes, DEFINE writes `openspec/changes/<change-id>/interview.md` through `requirements-grilling`. BUILD must stop until blocking answers are confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
+DEFINE may draft questions and incorporate answers. For OpenSpec-backed changes, DEFINE writes the initial `openspec/changes/<change-id>/interview.md` packet through `requirements-grilling`, then uses chat as the default surface for unresolved blocking questions. ROSE writes accepted answers, accepted defaults, explicit waivers, or accepted `UNVERIFIED` states back into `interview.md`; direct user edits to the file remain a fallback, not the default interaction model. BUILD must stop until blocking answers are confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
+
+## Default Interaction
+
+- Initial packet generation is durable-file-first: create or update `interview.md` so later sessions and review lanes have a persistent record.
+- Follow-up unresolved readiness questions are chat-first by default: ask concise blocking questions in chat, not by requiring the user to manually fill `interview.md`.
+- Chat answers are not readiness evidence until ROSE writes them back into `interview.md` or the agreed questionnaire artifact.
+- Direct file editing is supported when the user chooses it; after any direct edit, disk content wins after re-read and reconciliation.
+- Before answer classification, readiness, BUILD gating, or local review evidence use, ROSE must re-read the artifact from disk after any AI write-back or user edit.
 
 ## Artifact Freshness Gate
 

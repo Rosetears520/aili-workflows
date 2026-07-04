@@ -6,7 +6,7 @@
 
 - Repository source reference: `.agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md`
 - Related source protocols: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` and `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`
-- Installed OpenCode runtime targets use the same suffix under `skills/aili-delivery-flow/`.
+- Installed runtime targets use the same suffix under `$HOME/.agents/skills/aili-delivery-flow/`.
 - Search evidence is a map, not a replacement for reading final target files before editing, reviewing, testing, securing, or documenting.
 
 ## Subagent-first default

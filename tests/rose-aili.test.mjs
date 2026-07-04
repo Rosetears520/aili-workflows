@@ -158,6 +158,7 @@ test("set-default-rose does not create a model override", async () => {
 
   assert.equal(config.default_agent, "rose");
   assert.equal(config.agent, undefined);
+  assert.match(await readFile(path.join(opencodeHome, "commands", "local-review.md"), "utf8"), /# \/local-review/);
   await fixture.cleanup();
 });
 
@@ -917,6 +918,9 @@ test("doctor reports required components and optional project CodeGraph separate
   assert.equal(summary.source.agentsMd.status, "missing");
   assert.ok(summary.required.some((entry) => entry.type === "global" && entry.name === "AGENTS.md" && entry.installed));
   assert.ok(summary.required.some((entry) => entry.type === "agent" && entry.name === "rose" && entry.installed));
+  assert.ok(summary.required.some((entry) => entry.type === "skill" && entry.name === "rose-memory" && entry.installed));
+  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory", "SKILL.md")));
   await assert.rejects(readFile(logPath, "utf8"));
   await fixture.cleanup();
 });
@@ -1002,11 +1006,12 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
 
   const roseTarget = path.join(opencodeHome, "agents", "rose.md");
-  const skillTarget = path.join(opencodeHome, "skills", "rose-memory", "SKILL.md");
+  const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md");
   const globalAgentsTarget = path.join(opencodeHome, "AGENTS.md");
   assert.equal((await lstat(roseTarget)).isSymbolicLink(), false);
   assert.equal((await lstat(path.dirname(skillTarget))).isSymbolicLink(), false);
   assert.equal((await lstat(globalAgentsTarget)).isSymbolicLink(), false);
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
 
   await rm(fixture.ailiHome, { recursive: true, force: true });
   assert.match(await readFile(roseTarget, "utf8"), /ROSE Runtime Charter/);
@@ -1015,7 +1020,7 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await fixture.cleanup();
 });
 
-test("selective Bash install links OpenCode skills from .agents/skills and preserves parent directories", async () => {
+test("selective Bash install links shared skills from .agents/skills and preserves OpenCode skills directory", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
   const skillsParent = path.join(opencodeHome, "skills");
@@ -1029,13 +1034,14 @@ test("selective Bash install links OpenCode skills from .agents/skills and prese
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
     "--no-update"
-  ], { env: installerEnv() });
+  ], { env: installerEnv(fixture.root) });
 
-  const skillTarget = path.join(opencodeHome, "skills", "rose-memory");
+  const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory");
   assert.equal((await lstat(skillsParent)).isDirectory(), true);
   assert.equal(await readFile(preserved, "utf8"), "keep\n");
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
   assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
   await fixture.cleanup();
 });
 
@@ -1049,10 +1055,11 @@ test("selective Bash dry-run reports .agents skill source without mutating OpenC
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
     "--dry-run"
-  ], { env: installerEnv() });
+  ], { env: installerEnv(fixture.root) });
 
-  assert.match(result.stderr, /DRY RUN: would link entry: .*\/skills\/rose-memory -> .*\/\.agents\/skills\/rose-memory/);
+  assert.match(result.stderr, new RegExp(`DRY RUN: would link entry: ${escapeRegExp(path.join(sharedSkillsHome(fixture), "rose-memory"))} -> .*\/\.agents\/skills\/rose-memory`));
   await assert.rejects(stat(opencodeHome));
+  await assert.rejects(stat(sharedSkillsHome(fixture)));
   await fixture.cleanup();
 });
 
@@ -1071,7 +1078,7 @@ test("direct Bash install rejects unmanifested manifest drift before mutation", 
       "--aili-home", fixture.ailiHome,
       "--opencode-home", opencodeHome,
       "--dry-run"
-    ], { env: installerEnv() });
+    ], { env: installerEnv(fixture.root) });
     assert.fail("expected unmanifested direct Bash components to be rejected");
   } catch (error) {
     assert.match(error.stderr, /Unmanifested agents component\(s\): extra-agent/);
@@ -1096,7 +1103,7 @@ test("direct Bash install rejects missing manifest components before mutation", 
       "--aili-home", fixture.ailiHome,
       "--opencode-home", opencodeHome,
       "--dry-run"
-    ], { env: installerEnv() });
+    ], { env: installerEnv(fixture.root) });
     assert.fail("expected missing direct Bash components to be rejected");
   } catch (error) {
     assert.match(error.stderr, /Manifest agents component\(s\) missing from AILI_HOME: rose/);
@@ -1161,11 +1168,49 @@ test("Bash installer canonicalizes OpenCode home before unsafe path validation",
       "--aili-home", fixture.ailiHome,
       "--opencode-home", path.join(os.tmpdir(), "subdir", ".."),
       "--dry-run"
-    ], { env: installerEnv() });
+    ], { env: installerEnv(fixture.root) });
     assert.fail("expected unsafe OpenCode home to be rejected");
   } catch (error) {
     assert.match(error.stderr, /Refusing unsafe OPENCODE_HOME: \/tmp/);
   }
+  await fixture.cleanup();
+});
+
+test("Bash installer rejects root HOME before shared skill mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  try {
+    await execFileP("bash", [
+      path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "selective",
+      "--aili-home", fixture.ailiHome,
+      "--opencode-home", opencodeHome,
+      "--dry-run"
+    ], { env: installerEnv("/") });
+    assert.fail("expected unsafe root HOME to be rejected");
+  } catch (error) {
+    assert.match(error.stderr, /Refusing unsafe HOME for shared skill install root: \//);
+  }
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("Bash installer rejects tmp HOME before shared skill mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  try {
+    await execFileP("bash", [
+      path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "selective",
+      "--aili-home", fixture.ailiHome,
+      "--opencode-home", opencodeHome,
+      "--dry-run"
+    ], { env: installerEnv(os.tmpdir()) });
+    assert.fail("expected unsafe tmp HOME to be rejected");
+  } catch (error) {
+    assert.match(error.stderr, new RegExp(`Refusing unsafe HOME for shared skill install root: ${escapeRegExp(os.tmpdir())}`));
+  }
+  await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
 });
 
@@ -1195,7 +1240,7 @@ test("unmanifested repo components abort install before mutation", async () => {
   await fixture.cleanup();
 });
 
-test("manifest skills declare canonical shared source and OpenCode install targets", async () => {
+test("manifest skills declare canonical shared source and shared install target", async () => {
   const manifest = await loadManifest(repoRoot);
   const skill = manifest.components.skills.find((entry) => entry.name === "rose-memory");
   assert.ok(skill, "expected rose-memory skill manifest entry");
@@ -1203,10 +1248,22 @@ test("manifest skills declare canonical shared source and OpenCode install targe
   assert.equal(skill.path, ".agents/skills/rose-memory");
   assert.deepEqual(repoSourcePaths(skill), [".agents/skills/rose-memory"]);
   assert.deepEqual(repoInstallTargets(skill), [
-    { kind: "shared", path: ".agents/skills/rose-memory" },
-    { kind: "opencode", path: "skills/rose-memory" }
+    { kind: "shared", path: ".agents/skills/rose-memory" }
   ]);
   await stat(path.join(repoRoot, ".agents", "skills", "rose-memory", "SKILL.md"));
+});
+
+test("manifest registers local-review command", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const commandNames = new Set(manifest.components.commands.map((entry) => entry.name));
+  const command = manifest.components.commands.find((entry) => entry.name === "local-review");
+
+  assert.ok(commandNames.has("local-review"), "expected manifest command local-review");
+  assert.equal(command.path, "commands/local-review.md");
+  assert.equal(command.defaultInstalled, true);
+  assert.deepEqual(repoSourcePaths(command), ["commands/local-review.md"]);
+  assert.deepEqual(repoInstallTargets(command), [{ kind: "opencode", path: "commands/local-review.md" }]);
+  assert.match(await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8"), /OpenCode's built-in `\/review`/);
 });
 
 test("manifest registers specialized QA agents and skills", async () => {
@@ -1229,8 +1286,7 @@ test("manifest registers specialized QA agents and skills", async () => {
     const skill = manifest.components.skills.find((entry) => entry.name === name);
     assert.equal(skill.path, `.agents/skills/${name}`);
     assert.deepEqual(repoInstallTargets(skill), [
-      { kind: "shared", path: `.agents/skills/${name}` },
-      { kind: "opencode", path: `skills/${name}` }
+      { kind: "shared", path: `.agents/skills/${name}` }
     ]);
     const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
     assert.match(skillText, new RegExp(`---\\nname: ${name}\\n`));
@@ -1266,8 +1322,7 @@ test("manifest registers ECC-derived selected agents and skills", async () => {
     assert.equal(skill.path, `.agents/skills/${name}`);
     assert.equal(skill.defaultInstalled, true);
     assert.deepEqual(repoInstallTargets(skill), [
-      { kind: "shared", path: `.agents/skills/${name}` },
-      { kind: "opencode", path: `skills/${name}` }
+      { kind: "shared", path: `.agents/skills/${name}` }
     ]);
     const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
     assert.match(skillText, new RegExp(`---\\nname: ${name}\\n`));
@@ -1337,8 +1392,7 @@ test("manifest registers DeerFlow clean-room pattern skills", async () => {
     const skill = manifest.components.skills.find((entry) => entry.name === name);
     assert.equal(skill.path, `.agents/skills/${name}`);
     assert.deepEqual(repoInstallTargets(skill), [
-      { kind: "shared", path: `.agents/skills/${name}` },
-      { kind: "opencode", path: `skills/${name}` }
+      { kind: "shared", path: `.agents/skills/${name}` }
     ]);
     await stat(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"));
   }
@@ -1493,6 +1547,7 @@ test("packed package keeps CLI bin executable", async () => {
   assert.ok(packedEntries.includes("package/manifests/rose-aili.components.json"));
   assert.ok(packedEntries.includes("package/agents/rose.md"));
   assert.ok(packedEntries.includes("package/commands/build.md"));
+  assert.ok(packedEntries.includes("package/commands/local-review.md"));
   assert.ok(packedEntries.includes("package/.agents/skills/rose-memory/SKILL.md"));
   const manifest = await loadManifest(repoRoot);
   for (const agent of manifest.components.agents) {
@@ -1560,7 +1615,7 @@ async function safeCommandCwd(fixture) {
 
 function runCli(args, options = {}) {
   return new Promise((resolve, reject) => {
-    execFile(process.execPath, [cliPath, ...args], { cwd: options.cwd ?? repoRoot, env: options.env }, (error, stdout, stderr) => {
+    execFile(process.execPath, [cliPath, ...args], { cwd: options.cwd ?? repoRoot, env: testCliEnv(args, options.env) }, (error, stdout, stderr) => {
       const code = error && typeof error.code === "number" ? error.code : 0;
       const result = { code, stdout, stderr };
       if (error && options.reject !== false) reject(Object.assign(error, result));
@@ -1578,9 +1633,24 @@ function execFileP(file, args, options = {}) {
   });
 }
 
-function installerEnv() {
+function testCliEnv(args, baseEnv = process.env) {
+  return installerEnv(cliHomeFromArgs(args) ?? baseEnv.HOME, baseEnv);
+}
+
+function cliHomeFromArgs(args) {
+  const index = args.indexOf("--opencode-home");
+  const opencodeHome = index >= 0 ? args[index + 1] : undefined;
+  return opencodeHome && path.isAbsolute(opencodeHome) ? path.dirname(opencodeHome) : undefined;
+}
+
+function sharedSkillsHome(fixture) {
+  return path.join(fixture.root, ".agents", "skills");
+}
+
+function installerEnv(home, baseEnv = process.env) {
   return {
-    ...process.env,
+    ...baseEnv,
+    HOME: home ?? baseEnv.HOME,
     OPENCODE_ALLOW_CUSTOM_HOME: "yes",
     AILI_ALLOW_PACKAGE_HOME: "yes"
   };

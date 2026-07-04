@@ -67,6 +67,6 @@ Minimum fields:
 
 ## Symlink Runtime Note
 
-Selective OpenCode install links repository source `.agents/skills/*` into the global OpenCode `skills/<name>` directory. This makes this skill and its `references/` available at runtime.
+Selective OpenCode install links repository source `.agents/skills/*` into the shared `$HOME/.agents/skills/<name>` directory. This makes this skill and its `references/` available at runtime.
 
 Source-repo docs such as `docs/harness/**` are maintenance documentation, not guaranteed runtime context in downstream projects. Keep any always-needed triage rules inside this skill’s `references/`.

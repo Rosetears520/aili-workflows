@@ -133,8 +133,7 @@ function validateManifestComponentDefinitions(manifest: ComponentManifest): Reco
     skills: manifest.components.skills.map((entry) => validateRepoEntry("skills", entry, `.agents/skills/${entry.name}`, {
       sourcePath: `.agents/skills/${entry.name}`,
       installTargets: [
-        { kind: "shared", path: `.agents/skills/${entry.name}` },
-        { kind: "opencode", path: `skills/${entry.name}` }
+        { kind: "shared", path: `.agents/skills/${entry.name}` }
       ]
     }))
   };

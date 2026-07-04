@@ -16,7 +16,7 @@ This skill provides the ROSE memory protocol and the bundled SQLite CLI used by 
 
 The CLI implementation is distributed with this skill:
 
-`~/.config/opencode/skills/rose-memory/references/memory_cli.py`
+`~/.agents/skills/rose-memory/references/memory_cli.py`
 
 The memory database is always project-local:
 
@@ -91,7 +91,7 @@ rose-memory --help
 If the shim is unavailable, call the bundled tool directly:
 
 ```bash
-python ~/.config/opencode/skills/rose-memory/references/memory_cli.py --help
+python ~/.agents/skills/rose-memory/references/memory_cli.py --help
 ```
 
 Windows PowerShell fallback:
@@ -100,7 +100,7 @@ Windows PowerShell fallback:
 python "$env:USERPROFILE\.config\opencode\skills\rose-memory\references\memory_cli.py" --help
 ```
 
-For every example below, replace `rose-memory` with `python ~/.config/opencode/skills/rose-memory/references/memory_cli.py` when no shim exists.
+For every example below, replace `rose-memory` with `python ~/.agents/skills/rose-memory/references/memory_cli.py` when no shim exists.
 
 ## Standard Operations
 

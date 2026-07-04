@@ -8,21 +8,21 @@ If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows 
 
 Default installation mode is selective symlink setup.
 
-Do not replace `~/.config/opencode/agents`, `~/.config/opencode/skills`, or `~/.config/opencode/commands` by default. Preserve existing OpenCode directories and create symlinks inside them:
+Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. Preserve existing OpenCode agent/command directories and install skills into the shared skills directory:
 
 - `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`
 - `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`
-- `~/.config/opencode/skills/<skill> -> <repo>/.agents/skills/<skill>`
+- `$HOME/.agents/skills/<skill> -> <repo>/.agents/skills/<skill>`
 - `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`
 
-Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/`, `skills/`, and `commands/` directories.
+Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/` and `commands/` directories.
 
 ## Goal
 
 Install ROSE agents and skills for OpenCode while keeping:
 
 - workflow source synced with this repository
-- existing OpenCode global agents and skills preserved
+- existing OpenCode global agents preserved and shared skills kept outside OpenCode home
 - OpenCode global config lightweight
 - reusable global AGENTS rules installed in OpenCode home
 - project memory local to each project
@@ -75,10 +75,10 @@ WSL/Linux default:
 $AILI_HOME
 ```
 
-For Rosetears' WSL Ubuntu environment this resolves to:
+Example WSL/Linux expansion:
 
 ```bash
-/home/rosetears/code/ai/aili-workflows
+/home/<user>/code/ai/aili-workflows
 ```
 
 Windows native default:
@@ -96,7 +96,7 @@ $env:LOCALAPPDATA\aili-workflows
 The Windows Explorer path for a WSL install is only a viewing/editing convenience:
 
 ```text
-\\wsl.localhost\Ubuntu\home\rosetears\code\ai\aili-workflows
+\\wsl.localhost\Ubuntu\home\<user>\code\ai\aili-workflows
 ```
 
 Do not treat this as the Windows native install path.
@@ -105,9 +105,9 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/rosetears/code/ai/aili-workflows` | `/home/rosetears/.config/opencode` | selective symlinks inside `agents/`, `skills/`, and `commands/` |
-| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` | selective symlinks inside `agents/`, `skills/`, and `commands/` |
-| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` | selective symlinks or junctions inside `agents\`, `skills\`, and `commands\` |
+| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | `/home/<user>/.config/opencode` plus `/home/<user>/.agents/skills` | selective links: agents/commands inside OpenCode home; skills inside shared `.agents/skills` |
+| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` plus `$HOME/.agents/skills` | selective links: agents/commands inside OpenCode home; skills inside shared `.agents/skills` |
+| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` plus `%USERPROFILE%\.agents\skills` | selective symlinks or junctions: agents/commands inside OpenCode home; skills inside shared `.agents\skills` |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
 
@@ -128,7 +128,8 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
 - `agents/spec-miner.md`, `agents/agent-evaluator.md`, and `agents/opensource-sanitizer.md` - relevant-triggered read-only spec-mining, agent-output evaluation, and OSS/public exposure review subagents.
 - `.agents/skills/*/SKILL.md` - repository source for OpenCode skills.
-- `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
+- `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode delivery slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
+- `commands/local-review.md` - optional OpenCode slash command entrypoint `/local-review` for report-first local review; it does not override OpenCode's `/review` or replace `/ship`.
 - `.agents/skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
 - `.agents/skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
@@ -136,7 +137,7 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
 - `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global AGENTS rules, agents, skills, and commands.
 
-Slash commands are optional entrypoints. This repository ships only `/ideate`, `/define`, `/build`, and `/ship`, mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; internal stages such as research, questionnaire, test-plan, implement, fix, debug, review, and evolve are not shipped as top-level commands.
+Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
 
 ## Installation Decision Rule
 
@@ -207,15 +208,13 @@ Use Selective Symlink Setup by default when falling back to the Bash script.
 Choose Selective Symlink Setup when:
 
 - `~/.config/opencode/agents` already exists
-- `~/.config/opencode/skills` already exists
 - the user has existing agents or skills
 - the user says "soft link into opencode", "add this workflow", or "keep synced with repo"
 
 Do not choose Managed Directory Symlink Setup unless the user explicitly says:
 
 - replace the whole global agents directory
-- replace the whole global skills directory
-- let `aili-workflows` own the entire OpenCode agents/skills config
+- let `aili-workflows` own the entire OpenCode agents/commands config
 
 If unsure, use Selective Symlink Setup.
 
@@ -224,8 +223,8 @@ If unsure, use Selective Symlink Setup.
 Do not delete, replace without backup, or convert these paths into directory symlinks unless explicitly approved by the user:
 
 - `~/.config/opencode/agents`
-- `~/.config/opencode/skills`
 - `~/.config/opencode/commands`
+- `$HOME/.agents/skills`
 - `~/.config/opencode/AGENTS.md`
 - OpenCode runtime configuration files
 
@@ -234,14 +233,14 @@ Back up individual conflicting entries only.
 Allowed by default:
 
 - back up `~/.config/opencode/agents/rose.md` if it is a real file and conflicts with the new symlink
-- back up `~/.config/opencode/skills/rose-memory` if it is a real directory and conflicts with the new symlink
+- back up `$HOME/.agents/skills/rose-memory` if it is a real directory and conflicts with the new symlink
 - back up `~/.config/opencode/commands/ideate.md` if it is a real file and conflicts with the new symlink
 - back up `~/.config/opencode/AGENTS.md` if it is a real file and conflicts with the installer-owned global AGENTS file
 
 Not allowed by default:
 
 - moving the whole `agents/` directory
-- moving the whole `skills/` directory
+- moving the whole shared `$HOME/.agents/skills/` directory
 - moving the whole `commands/` directory
 - replacing the whole directory with a symlink
 
@@ -251,7 +250,7 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. It preserves OpenCode's existing global `agents/`, `skills/`, and `commands/` directories, then links entries inside them.
+Use this by default. It preserves OpenCode's existing global `agents/` and `commands/` directories, then links skills into `$HOME/.agents/skills`.
 
 WSL/Linux recommended command:
 
@@ -268,7 +267,7 @@ OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 mkdir -p "$(dirname "$AILI_HOME")"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
-mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
+mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands" "$HOME/.agents/skills"
 
 global_agents_target="$OPENCODE_HOME/AGENTS.md"
 if [ -e "$global_agents_target" ] && [ ! -L "$global_agents_target" ]; then
@@ -291,7 +290,7 @@ for dir in "$AILI_HOME"/.agents/skills/*; do
   [ -d "$dir" ] || continue
   [ -f "$dir/SKILL.md" ] || continue
   name="$(basename "$dir")"
-  target="$OPENCODE_HOME/skills/$name"
+  target="$HOME/.agents/skills/$name"
 
   if [ -e "$target" ] && [ ! -L "$target" ]; then
     mv "$target" "$target.backup.$(date +%Y%m%d%H%M%S)"
@@ -322,9 +321,7 @@ Result examples:
 
 ~/.config/opencode/AGENTS.md -> $AILI_HOME/templates/opencode-global-AGENTS.md
 
-~/.config/opencode/skills/
-  caveman/
-  caveman-commit/
+$HOME/.agents/skills/
   rose-memory -> $AILI_HOME/.agents/skills/rose-memory
 
 ~/.config/opencode/commands/
@@ -332,13 +329,14 @@ Result examples:
   define.md -> $AILI_HOME/commands/define.md
   build.md -> $AILI_HOME/commands/build.md
   ship.md -> $AILI_HOME/commands/ship.md
+  local-review.md -> $AILI_HOME/commands/local-review.md
 ```
 
 ### Mode B: Managed Directory Symlink Setup (Exclusive / Advanced)
 
-This is a dangerous exclusive mode. It replaces OpenCode's whole global `agents/`, `skills/`, and `commands/` directories with directory-level symlinks.
+This is a dangerous exclusive mode. It replaces OpenCode's whole global `agents/` and `commands/` directories with directory-level symlinks. Skills still install as entries under `$HOME/.agents/skills`.
 
-Do not use this mode unless the user explicitly says `aili-workflows` may replace the entire global `agents/`, `skills/`, and `commands/` directories.
+Do not use this mode unless the user explicitly says `aili-workflows` may replace the entire global `agents/` and `commands/` directories.
 
 WSL/Linux command with explicit confirmation:
 
@@ -352,15 +350,11 @@ Manual logic, only after explicit approval:
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 
-mkdir -p "$(dirname "$AILI_HOME")" "$OPENCODE_HOME"
+mkdir -p "$(dirname "$AILI_HOME")" "$OPENCODE_HOME" "$HOME/.agents/skills"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
 if [ -e "$OPENCODE_HOME/agents" ] && [ ! -L "$OPENCODE_HOME/agents" ]; then
   mv "$OPENCODE_HOME/agents" "$OPENCODE_HOME/agents.backup.$(date +%Y%m%d%H%M%S)"
-fi
-
-if [ -e "$OPENCODE_HOME/skills" ] && [ ! -L "$OPENCODE_HOME/skills" ]; then
-  mv "$OPENCODE_HOME/skills" "$OPENCODE_HOME/skills.backup.$(date +%Y%m%d%H%M%S)"
 fi
 
 if [ -e "$OPENCODE_HOME/commands" ] && [ ! -L "$OPENCODE_HOME/commands" ]; then
@@ -372,9 +366,15 @@ if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; the
 fi
 
 ln -sfn "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
-ln -sfn "$AILI_HOME/.agents/skills" "$OPENCODE_HOME/skills"
 ln -sfn "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
 ln -sfn "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
+
+for dir in "$AILI_HOME"/.agents/skills/*; do
+  [ -d "$dir" ] || continue
+  [ -f "$dir/SKILL.md" ] || continue
+  name="$(basename "$dir")"
+  ln -sfn "$dir" "$HOME/.agents/skills/$name"
+done
 ```
 
 ### Mode C: Copy Fallback
@@ -398,14 +398,14 @@ OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 mkdir -p "$(dirname "$AILI_HOME")"
 git clone https://github.com/Rosetears520/aili-workflows.git "$AILI_HOME" 2>/dev/null || git -C "$AILI_HOME" pull --ff-only
 
-mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/skills" "$OPENCODE_HOME/commands"
+mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands" "$HOME/.agents/skills"
 
 if [ -e "$OPENCODE_HOME/AGENTS.md" ] && [ ! -L "$OPENCODE_HOME/AGENTS.md" ]; then
   mv "$OPENCODE_HOME/AGENTS.md" "$OPENCODE_HOME/AGENTS.md.backup.$(date +%Y%m%d%H%M%S)"
 fi
 
 cp -R "$AILI_HOME/agents/"*.md "$OPENCODE_HOME/agents/"
-cp -R "$AILI_HOME/.agents/skills/"* "$OPENCODE_HOME/skills/"
+cp -R "$AILI_HOME/.agents/skills/"* "$HOME/.agents/skills/"
 cp -R "$AILI_HOME/commands/"*.md "$OPENCODE_HOME/commands/"
 cp -R "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md"
 ```
@@ -424,8 +424,8 @@ $OpenCodeHome = Join-Path $env:USERPROFILE ".config\opencode"
 
 New-Item -ItemType Directory -Force -Path (Split-Path $AiliHome) | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "agents") | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "skills") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $OpenCodeHome "commands") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $env:USERPROFILE ".agents\skills") | Out-Null
 
 if (!(Test-Path $AiliHome)) {
   git clone https://github.com/Rosetears520/aili-workflows.git $AiliHome
@@ -457,7 +457,7 @@ Get-ChildItem "$AiliHome\agents" -Filter "*.md" | ForEach-Object {
 }
 
 Get-ChildItem "$AiliHome\.agents\skills" -Directory | ForEach-Object {
-  $Target = Join-Path "$OpenCodeHome\skills" $_.Name
+  $Target = Join-Path (Join-Path $env:USERPROFILE ".agents\skills") $_.Name
 
   if ((Test-Path $Target) -and -not ((Get-Item $Target).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
     Rename-Item $Target "$($Target).backup.$(Get-Date -Format yyyyMMddHHmmss)"
@@ -485,7 +485,7 @@ Get-ChildItem "$AiliHome\commands" -Filter "*.md" | ForEach-Object {
 }
 ```
 
-If Windows symbolic link permissions are blocked, use copy fallback for command files or junctions for skill directories, but keep the same rule: create entries inside `skills\` and `commands\`, do not replace the whole directory.
+If Windows symbolic link permissions are blocked, use copy fallback for command files or junctions for skill directories, but keep the same rule: create skills under `%USERPROFILE%\.agents\skills` and commands under OpenCode `commands\`, do not replace whole directories.
 
 ## Cross-Environment Guard
 
@@ -516,7 +516,7 @@ Each runtime owns its own `~/.config/opencode`.
 
 ## Repair: Restore Directory-Level Symlink Mistake
 
-Use this only if `~/.config/opencode/agents` or `~/.config/opencode/skills` was accidentally replaced by a directory-level symlink.
+Use this only if `~/.config/opencode/agents`, legacy `~/.config/opencode/skills`, or `~/.config/opencode/commands` was accidentally replaced by a directory-level symlink.
 
 ```bash
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
@@ -631,7 +631,7 @@ Recommended `dcp.jsonc` snippet:
 }
 ```
 
-DCP is only the late-stage compression mechanism. It is not the task-continuity ledger and does not own the 50/70/85 workflow gates. ROSE/AILI should run checkpoint-first continuity instead: treat roughly 50/70/85 context pressure as workflow signals to refresh the active contract, update `progress.txt` for current progress, user feedback/corrections, checkpoint ledger, evidence, and next action, and update `implementation-notes.html` only for spec-backed drift/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, or required DEFINE write-back. Below 65% context pressure, manual `compress` requires an explicit user request; phase closure, command completion, or a checkpoint signal alone is not enough. Never compress active, adjacent, recent, or still-evolving discussion.
+DCP is only the late-stage compression mechanism. It is not the task-continuity ledger and does not own the 50/70/85 workflow gates. ROSE/AILI should run checkpoint-first continuity instead: treat roughly 50/70/85 context pressure as workflow signals to refresh the active contract, update `progress.txt` for current progress, user feedback/corrections, checkpoint ledger, evidence, and next action, and update `drift-log.md` only for spec-backed drift/self-correction, temporary decisions, trade-offs, open questions, unverified assumptions, or required DEFINE write-back. Legacy `implementation-notes.html` may be read as migration evidence, but new drift entries should not be appended there unless the active contract explicitly requires legacy HTML. Below 65% context pressure, manual `compress` requires an explicit user request; phase closure, command completion, or a checkpoint signal alone is not enough. Never compress active, adjacent, recent, or still-evolving discussion.
 
 Do not add unsupported keys such as `warn`, `force_compress`, or `target_after_compress`; the DCP schema only accepts documented keys and warns on unknown properties.
 
@@ -705,7 +705,7 @@ This repository follows an agent-driven model similar to `addyosmani/agent-skill
 
 - Skills are selected automatically by intent.
 - `AGENTS.md` or the active primary agent should require skill usage when a skill applies.
-- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin entrypoints to `.agents/skills/aili-delivery-flow`; no internal stage commands are shipped.
+- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin delivery entrypoints to `.agents/skills/aili-delivery-flow`; `/local-review` provides a standalone report-first local audit entrypoint. No internal stage commands, including AILI-owned `/review`, are shipped.
 - The user can work naturally: "implement this", "fix this bug", "review this", "plan this change".
 
 Typical intent mapping:
@@ -727,8 +727,8 @@ When a project needs ROSE memory:
 
 ```bash
 mkdir -p memory
-python ~/.config/opencode/skills/rose-memory/references/memory_cli.py init --db memory/memory.db
-python ~/.config/opencode/skills/rose-memory/references/memory_cli.py doctor --db memory/memory.db --record
+python ~/.agents/skills/rose-memory/references/memory_cli.py init --db memory/memory.db
+python ~/.agents/skills/rose-memory/references/memory_cli.py doctor --db memory/memory.db --record
 ```
 
 Rules:
@@ -749,28 +749,30 @@ WSL/Linux selective symlink setup:
 
 test -d "$AILI_HOME"
 test -d "$HOME/.config/opencode/agents"
-test -d "$HOME/.config/opencode/skills"
 test -d "$HOME/.config/opencode/commands"
+test -d "$HOME/.agents/skills"
 test ! -L "$HOME/.config/opencode/agents"
-test ! -L "$HOME/.config/opencode/skills"
 test ! -L "$HOME/.config/opencode/commands"
 test -L "$HOME/.config/opencode/AGENTS.md"
 test -L "$HOME/.config/opencode/agents/rose.md"
 test -L "$HOME/.config/opencode/agents/implementer.md"
-test -L "$HOME/.config/opencode/skills/rose-memory"
+test -L "$HOME/.agents/skills/rose-memory"
 test -L "$HOME/.config/opencode/commands/ideate.md"
 test -L "$HOME/.config/opencode/commands/define.md"
 test -L "$HOME/.config/opencode/commands/build.md"
 test -L "$HOME/.config/opencode/commands/ship.md"
+test -L "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/agents/rose.md"
-test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
+test -f "$HOME/.agents/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
+test -f "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/AGENTS.md"
 readlink "$HOME/.config/opencode/AGENTS.md"
 readlink "$HOME/.config/opencode/agents/rose.md"
-readlink "$HOME/.config/opencode/skills/rose-memory"
+readlink "$HOME/.agents/skills/rose-memory"
 readlink "$HOME/.config/opencode/commands/ideate.md"
-python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
+readlink "$HOME/.config/opencode/commands/local-review.md"
+python "$HOME/.agents/skills/rose-memory/references/memory_cli.py" --help
 ```
 
 Windows native selective symlink setup:
@@ -778,22 +780,24 @@ Windows native selective symlink setup:
 ```powershell
 Test-Path "$env:USERPROFILE\code\ai\aili-workflows"
 Test-Path "$env:USERPROFILE\.config\opencode\agents"
-Test-Path "$env:USERPROFILE\.config\opencode\skills"
 Test-Path "$env:USERPROFILE\.config\opencode\commands"
+Test-Path "$env:USERPROFILE\.agents\skills"
 Get-Item "$env:USERPROFILE\.config\opencode\AGENTS.md"
 Get-Item "$env:USERPROFILE\.config\opencode\agents\rose.md"
-Get-Item "$env:USERPROFILE\.config\opencode\skills\rose-memory"
+Get-Item "$env:USERPROFILE\.agents\skills\rose-memory"
 Get-Item "$env:USERPROFILE\.config\opencode\commands\ideate.md"
+Get-Item "$env:USERPROFILE\.config\opencode\commands\local-review.md"
 ```
 
 Copy fallback:
 
 ```bash
 test -f "$HOME/.config/opencode/agents/rose.md"
-test -f "$HOME/.config/opencode/skills/rose-memory/SKILL.md"
+test -f "$HOME/.agents/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
+test -f "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/AGENTS.md"
-python "$HOME/.config/opencode/skills/rose-memory/references/memory_cli.py" --help
+python "$HOME/.agents/skills/rose-memory/references/memory_cli.py" --help
 ```
 
 Required checks for runtime add-on setup:

@@ -94,16 +94,18 @@ Only OpenSpec change directories have deterministic no-question file output. For
 
 ## Output Placement Contract
 
-Packet Mode defaults to file output, not chat-first output.
+Initial Packet Mode defaults to persistent artifact output; unresolved readiness follow-up defaults to chat-first interaction with AI write-back.
 
 ### Quick Reference Flow
 
 ```text
 source-ground -> resolve placement -> draft packet -> 🔴 stress-test -> repair -> persist -> concise summary
-filled answers -> disk re-read -> answer classification -> domain-language/ADR check -> 🔴 stress-test -> readiness state -> follow-up round or incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
+unresolved readiness question -> ask in chat by default -> write accepted answer/waiver/UNVERIFIED state to artifact -> disk re-read -> answer classification/readiness -> domain-language/ADR check -> 🔴 stress-test -> follow-up round or incorporation log -> 🔴 write-back target check -> merge into agreed files -> validate
 ```
 
-Generate the interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for a temporary preview, writing is blocked by permissions or missing workspace access, or the user chooses preview-before-placement after the placement question. A chat preview is not a completed requirements-grilling artifact and cannot satisfy BUILD readiness.
+Generate the initial interview packet, run the stress-test pass, repair the packet, persist the final packet, then summarize the generated path in chat. Do not print the full packet in chat unless the user explicitly asks for a temporary preview, writing is blocked by permissions or missing workspace access, or the user chooses preview-before-placement after the placement question. A chat preview is not a completed requirements-grilling artifact and cannot satisfy BUILD readiness.
+
+After the initial packet exists, do not require the user to manually edit `interview.md` by default. When unresolved OpenSpec readiness questions remain, ask the blocking question in chat, write the user's accepted answer, accepted default, explicit waiver, or accepted `UNVERIFIED` state into `interview.md`, then re-read the file from disk before classifying answers or claiming readiness. Direct user edits to `interview.md` remain a supported fallback, but disk content must be re-read and reconciled before use.
 
 OpenSpec change output is the only deterministic no-question placement. For every non-OpenSpec source, ask where to place the output before writing; chat preview is an explicit temporary fallback only, and the gate remains `BLOCKED_FOR_CLARIFICATION` until the packet or follow-up round is persisted to an agreed file or explicitly waived.
 
@@ -147,9 +149,10 @@ Chat response after persistence should include only:
 Use Packet Mode by default for non-trivial changes:
 
 - generate the Chinese interview packet at `interview.md` for OpenSpec sources
-- let the user fill it
-- ingest answers later from disk
-- append Round 2+ follow-up sections in the same artifact when material blockers remain
+- treat that packet as the durable AI-maintained record, not as a manual form the user must fill by default
+- ask unresolved blocking follow-up questions in chat by default, then write accepted answers, waivers, or accepted `UNVERIFIED` states back into the same artifact
+- re-read answers from disk before classification, readiness, or write-back
+- append Round 2+ follow-up sections in the same artifact when material blockers remain, after recording the chat question/answer trail or direct-file fallback
 
 Use Interactive Mode only when:
 
@@ -159,7 +162,7 @@ Use Interactive Mode only when:
 
 In Interactive Mode, ask one question at a time.
 
-Interactive chat answers must still be persisted. After a material answer is accepted, append or merge the question, answer, classification, and write-back target into `interview.md` for OpenSpec sources or the agreed non-OpenSpec target before claiming readiness. If persistence is blocked, report `BLOCKED_FOR_CLARIFICATION` and the exact file target still needed.
+Interactive chat answers must still be persisted. After a material answer is accepted, append or merge the question, answer, classification, and write-back target into `interview.md` for OpenSpec sources or the agreed non-OpenSpec target, then re-read that artifact from disk before claiming readiness. If persistence is blocked, report `BLOCKED_FOR_CLARIFICATION` and the exact file target still needed.
 
 In Packet Mode, do not interrupt the packet with chat-style single-question turns unless a blocking target or persistence decision is missing.
 
@@ -178,7 +181,7 @@ If a question can be answered by exploring the codebase, explore the codebase in
 AILI adaptations:
 
 - In Interactive Mode, ask one material question at a time and wait.
-- In Packet Mode, group the initial question set in `interview.md`, but preserve dependency order and make Round 2+ follow-ups one decision branch at a time when answers diverge.
+- In Packet Mode, group the initial question set in `interview.md`, but preserve dependency order; after the packet exists, ask unresolved OpenSpec readiness follow-ups in chat by default, write the accepted outcome to the artifact, re-read it from disk, and make Round 2+ follow-ups one decision branch at a time when answers diverge.
 - For each question, explain why it matters, name the affected artifact or decision, provide an evidence-backed recommended answer when available, state the tradeoff, include an answer slot, and name the write-back target.
 - If the answer can be discovered from code, docs, specs, tests, configs, or official sources, inspect those sources instead of asking.
 - If no evidence-backed default exists, use `Open Question` or `Unverified`; do not present a model guess as a recommendation.
@@ -195,7 +198,7 @@ During grilling:
 - cross-reference current code, docs, specs, tests, configs, and approved source evidence before accepting domain claims
 - update the change-local `context.md` `## Language` section only when project-specific terms or conflicts are discovered and resolved
 - keep `context.md` Language glossary-like: tight definitions, `_Avoid_` alternatives, and project-specific terms only
-- keep implementation decisions, trade-offs, scratchpad notes, generic programming terms, and architecture rationale out of Language; use `design.md`, `adr.md`, tasks, specs, or `implementation-notes.html` as appropriate
+- keep implementation decisions, trade-offs, scratchpad notes, generic programming terms, and architecture rationale out of Language; use `design.md`, `adr.md`, tasks, specs, or `drift-log.md` as appropriate
 
 Use `references/CONTEXT-FORMAT.md` for Language structure. For OpenSpec changes, `context.md` remains beside `interview.md` unless a future accepted change says otherwise.
 
@@ -265,7 +268,7 @@ Do not start writing final content until the interview packet is complete. If th
 
 ## Readiness States
 
-Report the requirements-grilling gate with exactly one state whenever a packet is persisted, filled answers are ingested, follow-up rounds are appended, or write-back / BUILD readiness is discussed:
+Report the requirements-grilling gate with exactly one state whenever a packet is persisted, chat or direct-file answers are ingested, follow-up rounds are appended, or write-back / BUILD readiness is discussed:
 
 - `READY`: material questions are answered, answers are coherent with evidence, domain language is not contradictory, every material policy has concrete behavior/boundaries, and acceptance/testability is sufficient for implementation.
 - `BLOCKED`: material ambiguity, contradiction, incomplete answer, evidence conflict, unsupported default, out-of-scope answer, fuzzy domain term, source-of-truth conflict, or untestable acceptance remains. Use `BLOCKED_FOR_CLARIFICATION` as the detailed reason when the next action is another grilling round.
@@ -373,9 +376,9 @@ After Phase C, persist the final packet according to the Output Placement Contra
 
 ## Phase D: Ingest User Answers
 
-After the user fills the interview packet:
+After the user answers in chat or directly edits the interview packet:
 
-1. Re-read the filled packet from disk first; conversation summaries and chat-only answers are stale until confirmed against the saved artifact. If answers were collected in chat, write them to the agreed artifact first, then re-read from disk before classification.
+1. Re-read the artifact from disk first; compatibility marker: Re-read the filled packet from disk. Conversation summaries and chat-only answers are stale until confirmed against the saved artifact. If answers were collected in chat, write them to the agreed artifact first, then re-read from disk before classification or readiness. If the user edited the file directly, treat the on-disk content as the fallback source of truth after re-reading and reconciling material changes.
 2. Classify every material answer as one of: `confirmed`, `ambiguous`, `contradictory`, `incomplete`, `untestable`, `evidence-conflicting`, `out-of-scope`, or `Unverified`.
    - Answers that repeat broad labels such as “做安全策略”, “按幂等处理”, “正常回滚”, “走 quota”, “写 audit”, or “按现有逻辑” without concrete behavior, boundary, source-of-truth, and testable acceptance remain `incomplete` or `untestable` until clarified, waived, or accepted as named `UNVERIFIED`.
 3. Convert only `confirmed`, explicitly waived, or user-accepted `Unverified` answers into Decisions, Requirements, Design notes, Tasks, Acceptance criteria, Verification commands, Language updates, or ADR proposals.

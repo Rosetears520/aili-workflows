@@ -17,7 +17,7 @@ Do not write a project `AGENTS.md` from scratch.
 Use the bundled script:
 
 ```bash
-python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py init --project .
+python ~/.agents/skills/agents-md-initialization/references/agents_md.py init --project .
 ```
 
 The script and template are distributed with this skill:
@@ -36,19 +36,19 @@ python .agents/skills/agents-md-initialization/references/agents_md.py init --pr
 Initialize a project-local `AGENTS.md`:
 
 ```bash
-python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py init --project .
+python ~/.agents/skills/agents-md-initialization/references/agents_md.py init --project .
 ```
 
 Update an existing generated project `AGENTS.md` against the current template-managed content:
 
 ```bash
-python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py update --project .
+python ~/.agents/skills/agents-md-initialization/references/agents_md.py update --project .
 ```
 
 Check template compliance:
 
 ```bash
-python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py check --project .
+python ~/.agents/skills/agents-md-initialization/references/agents_md.py check --project .
 ```
 
 If the global installed path is unavailable but the current repository contains this skill, replace the path prefix with `.agents/skills/agents-md-initialization/`.
@@ -92,21 +92,21 @@ If the global installed path is unavailable but the current repository contains 
 Target projects should add a lightweight check when practical:
 
 ```bash
-python ~/.config/opencode/skills/agents-md-initialization/references/agents_md.py check --project .
+python ~/.agents/skills/agents-md-initialization/references/agents_md.py check --project .
 ```
 
 For `Makefile` projects:
 
 ```makefile
 check-agents:
-	python "$${HOME}/.config/opencode/skills/agents-md-initialization/references/agents_md.py" check --project .
+	python "$${HOME}/.agents/skills/agents-md-initialization/references/agents_md.py" check --project .
 ```
 
 For pre-commit hooks:
 
 ```bash
 #!/usr/bin/env bash
-python "$HOME/.config/opencode/skills/agents-md-initialization/references/agents_md.py" check --project .
+python "$HOME/.agents/skills/agents-md-initialization/references/agents_md.py" check --project .
 ```
 
 ## Verification

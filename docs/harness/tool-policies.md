@@ -14,7 +14,7 @@
 - When the user says "continue," hydrate lifecycle state and confirm the approved/ready BUILD item before implementation; do not infer approval from the word alone.
 - When a subagent returns evidence, reconcile the anchors and residual uncertainty; do not treat the recommendation as a final verdict.
 - When reporting verification, use fresh command or inspection evidence; do not claim verified from old logs, DCP summaries, or memory.
-- When writing continuity artifacts, put progress/user feedback in `progress.txt`; do not use `implementation-notes.html` as chat history or a progress ledger.
+- When writing continuity artifacts, put progress/user feedback in `progress.txt`; put new spec drift/self-corrections in `drift-log.md`; do not use `drift-log.md` or legacy `implementation-notes.html` as chat history or a progress ledger.
 
 ## Git
 

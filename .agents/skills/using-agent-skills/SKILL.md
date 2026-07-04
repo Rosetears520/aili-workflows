@@ -11,7 +11,7 @@ Agent Skills is a collection of engineering workflow skills organized by develop
 
 ## Skill Discovery
 
-Skills must be installed or linked into an OpenCode discovery path before the runtime can load them, such as global `~/.config/opencode/skills/` or a supported project-local skills directory. In this repository, run `scripts/install_opencode.sh --mode selective` after adding, deleting, or renaming skills, then restart OpenCode or open a new session to refresh discovery.
+Skills must be installed or linked into an OpenCode discovery path before the runtime can load them, such as global `$HOME/.agents/skills/` or a supported project-local skills directory. In this repository, run `scripts/install_opencode.sh --mode selective` after adding, deleting, or renaming skills, then restart OpenCode or open a new session to refresh discovery.
 
 When a task arrives, identify the development phase and apply the corresponding skill:
 

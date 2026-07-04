@@ -1,6 +1,6 @@
 # Compact Evidence Pack Protocol
 
-Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md`. Installed OpenCode runtime target: `skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md`.
+Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md`. Installed runtime target: `$HOME/.agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md`.
 
 Use a compact evidence pack when evidence is noisy, long, broad, multi-source, or otherwise too bulky for a concise BUILD/SHIP report, memory writeback, or subagent result. Compression is not proof by itself; every pack must preserve a source, result, and a rerun path or safe raw-artifact path when raw evidence is needed.
 

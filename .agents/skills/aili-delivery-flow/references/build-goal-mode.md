@@ -23,7 +23,7 @@ Before BUILD starts, resumes, continues after idle, or claims completion, hydrat
 
 - active idea capsule or `ideas/workflow-inbox.md` entry when an IDEATE-stage idea is being promoted or referenced;
 - backend-specific `context.md`, specs/design/tasks, `interview.md`, and `test-plan.md` when present;
-- existing `progress.txt`, `implementation-notes.html`, closeout/review artifacts relevant to the current scope, and `rose-memory` checkpoints or handoff summaries when available.
+- existing `progress.txt`, `drift-log.md`, legacy `implementation-notes.html` as read-only migration evidence, closeout/review artifacts relevant to the current scope, and `rose-memory` checkpoints or handoff summaries when available.
 
 Summarize the current goal, confirmed decisions, rejected options, open questions, `Unverified` items, traceability gaps, drift notes, evidence anchors, and next action before deciding scope, readiness, continuation, or completion. If new user input changes requirements after DEFINE, route back to DEFINE artifacts before BUILD. If the user requests implementation changes after a BUILD pass, treat them as a revised BUILD loop for the changed scope; SHIP remains release-readiness review over completed BUILD evidence.
 
@@ -103,7 +103,7 @@ ROSE must maintain the active context and progress ledgers when the backend cont
 
 Before long continuation, idle resume, or expected DCP compression, update `progress.txt` first so the current BUILD state can be recovered without raw chat history.
 
-For approved spec-backed implementation, ROSE also maintains `implementation-notes.html` beside the active change artifacts as a compact drift log. Record only spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; keep user feedback/corrections, progress ledger entries, raw transcripts, secrets, full logs, full file contents, and private data out of the file.
+For approved spec-backed implementation, ROSE maintains `drift-log.md` beside the active change artifacts as the compact model-readable drift log. Record only spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; keep user feedback/corrections, ordinary progress ledger entries, review report status, raw transcripts, secrets, full logs, full file contents, and private data out of the file. Read legacy `implementation-notes.html` during hydration or convergence as migration evidence when present, but append new drift entries to it only when the active contract explicitly requires the legacy HTML format.
 
 ## Research-First Planning Gate
 
@@ -134,7 +134,7 @@ Automatic BUILD continuation is optional and must be evaluator-gated. The evalua
 - `blocked`: no automatic continuation; ROSE reports the blocker and required user/action decision.
 - `unverified`: no automatic continuation; ROSE reports the unverified claim, evidence gap, and next action.
 
-The accepted default evaluator path is a structured/rule-based evaluator plus a ROSE-owned decision prompt. The evaluator may use session-visible messages, `context.md`, `progress.txt`, task state, `implementation-notes.html`, and necessary readonly git/status/search/test summaries. It must not read secrets, full logs, raw transcripts, or broad repository contents, and it must not edit files, update backend task/progress state, or claim final PASS/SHIP readiness. Any hook/plugin is a scheduler only; ROSE remains BUILD Supervisor and final status owner.
+The accepted default evaluator path is a structured/rule-based evaluator plus a ROSE-owned decision prompt. The evaluator may use session-visible messages, `context.md`, `progress.txt`, `drift-log.md`, task state, legacy `implementation-notes.html` as read-only migration evidence, and necessary readonly git/status/search/test summaries. It must not read secrets, full logs, raw transcripts, or broad repository contents, and it must not edit files, update backend task/progress state, or claim final PASS/SHIP readiness. Any hook/plugin is a scheduler only; ROSE remains BUILD Supervisor and final status owner.
 
 ## Continuation Loop Budget and Runtime Fallback
 

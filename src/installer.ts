@@ -379,7 +379,7 @@ function spawnOptionalCapture(command: string, args: string[], options: InstallO
 
 function sanitizedOptionalEnv(options: InstallOptions): NodeJS.ProcessEnv {
   return {
-    HOME: os.homedir(),
+    HOME: process.env.HOME || os.homedir(),
     PATH: sanitizedOptionalPath(process.env.PATH ?? "/usr/bin:/bin:/usr/sbin:/sbin"),
     OPENCODE_HOME: options.opencodeHome,
     OPENCODE_ALLOW_CUSTOM_HOME: "yes",
@@ -419,7 +419,7 @@ function spawnInstaller(args: string[], options: InstallOptions): Promise<number
     const child = spawn("/bin/bash", args, {
       stdio: options.json ? ["ignore", "ignore", "pipe"] : "inherit",
       env: {
-        HOME: os.homedir(),
+        HOME: process.env.HOME || os.homedir(),
         PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
         OPENCODE_HOME: options.opencodeHome,
         OPENCODE_ALLOW_CUSTOM_HOME: "yes",

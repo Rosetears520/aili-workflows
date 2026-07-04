@@ -15,9 +15,11 @@ Use subagents when delegation preserves MainAgent context, when separate work pa
 
 This skill adapts Superpowers-style parallel dispatch discipline to this repository's OpenCode model: ROSE remains the primary orchestrator, subagents receive precise task packets, and no persona delegates to another persona.
 
+For local review and review-pipeline fan-out, this skill also activates the orchestration boundaries recorded in `.agents/skills/local-review-gate/references/orchestration-adaptation.md`: borrow ECC/addyosmani fan-out/fan-in and main-agent-only-writer patterns, but reject public `multi-*` commands, router personas, nested persona calls, `.claude` paths, Claude-only tools, external workflow runtimes, `ccg-workflow`, Codex/Gemini runtime dependencies, and remote mutation defaults.
+
 ## When to Use
 
-Use this skill for context-saving dispatch, parallel dispatch, and subagent-first routing of non-trivial repository work. Default toward delegation for non-trivial repository tasks; direct ROSE work needs the explicit direct allowlist or current-task opt-out from `.agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md` in repository source, or the installed runtime target under `skills/aili-delivery-flow/` when running from an OpenCode home.
+Use this skill for context-saving dispatch, parallel dispatch, and subagent-first routing of non-trivial repository work. Default toward delegation for non-trivial repository tasks; direct ROSE work needs the explicit direct allowlist or current-task opt-out from `.agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md` in repository source, or the installed runtime target under `$HOME/.agents/skills/aili-delivery-flow/`.
 
 Pure conversation and explicit current-task subagent opt-out may stay direct. A clear target, exact path, short context, or DCP summary is not a direct-work reason by itself.
 
@@ -33,6 +35,8 @@ Executable dispatch rules:
 - When two or more independent evidence-returning slices can proceed without each other's outputs, do not share mutable edits/state, and can return structured evidence-only results, dispatch them in parallel; if they share mutable state or sequencing, split sequentially instead.
 - Preserve already separated package or lane boundaries through packets, todos, and join reporting unless dependency, ownership overlap, verification coupling, safety risk, missing/failed evidence, or explicit current-task user direction requires merging, serializing, or reassignment; state the reason when boundaries change.
 - When implementation is non-trivial, normally run separate review and test/verification evidence lanes afterward; add a security lane when the changed surface includes auth, permissions, secrets, shell/installers, dependencies, network, storage, or other security-sensitive behavior.
+- For serial phase work, every phase packet declares a phase checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk; do not continue a dependent phase until ROSE reconciles that checkpoint or records user-accepted risk.
+- For parallel phase work, every join contract declares merged-output verification; after all lanes return, ROSE reconciles statuses, evidence, conflicts, blockers, skipped checks, and missing evidence, then runs or requests verification over the merged output before continuing.
 - When a subagent returns evidence, reconcile anchors before deciding; do not copy the recommendation as ROSE's final verdict.
 
 ## Parallel Lane Discovery
@@ -137,7 +141,7 @@ ROSE may skip dispatch only when:
 - the user gives an explicit current-task subagent opt-out
 - the user needs an immediate tiny answer, meaning pure conversation only and no repository work
 - parallel subagents would need to write overlapping files; avoid parallel dispatch and use sequential/scoped delegation, or stop if safe ownership cannot be established
-- the work satisfies the direct allowlist in `.agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md` or its installed runtime target under `skills/aili-delivery-flow/`
+- the work satisfies the direct allowlist in `.agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md` or its installed runtime target under `$HOME/.agents/skills/aili-delivery-flow/`
 
 If ROSE skips delegation for a non-trivial task, it must state the direct opt-out or pure-conversation reason and the remaining safety/evidence basis. Exact file knowledge, short context, or DCP summaries do not justify skipping dispatch.
 
@@ -157,7 +161,8 @@ Before dispatching, ROSE must verify:
 4. Any edit permissions are isolated and non-overlapping.
 5. Each subagent can return enough evidence for ROSE to merge results.
 6. The join contract names expected evidence per lane, conflict/missing-evidence handling, final decision owner, and stop conditions.
-7. Existing package/lane boundaries from the user, DEFINE artifacts, BUILD package queue, or prior ROSE plan are preserved, or every merge/serialization/reassignment has an explicit dependency, ownership, verification, safety, missing-evidence, failed-result, or user-scope reason.
+7. Each serial phase packet declares a phase checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk.
+8. Existing package/lane boundaries from the user, DEFINE artifacts, BUILD package queue, or prior ROSE plan are preserved, or every merge/serialization/reassignment has an explicit dependency, ownership, verification, safety, missing-evidence, failed-result, or user-scope reason.
 
 If any item fails, run the work sequentially or narrow the task packets until independence is true.
 
@@ -175,10 +180,11 @@ The join contract must list, per lane:
 - blocker and stop conditions
 - conflict handling and missing/empty-evidence handling
 - final decision owner, normally ROSE, plus any required user approval/decision gate
+- merged-output verification required at the join point before later phases continue
 
 Missing, empty, or status-less lane output is not completion evidence. Do not infer a lane is complete from file state, adjacent successful lanes, or ROSE's own inspection. If required evidence is missing, request a bounded evidence-only follow-up, mark the lane `partial`/`blocked`/`unverified`, or reassign only with explicit current-task approval when ownership rules require it.
 
-Join reports must name every lane and include its status, changed or inspected scope, verification result or skipped-verification reason, remaining blockers, and any missing evidence before ROSE integrates results or claims completion.
+Join reports must name every lane and include its status, changed or inspected scope, verification result or skipped-verification reason, conflicts, remaining blockers, and any missing evidence before ROSE integrates results or claims completion. For parallel implementation or artifact lanes, the join report must also name the merged-output verification command, static check, artifact inspection, diff inspection, or skipped reason with risk.
 
 ## Delegation Safety Check
 
@@ -206,7 +212,7 @@ If any answer is no, narrow the packet, make the lane read-only, run the work se
 
 Send each subagent a complete packet. Do not rely on it inheriting the main conversation context.
 
-For harness-sensitive work, use `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` as the repository-source task packet protocol and `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md` as the repository-source result protocol; installed OpenCode homes expose the same suffixes under `skills/aili-delivery-flow/`.
+For harness-sensitive work, use `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` as the repository-source task packet protocol and `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md` as the repository-source result protocol; installed runtimes expose the same suffixes under `$HOME/.agents/skills/aili-delivery-flow/`.
 
 ```text
 Subagent task packet:
@@ -219,6 +225,7 @@ Subagent task packet:
 - Evidence required:
 - Optional evidence provider request: CodeGraph if available/useful, or N/A
 - Expected return format:
+- Phase checkpoint: command | static check | artifact inspection | diff inspection | skipped reason with risk
 - Join contract:
 - Stop conditions:
 ```
@@ -230,6 +237,7 @@ Guidelines:
 - Forbid nested agent calls unless the repository explicitly changes its orchestration rules.
 - Require concrete evidence, not just conclusions.
 - For parallel lanes, include the join contract: expected evidence for that lane, conflict or missing-evidence handling, final decision owner, and stop conditions.
+- For serial phase packets, include the phase checkpoint that proves the boundary before the next dependent phase starts.
 - For multi-lane packets, preserve the lane/package id, owner, editable scope or read-only source, expected evidence, status vocabulary, blocker conditions, and missing/empty-evidence handling so ROSE can join without guessing.
 - Ask for graph-assisted evidence only as compact locality anchors; forbid raw graph dumps and final proof claims based solely on graph output.
 
@@ -240,9 +248,10 @@ After subagents return:
 1. Compare conclusions against the evidence each subagent supplied.
 2. Identify conflicts, duplicated work, missing evidence, and unresolved risks.
 3. List every expected lane with status (`completed`, `partial`, `blocked`, `skipped`, or `unverified`) and do not treat missing or empty evidence as completion.
-4. Decide whether follow-up work is sequential, parallel, or blocked.
-5. Run or request fresh verification before claiming completion.
-6. Summarize findings by work package and separate verified facts from recommendations.
+4. Reconcile conflicts and skipped checkpoint risks before integration.
+5. Run or request fresh merged-output verification before claiming completion or starting later dependent phases.
+6. Decide whether follow-up work is sequential, parallel, or blocked.
+7. Summarize findings by work package and separate verified facts from recommendations.
 
 🔴 CHECKPOINT before reconciliation: every accepted conclusion must have evidence anchors and an owner. ROSE owns evidence reconciliation, routing, and final acceptance gates, but must not fabricate, redo, or silently replace subagent-owned edit/review/test work; if ownership must change, get explicit user approval first.
 

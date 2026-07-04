@@ -1,8 +1,9 @@
 import { constants } from "node:fs";
 import { access, readFile, stat } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { readOpenCodeConfig } from "./config.js";
-import { RepoComponent, checkRepoManifestDrift, loadManifest, opencodeInstallTargets } from "./manifest.js";
+import { RepoComponent, checkRepoManifestDrift, loadManifest, repoInstallTargets } from "./manifest.js";
 
 export interface DoctorOptions {
   opencodeHome: string;
@@ -45,11 +46,12 @@ export interface DoctorSummary {
 
 export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> {
   const manifest = await loadManifest(options.ailiHome);
+  const installRoots = { opencode: options.opencodeHome, shared: sharedInstallHome() };
   const required = [
     { type: "global", name: "AGENTS.md", installed: await exists(path.join(options.opencodeHome, "AGENTS.md")) },
-    ...(await Promise.all(manifest.components.agents.filter((entry) => entry.required).map((entry) => requiredInstallTarget(options.opencodeHome, "agent", entry, `agents/${entry.name}.md`)))),
-    ...(await Promise.all(manifest.components.commands.filter((entry) => entry.required).map((entry) => requiredInstallTarget(options.opencodeHome, "command", entry, `commands/${entry.name}.md`)))),
-    ...(await Promise.all(manifest.components.skills.filter((entry) => entry.required).map((entry) => requiredInstallTarget(options.opencodeHome, "skill", entry, `skills/${entry.name}`, "SKILL.md"))))
+    ...(await Promise.all(manifest.components.agents.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "agent", entry, `agents/${entry.name}.md`)))),
+    ...(await Promise.all(manifest.components.commands.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "command", entry, `commands/${entry.name}.md`)))),
+    ...(await Promise.all(manifest.components.skills.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "skill", entry, `.agents/skills/${entry.name}`, "SKILL.md"))))
   ];
   const config = await readOpenCodeConfig(options.opencodeHome);
   const defaultAgent = typeof config.value?.default_agent === "string" ? config.value.default_agent : null;
@@ -170,9 +172,13 @@ async function codegraphStatus(configuredMcp: unknown): Promise<DoctorSummary["c
   };
 }
 
-async function requiredInstallTarget(opencodeHome: string, type: string, entry: RepoComponent, defaultTargetPath: string, requiredFile?: string): Promise<{ type: string; name: string; installed: boolean }> {
-  const targets = opencodeInstallTargets(entry, defaultTargetPath);
-  const checks = targets.map((target) => path.join(opencodeHome, target.path, requiredFile ?? ""));
+function sharedInstallHome(): string {
+  return process.env.HOME || os.homedir();
+}
+
+async function requiredInstallTarget(installRoots: { opencode: string; shared: string }, type: string, entry: RepoComponent, defaultTargetPath: string, requiredFile?: string): Promise<{ type: string; name: string; installed: boolean }> {
+  const targets = repoInstallTargets(entry, defaultTargetPath);
+  const checks = targets.map((target) => path.join(installRoots[target.kind], target.path, requiredFile ?? ""));
   const installed = checks.length > 0 && (await Promise.all(checks.map((targetPath) => exists(targetPath)))).every(Boolean);
   return { type, name: entry.name, installed };
 }

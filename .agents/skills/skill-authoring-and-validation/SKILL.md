@@ -43,7 +43,7 @@ Every skill must live in a self-contained folder:
   assets/               # optional templates or static resources
 ```
 
-`skills/<skill-name>` is reserved for installed OpenCode runtime targets; repository source lives under `.agents/skills/<skill-name>`.
+`$HOME/.agents/skills/<skill-name>` is the installed shared runtime target; repository source lives under `.agents/skills/<skill-name>`.
 
 Keep the directory name and frontmatter `name` identical, lowercase, and kebab-case.
 

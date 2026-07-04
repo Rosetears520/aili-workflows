@@ -1,0 +1,199 @@
+---
+name: local-review-gate
+description: Use for `/local-review` or lifecycle-triggered local review gates over worktree diffs, refs, PRs, or OpenSpec changes; owns target resolution, evidence scope, categorized review reports, verdicts, explicit repair/re-review, and no-remote-mutation boundaries without overriding OpenCode `/review`.
+---
+
+# Local Review Gate
+
+## Purpose
+
+Use this skill when the user invokes `/local-review`, when BUILD or SHIP asks for a local review gate, or when a formal/multi-phase change needs a report-first audit before repair, PR submission, or final lifecycle acceptance.
+
+This skill is the workflow authority for the AILI-owned local review gate. It is not OpenCode's built-in `/review`, it does not replace `/ship`, and it does not make subagent PASS reports final acceptance authority.
+
+## Non-Negotiable Boundaries
+
+- Do not override, replace, or depend on OpenCode's built-in `/review` command.
+- Do not claim release-ready, archive-ready, merge-ready, or SHIP-ready status; `/local-review` verdicts apply only to the reviewed target and evidence scope.
+- Do not push, create PRs, comment on GitHub, approve/request changes, merge, tag, publish, delete, reset, clean, or mutate remote state.
+- PR mode may run only the exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`; do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`, or equivalent push, merge, comment, review, checkout, clone, or remote-mutating commands.
+- Do not perform repair until after a categorized report exists and `--repair` or an explicit user/current-contract approval authorizes repair.
+- Review lanes remain read-only. Approved repair must go to a separate edit/repair agent or edit/test lane, and affected findings require fresh re-review before being marked fixed.
+- Do not hide skipped checks, unavailable tools, stale evidence, partial context, or `Unverified` items.
+
+## Upstream Provenance and Adaptation
+
+Before copying or adapting upstream review material, read `references/upstream-provenance.md` and preserve its active/deferred source split. Active behavior references for this gate are:
+
+- `references/ecc-code-review-adaptation.md`: local/PR target selection, full-file review, validation, report artifact, verdict mapping, and read-only PR-mode boundaries.
+- `references/review-repair-lane-adaptation.md`: ECC-derived review/repair lane triggers, build-fix loop discipline, and separate repair ownership.
+- `references/orchestration-adaptation.md`: fail-closed fan-out/fan-in, blocking/advisory split, adversarial verification, phase checkpoints, and main-agent-only writer/orchestrator rules.
+- `references/addyosmani-code-review-rubric.md`: five-axis review rubric, `Critical`/`Important`/`Suggestion`, spec/task-first reading, concrete fixes, and uncertainty/proof gates.
+- `references/codex-github-compatibility.md`: behavior-only Codex/GitHub compatibility for AGENTS rules, PR focus instructions, high-priority findings, and local review/fix parity without cloud mutation.
+
+- Active derivative-reference sources: primary ECC `affaan-m/ECC` and `addyosmani/agent-skills`.
+- Behavior-only guidance: official Codex review docs; do not copy Codex documentation text.
+- Deferred or non-primary candidates: Kodelyth ECC, Elaine mirror/candidate, and `cminn10/ecc2cursor` unless a later scoped provenance review activates them.
+- Preserve MIT license/provenance for copied/adapted ECC or addyosmani material, including source URL, source path, copied/adapted scope, and adaptation rationale.
+- Replace Claude/ECC-specific tool, path, command, permission, and runtime assumptions with OpenCode/AILI-safe equivalents before activation.
+- Keep long copied/adapted material in references where possible, and use precise triggers and near-miss boundaries to avoid over-triggering.
+- Do not activate `.claude` paths, Claude-only tools, ECC-only command names, `ccg-workflow`, Codex/Gemini runtime dependencies, public `multi-*` commands, or unsafe remote mutation defaults.
+
+## Target Resolver
+
+Resolve and report the target before dispatching review lanes or accepting findings.
+
+| Input | Required resolution |
+|---|---|
+| no args | staged, unstaged, and untracked local changes; report absent categories too |
+| `--base <branch>` | current branch, selected base, merge-base, diff range, and any local staged/unstaged/untracked overlay |
+| `--commit <sha>` | commit identity, parent/range, touched files, and unavailable commit metadata |
+| `--pr <url\|number>` | read-only PR metadata/diff only through the exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head` when available; no `gh api`, checkout, clone, comment, review, merge, create, push, or equivalent remote mutation |
+| `--change <id\|path>` or OpenSpec path | proposal, design, tasks, specs, interview, test-plan, context, progress, drift log or legacy implementation notes, review report, final diff, and verification evidence |
+| `--focus <text>` or adversarial wording | target plus focus lane emphasis such as security, tests, data loss, performance, spec drift, or adversarial review |
+| `--repair` | only after a categorized report exists; convert approved findings into scoped repair packages and require re-review |
+
+For OpenSpec `--change <id|path>` targets, resolve the conventional artifact paths directly instead of relying only on broad glob/search output. Local `openspec/` directories may be git-ignored or omitted from snapshot-style indexes, so the target resolver must attempt exact reads or file listings for `proposal.md`, `design.md`, `tasks.md`, `interview.md`, `test-plan.md`, `context.md`, `progress.txt`, `review-report.md`, `drift-log.md`, legacy `implementation-notes.html`, and `specs/**/spec.md` before marking the artifact absent. If a broad search finds no OpenSpec files but exact reads/listing show the change exists, treat the broad search as insufficient evidence rather than as absence.
+
+If target, base, PR identity, OpenSpec change id, report path, permission, or required evidence source is ambiguous and cannot be safely inferred, return `BLOCKED` with the exact missing decision.
+
+## Full-Context Evidence Policy
+
+Diff-only review is insufficient for high-confidence findings.
+
+Before reporting a definite critical, security, data-loss, compatibility, correctness, or test adequacy finding, require:
+
+- full inspection of changed files and relevant untracked files;
+- related tests, fixtures, config, docs, AGENTS files, manifests, schemas, or protocol docs that constrain behavior;
+- callers, consumers, peer patterns, or downstream output paths when the claim depends on integration behavior;
+- command or artifact evidence for verification claims, or an explicit skipped reason with risk.
+
+When full context cannot be inspected within scope, label the affected claim `Unverified`, downgrade confidence, and prevent a `PASS` verdict unless the item is immaterial or explicitly accepted as risk.
+
+## Report Artifact Contract
+
+For non-trivial targets, create or update a repository-local Markdown report before repair starts.
+
+- OpenSpec default: `openspec/changes/<change-id>/review-report.md`.
+- Non-OpenSpec target: ask once for a repository-local report path, or offer chat-only review only when the user explicitly accepts the persistence limitation as `Unverified`.
+- Do not store or print secrets, tokens, private keys, cookies, raw logs, full transcripts, full file dumps, or private data in reports; use redacted path:line/type evidence instead.
+
+The report must record:
+
+- target, base/ref, merge-base, commit, PR metadata, or change id;
+- timestamp and current worktree/dirty-path classification when relevant;
+- source artifacts reviewed and source artifacts missing;
+- files/artifacts inspected in full, sampled, or skipped;
+- review lanes and checks run, skipped, stale, or unavailable;
+- categorized findings with severity, category, source lane, evidence anchor, affected file/artifact, required action, repair owner, repairability, current status, and re-review requirement;
+- previous findings, resolved/deferred/accepted-risk/out-of-scope items, and re-review history;
+- final verdict and named residual `Unverified` items.
+
+## Verdict Vocabulary
+
+Use only these local-review verdicts:
+
+- `BLOCKED`: target, permissions, evidence, report placement, or required decision is missing.
+- `NEEDS_FIXES`: actionable blocking or important findings remain.
+- `NEEDS_REVIEW`: human/product decision or conflicting evidence is required.
+- `PASS_WITH_UNVERIFIED`: no blocking findings remain, but named skipped or unverifiable items remain.
+- `PASS`: no blocking findings for the audited target and evidence scope, with fresh evidence and no material `Unverified` items.
+- `REPAIRING`: approved repair packages are being executed by separate edit/repair or edit/test lanes.
+- `REREVIEW_REQUIRED`: fixes were made or prior findings remain unresolved and need fresh review.
+
+`PASS` never means release-ready or SHIP-ready.
+
+For large or harness-sensitive `/local-review --change <id|path>` targets, `NEEDS_FIXES` and `BLOCKED` block BUILD continuation. `PASS_WITH_UNVERIFIED` may continue only after the user accepts each named `Unverified` item; otherwise return `NEEDS_REVIEW` or `BLOCKED` with the missing acceptance.
+
+## Lane Selection
+
+Select relevant lanes; do not run every lane by default.
+
+- target/context lane: target identity, diff/base/PR/change scope, dirty paths, and report placement;
+- `code-reviewer`: correctness, maintainability, architecture, performance, and context adequacy;
+- `test-engineer` or `test-coverage-reviewer`: verification story, test quality, and uncovered paths;
+- `security-auditor`: auth, permissions, secrets, shell/installers, network, dependencies, storage, or data-loss risk;
+- `pr-test-analyzer`: branch/PR-like diffs, changed-test review, CI-log interpretation, and focused command matrix;
+- `ai-regression-scout`: prompts, agents, skills, routing, fixtures, model/tool routing, or generated-output changes;
+- `silent-failure-reviewer`: stale evidence, skipped gates, misleading reports, swallowed errors, and false PASS risk;
+- `convergence-reviewer`: formal OpenSpec, multi-phase, harness-sensitive, or evidence-heavy work where source artifacts must be compared to tasks, diff, progress, review, and verification evidence;
+- browser/E2E lanes only when the changed surface and artifact placement justify them;
+- open-source/provenance lanes only when public/package/provenance exposure is in scope.
+
+Each lane packet must include target identity, accepted scope, source artifacts, diff/files, evidence already run, artifact placement rules, forbidden remote mutation, skipped-lane constraints, and expected return status. Review lanes are read-only and must not repair their own findings.
+
+Apply the adapted upstream lane gates:
+
+- run `code-reviewer` with five axes: correctness, readability, architecture, security, and performance;
+- require spec/task-first and tests-first review where those artifacts exist;
+- require `Critical`/`Important` findings to include exact evidence, concrete failure mode, why existing guards do not catch it, and a concrete fix;
+- accept zero findings only when inspected scope, skipped checks, and confidence are recorded;
+- fail closed when a required lane cannot run, returns empty/status-less output, or lacks evidence anchors;
+- split reconciled findings into blocking and advisory buckets, with unverifiable high-risk findings blocking until checked or explicitly accepted.
+
+## Convergence and Phase Checkpoints
+
+For formal or multi-phase work, include convergence review and phase checkpoint evidence:
+
+- serial phase packets declare a checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk;
+- after each serial phase, ROSE runs or delegates the checkpoint before the next dependent phase continues;
+- parallel lanes declare join evidence, and ROSE reconciles each lane's status, evidence, conflicts, blockers, skipped checks, and missing evidence;
+- the join point runs verification over the merged output before later phases continue;
+- final local review compares source artifacts, phase evidence, final diff/worktree state, review findings, and verification evidence.
+
+## Anti-Pseudo-Completion Checks
+
+Reject pseudo-completion when:
+
+- prior findings are unresolved or not explicitly accepted/out-of-scope;
+- verification output is stale, missing, partial, or not tied to the exact reviewed target;
+- a lane reports success without anchors, inspected scope, lane status, and skipped-check reasons;
+- tasks, specs, test-plan items, or accepted requirements lack implementation/evidence coverage;
+- dirty paths are unknown or unrelated to the claimed scope;
+- skipped checks lack a reason and risk;
+- the report claims to replace PR review without target/base metadata, inspected files, checks, findings, and re-review evidence.
+
+## Repair and Re-Review Loop
+
+1. Resolve target and write/update the categorized report.
+2. Classify findings before repair.
+3. If repair is authorized, convert repairable findings into scoped BUILD-style packages.
+4. Assign fixes to a separate edit/repair agent or edit/test lane; review lanes remain read-only.
+5. For build/type failures, detect the build system, group errors by file/root cause, fix one error class at a time, rerun focused verification, and stop if the same error persists after three attempts, more errors are introduced than fixed, a dependency/lockfile change is needed, or the fix requires architecture changes.
+6. Run affected verification after repair.
+7. Re-run only the relevant review lanes with fresh target identity, diff, evidence, and prior-finding state.
+8. Keep verdict `REREVIEW_REQUIRED` until affected findings are rechecked.
+
+## Output Contract
+
+```text
+LOCAL REVIEW STATUS: BLOCKED | NEEDS_FIXES | NEEDS_REVIEW | PASS_WITH_UNVERIFIED | PASS | REPAIRING | REREVIEW_REQUIRED
+CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN
+
+TARGET:
+- Mode:
+- Scope/base/ref/commit/PR/change:
+- Report path or chat-only waiver:
+
+SOURCE ARTIFACTS:
+- Reviewed:
+- Missing/stale/unavailable:
+
+LANES AND CHECKS:
+- Ran:
+- Skipped with reason/risk:
+- Re-review required:
+
+FINDINGS:
+- [critical|high|medium|low|suggestion|unverified] category - evidence - required action - owner - status - re-review requirement
+
+REPAIR PLAN:
+- Authorized: yes | no
+- Packages or N/A:
+
+UNVERIFIED / ACCEPTED RISK:
+- <item or N/A>
+
+NEXT:
+- <fix, re-review, user decision, or ship remains separate>
+```

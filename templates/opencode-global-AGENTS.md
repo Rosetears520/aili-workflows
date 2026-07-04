@@ -121,7 +121,7 @@ Use read-only scouting when broad repository search would pollute the main conte
 
 Before adding a local special-case, duplicated mapping, or hand-written generated output, inspect whether an existing shared config, registry, manifest, template, schema, generator, or documented source of truth controls the behavior. Use that source unless the user explicitly approves an exception.
 
-Prefer executable rules over abstract-only advice: write "when user asks X, do Y; if Z, do not A, do B." AILI anti-patterns to catch during self-checks: do not skip evidence because a filename is clear; do not assume BUILD approval from "continue"; do not treat subagent evidence as the final verdict; do not claim verified from old logs; do not use `implementation-notes.html` as chat history or progress ledger.
+Prefer executable rules over abstract-only advice: write "when user asks X, do Y; if Z, do not A, do B." AILI anti-patterns to catch during self-checks: do not skip evidence because a filename is clear; do not assume BUILD approval from "continue"; do not treat subagent evidence as the final verdict; do not claim verified from old logs; do not use `drift-log.md` or legacy `implementation-notes.html` as chat history or progress ledger.
 
 ### 3. Simplicity First
 
@@ -158,7 +158,7 @@ Acceptable evidence includes focused tests, related test suites, typecheck, lint
 - Treat ambiguous "archive" or "归档" requests as target-ambiguous: ask whether the user means docs/artifacts, OpenSpec archive, `progress.txt`, memory, or ending the task before compressing context or writing files.
 - Do not rely on stale memory, old logs, raw context percentages, or ungrounded summaries for the next edit/review/ship step.
 - When a project defines `progress.txt`, use it for current progress, user feedback/corrections, checkpoint ledger, worker dispatches, evidence references, verification/review/security state, blockers, ROSE decisions, and next action.
-- For approved spec-backed implementation, use `implementation-notes.html` only to explain spec deviations/interpretation, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a chat log, model-drift transcript, user-feedback ledger, or progress ledger.
+- For approved spec-backed implementation, use `drift-log.md` only for spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a chat log, user-feedback ledger, progress ledger, review report, or formal contract substitute. Read legacy `implementation-notes.html` only as migration evidence unless the active contract explicitly requires legacy HTML.
 - Do not store raw logs, full transcripts, secrets, private data, or large dumps in continuity artifacts.
 
 ## Stop Conditions

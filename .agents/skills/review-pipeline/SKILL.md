@@ -1,6 +1,6 @@
 ---
 name: review-pipeline
-description: Orchestrates post-implementation review before final PASS. Use after non-trivial changes to fan out only relevant code, test, security, coverage, PR-test, AI-regression, silent-failure, browser-QA, E2E-artifact, agent-output, or OSS-sanitizer lanes, reconcile findings, run a bounded fix loop, and gate completion without pushing or merging.
+description: Orchestrates post-implementation review before final PASS. Use after non-trivial changes to fan out only relevant code, test, security, coverage, PR-test, AI-regression, silent-failure, convergence, browser-QA, E2E-artifact, agent-output, or OSS-sanitizer lanes, reconcile findings, run a bounded fix loop, and gate completion without pushing or merging.
 ---
 
 # Review Pipeline
@@ -22,6 +22,10 @@ Use after changes that are multi-file, behavior-changing, security-sensitive, pe
 Do not use for tiny documentation or one-line edits where diff inspection and a narrow check are sufficient.
 
 ## Workflow
+
+### Upstream orchestration lessons activated
+
+The local review gate and this pipeline adapt MIT-licensed ECC orchestration and addyosmani review patterns through `.agents/skills/local-review-gate/references/orchestration-adaptation.md` and `addyosmani-code-review-rubric.md`: main-agent-only orchestration, no router personas, parallel fan-out only for independent evidence lanes, fail-closed incomplete review, blocking/advisory split, dedupe, adversarial verification for Critical/Important findings, and user-driven lifecycle pipelines. Do not import public `multi-*` commands, `.claude` paths, Claude-only teams/tools, Codex/Gemini runtime dependencies, or remote mutation defaults.
 
 ### Phase 1: Identify Review Target
 
@@ -47,6 +51,7 @@ Dispatch only relevant review/test lanes; none are always-on:
 - `pr-test-analyzer`: PR/diff test impact, changed-test review, CI-log interpretation, and focused command matrix recommendations
 - `ai-regression-scout`: prompt, agent, skill, model/tool routing, harness fixture, or generated-output regression scenario scouting
 - `silent-failure-reviewer`: false-success, swallowed-error, skipped-gate, partial-artifact, stale-evidence, or misleading-report risk review
+- `convergence-reviewer`: formal-change, OpenSpec, multi-phase, or harness-sensitive convergence review that compares proposal/design/tasks/specs/interview/test-plan/context/progress/drift or legacy implementation notes/final diff/review/verification evidence; it is read-only and is not final PASS authority
 - `browser-qa-runner`: local browser UI, DOM/accessibility, console/network, and screenshot evidence when UI/browser behavior changed
 - `e2e-artifact-runner`: E2E trace, video, screenshot, report, or failure-bundle evidence when durable artifacts are needed
 - `agent-evaluator`: quality, evidence, claim-hygiene, scope-fit, and handoff-usability review only for disputed, critical, acceptance-blocking, or user-requested agent/subagent outputs; do not evaluate every lane by default
@@ -69,7 +74,11 @@ Merge duplicate findings and classify each as:
 
 Name conflicts between reviewers and resolve them with evidence. If evidence is insufficient, mark the item `Unverified` instead of approving it.
 
+For Critical or Important findings, run an adversarial verification pass during reconciliation: check cited context, tests, types, existing guards, and project rules for disproof before keeping the item blocking. Findings that cannot be verified but could hide security, data-loss, broken-behavior, or irreversible workflow damage remain blocking until checked or explicitly accepted. Refuted or low-risk items move to advisory notes.
+
 For formal changes, reconcile review findings against the traceability mapping: each accepted requirement, decision, or risk should have implementation files/artifacts plus verification, review, and security evidence or an explicit skip reason. Missing coverage is `Open Question` when a decision is needed, or `Unverified` when evidence is missing.
+
+When a convergence lane runs, reconcile its `missing`, `partial`, `contradicts`, `unrequested`, `pseudo-complete`, `unchecked-task`, `stale-progress`, and `evidence-gap` labels against the report before accepting any local-review or lifecycle PASS claim. Convergence evidence can block or require repair/re-review, but it does not make its own final PASS authoritative.
 
 🔴 CHECKPOINT before accepting reconciliation: each blocker must be fixed, disproven with cited evidence, or explicitly accepted by the user. ROSE remains responsible for the final gate; reviewers provide evidence and recommendations, not final PASS.
 

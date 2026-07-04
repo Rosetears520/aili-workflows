@@ -52,7 +52,8 @@ Stop immediately and report the missing next action when:
 
 ## Boundaries
 
-- Only four top-level commands are valid: `/ideate`, `/define`, `/build`, `/ship`.
+- Only four top-level delivery commands are valid: `/ideate`, `/define`, `/build`, `/ship`.
+- `/local-review` is a standalone non-delivery local audit command owned by `local-review-gate`; do not route it through this delivery lifecycle skill as a fifth lifecycle mode.
 - Research, questionnaire, test-plan, implementation, debugging, review, repair, and harness evolution are internal stages, not user command entrypoints.
 - Anti-entrypoint blacklist: do not expose or invent top-level `/research`, `/questionnaire`, `/test-plan`, `/implement`, `/debug`, `/review`, `/repair`, `/harness`, or backend-specific lifecycle commands.
 - Backend-specific task systems store artifacts; they do not weaken lifecycle gates.

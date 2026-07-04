@@ -32,7 +32,7 @@ rose-memory doctor --db memory/memory.db --record
 Direct fallback:
 
 ```bash
-python ~/.config/opencode/skills/rose-memory/references/memory_cli.py doctor --db memory/memory.db --record
+python ~/.agents/skills/rose-memory/references/memory_cli.py doctor --db memory/memory.db --record
 ```
 
 Focused current-task pack:

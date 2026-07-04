@@ -72,7 +72,7 @@ Prefer documentation and workflow artifacts:
 
 - `AGENTS.md`, `CLAUDE.md`, `rose.md`, and project-local agent rules
 - `agents/*.md` when the question is about agent behavior
-- `.agents/skills/*/SKILL.md` and `.agents/skills/*/references/*.md` for repository source; installed OpenCode runtime targets may appear under `skills/<name>` when explicitly relevant
+- `.agents/skills/*/SKILL.md` and `.agents/skills/*/references/*.md` for repository source; installed shared runtime targets may appear under `$HOME/.agents/skills/<name>` when explicitly relevant
 - `openspec/changes/**`, `docs/**`, `README.md`, `templates/**`
 - design notes, ADRs, proposals, task files, setup docs, and migration notes
 
