@@ -21,6 +21,7 @@
       { "name": "browser-qa-runner", "path": "agents/browser-qa-runner.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "e2e-artifact-runner", "path": "agents/e2e-artifact-runner.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "web-researcher", "path": "agents/web-researcher.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
+      { "name": "web-performance-auditor", "path": "agents/web-performance-auditor.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "spec-miner", "path": "agents/spec-miner.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "agent-evaluator", "path": "agents/agent-evaluator.md", "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "opensource-sanitizer", "path": "agents/opensource-sanitizer.md", "required": true, "defaultInstalled": true, "repositoryManaged": true }
