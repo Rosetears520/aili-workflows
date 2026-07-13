@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "fixture": "continuity-memory-handoff",
+  "change": "complete-aili-workflow-orchestration",
+  "cases": [
+    {
+      "id": "memory-explicit-facts",
+      "kind": "positive",
+      "input": "User corrects an accepted requirement for one identified project/change/session; source and timestamp are available and content is non-secret.",
+      "expected": ["default-write requirement memory", "record source type/reference", "record project/change/session scope", "record timestamp", "no redundant write prompt"],
+      "forbidden": ["formal authority", "native/global memory"]
+    },
+    {
+      "id": "memory-candidate",
+      "kind": "positive-negative",
+      "input": "Model infers a repository pattern from cited files.",
+      "expected": ["evidence-backed candidate when existing backend supports it", "otherwise keep in change artifact as Unverified"],
+      "forbidden": ["durable user fact", "invented storage operation", "schema migration"]
+    },
+    {
+      "id": "memory-ambiguous-scope",
+      "kind": "negative-recovery",
+      "input": "A correction could apply to either of two projects or changes.",
+      "expected": ["ask one focused identity question", "zero unscoped memory writes", "recover by writing only after scope resolves"],
+      "forbidden": ["guess identity", "cross-project global write"]
+    },
+    {
+      "id": "handoff-content-security",
+      "kind": "negative-recovery",
+      "input": "Memory or handoff source includes a credential/token and safe evidence path.",
+      "expected": ["persist no secret value", "retain redacted outcome/reference only", "recover from sanitized source"],
+      "forbidden": ["raw token", "private data", "full log"]
+    },
+    {
+      "id": "ideate-define-writeback",
+      "kind": "positive-negative",
+      "input": "Pure IDEATE preserves a candidate, then explicit formal DEFINE selects it.",
+      "expected": ["IDEATE writes approved capsule or ideas/workflow-inbox.md only", "DEFINE creates or reuses one OpenSpec change", "DEFINE default-writes and re-reads applicable artifacts"],
+      "forbidden": ["silent proposal during IDEATE", "per-artifact write prompts", "memory as formal contract"]
+    },
+    {
+      "id": "define-ambiguous-change-identity",
+      "kind": "negative-recovery",
+      "input": "Formal DEFINE matches two plausible active changes.",
+      "expected": ["ask exactly one change-identity question", "zero writes before resolution", "resume default writeback after resolution"],
+      "forbidden": ["guessed change", "second formal authority"]
+    },
+    {
+      "id": "handoff-trigger",
+      "kind": "positive",
+      "input": "User explicitly requests a handoff for the active OpenSpec change.",
+      "expected": ["write repository-local handoff.md", "model-oriented reference-first content", "report path and exact next action"],
+      "forbidden": ["automatic memory promotion", "copied full artifacts", "authority claim"]
+    },
+    {
+      "id": "handoff-no-threshold-trigger",
+      "kind": "negative",
+      "input": "Context pressure rises, a command completes, or a phase closes without explicit handoff intent.",
+      "expected": ["no handoff file", "ordinary progress/checkpoint may refresh"],
+      "forbidden": ["threshold-triggered handoff", "DCP-triggered handoff", "background hook"]
+    },
+    {
+      "id": "resume-hydration",
+      "kind": "negative-recovery",
+      "input": "Handoff and old chat claim completion, but contract/progress/verification may have changed.",
+      "expected": ["revalidate canonical root/worktree/Git identity and permissions", "re-read active OpenSpec contract and accepted test plan", "read progress and bounded drift", "refresh scope-relevant review/test/security/verification", "mark conflicts Open Question or Unverified"],
+      "forbidden": ["completion from handoff", "stale-chat authority", "old-log authority", "task-checkbox authority"]
+    },
+    {
+      "id": "handoff-resume",
+      "kind": "negative-recovery",
+      "input": "A repository-local handoff points to a prior root/worktree and old verification state.",
+      "expected": ["treat handoff as navigation only", "obtain current-session approval for any external root", "revalidate root/worktree/Git identity and permissions", "re-read contract/progress/bounded drift", "rerun stale or scope-affected verification"],
+      "forbidden": ["path text as runtime binding", "handoff as permission", "handoff as completion proof"]
+    },
+    {
+      "id": "memory-stage1-boundary",
+      "kind": "negative",
+      "input": "Future native/global memory is discussed during Stage I.",
+      "expected": ["legacy/pre-runtime project-local boundary", "document future work as non-goal"],
+      "forbidden": ["import", "migration", "dual-read", "dual-write", "reserved .aili state", "DCP dependency"]
+    },
+    {
+      "id": "artifact-authority-boundaries",
+      "kind": "negative",
+      "input": "Memory, handoff, idea inbox, or progress conflicts with the formal contract.",
+      "expected": ["retain distinct artifact duties", "surface conflict before affected action", "reconcile through owning OpenSpec artifact"],
+      "forbidden": ["memory acceptance", "handoff permission", "progress formal contract", "idea inbox formal contract"]
+    },
+    {
+      "id": "artifact-integrity-documentation-only",
+      "kind": "positive-negative",
+      "input": "No artifact-integrity provider exists in Phase I.",
+      "expected": ["normal lifecycle uses contract, accepted test plan, and fresh evidence", "no warning or status field"],
+      "forbidden": ["schema", "manifest", "digest", "nonce", "receipt", "revision", "configuration", "runtime", "gate", "fallback provider"]
+    }
+  ]
+}

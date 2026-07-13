@@ -1,6 +1,6 @@
 # Questionnaire Policy
 
-Questionnaires prevent ambiguous work from entering BUILD.
+`requirements-grilling` is the sole requirements-refinement authority. `interview.md` is its one OpenSpec artifact. The phrase `change-interviewer` is compatibility routing only and owns no skill, prompt, artifact, state, manifest entry, or readiness authority.
 
 ## When Required
 
@@ -9,15 +9,21 @@ Questionnaires prevent ambiguous work from entering BUILD.
 - Scope boundaries or forbidden files are unclear.
 - Acceptance criteria cannot be verified from existing artifacts.
 
-## When Optional
+## When Not Required
 
 - The task is a small local edit with clear acceptance criteria.
 - A current spec already answers the blocking questions.
-- The user explicitly waives the questionnaire gate and accepts the risk.
+- Current evidence fully resolves every material dimension.
 
 ## Gate
 
-DEFINE may draft questions and incorporate answers. For OpenSpec-backed changes, DEFINE writes the initial `openspec/changes/<change-id>/interview.md` packet through `requirements-grilling`, then uses chat as the default surface for unresolved blocking questions. ROSE writes accepted answers, accepted defaults, explicit waivers, or accepted `UNVERIFIED` states back into `interview.md`; direct user edits to the file remain a fallback, not the default interaction model. BUILD must stop until blocking answers are confirmed, explicitly waived, or explicitly accepted as `UNVERIFIED`.
+DEFINE writes `openspec/changes/<change-id>/interview.md` through `requirements-grilling`. Ask one decision-changing question at a time, or use a dependency-ordered packet for non-trivial DEFINE. Every question states why it matters, affected decision/artifact/test/risk, evidence-backed recommendation or explicit uncertainty, tradeoffs, short options plus custom input, and writeback target. Do not ask for facts current code/spec/test/config/official evidence already establishes.
+
+Write accepted chat/UI/custom answers to `interview.md`, then re-read disk before classification or readiness. Ambiguous, contradictory, incomplete, untestable, out-of-scope, or evidence-conflicting answers remain `Open Question`/`Unverified` and trigger a focused follow-up rather than guessed writeback.
+
+Classify every confirmed correction, new requirement, artifact/design/task/test change, accepted finding, or implementation feedback into exactly one exhaustive class: `covered`, `material-question`, `material-delta`, `ordinary-steering`, or `Unverified`. A `material-delta` automatically writes/re-reads affected OpenSpec artifacts, reruns status/strict validation, and stales prior final-test-plan acceptance only when acceptance or required verification changes. Never ask whether to save the delta, guess identity, expand permission, bypass high-risk approval, or start BUILD.
+
+BUILD readiness requires complete dimension coverage, coherent strict proposal/spec/design/interview/context/tasks, no unresolved material product decision, and explicit acceptance of final `test-plan.md`. The test-plan acceptance is the sole mandatory lifecycle user gate; material/coherence/validation/permission/destructive/high-risk gates remain separate.
 
 ## Default Interaction
 
@@ -39,3 +45,9 @@ Before using, merging, validating, or overwriting a questionnaire artifact, ROSE
 4. Treat on-disk content as the source of truth.
 5. If user edits are detected, summarize them before merging or overwriting.
 6. Never claim “no changes detected” unless the artifact was re-read in the current turn.
+
+## Complete coverage
+
+Cover and link to writeback/test evidence: goal/success; scope/non-goals; roles/permissions; happy/failure paths; retry/rollback; boundaries; data/artifact lifecycle; state transitions; API/CLI/UI; compatibility/migration; security/privacy/secrets; reliability; observability/audit; acceptance/testability; rollout/rollback; explicit non-goals. Give each exactly one state: confirmed by evidence/user, not applicable with reason, needs question, open question, or `Unverified`.
+
+Run `strategy-stress-test` after generating/materially revising the packet and after answer writeback. Repair missed questions, evidence-answerable questions, unsupported recommendations, contradictions, missing failure/counterexamples, untestable acceptance, required-field gaps, over-design, and unlabeled uncertainty. Stress testing is not proposal approval or a second lifecycle gate.

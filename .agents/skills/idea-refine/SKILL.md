@@ -11,6 +11,8 @@ Refines raw ideas into sharp, actionable concepts worth building through structu
 
 Use this skill for ordinary non-command brainstorming and idea shaping, or when `aili-delivery-flow` explicitly routes an IDEATE session here for deeper divergence, convergence, or options comparison. Do not treat `/ideate` as this skill's own top-level trigger; lifecycle entry remains owned by `aili-delivery-flow`. Do not use this skill for stress-testing an existing plan, reviewing work, or validating a completion claim; route those scenarios to the appropriate review or stress-test skill.
 
+The pinned Addy closure under `references/upstream/` is inert provenance/reference data. This canonical adapter keeps divergent → convergent → one-pager while mapping foreign tools and paths to AILI repository evidence, current interaction, and user-confirmed artifact placement. Never execute `idea-refine.upstream.sh`, register upstream frontmatter, or treat it as lifecycle/permission authority.
+
 ## How It Works
 
 1.  **Understand & Expand (Divergent):** Restate the idea, ask sharpening questions, and generate variations.

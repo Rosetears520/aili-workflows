@@ -160,20 +160,19 @@ npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --set-default-rose
 npx -y rose-aili install --skip-opencode-config
 npx -y rose-aili install --enable-playwright
-npx -y rose-aili install --skip-dcp
 npx -y rose-aili install --enable-codegraph
+npx -y rose-aili install --enable-openspec
 npx -y rose-aili install --skip-openspec
-npx -y rose-aili update --skip-dcp
 npx -y rose-aili update --skip-openspec
 npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-OpenCode config sync is enabled by default for both `install` and `update`; use `--skip-opencode-config` to disable it. The default sync sets or keeps `default_agent: "rose"` when the value is absent or already `rose`, preserves a conflicting non-rose default unless `--force-default-agent` is passed, writes `agent.rose.model` only when `--model <provider/model>` is provided, and writes Playwright MCP only when `--enable-playwright` is provided. Existing `agent.rose.model` values are preserved unless `--force-model` is passed. `install` and `update` also follow defaults for DCP and OpenSpec unless `--skip-dcp` / `--skip-openspec` is passed; they do not silently enable CodeGraph. Optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
+OpenCode config sync is enabled by default for both `install` and `update`; use `--skip-opencode-config` to disable it. The default sync sets or keeps `default_agent: "rose"` when the value is absent or already `rose`, preserves a conflicting non-rose default unless `--force-default-agent` is passed, writes `agent.rose.model` only when `--model <provider/model>` is provided, and writes Playwright MCP only when `--enable-playwright` is provided. Existing `agent.rose.model` values are preserved unless `--force-model` is passed. Playwright, CodeGraph, and OpenSpec are explicit opt-ins; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
 
-Interactive `rose-aili install` asks, in order: Playwright MCP and CodeGraph OpenCode integration. DCP, OpenSpec, and OpenCode config sync are defaults and are not yes/no prompted; use `--skip-dcp`, `--skip-openspec`, or `--skip-opencode-config` to disable them. Interactive `rose-aili update` asks only the new CodeGraph integration question. Non-interactive setup can pass `--model <provider/model>` only when the user wants a fixed model override. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
+Interactive `rose-aili install` asks, in order, about the default agent, a missing model override, Playwright MCP, CodeGraph OpenCode integration, and OpenSpec. Interactive `rose-aili update` asks only the CodeGraph integration question. Non-interactive setup performs optional integration work only for explicit enable flags. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
 
-DCP is enabled by default for `rose-aili install` and `rose-aili update`: it first runs best-effort detection with `opencode plugin list`; if DCP is not detected, or detection fails/cannot confirm, it delegates `opencode plugin @tarquinen/opencode-dcp@latest --global` with argv execution. Whether DCP was already installed or newly installed, it writes/merges recommended DCP config into the existing `<opencode-home>/dcp.jsonc` / `dcp.json` target, or creates `dcp.jsonc` when neither exists. This uses a third-party `@latest` package, so treat it as user-accepted latest-version risk. Existing unrelated DCP config keys are preserved where possible; symlinked or non-regular DCP config targets are refused. If the plugin command or config write is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports DCP recovery instructions separately. Use `--skip-dcp` to disable this default; `--enable-dcp` remains accepted for compatibility but is no longer required.
+AILI has no active DCP integration. `install`, `update`, and `doctor` do not install, detect, configure, report, migrate, or remove a third-party DCP plugin and do not read or mutate user `dcp.json`/`dcp.jsonc`. Former DCP flags are ordinary unknown options. Historical DCP evidence may remain in archived ideas, accepted-change history, or negative fixtures, but it is not setup/runtime authority.
 
 CodeGraph opt-in is explicit: `rose-aili install --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`. Restart OpenCode after a configured CodeGraph install so OpenCode reloads the MCP integration. If either command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports CodeGraph recovery instructions separately.
 
@@ -181,7 +180,7 @@ Project-local CodeGraph initialization is separate from global install/update. A
 
 Project `AGENTS.md` initialization/update should also check CodeGraph readiness for the same repository. After generating or updating `AGENTS.md`, run or request `codegraph status`; if the repository is not initialized, ask whether to run `codegraph init -i`, then rerun `codegraph status` when approved. If CodeGraph is unavailable, skipped, or not approved, keep the `AGENTS.md` flow non-blocking but report that the project has no CodeGraph code-map coverage yet.
 
-OpenSpec is enabled by default for `rose-aili install` and `rose-aili update` unless `--skip-openspec` is passed. It requires Node.js `20.19.0+`, detects an existing CLI with `openspec --version`, runs `npm install -g @fission-ai/openspec@latest` only when the CLI is missing, then runs `openspec update` inside projects with existing OpenSpec markers or `openspec init` for first-time setup. `--enable-openspec` remains accepted for compatibility but is no longer required. Expanded workflow selection with `openspec config profile` remains a manual follow-up.
+OpenSpec is explicit opt-in for `rose-aili install` and `rose-aili update`. With `--enable-openspec`, it requires Node.js `20.19.0+`, detects an existing CLI with `openspec --version`, runs `npm install -g @fission-ai/openspec@latest` only when the CLI is missing, then runs `openspec update` inside projects with existing OpenSpec markers or `openspec init` for first-time setup. Expanded workflow selection with `openspec config profile` remains a manual follow-up.
 
 User preferences belong in OpenCode runtime config, not in symlinked upstream agent Markdown:
 
@@ -581,69 +580,14 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 
 ## Recommended OpenCode Runtime Add-ons
 
-Recommended runtime add-ons are DCP plugin, Playwright MCP, OpenSpec, and Context7 integration. `rose-aili install` and `rose-aili update` configure DCP and OpenSpec by default unless explicitly skipped, can configure the pinned optional Playwright MCP entry, and leave CodeGraph opt-in. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
-
-### DCP Plugin
-
-```bash
-opencode plugin @tarquinen/opencode-dcp@latest --global
-```
-
-This is a trust-latest command. `rose-aili install` and `rose-aili update` detect the plugin first, run the same command only when DCP is missing or cannot be confirmed, and then write/merge recommended config into the selected OpenCode home; pass `--skip-dcp` to disable it.
-
-DCP reads configuration from `~/.config/opencode/dcp.jsonc` / `dcp.json`, `$OPENCODE_CONFIG_DIR/dcp.jsonc` / `dcp.json`, or project `.opencode/dcp.jsonc` / `dcp.json`. Project config overrides global config. Restart OpenCode after changing the file.
-
-Recommended range thresholds for a 400k-token context window:
-
-| DCP config key | Value | Intent |
-|---|---:|---|
-| `compress.minContextLimit` | `"65%"` | begin late-stage range compression after workflow checkpoints should already exist |
-| `compress.maxContextLimit` | `"85%"` | upper automatic compression threshold before context pressure becomes unsafe |
-
-Recommended `dcp.jsonc` snippet:
-
-```jsonc
-{
-  "enabled": true,
-  "pruneNotification": "minimal",
-  "pruneNotificationType": "toast",
-  "turnProtection": {
-    "enabled": true,
-    "turns": 4
-  },
-  "compress": {
-    "mode": "range",
-    "permission": "allow",
-    "showCompression": false,
-    "minContextLimit": "65%",
-    "maxContextLimit": "85%",
-    "summaryBuffer": false,
-    "nudgeFrequency": 4,
-    "iterationNudgeThreshold": 12,
-    "nudgeForce": "soft",
-    "protectTags": true,
-    "protectUserMessages": false
-  },
-  "strategies": {
-    "deduplication": { "enabled": true },
-    "purgeErrors": { "enabled": true, "turns": 6 }
-  }
-}
-```
-
-DCP is only the late-stage compression mechanism. It is not the task-continuity ledger and does not own the 50/70/85 workflow gates. ROSE/AILI should run checkpoint-first continuity instead: treat roughly 50/70/85 context pressure as workflow signals to refresh the active contract, update `progress.txt` for current progress, user feedback/corrections, checkpoint ledger, evidence, and next action, and update `drift-log.md` only for spec-backed drift/self-correction, temporary decisions, trade-offs, open questions, unverified assumptions, or required DEFINE write-back. Legacy `implementation-notes.html` may be read as migration evidence, but new drift entries should not be appended there unless the active contract explicitly requires legacy HTML. Below 65% context pressure, manual `compress` requires an explicit user request; phase closure, command completion, or a checkpoint signal alone is not enough. Never compress active, adjacent, recent, or still-evolving discussion.
-
-Do not add unsupported keys such as `warn`, `force_compress`, or `target_after_compress`; the DCP schema only accepts documented keys and warns on unknown properties.
-
-Verify after restart by running `/dcp` in OpenCode and confirming the plugin reads the active `<opencode-home>/dcp.jsonc`, including `enabled: true`, `compress.minContextLimit: "65%"`, and `compress.maxContextLimit: "85%"`.
+Recommended opt-in runtime add-ons are Playwright MCP, OpenSpec, CodeGraph, and Context7 integration. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
 
 ### OpenSpec
 
-OpenSpec is installed/configured by default during `rose-aili install` unless explicitly skipped:
+OpenSpec is installed/configured only when explicitly enabled:
 
 ```bash
-rose-aili install
-rose-aili install --skip-openspec  # disable default OpenSpec setup
+rose-aili install --enable-openspec
 ```
 
 The delegated command path is:
@@ -705,8 +649,24 @@ This repository follows an agent-driven model similar to `addyosmani/agent-skill
 
 - Skills are selected automatically by intent.
 - `AGENTS.md` or the active primary agent should require skill usage when a skill applies.
-- Optional slash commands `/ideate`, `/define`, `/build`, and `/ship` provide thin delivery entrypoints to `.agents/skills/aili-delivery-flow`; `/local-review` provides a standalone report-first local audit entrypoint. No internal stage commands, including AILI-owned `/review`, are shipped.
+- Exactly four optional delivery shortcuts—`/ideate`, `/define`, `/build`, and `/ship`—provide thin entrypoints to `.agents/skills/aili-delivery-flow`; equivalent natural-language intent uses the same classifier, gates, and evidence rules. `/local-review` is a standalone report-first local audit entrypoint, not a delivery mode. No loop/schedule/goal/proactive/cycle/watch/objective/worktree-maintenance/Graphify shortcut and no internal-stage AILI `/review` command is shipped.
 - The user can work naturally: "implement this", "fix this bug", "review this", "plan this change".
+
+AILI provides no cron, scheduler, watcher, webhook, listener, daemon, persistent queue, hook, dependency, or auto-retry runtime for the four outer profiles. `turn` and `objective` are bounded executable profiles inside the existing lifecycle; `interval` and `event` are protocol/runbook descriptions for external/manual triggering only.
+
+## Source, Adapter, and Distribution Boundaries
+
+- Canonical AILI source is this repository's four command files, top-level canonical `SKILL.md` files and references, agents, templates, manifests, TypeScript, and installer sources.
+- Root `AGENTS.md`, `dist/`, installed OpenCode files, and installed shared skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
+- Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned outputs. They remain unchanged and directly callable outside AILI guarantees. AILI does not route to, recommend, wrap, suppress, prevent, control, or count their output as AILI acceptance/readiness/verification/completion evidence.
+- Pinned upstream files under canonical skill `references/upstream/` are inert licensed data, not another installed skill or runtime. They use `SKILL.upstream.md`; upstream scripts must remain non-executable data and must never become commands, hooks, or routing targets.
+- `package.json#files` ships canonical agents, `.agents/` (including protocols and inert references), commands, manifests, both AGENTS templates, `agents_md.py`, the Graphify guarded launcher and its contract fixture, the installer script, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; packaged helpers/data are not registered as commands or runnable skills.
+
+The upstream distribution path is currently fail-closed. OpenCode `1.17.18` installed-catalog recursion remains `UV-005`, and filesystem mode evidence may not prove required upstream `0644` modes; until both are resolved, do not claim distribution/registration/enablement or release readiness. `npm pack --dry-run` is content evidence only and does not publish or resolve runtime catalog/mode behavior.
+
+Cross-root delegation also fails closed against exact OpenCode `1.17.18` behavior. Root approval is not process containment: if ask/always/`--auto`, Task-root inheritance, symlink/TOCTOU, subprocess, bash-effect, secret, or neighboring-root behavior cannot be safely expressed and freshly proven, do not dispatch or mutate across roots; retain the runtime result as `Unverified`.
+
+Graphify remains a separate operation. A real or synthetic process starts only after explicit approval for that exact operation and successful provenance, advisory, network-denial, isolated-environment, argv, output-root, and write-inventory controls. Missing control means blocked/`Unverified` before process start; Graphify is never installation, command routing, scheduled behavior, or completion evidence.
 
 Typical intent mapping:
 
@@ -800,11 +760,9 @@ test -f "$HOME/.config/opencode/AGENTS.md"
 python "$HOME/.agents/skills/rose-memory/references/memory_cli.py" --help
 ```
 
-Required checks for runtime add-on setup:
+Required checks for selected runtime add-on setup:
 
 - OpenCode was fully restarted after installation or runtime configuration changes.
-- `/dcp` is available after installing the DCP plugin.
-- DCP compression thresholds use documented keys only: `compress.minContextLimit=65%` and `compress.maxContextLimit=85%` when the installed plugin supports percentage values.
 - `opencode mcp list` shows the expected Playwright MCP entry.
 - Context7 can answer a library documentation lookup through the installed CLI or MCP capability.
 

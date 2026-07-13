@@ -13,6 +13,8 @@ Agent Skills is a collection of engineering workflow skills organized by develop
 
 Skills must be installed or linked into an OpenCode discovery path before the runtime can load them, such as global `$HOME/.agents/skills/` or a supported project-local skills directory. In this repository, run `scripts/install_opencode.sh --mode selective` after adding, deleting, or renaming skills, then restart OpenCode or open a new session to refresh discovery.
 
+Only a top-level canonical `SKILL.md` registered by the component manifest is a runnable AILI skill. Files named `SKILL.upstream.md`, non-executable scripts, licenses, notices, and other data below `references/upstream/` are pinned provenance/reference data shipped inside existing skills; never catalog, route to, invoke, or register them independently. Generated `.opencode/skills/openspec-*` adapters are OpenSpec-owned direct adapters outside AILI lifecycle guarantees, not entries this router recommends or controls.
+
 When a task arrives, identify the development phase and apply the corresponding skill:
 
 ```
@@ -79,7 +81,7 @@ Use these boundaries before defaulting to generic implementation skills:
 
 | Conflict | Choose first | Fallback if still ambiguous |
 |---|---|---|
-| `/ideate`, `/define`, `/build`, `/ship` vs any phase skill | `aili-delivery-flow` | Stop and ask which lifecycle mode the user wants |
+| `/ideate`, `/define`, `/build`, `/ship` or equivalent natural-language delivery intent vs any phase skill | `aili-delivery-flow` | Stop and ask which lifecycle mode the user wants |
 | Harness behavior complaint vs approved harness edit | `harness-issue-triage` before `harness-evolution` | Do not edit core harness controls until approval exists |
 | Implementation plus independent subagent lanes | `parallel-subagent-dispatch` for packet routing, then the domain skill inside each packet | If edit scopes overlap, use sequential work or ask ROSE/user |
 | Review after implementation vs direct code review | `review-pipeline` for non-trivial completed changes; `code-review-and-quality` for a single review lane | If blockers cannot be reconciled, keep final PASS blocked |
@@ -159,6 +161,8 @@ These are the subtle errors that look like productivity but create problems:
 ## Lifecycle Boundary
 
 Do not duplicate the full delivery lifecycle here. If the user invokes `/ideate`, `/define`, `/build`, `/ship`, or asks for AILI lifecycle routing, hand control to `aili-delivery-flow` and let that skill own mode transitions, gates, and final routing.
+
+These are exactly four delivery shortcuts, not separate capabilities from natural language. Do not create or route to `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, worktree-maintenance, or Graphify commands, and do not turn interval/event protocol descriptions into schedulers, watchers, hooks, queues, or other background runtime.
 
 For ordinary non-lifecycle work, choose only the narrowest applicable chain. Example: a bug fix might need `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`; a completed non-trivial diff might go directly to `review-pipeline`.
 

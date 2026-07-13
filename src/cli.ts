@@ -6,7 +6,7 @@ import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { readOpenCodeConfig } from "./config.js";
 import { runDoctor } from "./doctor.js";
-import { defaultAiliHome, InstallOptions, runInstall, validateOpenCodeHome } from "./installer.js";
+import { defaultAiliHome, InstallOptions, runInstall, validateExactProjectRoot, validateOpenCodeHome } from "./installer.js";
 
 interface CliOptions extends InstallOptions {
   help?: boolean;
@@ -29,11 +29,18 @@ async function main(argv: string[]): Promise<void> {
     validateOpenCodeHome(options.opencodeHome);
   }
   if (command === "install" || command === "update") {
+    if (options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
     await applyInteractivePrompts(options, command === "install"
-      ? { includeCoreConfig: false, includeDcp: false, includeOpenspec: false }
-      : { includeCoreConfig: false, includePlaywright: false, includeDcp: false, includeCodegraph: true, includeOpenspec: false });
+      ? { includeCoreConfig: true, includeOpenspec: true }
+      : { includeCoreConfig: false, includePlaywright: false, includeCodegraph: true, includeOpenspec: false });
+    if (options.enableOpenspec && !options.skipOpenspec && !options.projectRoot) {
+      throw new Error("--enable-openspec requires --project-root <path>.");
+    }
     const summary = await runInstall(command, options);
     print(summary, options.json);
+    if (options.enableOpenspec && !options.skipOpenspec && summary.openspec.status === "failed") {
+      process.exitCode = 1;
+    }
     return;
   }
   if (command === "doctor") {
@@ -48,7 +55,6 @@ async function main(argv: string[]): Promise<void> {
 interface PromptDecisionOptions {
   includeCoreConfig?: boolean;
   includePlaywright?: boolean;
-  includeDcp?: boolean;
   includeCodegraph?: boolean;
   includeOpenspec?: boolean;
 }
@@ -67,7 +73,6 @@ async function applyInteractivePrompts(options: CliOptions, promptOptions: Promp
 async function applyPromptDecisions(options: CliOptions, config: Record<string, any> | undefined, ask: PromptAsk, promptOptions: PromptDecisionOptions = {}): Promise<void> {
   const includeCoreConfig = promptOptions.includeCoreConfig ?? false;
   const includePlaywright = promptOptions.includePlaywright ?? true;
-  const includeDcp = promptOptions.includeDcp ?? false;
   const includeCodegraph = promptOptions.includeCodegraph ?? true;
   const includeOpenspec = promptOptions.includeOpenspec ?? false;
   if (includeCoreConfig && !options.setDefaultRose) {
@@ -88,18 +93,13 @@ async function applyPromptDecisions(options: CliOptions, config: Record<string, 
     options.enablePlaywright = answer === "y" || answer === "yes";
     options.skipPlaywright = !options.enablePlaywright;
   }
-  if (includeDcp && !options.enableDcp && !options.skipDcp) {
-    const answer = (await ask("Enable DCP plugin globally via `opencode plugin @tarquinen/opencode-dcp@latest --global`? [y/N] ")).trim().toLowerCase();
-    options.enableDcp = answer === "y" || answer === "yes";
-    options.skipDcp = !options.enableDcp;
-  }
   if (includeCodegraph && !options.enableCodegraph && !options.skipCodegraph) {
     const answer = (await ask("Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] ")).trim().toLowerCase();
     options.enableCodegraph = answer === "y" || answer === "yes";
     options.skipCodegraph = !options.enableCodegraph;
   }
-  if (includeOpenspec && !options.enableOpenspec && !options.skipOpenspec) {
-    const answer = (await ask("Install/configure OpenSpec for spec-driven changes via `npm install -g @fission-ai/openspec@latest` and project `openspec init/update`? Requires Node.js 20.19+. [y/N] ")).trim().toLowerCase();
+  if (includeOpenspec && !options.enableOpenspec && !options.skipOpenspec && options.projectRoot) {
+    const answer = (await ask(`Install/configure OpenSpec in exact project root ${options.projectRoot} via \`npm install -g @fission-ai/openspec@latest\` and \`openspec init/update\`? Requires Node.js 20.19+. [y/N] `)).trim().toLowerCase();
     options.enableOpenspec = answer === "y" || answer === "yes";
     options.skipOpenspec = !options.enableOpenspec;
   }
@@ -148,12 +148,6 @@ function parseOptions(argv: string[]): CliOptions {
       case "--skip-playwright":
         options.skipPlaywright = true;
         break;
-      case "--enable-dcp":
-        options.enableDcp = true;
-        break;
-      case "--skip-dcp":
-        options.skipDcp = true;
-        break;
       case "--enable-codegraph":
         options.enableCodegraph = true;
         break;
@@ -165,6 +159,9 @@ function parseOptions(argv: string[]): CliOptions {
         break;
       case "--skip-openspec":
         options.skipOpenspec = true;
+        break;
+      case "--project-root":
+        options.projectRoot = requireValue(argv, ++index, arg);
         break;
       case "--plugin":
         options.plugins.push(requireValue(argv, ++index, arg));
@@ -211,9 +208,9 @@ Options:
   --force-model
   --skip-opencode-config
   --enable-playwright | --skip-playwright
-  --enable-dcp | --skip-dcp       (DCP defaults to enabled; skip disables)
   --enable-codegraph | --skip-codegraph
-  --enable-openspec | --skip-openspec (OpenSpec defaults to enabled; skip disables)
+  --enable-openspec | --skip-openspec (OpenSpec installs only when explicitly enabled)
+  --project-root <absolute-canonical-path> (required with --enable-openspec)
   --plugin <name>
   --json`);
 }

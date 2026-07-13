@@ -9,6 +9,9 @@
     {"id": "verification", "authority": "docs/harness/tool-policies.md"},
     {"id": "memory", "authority": ".agents/skills/rose-memory/SKILL.md"},
     {"id": "command", "authority": "docs/harness/command-lifecycle.md"},
-    {"id": "install", "authority": "scripts/install_opencode.sh"}
+    {"id": "install", "authority": "scripts/install_opencode.sh"},
+    {"id": "source-boundary", "authority": "docs/harness/workflow-orchestration-source-register.md"},
+    {"id": "upstream-provenance", "authority": "manifests/upstream-references.json"},
+    {"id": "distribution", "authority": "package.json"}
   ]
 }

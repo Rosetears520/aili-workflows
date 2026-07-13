@@ -44,7 +44,7 @@ Before persisting an interview packet to the repository, follow the repository's
 
 Use this skill when the user wants to refine, grill, challenge, interview, or write back a change before implementation, especially when source material is ambiguous, incomplete, or spread across files.
 
-This skill owns user-facing clarification,方案 discussion, no-objection/approval capture, waiver capture, write-back readiness, and `interview.md` answer ingestion. It does not own the evidence lanes themselves: official/API docs route to `source-driven-development`, mature public-project prior art routes to `mature-project-pattern-research`, local repository facts route to `repo-evidence-first`, and test-plan artifacts route to `test-document-generator`.
+This skill is the sole user-facing requirements-refinement authority. It owns clarification, evidence-backed方案 discussion, named-question waiver capture, five-way delta classification, write-back readiness, and `interview.md` answer ingestion. It does not own evidence lanes or add proposal approval: official/API docs route to `source-driven-development`, mature public-project prior art to `mature-project-pattern-research`, local repository facts to `repo-evidence-first`, and test-plan generation to `test-document-generator`.
 
 Realistic trigger prompts:
 
@@ -123,7 +123,7 @@ Target path resolution:
    - A. create a new file in a user-specified location;
    - B. append to an existing spec/document;
    - C. preview in chat first, then choose a file target before readiness or write-back.
-4. If the user explicitly says "print in chat", "do not create files", or "chat only", provide a temporary preview and report `BLOCKED_FOR_CLARIFICATION` until the user either selects a persistence target, explicitly waives file persistence for a named reason, or accepts the result as `UNVERIFIED`. Do not call the packet `READY` from chat-only content.
+4. If the user explicitly says "print in chat", "do not create files", or "chat only", provide only a temporary preview marked `BLOCKED_FOR_CLARIFICATION` and `UNVERIFIED`. Do not call the packet `READY` from chat-only content. For formal work, do not create/reuse/update OpenSpec, satisfy readiness, record acceptance, or start BUILD until the user later explicitly permits writeback.
 
 Use this concise placement question for non-OpenSpec sources:
 
@@ -162,6 +162,8 @@ Use Interactive Mode only when:
 
 In Interactive Mode, ask one question at a time.
 
+Pinned Addy `interview-me` 内容是 `references/upstream/` 下的 inert reference data，不是第二个 interviewer。其 hypothesis-with-guess 和 confidence-update 纪律只薄适配到 Interactive Mode 与 unresolved follow-up：先给简短当前假设，对一个 material question 附 evidence-backed guess 或显式 uncertainty，等待回答，再更新未知项。置信度百分比只用于诊断，绝不等于 `READY`、approval、waiver、acceptance 或 BUILD authorization。接受的答案仍须写入并重读 `interview.md` 或约定目标后再分类；Packet Mode 仍可生成 AILI 要求的 dependency-ordered 初始问题包。
+
 Interactive chat answers must still be persisted. After a material answer is accepted, append or merge the question, answer, classification, and write-back target into `interview.md` for OpenSpec sources or the agreed non-OpenSpec target, then re-read that artifact from disk before claiming readiness. If persistence is blocked, report `BLOCKED_FOR_CLARIFICATION` and the exact file target still needed.
 
 In Packet Mode, do not interrupt the packet with chat-style single-question turns unless a blocking target or persistence decision is missing.
@@ -182,7 +184,7 @@ AILI adaptations:
 
 - In Interactive Mode, ask one material question at a time and wait.
 - In Packet Mode, group the initial question set in `interview.md`, but preserve dependency order; after the packet exists, ask unresolved OpenSpec readiness follow-ups in chat by default, write the accepted outcome to the artifact, re-read it from disk, and make Round 2+ follow-ups one decision branch at a time when answers diverge.
-- For each question, explain why it matters, name the affected artifact or decision, provide an evidence-backed recommended answer when available, state the tradeoff, include an answer slot, and name the write-back target.
+- For each question, explain why it matters, name the affected artifact/test/risk/decision, provide an evidence-backed recommended answer when available (or explicit uncertainty), state the tradeoff, offer short selectable options plus a custom-answer option, include an answer slot, and name the write-back target.
 - If the answer can be discovered from code, docs, specs, tests, configs, or official sources, inspect those sources instead of asking.
 - If no evidence-backed default exists, use `Open Question` or `Unverified`; do not present a model guess as a recommendation.
 
@@ -250,7 +252,7 @@ Before generating questions:
 
 Do not ask the user for information that can be reliably discovered from current code, docs, specs, tests, configs, or official sources.
 
-Research-first planning sequence: gather docs/evidence, investigate, synthesize方案 with tradeoffs and `Unverified` items, discuss/confirm no objection or approval, then allow implementation only when the方案 is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED`. A completed packet or confident model answer is not enough.
+Research-first planning sequence: gather applicable local repository, official/current, and mature-project/prior-art evidence; separate source classes; investigate; synthesize方案 with tradeoffs and `Unverified` items; stress-test; and write back. This evidence loop is mandatory when triggered but creates no proposal approval, waiver, bundled-artifact approval, or second lifecycle gate. A completed packet or confident model answer is not enough; explicit final `test-plan.md` acceptance remains the sole mandatory lifecycle-level pre-BUILD user approval.
 
 Common gaps:
 
@@ -331,6 +333,7 @@ Material question threshold:
 
 - Ask only if the answer can change scope, design, tasks, acceptance criteria, tests, risk handling, rollout, terminology, domain model, or implementation safety.
 - Each question must include why asked, affected artifact/decision, evidence-backed recommended default when available, consequences/trade-offs, answer slot, and write-back target.
+- Each question must offer concise selectable options and a custom answer. Never force a listed option when user-provided text can resolve the decision.
 - If a candidate question is generic or would not change implementation readiness, omit it or convert it to a non-blocking note.
 - If the answer is discoverable from current repository files, tests, configs, specs, docs, or official sources, gather and cite evidence instead of asking.
 - If no evidence-backed default exists, mark the default as `Open Question` or `Unverified`; do not present a guess as a recommendation.
@@ -390,6 +393,16 @@ After the user answers in chat or directly edits the interview packet:
 9. Build an incorporation log before write-back that records answer classification, evidence checked, domain-language changes, ADR gate result, follow-up needed, and readiness state.
 10. Use `strategy-stress-test` after answer classification and before write-back to check for unsafe ingestion, missed follow-up questions, evidence conflicts, unsupported defaults, untestable acceptance, domain-model contradictions, ADR misuse, or unmarked `Open Question` / `Unverified` items.
 
+After answer ingestion, classify every confirmed correction, new requirement, artifact/design/task/test change, accepted finding, or implementation feedback into exactly one exhaustive delta class:
+
+- `covered`: the current accepted artifacts and tests already cover it; link the evidence and do not duplicate writeback.
+- `material-question`: one unresolved decision can change scope, contract, tasks, acceptance, risk handling, or implemented behavior; ask one focused question and do not guess.
+- `material-delta`: confirmed material change; automatically write/re-read all affected proposal/spec/design/tasks/interview/test-plan/context artifacts, rerun OpenSpec status/instructions as applicable and strict validation, and stale prior test-plan acceptance when acceptance or required verification changes.
+- `ordinary-steering`: presentation/process guidance that changes no material dimension; apply without reopening acceptance.
+- `Unverified`: evidence is missing or cannot currently establish the class; name the gap and block any dependent claim/action.
+
+Do not ask whether to save a material delta. Do not guess change identity, expand permission, bypass high-risk/operation approval, continue BUILD, or use old acceptance after acceptance/verification changed. If material writeback leaves the acceptance contract unchanged, preserve acceptance only with explicit comparison evidence.
+
 If the answer-set stress-test finds material ambiguity, contradiction, incompleteness, untestable acceptance, evidence conflict, terminology conflict, or out-of-scope expansion, report readiness as `BLOCKED` / `BLOCKED_FOR_CLARIFICATION`, persist or present the follow-up round according to the placement contract, and do not write the affected answers into proposal, design, tasks, specs, acceptance criteria, Language, ADR, or test plans until clarified, waived, or accepted as `UNVERIFIED`.
 
 If the user explicitly says to proceed despite named unresolved items, record whether the gate is `WAIVED` or `UNVERIFIED`, list the accepted items, and keep the risk visible in write-back and completion reports. Do not call it `READY`.
@@ -400,7 +413,7 @@ Write only to the agreed target files.
 
 🔴 STOP before write-back when the target file is not explicitly agreed, the requirements-grilling gate is `BLOCKED`, answers conflict, existing content would need replacement instead of merge, a confirmed answer would change scope/design/tasks beyond the agreed package, Language would absorb an implementation decision, or an ADR would be created without passing the ADR gate. Ask or report the conflict instead of overwriting.
 
-BUILD readiness rule: a change package may proceed from the requirements-grilling gate only when the state is `READY`, explicitly `WAIVED`, or explicitly accepted as `UNVERIFIED` with named unresolved items. A merely completed form is not enough.
+BUILD readiness rule: the requirements-grilling portion must have complete dimension coverage, coherent answers, and no unresolved material product decision. Overall pre-BUILD readiness additionally requires coherent strictly validated proposal/specs/design/interview/context/tasks and explicit user acceptance of the final `test-plan.md`. That acceptance is the sole mandatory lifecycle gate; a question waiver, `Unverified` label, artifact presence, proposal approval, or per-artifact confirmation cannot replace it. Material/coherence/validation/permission/destructive/high-risk/operation gates remain separate. A merely completed form is not enough.
 
 General write-back rules:
 
@@ -431,6 +444,8 @@ After write-back:
 3. If the target has a known validation command from project docs, run it.
 4. If no command exists, validate by reading the edited files and checking that unresolved items are labeled.
 5. Report what was verified and what remains unverified.
+
+For OpenSpec material writeback, also run/read `openspec status --change <change-id> --json`, current applicable `openspec instructions ... --json`, re-read every changed artifact from disk, and then strict validation. File presence or transient chat/UI state is not readiness evidence.
 
 ## Completion Report
 

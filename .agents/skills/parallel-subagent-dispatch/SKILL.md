@@ -13,7 +13,7 @@ metadata:
 
 Use subagents when delegation preserves MainAgent context, when separate work packages can proceed independently and return evidence for ROSE to reconcile, or when a non-trivial repository task enters the subagent-first runtime path.
 
-This skill adapts Superpowers-style parallel dispatch discipline to this repository's OpenCode model: ROSE remains the primary orchestrator, subagents receive precise task packets, and no persona delegates to another persona.
+This skill adapts Superpowers-style parallel dispatch discipline to this repository's OpenCode model: ROSE remains the primary orchestrator, subagents receive precise task packets, and no persona delegates to another persona. A30 cross-root reads are supported only through ROSE Task dispatch in the same OpenCode instance; direct user `@` invocation is outside A30 guarantees.
 
 For local review and review-pipeline fan-out, this skill also activates the orchestration boundaries recorded in `.agents/skills/local-review-gate/references/orchestration-adaptation.md`: borrow ECC/addyosmani fan-out/fan-in and main-agent-only-writer patterns, but reject public `multi-*` commands, router personas, nested persona calls, `.claude` paths, Claude-only tools, external workflow runtimes, `ccg-workflow`, Codex/Gemini runtime dependencies, and remote mutation defaults.
 
@@ -108,7 +108,7 @@ Do not paste large file excerpts, full grep dumps, long logs, or exploratory dea
 
 Search evidence is a map. The editing, reviewing, testing, securing, or documenting agent must still read final target files before acting.
 
-Optional CodeGraph evidence may be requested in any eligible ROSE-directed lane when it reduces missed-file or impact risk: broad scouting, implementation call-chain checks, review residual impact checks, test scope discovery, or doc/spec claims tied to code anchors. It is not mandatory and not proof. Require fallback to normal search/read when unavailable, stale, noisy, or no-result, and mark material graph gaps as `Unverified`.
+Optional CodeGraph evidence may be requested in an eligible ROSE-directed lane only for the exact current repository root when it reduces missed-file or impact risk: broad scouting, implementation call-chain checks, review residual impact checks, test scope discovery, or doc/spec claims tied to code anchors. Confirm that root per operation. Initialization requires separate approval for exactly one root; refuse batch/multi-repository initialization even under broad approval. It is not mandatory, not proof, and has no lifecycle/completion authority. Require fallback to normal search/read when unavailable, stale, noisy, or no-result, require the acting lane to read final files, and mark material graph gaps as `Unverified`.
 
 ## Execution Ownership Gate
 
@@ -234,12 +234,21 @@ Guidelines:
 
 - Include exact files, commands, diffs, symptoms, or acceptance criteria needed for the task.
 - State whether the subagent may edit, may only inspect, or must ask before edits.
-- Forbid nested agent calls unless the repository explicitly changes its orchestration rules.
+- Forbid nested agent calls; every non-ROSE subagent has `task: deny`.
 - Require concrete evidence, not just conclusions.
 - For parallel lanes, include the join contract: expected evidence for that lane, conflict or missing-evidence handling, final decision owner, and stop conditions.
 - For serial phase packets, include the phase checkpoint that proves the boundary before the next dependent phase starts.
 - For multi-lane packets, preserve the lane/package id, owner, editable scope or read-only source, expected evidence, status vocabulary, blocker conditions, and missing/empty-evidence handling so ROSE can join without guessing.
 - Ask for graph-assisted evidence only as compact locality anchors; forbid raw graph dumps and final proof claims based solely on graph output.
+
+### Cross-root permission overlay
+
+- Reference one canonical `WT-001` context from `.agents/skills/aili-delivery-flow/references/protocols/worktree-context.md`; never duplicate or rebind its identity, approval, Git, path, dirty-state, command/cwd, soft-boundary, or containment facts.
+- Treat `role_overlay` as evidence/narrowing text only, never permission authority. Final effective permissions must come from final runtime-merged child rules and provenance; missing rules, provenance, or override-absence evidence returns `Unverified` and keeps rollout disabled.
+- Delegation is non-transitive. Every non-ROSE subagent has `task: deny`; only ROSE uses its unchanged Task allowlist.
+- The exact 15 A30 roles may ask for external reads with only `read`, `list`, `glob`, and `grep`; all mutation, shell, delegation, LSP, skill, web, plugin, MCP, custom, and browser tools remain denied. All nonselected roles retain `external_directory: deny`.
+- Disclose that external-directory ask/always/auto may broaden private-data reads. No-mutation/no-nesting depends on final effective tool denies, not ask behavior.
+- Parent pre/postflight must capture exact session root, parent/target HEAD and dirty state, and Git common-dir and require equality. Do not auto-integrate, commit, merge, rebase, reset, clean, repair, prune, remove, or roll back worktrees.
 
 ## Reconciliation and Verification
 

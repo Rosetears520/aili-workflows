@@ -15,6 +15,7 @@ Purpose:
 - Reconcile final diff, release-blocker audit, review, repair, verification, and closeout before handoff, merge, release, or archive.
 
 Required behavior:
+- Treat `/ship` and equivalent natural-language review/repair/closeout intent identically, but require a new explicit SHIP intent plus current implementation evidence. DEFINE artifacts, acceptance, or an earlier “implement and then ship” request are insufficient.
 - Resolve and report the release-blocker audit target: active change/proposal artifacts, current final diff, a named baseline or previous-release comparison, or a broader repository scan only when explicitly requested or risk-triggered.
 - When SHIP decomposes review, repair, verification, security, packaging, or closeout work into multiple independently actionable lanes, report the parallelism analysis, lane boundaries, join point, and any serial/no-parallel reason before integration.
 - Produce a detailed human-reviewable Markdown closeout document for every SHIP run. CLI output may be brief, but it must include the closeout document path, verdict, blocking/important/`Unverified` summary, and approved next action.
@@ -29,11 +30,13 @@ Required behavior:
 - For post-cycle bugs, decide whether to update the current change, create a new fix change, or route harness defects through triage and evolution.
 
 Hard stops:
+- Block natural-language SHIP when implementation evidence is missing; ask only for the unresolved target/evidence and run no review/repair/convergence mutation.
 - Do not treat BUILD review/test/security evidence as fresh if scope changed or evidence is stale.
 - Do not claim ready on stale or missing evidence.
 - Do not claim ready when a `release-blocking` finding is unresolved, unproven, or not explicitly accepted as risk by the user or current active contract owner.
 - Do not guess a previous-release baseline; ask for a tag/commit/branch/release reference or mark that comparison `Open Question` / `Unverified`.
 - Do not claim exhaustive whole-codebase safety; report scanned scope, skipped lanes, and residual `Unverified` items.
+- Do not infer SHIP preauthorization from BUILD intent or direct generated-adapter output; establish current AILI contract, implementation, and verification evidence independently.
 - Mark residual risks and unverified items explicitly.
 - Do not push, clean/reset destructively, delete branches, remove worktrees, archive OpenSpec changes, stash unrelated changes, or delete user-visible artifacts without explicit approval for that exact action.
 

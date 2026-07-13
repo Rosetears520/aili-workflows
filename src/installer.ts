@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
-import { constants } from "node:fs";
+import { constants, realpathSync, statSync } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { configPathFor, dcpConfigPathFor, mergeDcpConfig, mergeOpenCodeConfig } from "./config.js";
+import { configPathFor, mergeOpenCodeConfig } from "./config.js";
 import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestAllowlist } from "./manifest.js";
 
 export interface InstallOptions {
@@ -19,12 +19,11 @@ export interface InstallOptions {
   skipOpenCodeConfig?: boolean;
   enablePlaywright?: boolean;
   skipPlaywright?: boolean;
-  enableDcp?: boolean;
-  skipDcp?: boolean;
   enableCodegraph?: boolean;
   skipCodegraph?: boolean;
   enableOpenspec?: boolean;
   skipOpenspec?: boolean;
+  projectRoot?: string;
   plugins: string[];
   json?: boolean;
 }
@@ -48,18 +47,15 @@ export interface InstallSummary {
   config: Awaited<ReturnType<typeof mergeOpenCodeConfig>>;
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
-  dcp: OptionalSummary;
   codegraph: OptionalSummary;
   openspec: OptionalSummary;
   plugins: Array<{ name: string; status: "skipped" | "unverified"; reason: string; source?: string }>;
 }
 
-const DCP_COMMAND = ["opencode", "plugin", "@tarquinen/opencode-dcp@latest", "--global"];
 const CODEGRAPH_INSTALL_COMMAND = ["npm", "install", "-g", "@colbymchenry/codegraph@latest"];
 const CODEGRAPH_OPENCODE_COMMAND = ["codegraph", "install", "--target=opencode", "--yes"];
 const CODEGRAPH_RESTART_STEP = "Restart OpenCode so it loads the CodeGraph OpenCode integration.";
 const OPENSPEC_INSTALL_COMMAND = ["npm", "install", "-g", "@fission-ai/openspec@latest"];
-const DCP_DETECT_COMMAND = ["opencode", "plugin", "list"];
 const OPENSPEC_DETECT_COMMAND = ["openspec", "--version"];
 const MIN_OPENSPEC_NODE = [20, 19, 0] as const;
 
@@ -70,6 +66,10 @@ export function defaultAiliHome(): string {
 
 export async function runInstall(command: "install" | "update", rawOptions: InstallOptions): Promise<InstallSummary> {
   const options = { ...rawOptions, opencodeHome: validateOpenCodeHome(rawOptions.opencodeHome) };
+  if (options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
+  if (options.enableOpenspec && !options.skipOpenspec && !options.projectRoot) {
+    throw new Error("--enable-openspec requires --project-root <path>.");
+  }
   const manifest = await loadManifest(options.ailiHome);
   await validateManifestAllowlist(options.ailiHome, manifest);
   await validateInstallerSources(options.ailiHome);
@@ -85,7 +85,7 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
   const configRequest = {
     opencodeHome: options.opencodeHome,
     dryRun: options.dryRun,
-    setDefaultRose: shouldSyncOpenCodeConfig,
+    setDefaultRose: shouldSyncOpenCodeConfig && options.setDefaultRose !== false,
     forceDefaultAgent: options.forceDefaultAgent,
     model: options.model,
     forceModel: options.forceModel,
@@ -100,9 +100,8 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
 
   const componentInstall = await runCompatibilityInstaller(options);
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
-  const dcp = await runDcpInstall(command, options);
   const codegraph = await runCodeGraphInstall(options);
-  const openspec = await runOpenSpecInstall(command, options);
+  const openspec = await runOpenSpecInstall(options);
 
   return {
     command,
@@ -113,7 +112,6 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
     config,
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
     optionalDecisions: buildOptionalDecisions(command, options, shouldConfigurePlaywright, shouldSyncOpenCodeConfig),
-    dcp,
     codegraph,
     openspec,
     plugins: pluginStatuses
@@ -155,14 +153,6 @@ function buildOptionalDecisions(command: "install" | "update", options: InstallO
       nextStep: "rose-aili install --enable-playwright"
     });
   }
-  if (options.skipDcp) {
-    decisions.push({
-      name: "DCP plugin",
-      status: "skipped",
-      reason: "explicitly skipped",
-      nextStep: `rose-aili ${command}`
-    });
-  }
   if (!options.enableCodegraph) {
     decisions.push({
       name: "CodeGraph",
@@ -171,70 +161,15 @@ function buildOptionalDecisions(command: "install" | "update", options: InstallO
       nextStep: "rose-aili install --enable-codegraph"
     });
   }
-  if (options.skipOpenspec) {
+  if (!options.enableOpenspec || options.skipOpenspec) {
     decisions.push({
       name: "OpenSpec",
       status: "skipped",
-      reason: "explicitly skipped",
-      nextStep: `rose-aili ${command}`
+      reason: options.skipOpenspec ? "explicitly skipped" : "not configured in this install",
+      nextStep: "rose-aili install --enable-openspec --project-root <absolute-canonical-path>"
     });
   }
   return decisions;
-}
-
-async function runDcpInstall(commandName: "install" | "update", options: InstallOptions): Promise<OptionalSummary> {
-  const command = DCP_COMMAND.join(" ");
-  if (!shouldRunDefaultInstallAddon(options.skipDcp)) {
-    return {
-      status: "skipped",
-      command,
-      reason: "DCP explicitly skipped."
-    };
-  }
-  const configCommand = await dcpConfigPathFor(options.opencodeHome);
-  if (options.dryRun) {
-    try {
-      const config = await mergeDcpConfig({ opencodeHome: options.opencodeHome, dryRun: true });
-      return { status: "planned", command: `${command} && write ${config.configPath}` };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { status: "failed", command: `${command} && write ${configCommand}`, reason: message };
-    }
-  }
-  try {
-    await mergeDcpConfig({ opencodeHome: options.opencodeHome, dryRun: true });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      status: "failed",
-      command: `${command} && write ${configCommand}`,
-      reason: message,
-      recovery: `Fix the DCP config target, then rerun: rose-aili ${commandName === "update" ? "update --enable-dcp" : "install"}`
-    };
-  }
-  const installed = await isDcpInstalled(options);
-  const result = installed ? { code: 0, detail: "" } : await spawnOptional(DCP_COMMAND[0], DCP_COMMAND.slice(1), options);
-  if (result.code === 0) {
-    try {
-      const config = await mergeDcpConfig({ opencodeHome: options.opencodeHome, dryRun: false });
-      const action = installed ? `detected existing DCP plugin && write ${config.configPath}` : `${command} && write ${config.configPath}`;
-      return { status: "configured", command: action, reason: `DCP plugin ${installed ? "already installed" : "configured"} and recommended ${path.basename(config.configPath)} synced.` };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      return {
-        status: "failed",
-        command: `${command} && write ${configCommand}`,
-        reason: message,
-        recovery: `Fix the DCP config target, then rerun: rose-aili ${commandName === "update" ? "update --enable-dcp" : "install"}`
-      };
-    }
-  }
-  return {
-    status: "failed",
-    command,
-    reason: result.detail || `command exited with ${result.code ?? "unknown status"}`,
-    recovery: "Install DCP manually with: opencode plugin @tarquinen/opencode-dcp@latest --global"
-  };
 }
 
 async function runCodeGraphInstall(options: InstallOptions): Promise<OptionalSummary> {
@@ -266,12 +201,12 @@ async function runCodeGraphInstall(options: InstallOptions): Promise<OptionalSum
   return { status: "configured", command, nextStep: CODEGRAPH_RESTART_STEP };
 }
 
-async function runOpenSpecInstall(commandName: "install" | "update", options: InstallOptions): Promise<OptionalSummary> {
-  if (!shouldRunDefaultInstallAddon(options.skipOpenspec)) {
+async function runOpenSpecInstall(options: InstallOptions): Promise<OptionalSummary> {
+  if (!options.enableOpenspec || options.skipOpenspec) {
     return {
       status: "skipped",
-      command: "rose-aili install --enable-openspec",
-      reason: "OpenSpec explicitly skipped."
+      command: "rose-aili install --enable-openspec --project-root <absolute-canonical-path>",
+      reason: options.skipOpenspec ? "OpenSpec explicitly skipped." : "OpenSpec is explicit opt-in only and requires an exact project root."
     };
   }
   if (!supportsOpenSpecNode(process.versions.node)) {
@@ -282,7 +217,8 @@ async function runOpenSpecInstall(commandName: "install" | "update", options: In
       recovery: "Upgrade Node.js to 20.19.0+ and rerun: rose-aili install --enable-openspec"
     };
   }
-  const projectCommand = await hasOpenSpecProject(process.cwd()) ? "update" : "init";
+  if (!options.projectRoot) throw new Error("--enable-openspec requires --project-root <path>.");
+  const projectCommand = await hasOpenSpecProject(options.projectRoot) ? "update" : "init";
   const command = `${OPENSPEC_INSTALL_COMMAND.join(" ")} && openspec ${projectCommand}`;
   if (options.dryRun) return { status: "planned", command };
   const installed = await isOpenSpecInstalled(options);
@@ -295,7 +231,7 @@ async function runOpenSpecInstall(commandName: "install" | "update", options: In
       recovery: "Install OpenSpec manually with: npm install -g @fission-ai/openspec@latest"
     };
   }
-  const projectResult = await spawnOptional("openspec", [projectCommand], options, process.cwd());
+  const projectResult = await spawnOptional("openspec", [projectCommand], options, options.projectRoot);
   if (projectResult.code !== 0) {
     return {
       status: "failed",
@@ -305,17 +241,6 @@ async function runOpenSpecInstall(commandName: "install" | "update", options: In
     };
   }
   return { status: "configured", command: installed ? `openspec ${projectCommand}` : command };
-}
-
-function shouldRunDefaultInstallAddon(skipped?: boolean): boolean {
-  if (skipped) return false;
-  return true;
-}
-
-async function isDcpInstalled(options: InstallOptions): Promise<boolean> {
-  const result = await spawnOptionalCapture(DCP_DETECT_COMMAND[0], DCP_DETECT_COMMAND.slice(1), options);
-  if (result.code !== 0) return false;
-  return /(?:@tarquinen\/)?opencode-dcp/.test(`${result.stdout}\n${result.detail}`);
 }
 
 async function isOpenSpecInstalled(options: InstallOptions): Promise<boolean> {
@@ -465,6 +390,26 @@ export function validateOpenCodeHome(opencodeHome: string): string {
   if (resolved === path.resolve(os.homedir())) throw new Error(`Refusing unsafe OPENCODE_HOME: ${opencodeHome}`);
   if (resolved === path.resolve(os.tmpdir())) throw new Error(`Refusing unsafe OPENCODE_HOME: ${opencodeHome}`);
   return resolved;
+}
+
+export function validateExactProjectRoot(projectRoot: string): string {
+  if (!projectRoot || !path.isAbsolute(projectRoot)) {
+    throw new Error(`OpenSpec --project-root requires an absolute canonical directory: ${projectRoot || "<empty>"}`);
+  }
+  const resolved = path.resolve(projectRoot);
+  let canonical: string;
+  try {
+    canonical = realpathSync(resolved);
+  } catch {
+    throw new Error(`OpenSpec --project-root requires an existing directory: ${projectRoot}`);
+  }
+  if (resolved !== canonical || !statSync(canonical).isDirectory()) {
+    throw new Error(`Refusing ambiguous or symlinked OpenSpec project root: ${projectRoot}`);
+  }
+  for (const unsafe of [path.parse(canonical).root, path.resolve(os.homedir()), path.resolve(os.userInfo().homedir), path.resolve(os.tmpdir())]) {
+    if (canonical === unsafe) throw new Error(`Refusing unsafe OpenSpec project root: ${projectRoot}`);
+  }
+  return canonical;
 }
 
 function validatePlugins(manifest: ComponentManifest, plugins: string[]): InstallSummary["plugins"] {

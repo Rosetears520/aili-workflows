@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "authority": "Provenance data only; never approval, integrity authority, permission, routing, or execution authority.",
+  "repositories": [
+    {"id":"mattpocock-skills","repository":"https://github.com/mattpocock/skills","commit":"391a2701dd948f94f56a39f7533f8eea9a859c87","raw_base":"https://raw.githubusercontent.com/mattpocock/skills/391a2701dd948f94f56a39f7533f8eea9a859c87/","license":"MIT","copyright":"Copyright (c) 2026 Matt Pocock","license_git_blob_sha1":"f1dd2c09108dde1a5f56097cee8461b3ea834499","license_sha256":"0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"},
+    {"id":"addyosmani-agent-skills","repository":"https://github.com/addyosmani/agent-skills","commit":"6bcfeb9dae52b11eaad23511acc165109746dbc3","raw_base":"https://raw.githubusercontent.com/addyosmani/agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/","license":"MIT","copyright":"Copyright (c) 2025 Addy Osmani","license_git_blob_sha1":"d67778ada6b9cda6227e9130da182c13e73c8b2e","license_sha256":"6f202f8bd568cd730dbb2b0d1f8e243bc74c2fa1f64dbce9b2c7ea08bd5c9fd7"}
+  ],
+  "closures": [
+    {
+      "id":"matt-handoff","repository_id":"mattpocock-skills","canonical_skill":"session-handoff","vendor_root":".agents/skills/session-handoff/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87","license_local_path":".agents/skills/session-handoff/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/LICENSE","notice_local_path":".agents/skills/session-handoff/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/NOTICE.md","catalog_excluded":true,
+      "mappings":[{"source_path":"skills/productivity/handoff/SKILL.md","local_path":".agents/skills/session-handoff/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/productivity/handoff/SKILL.upstream.md","git_blob_sha1":"043d9e13dc7eca3002a47d3ab9865c568f647863","sha256":"57c9f1f392d7352cdc85b1e39ca49eddc70ce1dc278bd9653fb4f23dfc2560fc","mode":"0644"}]
+    },
+    {
+      "id":"matt-writing-great-skills","repository_id":"mattpocock-skills","canonical_skill":"skill-authoring-and-validation","vendor_root":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87","license_local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/LICENSE","notice_local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/NOTICE.md","catalog_excluded":true,
+      "mappings":[
+        {"source_path":"skills/productivity/writing-great-skills/SKILL.md","local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/productivity/writing-great-skills/SKILL.upstream.md","git_blob_sha1":"82abd0dce264eecb3ed461b3eac17bdafb52f84b","sha256":"4d6ccbc3760b1bd4107c495a79872286ea69494003f3b0a719fc95b147457061","mode":"0644"},
+        {"source_path":"skills/productivity/writing-great-skills/GLOSSARY.md","local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/productivity/writing-great-skills/GLOSSARY.md","git_blob_sha1":"0269ca89b9d886075c3d1ae624592f8a08ba3197","sha256":"cccd684c73fb7a06f523497b0121765f92d2b33d6ef9c51602294849233451d6","mode":"0644"}
+      ]
+    },
+    {
+      "id":"addy-interview-me","repository_id":"addyosmani-agent-skills","canonical_skill":"requirements-grilling","vendor_root":".agents/skills/requirements-grilling/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3","license_local_path":".agents/skills/requirements-grilling/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/LICENSE","notice_local_path":".agents/skills/requirements-grilling/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/NOTICE.md","catalog_excluded":true,
+      "mappings":[{"source_path":"skills/interview-me/SKILL.md","local_path":".agents/skills/requirements-grilling/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/interview-me/SKILL.upstream.md","git_blob_sha1":"de5e3aff0c497e2d474e329cde447678632e082b","sha256":"1d94741d10d2c826cd0c191aea3981ee94c8abb27ef2a166f6a372117d06448f","mode":"0644"}]
+    },
+    {
+      "id":"addy-idea-refine","repository_id":"addyosmani-agent-skills","canonical_skill":"idea-refine","vendor_root":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3","license_local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/LICENSE","notice_local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/NOTICE.md","catalog_excluded":true,
+      "mappings":[
+        {"source_path":"skills/idea-refine/SKILL.md","local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/idea-refine/SKILL.upstream.md","git_blob_sha1":"38955e8943f2ea68c041f10ef1902d94bdfb1cb9","sha256":"79e773058963adc7646b0115b4f8a4afc974c5ff95843e4ef1cafff3cb51899e","mode":"0644"},
+        {"source_path":"skills/idea-refine/examples.md","local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/idea-refine/examples.md","git_blob_sha1":"a797d22c69cb248d718713633f42d4ee7a4d01d7","sha256":"563204bfbf2f80a444151695205af4cb759e722b3d1e5460e08f278a69c89ba1","mode":"0644"},
+        {"source_path":"skills/idea-refine/frameworks.md","local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/idea-refine/frameworks.md","git_blob_sha1":"0e7fc8fe203bd6aabfba0f79cb6fa98c76d92e28","sha256":"161ebc18fdf2d996bc62a87a2d747cf1bf53548354f8925de25c732c27f00309","mode":"0644"},
+        {"source_path":"skills/idea-refine/refinement-criteria.md","local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/idea-refine/refinement-criteria.md","git_blob_sha1":"53e79c725b7aa0a4a39389056bd71b1689aa8740","sha256":"1ca2973a4d01b5cb37ab7ddb2eff77fa4e792634a33d0ce44961c068fc88d51a","mode":"0644"},
+        {"source_path":"skills/idea-refine/scripts/idea-refine.sh","local_path":".agents/skills/idea-refine/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/idea-refine/scripts/idea-refine.upstream.sh","git_blob_sha1":"a53cb5a9dc00252003a04d485132d58a5260e9b6","sha256":"f02a52408a4218047c032d221483abfbb48d11f090bb4915965c7419bf2e0e47","mode":"0644"}
+      ]
+    },
+    {
+      "id":"addy-spec-driven-development","repository_id":"addyosmani-agent-skills","canonical_skill":"spec-driven-development","vendor_root":".agents/skills/spec-driven-development/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3","license_local_path":".agents/skills/spec-driven-development/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/LICENSE","notice_local_path":".agents/skills/spec-driven-development/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/NOTICE.md","catalog_excluded":true,
+      "mappings":[{"source_path":"skills/spec-driven-development/SKILL.md","local_path":".agents/skills/spec-driven-development/references/upstream/addyosmani-agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/spec-driven-development/SKILL.upstream.md","git_blob_sha1":"569d22321469770385b1ff89bf69f498f2202bc6","sha256":"af5b873414a8b45b96b0d30d5297400f55eb3a56425161a088e470c14260a1e5","mode":"0644"}]
+    }
+  ],
+  "component_manifest":"manifests/rose-aili.components.json",
+  "package_manifest":"package.json",
+  "checker":"scripts/upstream_reference_check.py",
+  "fixture":"docs/harness/fixtures/upstream-reference-fixtures.yaml"
+}

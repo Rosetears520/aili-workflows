@@ -231,7 +231,7 @@ Search evidence answers: where should I look?
 
 It does not replace: I inspected the code I am about to change.
 
-Optional CodeGraph evidence may supplement this protocol when available and useful for non-trivial locality discovery: files, symbols, callers, callees, peer patterns, related tests, or impact areas. Keep it optional, summarize it into compact anchors, fall back to normal search/read when stale or unavailable, and never treat graph output as a substitute for final file/diff/test/document inspection.
+Optional CodeGraph evidence may supplement this protocol only for the exact current repository root when available and useful for non-trivial locality discovery: files, symbols, callers, callees, peer patterns, related tests, or impact areas. Confirm the root for each operation; initialization requires separate approval for that one root, and batch/multi-repository initialization is refused even under broad approval. Keep it optional, summarize it into compact anchors, fall back to normal search/read when stale, noisy, unavailable, or unhelpful, and require final-file reads plus applicable diff/test/document inspection. Graph output is never proof and has no lifecycle/completion authority.
 
 ## Broad Search Context Isolation
 

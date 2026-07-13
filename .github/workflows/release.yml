@@ -55,13 +55,25 @@ jobs:
         run: bash -n scripts/install_opencode.sh
 
       - name: Compile Python helpers
-        run: python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py
+        run: python -m py_compile scripts/harness_fixture_check.py scripts/agents_md.py scripts/delegation_protocols_check.py scripts/workflow_contract_check.py scripts/upstream_reference_check.py
 
       - name: Run harness fixture check
         run: python scripts/harness_fixture_check.py
 
       - name: Check AGENTS.md template compliance
         run: python scripts/agents_md.py check --project .
+
+      - name: Check workflow contracts
+        run: |
+          python scripts/workflow_contract_check.py --project . --change complete-aili-workflow-orchestration --profile scaffold --fixture docs/harness/fixtures/workflow-orchestration-fixtures.yaml --json
+          python scripts/workflow_contract_check.py --project . --change complete-aili-workflow-orchestration --profile generated-adapter-boundary --fixture docs/harness/fixtures/generated-openspec-adapter-fixtures.yaml --json
+          python scripts/workflow_contract_check.py --project . --change complete-aili-workflow-orchestration --profile residual --fixture docs/harness/fixtures/workflow-orchestration-fixtures.yaml --json
+
+      - name: Check A30 static permissions
+        run: python scripts/delegation_protocols_check.py --profile permissions
+
+      - name: Check pinned upstream references and installed catalog
+        run: python scripts/upstream_reference_check.py --project . --manifest manifests/upstream-references.json --fixture docs/harness/fixtures/upstream-reference-fixtures.yaml --opencode-version 1.17.18 --verify-installed-catalog --json
 
       - name: Verify npm package contents
         run: npm pack --dry-run

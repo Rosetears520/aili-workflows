@@ -2,11 +2,59 @@
 
 Use the skill-internal `references/protocols/` templates as the first version of delivery artifacts.
 
+## Shared artifact envelope
+
+[KNOWN] All lifecycle artifacts use the same neutral reference fields when they are passed between lanes. A protocol may add fields, but it must not redefine these fields or create a second authority for the artifact:
+
+- `artifact_id`: stable identifier within the active change or task;
+- `artifact_kind`: formal contract, sidecar, progress, drift, review, handoff, evidence, or closeout;
+- `path`: canonical repository-local path or an explicitly approved non-OpenSpec placement;
+- `authority_class`: canonical source, generated/installed adapter, upstream reference, historical evidence, or out of scope;
+- `owner`: capability and lane allowed to write the artifact;
+- `lifecycle_phase`: IDEATE, DEFINE, BUILD, SHIP, or ordinary;
+- `source_requirements`: requirement, decision, risk, or task identifiers represented by the artifact;
+- `status` and `freshness`: current state and the evidence time/scope used to establish it;
+- `evidence_anchors`, `blocked`, and `unverified`: proof references and unresolved limits.
+
+[KNOWN] An artifact reference is navigation and ownership metadata. It does not replace the artifact's owning source, user approval, current Git/filesystem evidence, or fresh verification.
+
+## Shared delta classification
+
+[KNOWN] Every accepted correction, requirement, artifact change, finding, or implementation feedback item receives exactly one classification:
+
+- `covered`: already represented by the accepted contract and verification;
+- `material-question`: a decision-changing ambiguity that must be answered before affected work continues;
+- `material-delta`: changes scope, contract, task, acceptance, risk, or implemented behavior and returns to DEFINE writeback/revalidation;
+- `ordinary-steering`: in-scope execution guidance that does not change the accepted contract;
+- `Unverified`: evidence is insufficient to classify safely.
+
+[KNOWN] The record carries `delta_id`, `classification`, `evidence`, `affected_artifacts`, `writeback_required`, `acceptance_stale`, and `next_action`. It references existing artifacts rather than creating a delta ledger or competing formal authority.
+
+## Shared convergence link
+
+[KNOWN] Each convergence claim uses one link with `requirement_or_decision`, `task_or_package`, `file_or_artifact`, `fresh_verification`, `review_or_security_disposition`, `freshness`, and `status`. Status is `linked`, `missing`, `stale`, `conflicting`, `blocked`, or `Unverified`. A checked task, generated summary, CodeGraph result, or Graphify result is not a substitute for the link.
+
+## Package savepoint and task-audit contracts
+
+[KNOWN] Each Package 1–11 lightweight savepoint records `package`, `scope`, `files_changed`, `unresolved_items`, and `next_package` after the package's complete accepted behavior is implemented. Optional command or diff feedback may be referenced, but is not closure, a readiness verdict, or a package-local quality gate. Package 12 alone owns mandatory convergence.
+
+[KNOWN] Package 12 uses one canonical task matrix. Every `tasks.md` checklist row appears exactly once with exactly these nine fields: `task_id`; `accepted requirement/decision/risk`; `expected behavior`; `implementation files/artifacts`; `fresh tests/inspection/review evidence`; `status`; `findings`; `disposition`; `freshness`. Status is exactly `Done | Partial | Missing | Blocked | N/A`. `Done` and resolved source-backed `N/A` pass; every other status or unsupported/unresolved state blocks. P11's generated `Partial` traceability remains separate and non-final. After commands and review lanes are reconciled, ROSE—not the checker—owns creation of the separate final task-audit JSON consumed by final closure. The detailed evidence and mismatch rules are owned by `agents/convergence-reviewer.md`.
+
+## Conditional review arbitration artifact
+
+[KNOWN] `openspec/changes/<change-id>/review-arbitration.md` exists only for disputed, blocking, cross-session, or materially inconsistent findings. It preserves finding identity, claims, evidence, counter-evidence, proposed dispositions, ROSE disposition/rationale, decision owner, status, required recheck, freshness, and residual `Unverified` items. It is not a vote ledger, confidence aggregation, routine review report, or artifact created in advance of a real qualifying dispute.
+
+## Shared loop envelope
+
+[KNOWN] This file is the canonical repository protocol path for neutral loop-envelope references. Delivery continuity requirement `CONT-005` remains the sole normative owner of budget representation and invariants. Every profile references one envelope with `loop_kind`, `trigger`, `trigger_evidence`, `objective`, `accepted_contract`, `change_id`, `success_evidence`, one nested `budgets` object, `human_gate`, `operation_gate`, `allowed_actions`, `writeback_targets`, `stop_reason`, and `outcome`. Protocol-only interval/event definitions additionally reference the canonical `ROUTE-007` identity object and may add only `external_trigger_source`, `event_classifier`, or `cancellation`.
+
+[KNOWN] The neutral terminal outcomes are `complete`, `need-user`, `material-delta`, `blocked`, `Unverified`, `cancelled`, and `budget-exhausted`. Profiles and packages must reference this envelope; they must not create flat budget fields, a second envelope, a session registry, or a background runtime.
+
 | Mode | Primary artifacts | Minimum fields |
 |---|---|---|
 | IDEATE | `references/protocols/idea-brief.md`, optional research evidence pack, optional lightweight idea capsule, optional backend-neutral `ideas/workflow-inbox.md` | goal, options, assumptions, unknowns, next decision, candidate idea notes when preserved, promotion target when selected |
 | DEFINE | spec draft, alignment questionnaire/interview, acceptance test plan, backend-specific `context.md` for formal changes | scope, requirements, questions, requirements/decisions/risks traceability matrix, test cases, approval state, confirmed decisions, rejected options, BUILD readiness |
-| BUILD | implementation package, subagent packet/result when delegated, compact evidence pack when evidence is noisy, local review report, scoped goal marker/contract, backend-neutral `progress.txt` ledger with backend-specific placement, `drift-log.md` for spec-backed drift notes, legacy `implementation-notes.html` as read-only migration evidence when present | requirement/decision/risk source, task/package, target files/artifacts, acceptance criteria, forbidden scope, verification command, expected/actual evidence, independent review/test/security lanes, skipped checks, branch/status dirty-path classification for non-trivial closeout, progress/checkpoint entries, user feedback/corrections, worker dispatches, loop budget, permission policy summary, ROSE decision, spec drift notes, `Open Question` / `Unverified` items |
+| BUILD | implementation package, subagent packet/result when delegated, lightweight Package 1–11 savepoints, Package 12 review evidence, backend-neutral `progress.txt` ledger with backend-specific placement, `drift-log.md` for spec-backed drift notes, legacy `implementation-notes.html` as read-only migration evidence when present | requirement/decision/risk source, task/package, target files/artifacts, acceptance criteria, forbidden scope, expected/actual evidence, canonical `CONT-005` envelope and nested budgets, Package 12 review/test/security evidence, branch/status dirty-path classification, progress/checkpoint entries, ROSE decision, `Open Question` / `Unverified` items |
 | SHIP | review report, compact evidence pack when evidence is noisy, required repository-local Markdown closeout report | closeout document path, BUILD gate status, release-blocker audit target/status, spec coverage check result, review findings, finding classifications, repair result, fresh evidence, branch/worktree hygiene status and cleanup approvals needed, existing feature impact, release-readiness risks, `Open Question` / `Unverified` items, next steps |
 
 ## Output Contract
@@ -52,15 +100,20 @@ context.md
 - IDEATE may preserve candidate ideas in a lightweight idea capsule or append them to `ideas/workflow-inbox.md` without creating a formal proposal by default; DEFINE promotes only selected ideas into a backend-specific change contract.
 - Formal changes use one backend-specific `context.md`; OpenSpec uses `openspec/changes/<change-id>/context.md`, while non-OpenSpec backends use adapter/placement rules.
 - BUILD uses a backend-neutral `progress.txt` contract; OpenSpec uses `openspec/changes/<change-id>/progress.txt`, while non-OpenSpec BUILD asks once for a repository-local placement before writing.
-- Scoped BUILD goal sessions use a combined transcript-visible marker plus repository-local context/progress marker. Required marker fields are `goal_id`, change id or backend target, repository root, scope boundary, evaluator criteria, loop budget, stop conditions, and permission policy summary.
+- BUILD continuation references exactly one active canonical `CONT-005` envelope in current context/progress state. It does not create another identity, marker contract, flat budget model, or authorization source.
 - Only ROSE writes/appends `progress.txt`. Workers return compact evidence reports for ROSE to reconcile.
 - `progress.txt` entries include objective, worker dispatches, evidence references, current progress, user feedback/corrections, checkpoint ledger, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action.
 - For approved spec-backed implementation, maintain `drift-log.md` beside the change artifacts only for spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a user-feedback log, progress ledger, review report, or formal contract substitute.
 - Legacy `implementation-notes.html` may be read during hydration or convergence as migration evidence, but new drift/self-correction entries go to `drift-log.md` unless the current active contract explicitly requires the legacy HTML format.
-- Before DEFINE/BUILD/SHIP or normal-chat continuation, hydrate from the active idea capsule/inbox, `context.md`, backend tasks/specs/design, `test-plan.md`, `progress.txt`, `drift-log.md` when present, legacy `implementation-notes.html` when present as read-only migration evidence, closeout/review evidence when relevant, and memory/checkpoints; summarize current goal, decisions, open questions, `Unverified` items, progress/checkpoint state, spec drift notes, and next action before acting.
-- Context pressure gates such as 50/70/85 are checkpoint signals, not instructions to compress; do not proactively run manual context compression below 65% unless the user explicitly requests compression or the current phase is clearly closing.
+- Before DEFINE/BUILD/SHIP or normal-chat continuation, resolve one active change and re-read its OpenSpec proposal/specs/design/tasks, `interview.md`, accepted `test-plan.md`, `context.md`, `progress.txt`, bounded `drift-log.md`, scoped legacy/pre-runtime memory, and fresh scope-relevant review/test/security/verification evidence. Revalidate canonical root/worktree/Git identity and summarize current goal, decisions, open questions, `Unverified` items, progress, bounded drift, evidence freshness, and next action before acting.
+- Idea capsules/inbox entries are IDEATE candidates and may guide selection; they are not a formal contract. Legacy `implementation-notes.html`, stale chat summaries, old logs, task checkboxes, handoff, and memory are navigation/migration context only and cannot establish acceptance, permission, completion, or fresh evidence.
+- Context pressure or compression thresholds may prompt an ordinary checkpoint but never authorize compression, handoff, persistence, or lifecycle movement. Continuity is provider-neutral and has no DCP dependency.
 - `context.md`, `progress.txt`, `drift-log.md`, and legacy `implementation-notes.html` do not replace `rose-memory`, `handoff.md`, `interview.md`, `test-plan.md`, backend tasks, formal specs/tasks, or final reports.
 - Exclude secrets, raw logs, full transcripts, full file contents, private data, and long dumps from inbox/context/progress/notes artifacts and evaluator input.
+
+## Future extension point: `artifact-integrity`
+
+`artifact-integrity` is a documentation-only, non-binding name reserved for possible future protocol work. Phase I defines no provider, manifest, schema, digest, nonce, receipt, revision, configuration, storage, runtime behavior, approval semantic, warning, status field, or gate. Its absence has no effect on DEFINE, BUILD, review, SHIP, or any summary.
 
 ## BUILD Readiness
 

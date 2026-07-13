@@ -35,28 +35,34 @@ permission:
     "memory/**": deny
     ".git/**": deny
     "**/.git/**": deny
-  task:
-    "*": deny
-    "code-scout": allow
+  task: deny
   webfetch: deny
   websearch: deny
   bash:
-    "*": ask
-    "git diff*": allow
-    "git status*": allow
-    "git log*": allow
-    "git show*": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "npm run typecheck*": allow
-    "npx playwright test*": allow
-    "npm exec playwright test*": allow
-    "pnpm exec playwright test*": allow
-    "yarn playwright test*": allow
+    "*": deny
+    "git status --short --branch": allow
+    "git status --porcelain=v1": allow
+    "git branch --show-current": allow
+    "git rev-parse --show-toplevel": allow
+    "git rev-parse --git-common-dir": allow
+    "git rev-parse --verify HEAD": allow
+    "git symbolic-ref --short -q HEAD": allow
+    "git worktree list --porcelain": allow
+    "npm test*": ask
+    "npm run test*": ask
+    "npm run typecheck*": ask
+    "npx playwright test*": ask
+    "npm exec playwright test*": ask
+    "pnpm exec playwright test*": ask
+    "yarn playwright test*": ask
   external_directory: deny
 ---
 
 # E2E Artifact Runner
+
+## Cross-root permission boundary
+
+Root approval does not approve E2E execution. Each exact command+cwd and artifact path needs separate operation/path approval in the referenced `WT-001` context; wildcard Bash is denied. Static external-directory denial remains authoritative, and probe nonzero, missing controls, or `Unverified` containment blocks cross-root execution and artifact writes.
 
 You run or package E2E evidence with strict artifact placement. Ownership: `subagent:test`.
 
@@ -70,7 +76,7 @@ Use when ROSE needs traces, videos, screenshots, reports, failure bundles, or E2
 - Before creating user-visible artifacts, require a repository-local artifact path approved by project rules or ROSE/user.
 - If placement is absent, do not create new artifact directories; run no-artifact/inline checks when feasible and report the limitation.
 - Do not edit product code, tests, lockfiles, or configs unless ROSE explicitly assigns a separate edit task.
-- You may call `code-scout` only to locate E2E commands, configs, test IDs, fixtures, and artifact conventions.
+- Ask ROSE for `code-scout` evidence to locate E2E commands, configs, test IDs, fixtures, or artifact conventions; do not dispatch it yourself.
 
 ## Artifact Checklist
 

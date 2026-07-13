@@ -1,6 +1,6 @@
 # ROSE Memory References
 
-This directory is distributed as part of the global `rose-memory` OpenCode skill.
+This directory is distributed with the `rose-memory` skill. The CLI is a legacy/pre-runtime compatibility tool; all state remains project-local and has no native/global or formal lifecycle authority.
 
 Files:
 
@@ -16,11 +16,12 @@ Do not store `memory.db` in this directory. Do not edit SQLite rows manually.
 
 Memory policy:
 
-- Record task-relevant memory by default for non-trivial tasks.
-- Use checkpoints for current goal, scope, progress, touched files, and verification evidence.
-- Use requirement memory for user-stated requirements, preferences, decisions, corrections, and acceptance criteria.
-- Use durable findings only for reusable, evidence-backed project knowledge.
-- Current conversation and DCP compressed summaries override stale memory for active-task state.
+- Default-write only explicit user-stated requirements, preferences, decisions, corrections, and acceptance criteria when identity, project/change/session scope, source metadata, timestamp, permission, and content safety are clear.
+- Block or keep the item in the active change artifact when scope, metadata, identity, or permission is ambiguous; never persist secrets or private data.
+- Use checkpoints as bounded continuity input. Formal `progress.txt`, OpenSpec artifacts, fresh Git/filesystem state, and fresh verification retain their own authority.
+- Keep model-derived facts as evidence-backed candidates or change-local `Unverified` items. Do not invent storage operations when the current CLI cannot represent the required lifecycle.
+- DCP, compression thresholds, stale chat summaries, task checkboxes, and old logs have no active-task authority.
+- Do not import, migrate, dual-read, dual-write, or bridge this database to native/global or reserved `.aili` state.
 - Memory writeback failure should be retried once, tracked, retried before handoff, and reported if still failing; it should not block otherwise safe task progress.
 
 If a `rose-memory` command is available:

@@ -30,6 +30,7 @@ Before copying or adapting upstream review material, read `references/upstream-p
 - `references/orchestration-adaptation.md`: fail-closed fan-out/fan-in, blocking/advisory split, adversarial verification, phase checkpoints, and main-agent-only writer/orchestrator rules.
 - `references/addyosmani-code-review-rubric.md`: five-axis review rubric, `Critical`/`Important`/`Suggestion`, spec/task-first reading, concrete fixes, and uncertainty/proof gates.
 - `references/codex-github-compatibility.md`: behavior-only Codex/GitHub compatibility for AGENTS rules, PR focus instructions, high-priority findings, and local review/fix parity without cloud mutation.
+- `references/graphify-local-review.md`: explicit-operation-only Graphify adapter, pinned provenance/security concerns, sole guarded launcher, exact argv/network/environment/output controls, local-uncommitted output, and advisory-only findings. It adds no install, registration, hook/plugin, scheduler, lifecycle gate, or completion authority.
 
 - Active derivative-reference sources: primary ECC `affaan-m/ECC` and `addyosmani/agent-skills`.
 - Behavior-only guidance: official Codex review docs; do not copy Codex documentation text.
@@ -89,6 +90,15 @@ The report must record:
 - previous findings, resolved/deferred/accepted-risk/out-of-scope items, and re-review history;
 - final verdict and named residual `Unverified` items.
 
+All review/test/security/coverage/convergence lane results embedded or referenced by the report must use the shared finding/result envelope in `aili-delivery-flow/references/protocols/subagent-result.md`. A worker proposes `fix`, `refute-with-counter-evidence`, `accept-named-risk`, or `Unverified-block`; ROSE owns final disposition. Do not reconcile by majority vote, lane count, or averaged confidence, and do not treat a worker verdict as final authority.
+
+### Conditional arbitration artifact
+
+- Create or update exactly `openspec/changes/<change-id>/review-arbitration.md` only when a finding is disputed, blocking, cross-session, or materially inconsistent.
+- Preserve stable finding ID, competing claims, evidence and counter-evidence, proposed dispositions, ROSE disposition and rationale, decision owner, status, required recheck, freshness, and residual `Unverified` items.
+- A credible material minority finding stays open until fixed/rechecked, refuted with counter-evidence, accepted as a named risk by the authorized owner, or blocked as `Unverified`.
+- Do not create the artifact for routine uncontested findings and do not pre-create an empty instance.
+
 ## Verdict Vocabulary
 
 Use only these local-review verdicts:
@@ -140,6 +150,10 @@ For formal or multi-phase work, include convergence review and phase checkpoint 
 - parallel lanes declare join evidence, and ROSE reconciles each lane's status, evidence, conflicts, blockers, skipped checks, and missing evidence;
 - the join point runs verification over the merged output before later phases continue;
 - final local review compares source artifacts, phase evidence, final diff/worktree state, review findings, and verification evidence.
+
+For a Package 12 formal final gate, all specialist lanes are independently dispatched by ROSE with explicit `edit: deny` and `task: deny` in the final-review overlay, including `test-engineer`, and return directly to ROSE. ROSE joins every expected lane without voting. The existing `convergence-reviewer` alone owns checklist completeness; `plan-auditor` is pre-implementation and `silent-failure-reviewer` is complementary.
+
+Packages 1–11 record lightweight savepoints containing complete behavior scope, files changed, unresolved items, and next package. Optional commands or diff feedback are not package closure or independent quality gates. Package 12 alone runs the mandatory canonical matrix and holistic convergence.
 
 ## Anti-Pseudo-Completion Checks
 

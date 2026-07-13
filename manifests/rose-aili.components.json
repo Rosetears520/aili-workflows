@@ -118,17 +118,6 @@
         }
       }
     ],
-    "plugins": [
-      {
-        "name": "opencode-dcp",
-        "optional": true,
-        "defaultInstalled": false,
-        "thirdParty": true,
-        "enabled": false,
-        "source": "manual:npm:@tarquinen/opencode-dcp@latest",
-        "trust": "trust-latest/manual-only; documented optional add-on in docs/opencode-setup.md",
-        "install": { "status": "unverified", "reason": "Plugin CLI side effects are manual-only and are not automated by rose-aili MVP." }
-      }
-    ]
+    "plugins": []
   }
 }

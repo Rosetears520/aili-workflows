@@ -1,5 +1,5 @@
 ---
-description: Build approved ready work autonomously through implementation and local quality gates.
+description: Execute accepted work as a neutral dependency-ordered package queue.
 agent: rose
 subtask: false
 ---
@@ -12,41 +12,33 @@ $ARGUMENTS
 Invoke `aili-delivery-flow` in BUILD mode.
 
 Purpose:
-- Treat `/build` as the user's only public goal-style execution entrypoint: execute the current ready work item in autonomous goal mode for BUILD, synthesize a scoped implementation package queue when needed, and prove the complete in-scope result with local quality gates.
+- Execute the complete accepted Package 1–11 queue with lightweight savepoints, then run Package 12 as the single mandatory comprehensive quality gate.
 
 Required behavior:
-- Resolve the active target from user input, current OpenSpec/backend context, or a single ready work item; ask only when the target is missing or ambiguous.
-- Hydrate current state before acting: re-read relevant DEFINE artifacts from disk plus active idea/context/progress/test/drift artifacts, legacy implementation notes when present as read-only migration evidence, and memory/checkpoints when present, then summarize the current goal, decisions, open questions, `Unverified` items, drift notes, and next action.
-- Infer the target repository root from the active backend/change context before running git safety commands; do not use the shell cwd as authority when it differs from the target repo.
-- Before implementation when the target involves unfamiliar, fast-changing, platform/runtime, packaging, security, external integration, UI/product-form, model/provider/API, or user-requested research risk, require official-doc, local-repo, or mature prior-art evidence and an accepted/waived/`UNVERIFIED`方案 state; use external web/Context7/public-project lookup only when the current user, task, or project contract allows source lookup, and never send secrets or sensitive context.
-- Establish a scoped BUILD goal marker/contract when continuation is needed, using a transcript-visible marker plus repository-local context/progress state; include `goal_id`, backend/change target, repository root, scope boundary, evaluator criteria, loop budget, stop conditions, and permission policy summary, without secrets, raw logs, full transcripts, or full file contents.
-- Build an ordered implementation package queue from tasks, specs, design, test plans, and repository evidence when the user did not provide an explicit package.
-- Confirm target files, forbidden scope, acceptance criteria, verification command, review lanes, and parallelism analysis for each synthesized or user-provided package before editing that package.
-- Work package-by-package until all in-scope packages are complete, blocked by an allowed stop condition, or repair limits are reached; any automatic continuation must be gated by a structured evaluator state of `done`, `continue`, `blocked`, or `unverified` plus a ROSE-owned decision prompt.
-- Implement complete package behavior inside the accepted scope; `Surgical` or scoped means no unrelated changes, not artificially tiny or partial patches.
-- Implement only in-scope packages and update task state as work completes with evidence.
-- Maintain `progress.txt` as the ROSE-owned progress/checkpoint ledger for current progress, user feedback/corrections, worker dispatches, evidence references, verification/review/security status, blockers, decisions, and next action.
-- Maintain `drift-log.md` during approved spec-backed implementation only for spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back; do not use it as a user-feedback log, progress ledger, review report, or formal contract substitute. Read legacy `implementation-notes.html` only as migration evidence unless the active contract explicitly requires legacy HTML.
-- Run local BUILD gates: code review, test verification, and security review when security surfaces are present.
-- Before non-trivial BUILD closeout, inspect target repo branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, remove only safe task-owned non-user-visible scratch artifacts, and propose cleanup for residue; ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.
-- When the user requests a packaged deliverable, run relevant tests/checks before packaging, repair in-scope failures, package as separate evidence, then classify package-time failures and repair/retest/repackage within the approved limit.
+- Treat `/build` and equivalent explicit natural-language implementation intent identically. Acceptance alone is zero execution.
+- Resolve exactly one accepted target, infer its canonical target repository root from backend context, and require current final-test-plan acceptance, dependency readiness, operation permission, verifiable exit criteria, and a valid canonical `CONT-005` envelope.
+- Use the supplied package or synthesize an ordered implementation package queue from tasks, specs, design, the accepted test plan, and repository evidence. Preserve package identity, dependencies, non-overlapping edit ownership, forbidden scope, and final traceability.
+- Implement complete package behavior inside the accepted scope. `Surgical` or scoped means no unrelated work, not artificially tiny or partial patches.
+- For each Package 1–11, finish accepted behavior and record a lightweight savepoint containing scope, files changed, unresolved items, and next package. Optional focused build, test, typecheck, harness, delegation, or diff feedback is not package closure and does not create a mandatory package-local quality gate or repair budget.
+- After complete Package 1–11 implementations/savepoints, run Package 12's canonical task matrix, full command matrix, and diverse non-nesting review lanes. Package 12 alone may use up to three holistic review-repair-retest-re-review cycles.
+- Use exactly six inner loops—question, delta, evidence/plan, neutral BUILD, review/repair, convergence—and four outer profiles: executable `turn` and `objective`, protocol-only `interval` and `event`. Do not create a seventh loop.
+- Resume wording (`continue`, `继续`, `go ahead`, `继续做`) may resume exactly one active authorized envelope only when target, phase, authorization, current gates, and remaining budget are unambiguous. Preserve all consumed counters and stop state; never reset, broaden authorization, switch phase/target, refresh acceptance, or start from acceptance alone. Otherwise ask one focused target/authorization question and perform no loop, write, or mutation.
+- Apply `CONT-005` as the only budget authority. Use one nested `budgets` object with iteration, time, tokens, and review_repair entries; Package 1–11 implementation-only objectives use `review_repair: null`, and Package 12 uses `review_repair.limit: 3`.
+- Block pure or mixed requests to install, register, run, modify, update, reconfigure, enable, or reuse automation with zero mutation and zero LP. Only a later documentation-only request may define/reuse a design-owned external/manual interval/event LP.
+- Before non-trivial closeout, inspect target repo branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, and propose cleanup for residue; ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.
 
 Hard stops:
-- Do not edit if `/build` cannot resolve exactly one approved or ready target, or if approval/readiness evidence is missing and not explicitly waived by the current active contract.
-- Do not edit if the inferred target repository root is outside the current workspace or allowed external directories without explicit external-directory approval.
-- Do not add or route users to `/goal`, `commands/goal.md`, or any new public delivery command; scoped goal execution is BUILD behavior only.
-- Do not ask for manual package approval only because the user omitted a package; synthesize the package queue instead.
-- Do not collapse or serialize already separated packages/lanes without a dependency, ownership, verification, high-risk gate, failed-evidence, or user-scope reason.
-- Do not package before relevant verification unless the user explicitly waives the risk and the skipped check is marked `UNVERIFIED`.
-- Do not harden, enable by default, or depend on a scoped hook/plugin before the OpenCode validation spike proves marked-session recursion safe; fall back to prompt-only `/build` manual autonomous mode when runtime continuation remains `Unverified`.
-- Do not weaken global permissions, use global `permission: "allow"`, or rely on `--dangerously-skip-permissions`; any scoped allowlist is limited to marked BUILD sessions, readonly/status/search operations, and current-task-approved verification commands.
-- Pause before high-risk operations that require explicit approval: destructive commands, file deletes/moves/renames, dependency or lockfile changes, schema/migration changes, auth/permission/security weakening, pushes, merges, tags, history rewrites, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts.
-- Do not stop after implementation without the local BUILD gates: code review, test verification, and security review when security surfaces are present.
+- Do not edit without exactly one accepted ready target, valid budgets, and required permissions. Do not use acceptance, vague continuation, task checkboxes, or optional package feedback as execution/completion authority.
+- Do not own, bind, control, imitate, modify, or claim implementation of native `/goal`; successful native `/goal` behavior is Stage II / N/A. Do not add a public loop/profile alias.
+- Do not add a scheduler, listener, daemon, persistent queue, hook, dependency, auto-retry, or other background runtime.
+- Pause before destructive/high-risk operations, file deletion/move/rename, dependency or lockfile changes, schema/migration changes, auth/security weakening, external-root access, push/merge/history changes, archive, or secret handling without exact approval.
+- Do not ask for manual package approval only because the user omitted a package.
 - Stay inside the package; report scope expansion or missing verification instead of guessing.
 
 Output contract:
-- selected mode and backend;
-- target, package queue summary, completed/blocked packages, and files changed;
-- verification, review, and skipped-lane evidence;
+- selected BUILD mode, backend, target, and active outer profile;
+- package queue, lightweight savepoints, completed/blocked packages, and files changed;
+- canonical budget state, stop reason/outcome, and optional feedback evidence;
+- Package 12 gate evidence when reached, or why it has not started;
 - residual risks, scope expansions, and `Unverified` items;
 - whether the change is ready for `/ship`.

@@ -13,7 +13,7 @@
 - When a filename looks obvious, still read the active file/source before editing; do not rely on the name alone.
 - When the user says "continue," hydrate lifecycle state and confirm the approved/ready BUILD item before implementation; do not infer approval from the word alone.
 - When a subagent returns evidence, reconcile the anchors and residual uncertainty; do not treat the recommendation as a final verdict.
-- When reporting verification, use fresh command or inspection evidence; do not claim verified from old logs, DCP summaries, or memory.
+- When reporting verification, use fresh command or inspection evidence; do not claim verified from old logs, compression summaries, or memory.
 - When writing continuity artifacts, put progress/user feedback in `progress.txt`; put new spec drift/self-corrections in `drift-log.md`; do not use `drift-log.md` or legacy `implementation-notes.html` as chat history or a progress ledger.
 
 ## Git
@@ -26,6 +26,12 @@
 - Standard library only.
 - Static file/schema checks only.
 - No model calls, benchmarks, package installs, external services, or multi-host probing.
+
+## Cross-Root and Optional Tools
+
+- Cross-root work is fail-closed against exact OpenCode `1.17.18` behavior. Root approval is a soft boundary, not sandboxing or process containment. If ask/always/`--auto`, Task-root inheritance, role intersection, symlink/TOCTOU, subprocess, bash-effect, secret, or neighboring-root behavior cannot be safely expressed and freshly proven, do not dispatch or mutate and retain the result as `Unverified`.
+- CodeGraph is optional exact-current-root discovery only. Confirm one root, request per-root initialization approval, refuse batch initialization, fall back when stale/noisy/unavailable, and read every final file; CodeGraph is not lifecycle or completion proof.
+- Graphify execution is a separate operation requiring explicit approval for the exact synthetic/project run. Missing executable provenance, current security/advisory evidence, enforceable network denial, sanitized isolated environment, argv safety, private output root, or write inventory blocks before process start. Never infer operation permission from lifecycle approval and never claim a run from contract-only checks.
 
 ## Completion Claims
 

@@ -30,7 +30,19 @@ Direct allowlist 小改可以跳过完整 evidence pack，但必须说明为什�
 5. 把冲突、stale、missing、generated、archived 证据显式标出。
 6. 给出下一步：edit、delegate、ask_user、blocked、verify。
 
-可选证据源：当非平凡代码任务需要文件/符号/调用方/被调用方/peer pattern/测试/影响面定位，且 CodeGraph 可用且有帮助时，ROSE 可把 CodeGraph 作为可选 locality provider 分配给合格 lane owner。CodeGraph 结果必须压缩成 evidence anchors；不可当作 proof；不可替代 edit/review/test/doc lane 的最终读文件、读 diff、读测试或读文档；不可用时回退到普通 search/read，只有 materially affects confidence 时标 `Unverified`。
+## 可执行的仓库复用规则
+
+在新增任何本地映射、配置、registry 条目、manifest 条目、模板、schema、generator 输出或协议文件前，按顺序执行：
+
+1. 检查任务相关的 canonical code、docs、specs、tests、config、registries、manifests、templates、generators 和 peer patterns，并记录 path:line/symbol 证据。
+2. 在 `workflow.components.yaml`、组件 manifest、现有协议目录和生成源中定位 owner；如果现有 owner 能表达行为，复用并编辑 owner，不创建第二份映射。
+3. 如果只找到 generated/installed adapter，回到其 canonical source/generator；除非任务明确授权，不手改生成物，也不复制生成映射到本地特例。
+4. 如果两个 owner 冲突、生成源不明或产品接口有多种不兼容解释，标记 `Open Question`/`Unverified` 并停止相关编辑，向用户询问，不猜测。
+5. 编辑后运行最近的行为测试或静态 checker，并重新读取最终编辑文件；没有 fresh evidence 时不得声称 complete/fixed/verified/ready。
+
+自检记录至少包含 `inspected_sources`、`owner_selected`、`reuse_or_create_decision`、`generated_boundary`、`ambiguities` 和 `verification`. 缺少任一项时，仓库复用纪律状态不得为通过。
+
+可选证据源：当非平凡代码任务需要文件/符号/调用方/被调用方/peer pattern/测试/影响面定位，且 CodeGraph 可用且有帮助时，ROSE 可把 CodeGraph 作为只针对 exact current repository root 的可选 locality provider 分配给合格 lane owner。每次 status/query/init 前确认 exact current repository root；init 必须取得该单一 root 的独立明确批准，即使存在 broad approval 也拒绝 batch/multi-repository initialization。CodeGraph 结果必须压缩成 evidence anchors；不可当作 proof；不可替代 edit/review/test/doc lane 对每个 final file、diff、测试或文档的最终读取；stale/noisy/unavailable/no-result 时回退普通 search/read，只有 materially affects confidence 时标 `Unverified`。CodeGraph 没有 lifecycle、correctness、acceptance、completion 或 readiness authority。
 
 🔴 CHECKPOINT: 在进入编辑、审查结论或 completion claim 前，必须能列出至少 1 个有效证据锚点，或把状态降级为 `PARTIAL` / `NOT_FOUND` / `CONFLICTING` / `BLOCKED`。没有 anchors，就不能说 “confirmed / verified / done / repository pattern”。
 

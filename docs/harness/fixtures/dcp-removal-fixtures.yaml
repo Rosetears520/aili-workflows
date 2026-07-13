@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "fixture": "dcp-removal",
+  "change": "complete-aili-workflow-orchestration",
+  "owner_package": "P4",
+  "requirements": ["INST-001", "INST-002", "INST-003", "INST-004", "INST-005"],
+  "removed_flags": ["--enable-dcp", "--skip-dcp"],
+  "parser_cases": [
+    {"id": "supported-command-option", "commands": ["install", "update", "doctor"], "flags": ["--enable-dcp", "--skip-dcp"], "exit": 1, "stderr": "Unknown option: <flag>"},
+    {"id": "unknown-command-option-precedence", "argv": ["nonexistent", "<flag>"], "exit": 1, "stderr": "Unknown option: <flag>"},
+    {"id": "bare-removed-flag", "argv": ["<flag>"], "exit": 1, "stderr": "Unknown command: <flag>"},
+    {"id": "command-help-invalid-option", "argv_examples": [["install", "--help", "--enable-dcp"], ["update", "--skip-dcp", "--help"], ["doctor", "--help", "--enable-dcp"], ["nonexistent", "--enable-dcp", "--help"]], "exit": 1, "stderr": "Unknown option"},
+    {"id": "top-level-help-precedence", "argv_examples": [["help", "--enable-dcp"], ["--help", "--enable-dcp"], ["-h", "--skip-dcp"], ["nonexistent", "--help"]], "exit": 0, "stdout": "generic help"}
+  ],
+  "state_cases": [
+    {"id": "malformed-jsonc", "path": "<custom-opencode-home>/dcp.jsonc", "preserve": ["bytes", "mode", "size", "mtime", "ctime", "inode"]},
+    {"id": "regular-json", "path": "<custom-opencode-home>/dcp.json", "preserve": ["bytes", "mode", "size", "mtime", "ctime", "inode"]},
+    {"id": "symlink-jsonc", "path": "<custom-opencode-home>/dcp.jsonc", "preserve": ["link-target", "target-bytes", "link-metadata", "target-metadata"]},
+    {"id": "custom-home-bytes", "path": "<custom-opencode-home>/dcp.jsonc", "preserve": ["bytes", "metadata"]},
+    {"id": "third-party-plugin-entry", "path": "<custom-opencode-home>/opencode.json", "preserve": ["plugin-array-entry", "unrelated-plugin-entry"]}
+  ],
+  "commands": ["install", "update", "doctor"],
+  "forbidden_interactions": ["spawn", "plugin-list", "detect", "install", "read-for-mutation", "parse", "status-stat", "write", "backup", "temp", "rename", "delete"],
+  "forbidden_output": ["human DCP status", "JSON dcp field", "DCP next step"],
+  "preserved_supported_behavior": ["@playwright/mcp@0.0.75", "default_agent", "agent.rose.model", "unrelated mcp", "unrelated plugin", "JSON/JSONC safety", "doctor checks"],
+  "openspec": {
+    "interactive_install": "ask when no explicit choice",
+    "noninteractive_default": "skip without process or project mutation",
+    "next_step": "rose-aili install --enable-openspec",
+    "explicit_enable": "existing supported install/detect/init-or-update behavior"
+  }
+}

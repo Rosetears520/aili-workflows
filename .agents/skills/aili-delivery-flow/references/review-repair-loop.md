@@ -1,14 +1,14 @@
 # Review and Repair Loop
 
-BUILD runs the local implementation quality loop. SHIP runs the fuller release-readiness loop that includes BUILD evidence plus broader handoff, merge, release, archive, or rollback checks.
+Packages 1–11 implement complete accepted behavior and record lightweight savepoints without mandatory package-local quality closure. Package 12 runs the single comprehensive BUILD quality loop. SHIP uses that evidence plus broader release-readiness checks.
 
-## BUILD Local Gates
+## Package 12 comprehensive BUILD gate
 
-1. Gather the implementation diff, package scope, traceability mapping, targeted verification evidence, and optional graph-assisted impact evidence when useful; summarize noisy or long evidence with `protocols/compact-evidence-pack.md`.
-2. Run code review and test verification for the implemented package.
-3. Run security review when the package touches auth, permissions, secrets, shell/installer behavior, dependencies, network, storage, or other security-sensitive surfaces.
+1. Require complete Package 1–11 implementations and lightweight savepoints; gather the final diff, P11 Partial traceability, optional feedback, and known findings. P11 traceability stays non-final. ROSE creates the separate final task-audit JSON only after command and review reconciliation; the final checker reads but never generates it.
+2. Run the fresh full command matrix and independently dispatch diverse read-only canonical convergence, code, test/coverage, security, AI-regression, silent-failure, generated/docs/manifests, and other relevant lanes. Route prompt/agent/skill/model-tool/generated-output behavior to `ai-regression-scout`; route ordinary product test design/execution/coverage to `test-engineer`; dispatch both with distinct questions when both apply. Every final-review packet denies nested task dispatch; lanes return directly to ROSE using the shared finding/result envelope. This overlay is required policy, but declarative fields do not prove runtime enforcement; retain `UV-001` as `Unverified` until an executable permission probe proves the effective denial.
+3. Join every expected lane at ROSE without majority voting, lane-count verdicts, averaged confidence, or worker final authority; missing evidence remains blocking or `Unverified`, and a credible material minority finding remains open until evidence-backed disposition. Final closure requires all 74 exact nine-field ROSE audit rows to be `Done` or resolved source-backed `N/A`, with final task-specific files/evidence, empty findings, resolved dispositions, and verified `UV-001` read-only edit and nested-task runtime enforcement.
 4. Classify findings as must-fix, should-fix, accepted risk, out-of-scope, or unverified.
-5. Apply only in-scope repairs and rerun affected verification/review lanes.
+5. Apply all in-scope repairs for one holistic cycle, rerun affected lanes and the complete task matrix, and stop after at most three cycles.
 6. For non-trivial closeout, inspect branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, remove only safe task-owned non-user-visible scratch artifacts, and propose cleanup for residue.
 7. Return BUILD evidence with passed, skipped, blocked, and `Unverified` lanes; map each changed file/artifact and verification result back to its source requirement, decision, or risk; cite compact evidence packs instead of raw dumps when evidence is noisy, and never treat CodeGraph evidence as completion proof by itself.
 
@@ -26,7 +26,9 @@ BUILD runs the local implementation quality loop. SHIP runs the fuller release-r
 
 ## Hard Gates
 
-- No BUILD pass claim without local code-review and test evidence, plus security evidence or a recorded non-security skip reason.
+- No Package 1–11 mandatory quality gate, package-quality repair budget, or closure claim from optional feedback.
+- No BUILD pass claim before Package 12's complete task matrix, fresh command matrix, and joined diverse-lane evidence.
+- No fourth holistic cycle, reduced matrix, dropped minority finding, nested final-review dispatch, vote-based verdict, or worker-owned final disposition.
 - No SHIP ready claim without fresh release-readiness evidence.
 - No SHIP ready claim for a formal change without a spec coverage check covering requirements/tasks/test-plan items against implementation, verification, review, and security evidence.
 - No noisy evidence claim from summary alone; cite source, scope, result, and rerun/artifact access through a compact evidence pack.

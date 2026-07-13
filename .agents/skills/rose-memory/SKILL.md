@@ -1,6 +1,6 @@
 ---
 name: rose-memory
-description: Use the ROSE project-local SQLite memory system through the bundled memory_cli.py. Use this for task checkpoints, requirement memory, durable findings, focused retrieval packs, and writeback receipts.
+description: Use the legacy/pre-runtime ROSE project-local SQLite continuity backend through memory_cli.py for scoped user facts, checkpoints, candidates, and focused retrieval; never treat it as native/global memory or formal authority.
 license: MIT
 compatibility: opencode
 metadata:
@@ -12,7 +12,7 @@ metadata:
 
 ## Purpose
 
-This skill provides the ROSE memory protocol and the bundled SQLite CLI used by ROSE agents.
+This skill provides the legacy/pre-runtime ROSE continuity protocol and bundled SQLite CLI. It is project-local compatibility infrastructure, not native OpenCode memory, global state, or formal lifecycle authority.
 
 The CLI implementation is distributed with this skill:
 
@@ -30,10 +30,10 @@ Use this skill when:
 
 - starting or resuming a ROSE task
 - checking current ROSE memory status
-- recording task checkpoints or completion receipts
-- recording user-stated requirements, preferences, decisions, corrections, or acceptance criteria
-- recording durable project facts, findings, claims, or evidence
-- retrieving focused project memory context after compaction or explicit resume
+- recording a scoped task checkpoint or completion receipt
+- default-writing an explicit user-stated requirement, preference, decision, correction, or acceptance criterion when identity, scope, metadata, permission, and content safety are clear
+- recording evidence-backed model-derived material only as a candidate when the existing backend supports that exact operation
+- retrieving focused project memory as one bounded input during explicit resume
 - recovering from interrupted work
 
 ## Rules
@@ -42,40 +42,41 @@ Use this skill when:
 - Never create `memory.md`, JSON sidecars, or alternate memory state files.
 - Never store project state under `~/.config/opencode/`.
 - Always use the `rose-memory` shim when available, otherwise use the bundled `memory_cli.py` directly.
-- Durable memory must have evidence or an explicit no-promotion receipt.
-- Memory is additive context, not the active task contract. Current user instructions and current conversation override older memory.
-- Record memory by default for non-trivial tasks, but classify it into task checkpoints, requirement memory, and durable project findings.
-- Prefer writing user requirements and decisions over task transcript logs. Promote durable findings only when they are reusable and evidence-backed.
-- DCP compression is normal context management. Use compressed summaries as the authoritative active-chat state; query memory only when the summary is insufficient, the active task is ambiguous, the user explicitly resumes prior work, or memory writeback is pending.
+- Memory is additive, scoped continuity context. It is never the active OpenSpec contract, test-plan acceptance, permission, Git truth, review verdict, or completion proof.
+- Default-write only explicit user requirements, preferences, corrections, decisions, and acceptance criteria when project/change/session identity, source reference/type, timestamp, permission, and non-secret content are clear. Do not ask a redundant per-fact write question in that safe case.
+- If identity, scope, required metadata, or permission is ambiguous, ask one focused scope/identity question or keep the item in the active change artifact; do not create an unscoped record.
+- Never persist secrets, credentials, private data, raw logs, full transcripts, or full file contents. Redact the value and retain only a safe outcome/reference when useful.
+- Model-derived repository facts, patterns, risks, review findings, history/log observations, and procedural rules are not user facts. Keep them as evidence-backed candidates or change-local `Unverified` items. If the existing CLI cannot represent the exact candidate lifecycle, keep the item in the appropriate change artifact instead of inventing a command, schema, or bridge.
+- Memory does not depend on DCP, compression thresholds, stale chat, or old logs. None of those sources has active-task authority.
 - If memory writeback fails, retry once when the fix is obvious. If it still fails, continue safe task progress, keep a pending TodoWrite item for memory writeback, retry before final handoff, and report any remaining failure.
 - If the current directory is not inside a project, stop and report `SETUP_BLOCKED_NO_PROJECT_ROOT`.
-- 🔴 CHECKPOINT: before promoting durable memory, confirm the fact is stable, reusable, evidence-backed, non-secret, and not contradicted by the current user message or DCP summary. If any condition is missing, complete with `--no-durable-memory-promoted` and report the no-promotion reason.
+- 🔴 CHECKPOINT: before any promotion, confirm the existing backend supports the exact candidate/promotion operation and that the item is scoped, reusable, evidence-backed, non-secret, and not contradicted by the active formal contract or current user instruction. Otherwise use `--no-durable-memory-promoted` and keep the item in change-local evidence or mark it `Unverified`.
 
 ## Memory Layers
 
 Task checkpoint:
 - Goal, scope, progress, files touched, and verification evidence.
-- Write for every non-trivial task and meaningful phase transition.
+- Use for deliberate checkpoint/resume continuity; `progress.txt` remains the current execution ledger for a formal change.
 
 Requirement memory:
 - User-stated requirements, preferences, corrections, decisions, and acceptance criteria.
-- Prioritize this layer because it reduces future drift.
+- This is the only default-write layer, and only under the scope/metadata/permission/security gates above.
 
-Durable project finding:
-- Reusable architecture facts, project constraints, and evidence-backed lessons learned.
-- Do not promote ordinary task notes or raw DCP summaries into durable memory.
+Candidate:
+- Model-derived facts or rules with explicit evidence links, never disguised as user facts.
+- Candidate status does not make the item authoritative. Do not promote when support or evidence is uncertain.
 
 Conflict rule:
-- Current user message wins over current chat history, DCP summaries, and memory.
-- DCP compressed summary wins over stale memory for active-task state.
+- Current user instruction and the active formal contract govern the task; fresh filesystem/Git/review/verification evidence governs current state.
+- Memory, handoff, chat summaries, old logs, and task checkboxes are navigation/context only.
 - If memory suggests a conflict that changes the next action, surface it before acting.
 
 Conflict next-action table:
 
 | Conflict found | Next action |
 |---|---|
-| Current user message conflicts with memory | Follow the current user message; do not promote the stale memory. |
-| DCP summary conflicts with memory for active-task state | Follow the DCP summary unless the user corrects it. |
+| Current user instruction or active OpenSpec contract conflicts with memory | Follow the current authority; do not promote the stale memory. |
+| Chat summary, old log, or task checkbox claims completion | Re-read the contract, progress, bounded drift, root/Git identity, and fresh verification; do not infer completion. |
 | Memory claims lack evidence | Treat as context only; mark `[UNVERIFIED]` and avoid durable promotion. |
 | Memory contains possible secret, raw log, or credential | Do not repeat or store it; report a redacted concern. |
 | Conflict changes what you would do next | Stop and ask or state the conflict before acting. |
@@ -153,9 +154,13 @@ Record requirement memory:
 rose-memory remember-requirement \
   --db memory/memory.db \
   --text "<user requirement/preference/correction/decision>" \
-  --source "conversation" \
-  --task-key "<task>"
+  --source "user:conversation:<message-reference>" \
+  --project "<canonical-project>" \
+  --session-key "<session-key>" \
+  --task-key "<change-or-task-key>"
 ```
+
+The CLI records its timestamp. Run this only when the arguments above represent the required project/change/session scope; otherwise keep the item in the active change artifact and resolve scope first.
 
 Retrieve memory context:
 
@@ -170,7 +175,7 @@ Retrieve the focused current-task pack:
 rose-memory pack-current --db memory/memory.db --task-key "<task>" --budget 1200
 ```
 
-After DCP compaction, prefer the compressed summary. Use `pack-current` or this focused fallback only when memory is actually needed:
+During explicit resume, use `pack-current` only as one scoped hydration input after resolving the active project/change/task. Re-read the active OpenSpec contract, `progress.txt`, bounded `drift-log.md`, root/Git state, and fresh review/verification evidence before acting:
 
 ```bash
 rose-memory pack \
@@ -186,7 +191,7 @@ Complete a task with no durable memory promoted:
 rose-memory complete --db memory/memory.db --summary "<completion summary>" --no-durable-memory-promoted
 ```
 
-Most completions should include `--no-durable-memory-promoted`. Use durable promotion only for stable user preferences, repeated corrections, architecture facts, reusable project findings, or evidence-backed decisions.
+Most completions should include `--no-durable-memory-promoted`. Any model-derived architecture fact, project finding, or procedural rule must first remain an evidence-backed candidate and follow the existing explicit candidate/promotion workflow; never promote it directly as requirement memory or invent a promotion path.
 
 ## Success Signal
 

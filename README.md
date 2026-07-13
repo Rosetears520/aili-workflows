@@ -284,14 +284,14 @@ aili-workflows/
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供四个可选 delivery slash command 入口：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。另提供 `/local-review` 作为本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit` 或 `/evolve` 等内部阶段命令。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供且只提供四个 delivery shortcut：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供 `/local-review` 作为非 delivery-mode 的本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime。
 
 ### OpenCode 设置
 
 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
 安装会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`；项目级事实、命令、测试位置、产物落点和本地例外仍通过各项目自己的瘦 `AGENTS.md` 管理。
 
-安装/更新默认会写入 OpenCode 全局配置目录、共享 `$HOME/.agents/skills`，并 best-effort 检测/补装 DCP 与 OpenSpec；不需要这些全局或项目侧效果时，请使用下方 `--skip-*` 选项。
+安装/更新默认会写入 OpenCode 全局配置目录和共享 `$HOME/.agents/skills`。Playwright MCP、CodeGraph 和 OpenSpec 都是显式 opt-in；AILI 不安装、检测、配置、迁移或删除 DCP。
 
 ```bash
 npx -y rose-aili install
@@ -310,9 +310,9 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。`install` 和 `update` 都会默认检测/补装 DCP 与 OpenSpec，并同步 DCP/OpenCode 推荐配置；显式传 `--skip-dcp`、`--skip-openspec` 或 `--skip-opencode-config` 可关闭对应默认行为。`--enable-dcp` / `--enable-openspec` 保留兼容但不再必要。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。`install` 和 `update` 不读取或修改第三方 DCP plugin 状态及用户的 `dcp.json`/`dcp.jsonc`。OpenSpec 仅在显式传 `--enable-openspec` 时检测/安装并运行项目 `init/update`；`--skip-openspec` 可显式保持禁用。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
 
-交互式 `rose-aili install` 会询问是否启用 Playwright MCP、是否安装 CodeGraph OpenCode 集成；DCP、OpenSpec 和 OpenCode config 同步属于 install/update 默认行为，不再询问 yes/no，只有显式 `--skip-dcp`、`--skip-openspec` / `--skip-opencode-config` 才会关闭。交互式 `rose-aili update` 只询问新增的 CodeGraph 集成，不询问 default agent / model。模型偏好只通过 `--model <provider/model>` 非交互设置，始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+交互式 `rose-aili install` 会依次询问 default agent、缺失的 model override、Playwright MCP、CodeGraph 和 OpenSpec；交互式 `update` 只询问 CodeGraph。非交互模式只执行显式 flag 请求的 optional integration。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
 
 ```jsonc
 {
@@ -333,16 +333,13 @@ npx -y rose-aili install --set-default-rose
 npx -y rose-aili install --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --skip-opencode-config
 npx -y rose-aili install --enable-playwright
-npx -y rose-aili install --skip-dcp
 npx -y rose-aili install --enable-codegraph
+npx -y rose-aili install --enable-openspec
 npx -y rose-aili install --skip-openspec
-npx -y rose-aili update --skip-dcp
 npx -y rose-aili update --skip-openspec
 ```
 
-非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 CodeGraph，也不会在未传 `--model` 时静默固定模型。`install` / `update` 会按默认行为检测/补装 DCP 和 OpenSpec；不需要它们时显式加 `--skip-dcp` / `--skip-openspec`。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
-
-DCP 在 `install` 和 `update` 中默认启用：安装器会先用 `opencode plugin list` best-effort 检测插件；未检测到或无法确认时才委托执行 `opencode plugin @tarquinen/opencode-dcp@latest --global`，已安装则不重复安装。无论是否需要补装，都会在 `--opencode-home` 指向的目录写入/合并 `dcp.jsonc`/`dcp.json` 推荐配置（包含 `compress.minContextLimit: "65%"`、`compress.maxContextLimit: "85%"`、range compression、turn protection、deduplication 和 purgeErrors）。已有 `dcp.jsonc`/`dcp.json` 的无关键会尽量保留；符号链接或非普通文件会拒绝写入。该命令使用第三方 `@latest` 包，版本可能漂移；失败只会在 summary 中标记 DCP 可选项失败，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。DCP 只负责 late-stage compression；长任务采用 MiMo-style checkpoint-first，由 ROSE/AILI 在压缩前优先更新 `progress.txt`，并仅在 spec-backed drift/自我纠正、临时决策、取舍、开放问题、未验证假设或需要 DEFINE 回写时更新 `drift-log.md`；旧 `implementation-notes.html` 只作为迁移证据读取，除非当前活动契约明确要求旧 HTML 格式。具体配置见 [`docs/opencode-setup.md`](docs/opencode-setup.md)，重启后可用 `/dcp` 验证配置生效。
+非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 Playwright、CodeGraph、OpenSpec 或模型 override。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
 
 CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
 
@@ -350,7 +347,17 @@ CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @
 
 项目级 `AGENTS.md` 初始化 / 更新应联动检查 CodeGraph：生成或更新 `AGENTS.md` 后先运行/请求 `codegraph status`；如果该仓库尚未初始化，则询问用户是否在当前仓库运行 `codegraph init -i`，同意后再运行 `codegraph status`。CodeGraph 不可用、用户跳过或拒绝时，不阻塞 `AGENTS.md` 完成，但必须在结果中说明没有代码地图覆盖。
 
-OpenSpec 在 `install` 和 `update` 中默认启用，除非显式 `--skip-openspec`；`--enable-openspec` 保留兼容但不再必要。OpenSpec 要求 Node.js `20.19.0+`，会先用 `openspec --version` 检测 CLI；未检测到时运行 `npm install -g @fission-ai/openspec@latest`，然后在当前项目中检测既有 OpenSpec 标记；已有项目运行 `openspec update`，首次项目运行 `openspec init`。扩展 workflow 的 `openspec config profile` 仍是手动后续步骤。
+OpenSpec 是显式 opt-in：只有 `--enable-openspec` 才会先用 `openspec --version` 检测 CLI，必要时运行 `npm install -g @fission-ai/openspec@latest`，再根据当前项目标记运行 `openspec update` 或 `openspec init`。OpenSpec 要求 Node.js `20.19.0+`；扩展 workflow 的 `openspec config profile` 仍是手动后续步骤。
+
+### 分发与来源边界
+
+`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、四个 delivery commands 与独立 `local-review`、`.agents/` 下的 canonical skills/protocols、`manifests/`、两个 AGENTS 模板、`agents_md.py`、Graphify guarded launcher 及其 contract fixture、兼容安装脚本以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime；任何已打包 helper/fixture 都不注册为 command 或 runnable skill。
+
+固定上游材料位于现有 canonical skills 的 `references/upstream/` 中，并由 `manifests/upstream-references.json` 记录精确 pin、blob/hash、license/notice、`0644` mode 和 source→local mapping。上游 `SKILL.md` 以 `SKILL.upstream.md` 保存，脚本必须作为 non-executable data；这些文件随 `.agents/` 作为 inert reference data 打包，但不出现在 component manifest 的 skills 列表中，不获得 routing、approval、permission 或 execution authority。canonical AILI adapters 仍是各 skill 顶层唯一的 `SKILL.md`。
+
+当前分发保持 fail-closed：OpenCode `1.17.18` 临时 installed-catalog 对递归 reference data 的排除仍是 `UV-005`，且当前文件系统不能证明所有 upstream script mode 满足 `0644` 时，不得据此声称 distribution/registration/enablement 或 release readiness。`npm pack --dry-run` 只检查计划包内容，不发布，也不解决这些 runtime/mode 缺口。
+
+Graphify 仅允许在另行明确批准具体 operation、且 guarded launcher 的 provenance/network/environment/output controls 全部满足时启动；否则记录 blocked/`Unverified`，不启动 process。它不属于安装、command、hook、周期任务或 release gate。
 
 安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装全局 `AGENTS.md`、agents、skills 和 commands。
 

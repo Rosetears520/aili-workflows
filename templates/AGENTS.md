@@ -48,7 +48,7 @@ Do not copy broad global operating rules into this file unless this project inte
 - Configuration files: TODO
 - CI/CD files: TODO
 - Generated files: TODO
-- External integrations: TODO
+- External integrations: TODO (list only integrations with current active setup/runtime evidence; do not list removed or historical integrations as optional setup)
 
 ## Project-Specific Rules
 

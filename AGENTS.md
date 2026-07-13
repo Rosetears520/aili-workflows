@@ -42,7 +42,7 @@ Do not copy broad global operating rules into this file unless this project inte
 - Configuration files: `package.json`, `package-lock.json`, `tsconfig.json`, `.gitignore`, `workflow.components.yaml`, `manifests/rose-aili.components.json`, `templates/AGENTS.md`, command prompts, agent prompts, and skill definitions.
 - CI/CD files: `.github/workflows/ci.yml` and `.github/workflows/release.yml`; no `Makefile` is present.
 - Generated files: project-local `AGENTS.md` is generated from `templates/AGENTS.md`; runtime/local state is ignored in `memory/`, `.opencode/`, and `openspec/`.
-- External integrations: OpenCode global config, npm package execution/publishing, GitHub repository URL in `scripts/install_opencode.sh`, optional DCP/OpenSpec/CodeGraph setup, and optional skills with third-party provenance listed in `README.md`.
+- External integrations: OpenCode global config, npm package execution/publishing, GitHub repository URL in `scripts/install_opencode.sh`, optional OpenSpec/CodeGraph setup, and optional skills with third-party provenance listed in `README.md`.
 
 ## Project-Specific Rules
 

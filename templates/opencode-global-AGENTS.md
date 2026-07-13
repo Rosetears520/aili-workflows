@@ -24,8 +24,8 @@ Do not symlink this global file into project roots.
 - Localize AILI/ROSE harness or workflow behavior problems with `skills/harness-issue-triage`; apply approved harness changes through `skills/harness-evolution`.
 - For non-trivial repository work under ROSE, dispatch subagents by default when available; when independent evidence-returning slices exist, prefer parallel research, implementation, review, test, documentation, or security lanes. Subagent output is evidence and recommendation only; ROSE/user keeps the final decision.
 - Use project-local `AGENTS.md` files for project-specific rules. Project facts, repository commands, local test locations, architecture notes, and local exceptions do not belong in this global file.
-- If asked to initialize CodeGraph for a project, confirm the current repository root first, then run only project-local CodeGraph commands such as `codegraph init -i` and `codegraph status` for that repository. Do not batch-initialize other repositories or run `openspec init` without separate explicit approval.
-- When initializing or updating a project `AGENTS.md`, also check CodeGraph readiness for that same project. Run or request `codegraph status` after confirming the repository root. If CodeGraph is not initialized, ask the user whether to run `codegraph init -i` for that repository, then rerun `codegraph status` if approved. If CodeGraph is unavailable, skipped, or not approved, report it as a non-blocking follow-up instead of silently assuming code-map coverage.
+- Use CodeGraph only as optional discovery evidence for the exact current repository root. Confirm that root before every status/query/init operation. If initialization is requested, ask for explicit approval for exactly that one root, then run only root-local commands such as `codegraph init -i` and `codegraph status`; refuse batch or multi-repository initialization even under broad approval, and do not run `openspec init` without separate explicit approval.
+- When initializing or updating a project `AGENTS.md`, check CodeGraph readiness only for that exact current repository root. If CodeGraph is not initialized, ask whether to run `codegraph init -i` for that one root, then rerun `codegraph status` if approved. If unavailable, stale, noisy, skipped, or not approved, fall back to ordinary search/read and report the gap only when material. Always read final files before editing or concluding; CodeGraph is not proof and has no lifecycle, correctness, completion, or readiness authority.
 
 ## Agent Operating Discipline
 
@@ -53,6 +53,25 @@ command result, diff count, validation result, or tool-derived output ·
 system, coherent ≠ real · [GUESS] no basis · [UNVERIFIED] missing or stale
 evidence · [OPEN QUESTION] requires user/source decision. No untagged
 disease, statute, citation, or named entity.
+
+For sourced claims in documents, reports, handoffs, and formal artifacts, use
+a source-qualified double tag when the source class is known, such as
+`[KNOWN|USER]` or `[KNOWN|EXTERNAL]` (localized for user-facing text, for
+example `[已知|用户]` or `[已知|外部]`), and immediately follow the claim with
+its concrete source: a repository path and revision, URL and version/date,
+session or user-decision reference, command/result reference, or equivalent
+reproducible locator. The first tag segment remains the claim status; the
+second identifies only the source class and does not by itself make the claim
+authoritative. A user-sourced claim proves what the user stated or decided
+within the recorded scope; an external-sourced claim proves what that named
+external source states within its cited scope. Do not label unsupported
+user-written content, current code observations, generated output, or
+third-party material as an authoritative product, cross-team, public API,
+schema, deployment, or organizational source. When a claim crosses frontend
+and backend boundaries, record both sides' recognition before relying on it
+as a shared contract; for a backend-only claim, record backend recognition.
+If the required source or recognition is missing, ask the user and keep the
+claim draft, `Unverified`, or blocked rather than starting affected work.
 
 Strict OpenCode adapter: `TAG every claim` means every factual, interpretive, evaluative, implementation-state, verification-state, readiness, citation, named-entity, disease, statute, medical, legal, finance, or repository claim in agent responses, artifacts, and reports gets a claim tag. Non-claim imperatives, headings, labels, and requested output scaffolding do not need tags. If tags would make a required report unreadable, compactly group adjacent claims under the same tag only when the tag truthfully applies to each claim in the group.
 
@@ -151,15 +170,15 @@ Acceptable evidence includes focused tests, related test suites, typecheck, lint
 
 ### 6. Task Continuity
 
-- Use MiMo-style checkpoint-first continuity for long tasks: before context compression, idle continuation, or any step that depends on compressed/raw history, refresh the active contract, changed files, open decisions, verification path, and next action from repository artifacts.
-- Treat roughly 50/70/85 context pressure as workflow checkpoint signals owned by ROSE/AILI documents, not as DCP plugin configuration. Recommended DCP opt-in config is late-stage compression only (`compress.minContextLimit: "65%"`, `compress.maxContextLimit: "85%"`).
-- Do not proactively run manual context compression below 65% context pressure; below 65%, manual `compress` requires an explicit user request, and phase closure, command completion, or a checkpoint signal is not enough.
-- Never compress active, adjacent, recent, or still-evolving discussion.
+- Use provider-neutral checkpoint-first continuity for long tasks. Before resume, idle continuation, or any step that depends on earlier context, resolve the active project/change and re-read the formal contract, current progress, bounded drift, scoped legacy memory, canonical root/Git state, open decisions, fresh review/verification evidence, and next action from repository artifacts.
+- Context pressure, compression thresholds, phase closure, command completion, and checkpoints do not authorize compression, handoff, persistence, lifecycle movement, or execution. Handoff files require an explicit accepted trigger and a repository-local path.
+- Never treat compression state, stale chat summaries, old logs, handoff, memory, generated summaries, or task checkboxes as active-contract, permission, Git-truth, verification, or completion authority.
 - Treat ambiguous "archive" or "归档" requests as target-ambiguous: ask whether the user means docs/artifacts, OpenSpec archive, `progress.txt`, memory, or ending the task before compressing context or writing files.
 - Do not rely on stale memory, old logs, raw context percentages, or ungrounded summaries for the next edit/review/ship step.
 - When a project defines `progress.txt`, use it for current progress, user feedback/corrections, checkpoint ledger, worker dispatches, evidence references, verification/review/security state, blockers, ROSE decisions, and next action.
 - For approved spec-backed implementation, use `drift-log.md` only for spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a chat log, user-feedback ledger, progress ledger, review report, or formal contract substitute. Read legacy `implementation-notes.html` only as migration evidence unless the active contract explicitly requires legacy HTML.
 - Do not store raw logs, full transcripts, secrets, private data, or large dumps in continuity artifacts.
+- Project-local `rose-memory` is legacy/pre-runtime scoped continuity only. Default-write explicit user requirements/preferences/corrections/decisions only when identity, scope, metadata, permission, and content safety are clear; keep model-derived claims as evidence-backed candidates or change-local `Unverified` items.
 
 ## Stop Conditions
 

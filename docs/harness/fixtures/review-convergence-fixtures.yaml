@@ -1,0 +1,244 @@
+{
+  "schema_version": "1.0",
+  "fixture": "review-convergence",
+  "change": "complete-aili-workflow-orchestration",
+  "canonical_owner": "agents/convergence-reviewer.md",
+  "expected_task_count": 74,
+  "task_ids": [
+    "1.1", "1.2", "1.3", "1.4", "1.5", "1.6",
+    "2.1", "2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9",
+    "3.1", "3.2", "3.3", "3.4", "3.5", "3.6",
+    "4.1", "4.2", "4.3", "4.4", "4.5", "4.6",
+    "5.1", "5.2", "5.3", "5.4", "5.5",
+    "6.1", "6.2", "6.3", "6.4", "6.5",
+    "7.1", "7.2", "7.3", "7.4", "7.5",
+    "8.1", "8.2", "8.3", "8.4", "8.5", "8.6", "8.7",
+    "9.1", "9.2", "9.3", "9.4", "9.5", "9.6", "9.7", "9.8",
+    "10.1", "10.2", "10.3", "10.4", "10.5",
+    "11.1", "11.2", "11.3", "11.4", "11.5",
+    "12.1", "12.2", "12.3", "12.4", "12.5", "12.6", "12.7"
+  ],
+  "matrix_fields": [
+    "task_id",
+    "accepted requirement/decision/risk",
+    "expected behavior",
+    "implementation files/artifacts",
+    "fresh tests/inspection/review evidence",
+    "status",
+    "findings",
+    "disposition",
+    "freshness"
+  ],
+  "statuses": ["Done", "Partial", "Missing", "Blocked", "N/A"],
+  "runtime_enforcement": {"id":"UV-001","policy":"Package 12 final lanes require a read-only edit-deny/task-deny overlay","status":"Unverified","reason":"declarative agent and fixture fields do not prove runtime overlay enforcement"},
+  "final_review_overlays": [
+    {"agent":"agents/agent-evaluator.md","edit":"deny","task":"deny"},
+    {"agent":"agents/ai-regression-scout.md","edit":"deny","task":"deny"},
+    {"agent":"agents/code-reviewer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/code-scout.md","edit":"deny","task":"deny"},
+    {"agent":"agents/convergence-reviewer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/doc-researcher.md","edit":"deny","task":"deny"},
+    {"agent":"agents/opensource-sanitizer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/plan-auditor.md","edit":"deny","task":"deny"},
+    {"agent":"agents/pr-test-analyzer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/security-auditor.md","edit":"deny","task":"deny"},
+    {"agent":"agents/silent-failure-reviewer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/spec-miner.md","edit":"deny","task":"deny"},
+    {"agent":"agents/test-coverage-reviewer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/test-engineer.md","edit":"deny","task":"deny"},
+    {"agent":"agents/web-performance-auditor.md","edit":"deny","task":"deny"},
+    {"agent":"agents/web-researcher.md","edit":"deny","task":"deny"}
+  ],
+  "shared_result_envelope": {
+    "result_fields": ["result_id", "trace_id", "lane", "owner", "status", "confidence", "inspected_scope", "checks", "freshness", "skipped_checks", "blockers", "unverified", "findings", "convergence_links", "review_arbitration_ref"],
+    "finding_fields": ["finding_id", "source", "claim", "severity", "evidence_anchors", "affected_requirement", "proposed_disposition", "required_action", "verification"],
+    "proposed_dispositions": ["fix", "refute-with-counter-evidence", "accept-named-risk", "Unverified-block"],
+    "final_disposition_owner": "ROSE"
+  },
+  "arbitration": {
+    "path": "openspec/changes/<change-id>/review-arbitration.md",
+    "create_only_for": ["disputed", "blocking", "cross-session", "materially inconsistent"],
+    "preserve": ["finding_id", "competing claims", "evidence", "counter-evidence", "proposed dispositions", "ROSE disposition", "rationale", "decision owner", "status", "required recheck", "freshness", "Unverified"],
+    "precreate": false
+  },
+  "cases": [
+    {
+      "id": "all-task-one-row",
+      "input": {"task_count": 74, "matrix_row_count": 74, "unique_task_ids": 74, "task_ids_equal_canonical_set": true, "fields_equal_canonical_set": true},
+      "expected": "pass",
+      "reason": "all 74 checklist tasks occur exactly once with all nine fields"
+    },
+    {
+      "id": "task-row-missing",
+      "input": {"task_count": 74, "matrix_row_count": 73, "missing_task_ids": ["7.4"]},
+      "expected": "block",
+      "reason": "a missing task row blocks"
+    },
+    {
+      "id": "task-row-duplicate",
+      "input": {"task_count": 74, "matrix_row_count": 75, "duplicate_task_ids": ["7.4"]},
+      "expected": "block",
+      "reason": "a duplicate task row blocks even when every task ID appears"
+    },
+    {
+      "id": "task-row-undefined",
+      "input": {"task_count": 74, "matrix_row_count": 74, "undefined_task_ids": ["13.1"], "missing_task_ids": ["7.4"]},
+      "expected": "block",
+      "reason": "an undefined row cannot substitute for a canonical task"
+    },
+    {
+      "id": "task-audit-all-five-statuses",
+      "input": {"statuses_seen": ["Done", "Partial", "Missing", "Blocked", "N/A"], "status_vocabulary_exact": true},
+      "expected": "parse-all-and-block-nonpassing",
+      "passing_statuses": ["Done", "N/A"],
+      "blocking_statuses": ["Partial", "Missing", "Blocked"],
+      "reason": "only Done and a separately resolved source-backed N/A can pass"
+    },
+    {
+      "id": "task-audit-na-accepted-source-pass",
+      "input": {"status": "N/A", "accepted_source": "openspec/changes/complete-aili-workflow-orchestration/design.md#review-arbitration-and-convergence", "concrete_rationale": true, "convergence_reviewer_confirmed": true, "rose_resolved": true},
+      "expected": "pass",
+      "reason": "resolved source-backed N/A is accepted"
+    },
+    {
+      "id": "pseudo-complete",
+      "input": {"checkbox": "checked", "task_specific_files": [], "fresh_evidence": [], "claimed_status": "Done"},
+      "expected": "block",
+      "gap": "pseudo-complete"
+    },
+    {
+      "id": "task-status-invalid",
+      "input": {"status": "Complete", "allowed_statuses": ["Done", "Partial", "Missing", "Blocked", "N/A"]},
+      "expected": "block"
+    },
+    {
+      "id": "unchecked-task",
+      "input": {"checkbox": "unchecked", "task_specific_files": ["implemented/file.md"], "fresh_evidence": ["focused inspection"], "claimed_status": "Done"},
+      "expected": "block-until-reconciled",
+      "gap": "unchecked-task"
+    },
+    {
+      "id": "stale-evidence",
+      "input": {"status": "Done", "evidence_target_precedes_final_diff": true, "freshness": "stale"},
+      "expected": "block",
+      "gap": "stale-progress"
+    },
+    {
+      "id": "task-file-mismatch",
+      "input": {"status": "Done", "expected_behavior": "review convergence", "implementation_files": ["unrelated/runtime.ts"], "file_scope_matches_task": false},
+      "expected": "block"
+    },
+    {
+      "id": "task-test-mismatch",
+      "input": {"status": "Done", "expected_behavior": "reject nested final-review dispatch", "fresh_evidence": ["unrelated happy-path test"], "evidence_tests_expected_behavior": false},
+      "expected": "block"
+    },
+    {
+      "id": "na-without-accepted-source",
+      "input": {"status": "N/A", "accepted_source": null, "concrete_rationale": false, "rose_resolved": false},
+      "expected": "block"
+    },
+    {
+      "id": "drift-unrequested",
+      "input": {"task_scope_match": false, "final_diff_contains_unrequested_work": true, "accepted_material_delta": false},
+      "expected": "block",
+      "gap": "unrequested"
+    },
+    {
+      "id": "subagent-nesting-forbidden",
+      "input": {"phase": "Package 12 final review", "lane_permission": "task: allow", "nested_dispatch_attempted": true},
+      "expected": "block",
+      "required": "every final-review lane is read-only, task-denied, and returns directly to ROSE"
+    },
+    {
+      "id": "final-overlay-edit-attempt-denied",
+      "input": {"phase":"Package 12 final review","agent":"agents/test-engineer.md","attempt":"edit tests/workflow-contract-check.test.mjs","overlay_edit":"deny","overlay_task":"deny"},
+      "expected": "deny-before-mutation",
+      "required": "the final-review overlay denies edit and task even when the base role can write tests"
+    },
+    {
+      "id": "diverse-lane-join",
+      "input": {"expected_lanes": ["convergence", "code", "test/coverage", "security", "AI-regression", "silent-failure", "generated/docs/manifests"], "independently_dispatched": true, "read_only": true, "all_return_to": "ROSE", "all_results_use_shared_envelope": true, "all_lanes_joined": true},
+      "expected": "pass"
+    },
+    {
+      "id": "no-majority-vote",
+      "input": {"pass_lanes": 6, "blocking_lanes": 1, "blocking_finding_has_evidence": true, "decision_method": "vote-count"},
+      "expected": "block",
+      "required": "ROSE reconciles evidence; no majority vote or averaged confidence"
+    },
+    {
+      "id": "minority-finding-arbitration",
+      "input": {"pass_lanes": 6, "minority_finding": "material and evidenced", "disputed": true, "counter_evidence_preserved": true, "arbitration_path": "openspec/changes/<change-id>/review-arbitration.md", "disposition": "open"},
+      "expected": "block-until-fixed-refuted-risk-accepted-or-Unverified-block"
+    },
+    {
+      "id":"review-ai-vs-product-routing",
+      "input":{"finding":"prompt routing regression changes product-visible lifecycle behavior","candidate_lanes":["AI-regression","code-review","product decision"]},
+      "expected":"AI-regression and code lanes inspect implementation; unresolved product semantics return to ROSE/user and are not decided by reviewers"
+    },
+    {
+      "id":"review-ai-regression-vs-test-engineer-routing",
+      "input":{"ai_surface":"prompt/agent/skill/model or tool routing/generated-output expectation","ordinary_test_surface":"product-code test design, writing, execution, or coverage"},
+      "expected":{"ai_surface":"ai-regression-scout","ordinary_test_surface":"test-engineer","overlap":"dispatch both with distinct evidence questions"}
+    },
+    {
+      "id": "no-finding-with-scope",
+      "input": {"findings": [], "inspected_scope": ["final diff", "relevant tests"], "checks": ["focused inspection"], "freshness": "current final diff", "skipped_checks": [], "blockers": [], "unverified": []},
+      "expected": "valid-result",
+      "reason": "zero findings is valid only with complete scope and evidence metadata"
+    },
+    {
+      "id": "final-holistic-recheck",
+      "input": {"cycle": 2, "repairs_applied": true, "affected_lanes_rerun": true, "complete_task_matrix_rerun": true},
+      "expected": "continue-reconciliation"
+    },
+    {
+      "id": "max-three-cycle-repair-budget",
+      "input": {"completed_holistic_cycles": 3, "blocking_findings_remain": true, "requested_next_cycle": 4},
+      "expected": "block",
+      "reason": "a fourth holistic cycle is forbidden"
+    },
+    {
+      "id": "repair-budget",
+      "input": {"budget_scope": "single Package 12 holistic loop", "limit": 3, "per_finding_reset": false, "per_lane_reset": false},
+      "expected": "valid"
+    },
+    {
+      "id": "consolidated-final-repair-max-three",
+      "input": {"completed_holistic_cycles": 3, "requested_next_cycle": 4},
+      "expected": "block"
+    },
+    {
+      "id": "consolidated-final-holistic-gate",
+      "input": {"packages_1_through_11_complete": true, "package_12_matrix_complete": true, "fresh_command_matrix": true, "diverse_lanes_joined": true},
+      "expected": "eligible-for-ROSE-reconciliation"
+    },
+    {
+      "id": "material-delta",
+      "input": {"review_finding_changes_scope_or_acceptance": true, "classification": "material-delta", "define_writeback_required": true, "prior_acceptance_stale": true},
+      "expected": "return-to-define-and-block-build-convergence"
+    },
+    {
+      "id": "deferred-P1-findings",
+      "input": {"known_P1_important_findings": 6, "preserved_to_Package12": true, "reported_fixed_without_evidence": false},
+      "expected": "retain-open-for-final-gate"
+    },
+    {
+      "id": "pre-action-safety",
+      "input": {"operation": "dependency/delete/destructive/high-risk", "explicit_operation_approval": false, "mutation_started": false},
+      "expected": "stop-before-action"
+    },
+    {
+      "id": "package-1-11-lightweight-savepoint",
+      "input": {"package": 7, "complete_behavior": true, "savepoint_fields": ["scope", "files changed", "unresolved items", "next package"], "optional_feedback": ["harness", "build", "npm", "diff"], "quality_gate_claimed": false},
+      "expected": "savepoint-only-not-closure"
+    },
+    {
+      "id": "package-local-quality-gate-forbidden",
+      "input": {"package": 7, "mandatory_independent_review": true, "package_closure_from_optional_feedback": true},
+      "expected": "block",
+      "required": "Package 12 is the sole mandatory convergence gate"
+    }
+  ]
+}

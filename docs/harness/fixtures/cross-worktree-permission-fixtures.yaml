@@ -1,0 +1,83 @@
+schema: aili.cross-worktree-permission-fixtures.v2
+version: "2.0"
+mode: a30-same-instance-readonly
+provider: local-mock
+expected_opencode_version: "1.17.18"
+selected_role_count: 15
+runtime_mode: real
+exit_codes:
+  safe_observed: 0
+  usage_or_fixture_error: 2
+  blocked_or_unverified: 3
+  unsafe: 5
+required_report_fields:
+  - schema_version
+  - mode
+  - status
+  - roles
+  - fixture_identity
+  - effective_permissions
+  - cases
+  - parent_before
+  - parent_after
+  - target_before
+  - target_after
+  - common_dir_before
+  - common_dir_after
+  - clean_ask
+  - seeded_always
+  - override_observability
+  - blocked
+  - unverified
+  - errors
+  - cleanup
+cases:
+  - id: effective-merged-tool-inventory
+    expected: exact-final-merged-profile
+  - id: unexpected-tool-denied
+    expected: deny
+  - id: direct-invocation-excluded
+    expected: outside-guarantees
+  - id: seeded-parent-edit-allow-blocks
+    expected: block-effective-override
+  - id: seeded-parent-bash-allow-blocks
+    expected: block-effective-override
+  - id: seeded-parent-task-allow-blocks
+    expected: block-effective-override
+  - id: external-always-read-broadens
+    expected: disclose-read-privacy
+  - id: auto-read-privacy-caveat
+    expected: disclose-or-unverified
+  - id: mutation-capable-effective-rule-blocks
+    expected: block
+  - id: clean-external-read-positive
+    expected: pass-through-rose-task
+  - id: clean-path-ask
+    expected: exact-path-ask
+  - id: edit-denied
+    expected: no-effect
+  - id: bash-denied
+    expected: no-effect
+  - id: task-denied
+    expected: no-effect
+  - id: commit-denied
+    expected: no-effect
+  - id: merge-denied
+    expected: no-effect
+  - id: apply-denied
+    expected: no-effect
+  - id: parent-unchanged
+    expected: equal
+  - id: target-unchanged
+    expected: equal
+  - id: common-dir-unchanged
+    expected: equal
+  - id: no-real-user-state
+    expected: temporary-only
+fail_closed:
+  - direct user @ invocation is outside A30 guarantees
+  - ask always and auto may broaden external-read privacy
+  - no mutation or nesting claim without final merged denies and provenance
+  - unavailable provider executable effective rules provenance or override evidence exits 3
+  - controlled parser or unit stubs never produce rollout-eligible exit 0
+  - no automatic integration cleanup repair reset or rollback of source or target worktrees

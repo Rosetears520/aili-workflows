@@ -1,6 +1,6 @@
 {
   "name": "rose-aili",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "AILI OpenCode workflow installer CLI",
   "license": "MIT",
   "repository": {
@@ -17,8 +17,14 @@
     ".agents/",
     "commands/",
     "manifests/",
+    "templates/AGENTS.md",
     "templates/opencode-global-AGENTS.md",
+    "scripts/agents_md.py",
+    "scripts/graphify_baseline_check.py",
+    "scripts/upstream_reference_check.py",
     "scripts/install_opencode.sh",
+    "docs/harness/fixtures/graphify-local-review-fixtures.yaml",
+    "docs/harness/fixtures/upstream-reference-fixtures.yaml",
     "README.md",
     "docs/opencode-setup.md"
   ],
@@ -26,7 +32,7 @@
     "build": "tsc -p tsconfig.json && node scripts/make-cli-executable.mjs",
     "prepare": "npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/*.test.mjs"
+    "test": "npm run build && node --test tests/*.test.mjs && python -m unittest discover -s tests -p '*.py'"
   },
   "dependencies": {
     "jsonc-parser": "^3.3.1"

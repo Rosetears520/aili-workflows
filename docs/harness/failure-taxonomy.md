@@ -10,6 +10,10 @@
 | Memory provenance gap | memory, docs/protocol | CLI receipt/evidence pointer, no raw DB write |
 | Install path drift | install/setup | setup/script review |
 | Tool misuse or trust issue | tool-policy, system-rules | policy check; security escalation if needed |
+| Direct generated OpenSpec adapter bypasses AILI gates | source-boundary, backend adapter | classify as callable outside AILI guarantees; do not route/control it or accept its output as AILI evidence |
+| Upstream reference appears runnable/discoverable | distribution, source-boundary | block distribution/registration/enablement; verify naming, mode, manifest exclusion, and installed catalog |
+| Cross-root behavior cannot be proven on OpenCode 1.17.18 | tool-policy, subagent-config, environment | fail closed with no dispatch/mutation and preserve the runtime gap as `Unverified` |
+| Graphify requested without exact operation controls | tool-policy, environment | block before process start; request exact operation permission and missing controls |
 
 ## Report First
 

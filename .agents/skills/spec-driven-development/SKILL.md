@@ -19,19 +19,20 @@ Write a structured specification before writing any code. The spec is the shared
 
 **When NOT to use:** Single-line fixes, typo corrections, or changes where requirements are unambiguous and self-contained.
 
-## The Gated Workflow
+## The Validated Workflow
 
-Spec-driven development has four phases. Do not advance to the next phase until the current one is validated.
+Spec-driven development has four phases. Validate each before advancing. Formal AILI work maps SPECIFY/PLAN/TASKS to the active backend's canonical artifacts (for OpenSpec: proposal/specs/design/tasks/interview/context/test-plan) through `aili-delivery-flow`; do not create upstream `tasks/plan.md`, `tasks/todo.md`, public commands, or parallel approval authorities.
 
 ```
 SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
    │          │        │          │
    ▼          ▼        ▼          ▼
- Human      Human    Human      Human
- reviews    reviews  reviews    reviews
+ Validate   Validate Validate   Verify
 ```
 
-🔴 **CHECKPOINT · Phase approval required:** after SPECIFY, PLAN, and TASKS, stop and ask the human to approve, revise, or mark unresolved items as `Open Question` / `Unverified`. Do not treat silence, inferred intent, or a generated draft as approval.
+🔴 **CHECKPOINT · AILI lifecycle gate:** phase validation may require clarification or revision, but is not a separate mandatory lifecycle approval. Resolve or label material `Open Question` / `Unverified` items, persist/re-read canonical artifacts, and preserve final accepted `test-plan.md` as the sole mandatory pre-BUILD user approval. Silence, inferred intent, drafts, and upstream phase language are never approval.
+
+The pinned Addy file under `references/upstream/` is inert reference data. This existing skill is the only runnable adapter; AILI placement, permissions, lifecycle order, material-delta writeback, final test-plan acceptance, and stop conditions override foreign paths and gates.
 
 ### Phase 1: Specify
 
@@ -170,7 +171,7 @@ With the validated spec, generate a technical implementation plan:
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
-🛑 **STOP before TASKS:** do not break work into tasks until the human has approved the plan or explicitly accepted its open risks.
+🛑 **STOP before TASKS:** do not break work into tasks until the plan is coherent and material open risks are resolved or explicitly recorded under the AILI contract. This validation creates no extra approval gate.
 
 ### Phase 3: Tasks
 
@@ -182,7 +183,7 @@ Break the plan into discrete, implementable tasks:
 - Tasks are ordered by dependency, not by perceived importance
 - No task should require changing more than ~5 files
 
-🛑 **STOP before IMPLEMENT:** do not start coding until the task list has human approval and each task has acceptance criteria plus verification.
+🛑 **STOP before IMPLEMENT:** do not start coding until tasks have acceptance criteria plus verification, canonical artifacts are coherent/validated, and final `test-plan.md` has explicit user acceptance under the AILI lifecycle.
 
 **Task template:**
 ```markdown
@@ -228,7 +229,8 @@ The spec is a living document, not a one-time artifact:
 Before proceeding to implementation, confirm:
 
 - [ ] The spec covers all six core areas
-- [ ] The human has reviewed and approved the spec
+- [ ] Canonical spec artifacts have been reviewed and validated
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
 - [ ] The spec is saved to a file in the repository
+- [ ] For formal AILI work, the final `test-plan.md` has explicit user acceptance before implementation

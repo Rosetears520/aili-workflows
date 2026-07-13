@@ -93,7 +93,7 @@ Write `SKILL.md` for agent execution, not for marketing.
 - Keep instructions short enough to load cheaply.
 - Link to `references/` for deep background instead of duplicating it.
 - Put exact, repeatable commands in `scripts/` when reliability matters.
-- Avoid copying long upstream content unless license and source attribution are handled in `README.md`.
+- Avoid copying long upstream content unless exact pin, license, notice, inert placement, and repository provenance data are handled before distribution.
 - If borrowing an external skill pattern, rewrite the workflow in this repository's voice, remove upstream runtime/tool assumptions, and add explicit provenance either in the skill or `README.md`.
 
 A good skill gives the agent enough structure to avoid drift while preserving judgement where the task needs it.
@@ -105,6 +105,10 @@ A good skill gives the agent enough structure to avoid drift while preserving ju
 - Prefer clean-room pattern absorption over vendoring. When text, code, assets, or templates are copied, include license, copyright, source URL, and notice requirements before shipping.
 - Remove foreign runtime assumptions such as project-specific paths, unavailable tools, provider configuration, hosted environments, or branding before adapting a skill to AILI/OpenCode.
 - If provenance is uncertain, mark it `Unverified` and do not present the skill as original or ready for distribution.
+
+### Pinned upstream adaptation
+
+Matt Pocock 的 pinned `writing-great-skills` 与 glossary 仅作为 inert reference data 保存在 `references/upstream/`。本 canonical skill 薄适配 predictability、清晰 invocation branches、information hierarchy/progressive disclosure、single source of truth、可检查 completion criteria，以及 duplication/sediment/no-op pruning。应用时仍以本仓库的 ROSE routing、approval、provenance、artifact placement 和 validation gates 为准；不得注册 upstream frontmatter 或把 reference 当作审批/完整性权威。
 
 ## Freedom-Level Choice
 

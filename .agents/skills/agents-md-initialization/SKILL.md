@@ -68,12 +68,13 @@ If the global installed path is unavailable but the current repository contains 
    - `Project-Specific Testing and Artifact Placement`
    - `Local Overrides`
 4. Do not copy broad global workflow/safety rules into the project file unless the project intentionally strengthens or specializes them.
-5. Check CodeGraph readiness for the same target project after confirming the repository root:
+5. Check CodeGraph readiness only for the exact current repository root after confirming it:
    - run or request `codegraph status` for the target project
-   - if CodeGraph is not initialized, ask whether to run `codegraph init -i` in that repository
+   - if CodeGraph is not initialized, ask whether to run `codegraph init -i` for that exact one root; approval is per-root and is not inferred from broad or neighboring-root approval
    - if approved, run `codegraph init -i` and then `codegraph status`
    - if CodeGraph is unavailable, skipped, or not approved, report it as a non-blocking follow-up
-   - do not initialize multiple repositories and do not run `openspec init` as part of this flow
+   - refuse batch/multi-repository initialization even under broad approval, and do not run `openspec init` as part of this flow
+   - treat CodeGraph as optional discovery only; stale/noisy/unavailable results fall back to ordinary search/read, every final file must still be read, and CodeGraph has no lifecycle/completion authority
 6. Run `check` before completion.
 
 ## Fallbacks and Stop Conditions

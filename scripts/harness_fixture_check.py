@@ -7,6 +7,7 @@ Uses JSON syntax in .yaml files so validation stays Python-stdlib only.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -27,7 +28,7 @@ REQUIRED = {
             "code-reviewer",
             "test-engineer",
             "security-auditor",
-            "goal-mode",
+            "neutral-build",
             "package-queue",
             "external-repo-root",
             "release-readiness",
@@ -97,6 +98,55 @@ REQUIRED = {
         "case_key": "cases",
         "min_cases": 2,
     },
+    "continuity-memory-handoff-fixtures.yaml": {
+        "markers": ["memory-explicit-facts", "memory-candidate", "handoff-trigger", "handoff-no-threshold-trigger", "resume-hydration", "artifact-integrity-documentation-only"],
+        "case_key": "cases",
+        "min_cases": 12,
+        "package": "P3",
+    },
+    "dcp-removal-fixtures.yaml": {
+        "markers": ["INST-005", "malformed-jsonc", "symlink-jsonc", "forbidden_interactions", "@playwright/mcp@0.0.75"],
+        "case_key": "state_cases",
+        "min_cases": 5,
+        "package": "P4",
+    },
+    "cross-worktree-permission-fixtures.yaml": {
+        "markers": ["aili.cross-worktree-permission-fixtures.v2", "effective-merged-tool-inventory", "direct-invocation-excluded", "seeded-parent-edit-allow-blocks", "external-always-read-broadens", "no-real-user-state"],
+        "case_key": "cases",
+        "min_cases": 21,
+        "package": "P6",
+        "format": "text-yaml",
+    },
+    "review-convergence-fixtures.yaml": {
+        "markers": ["all-task-one-row", "task-audit-na-accepted-source-pass", "subagent-nesting-forbidden", "diverse-lane-join", "no-majority-vote"],
+        "case_key": "cases",
+        "min_cases": 25,
+        "package": "P7",
+    },
+    "upstream-reference-fixtures.yaml": {
+        "markers": ["matt-handoff", "addy-idea-refine", "positive", "near-miss", "negative", "upstream_runnable"],
+        "case_key": "cases",
+        "min_cases": 15,
+        "package": "P8",
+    },
+    "graphify-local-review-fixtures.yaml": {
+        "markers": ["strict-local", "no-install", "network-denial-required", "false-run-claim", "argv-newline"],
+        "case_key": "cases",
+        "min_cases": 27,
+        "package": "P9",
+    },
+    "generated-openspec-adapter-fixtures.yaml": {
+        "markers": ["canonical-four-routes-own-gates", "direct-output-no-aili-claim", "lp-identity-natural-decomposed-normalizes-reuse", "automation-modify-documentation-mixed-block"],
+        "case_key": "package_2_cases",
+        "min_cases": 80,
+        "package": "P2",
+    },
+    "workflow-orchestration-fixtures.yaml": {
+        "markers": ["aggregate_traceability", "DEF-E3-TASK-CHECKLIST-AUDIT", "required_fixture_ids", "tests/opencode-permission-probe.test.mjs"],
+        "case_key": "cases",
+        "min_cases": 17,
+        "package": "P11",
+    },
 }
 
 
@@ -126,10 +176,22 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
     if not path.exists():
         return [f"missing fixture: {path}"]
 
-    try:
-        data = load_fixture(path)
-    except ValueError as exc:
-        return [str(exc)]
+    if spec.get("format") == "text-yaml":
+        text = path.read_text(encoding="utf-8")
+        fixture_cases = re.findall(
+            r"^\s*- id:\s*(\S+)\s*\n\s+expected:\s*([^\n]+)\s*$",
+            text,
+            re.MULTILINE,
+        )
+        data = {
+            "cases": [{"id": case_id, "expected": expected.strip()} for case_id, expected in fixture_cases],
+            "text": text,
+        }
+    else:
+        try:
+            data = load_fixture(path)
+        except ValueError as exc:
+            return [str(exc)]
 
     cases = data.get(spec["case_key"])
     if not isinstance(cases, list) or len(cases) < spec["min_cases"]:
@@ -148,6 +210,16 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
         errors.extend(validate_verification_claims(cases, name))
     if name == "subagent-dispatch-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_subagent_dispatch(cases, name))
+    if name in {
+        "continuity-memory-handoff-fixtures.yaml",
+        "dcp-removal-fixtures.yaml",
+        "cross-worktree-permission-fixtures.yaml",
+        "review-convergence-fixtures.yaml",
+        "upstream-reference-fixtures.yaml",
+        "graphify-local-review-fixtures.yaml",
+        "generated-openspec-adapter-fixtures.yaml",
+    }:
+        errors.extend(validate_package_fixture(name, data, cases))
 
     return errors
 
@@ -207,6 +279,182 @@ def require_absent_in_section(relative_path: str, section: str, forbidden: list[
     for marker in forbidden:
         if marker.lower() in lowered:
             errors.append(f"{relative_path}: {label} must not contain {marker!r}")
+    return errors
+
+
+def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
+    errors: list[str] = []
+    ids = [case.get("id") for case in cases if isinstance(case, dict)]
+    duplicate_ids = sorted({case_id for case_id in ids if ids.count(case_id) > 1})
+    if duplicate_ids:
+        errors.append(f"{name}: duplicate case ids {duplicate_ids}")
+
+    required_by_name = {
+        "continuity-memory-handoff-fixtures.yaml": {
+            "memory-explicit-facts", "memory-candidate", "memory-ambiguous-scope",
+            "handoff-content-security", "ideate-define-writeback", "define-ambiguous-change-identity",
+            "handoff-trigger", "handoff-no-threshold-trigger", "resume-hydration", "handoff-resume",
+            "memory-stage1-boundary", "artifact-authority-boundaries", "artifact-integrity-documentation-only",
+        },
+        "cross-worktree-permission-fixtures.yaml": {
+            "effective-merged-tool-inventory", "unexpected-tool-denied", "direct-invocation-excluded",
+            "seeded-parent-edit-allow-blocks", "seeded-parent-bash-allow-blocks",
+            "seeded-parent-task-allow-blocks", "external-always-read-broadens",
+            "auto-read-privacy-caveat", "mutation-capable-effective-rule-blocks",
+            "clean-external-read-positive", "clean-path-ask", "edit-denied", "bash-denied",
+            "task-denied", "commit-denied", "merge-denied", "apply-denied", "parent-unchanged",
+            "target-unchanged", "common-dir-unchanged", "no-real-user-state",
+        },
+        "review-convergence-fixtures.yaml": {
+            "all-task-one-row", "task-row-missing", "task-row-duplicate", "task-row-undefined",
+            "task-audit-all-five-statuses", "task-audit-na-accepted-source-pass", "pseudo-complete",
+            "task-status-invalid", "unchecked-task", "stale-evidence", "task-file-mismatch",
+            "task-test-mismatch", "na-without-accepted-source", "drift-unrequested",
+            "subagent-nesting-forbidden", "diverse-lane-join", "no-majority-vote",
+            "final-overlay-edit-attempt-denied", "review-ai-vs-product-routing",
+            "review-ai-regression-vs-test-engineer-routing",
+        },
+        "generated-openspec-adapter-fixtures.yaml": {
+            "lp-identity-natural-decomposed-normalizes-reuse", "lp-identity-reject-decomposed-nfc",
+            "lp-identity-unicode-byte-oracle", "automation-modify-reject",
+            "automation-mixed-documentation-block", "lp-allocation-race-recompute-once",
+            "lp-allocation-second-race-block", "lp-duplicate-identity-key-hard-block",
+            "routing-natural-aili-vs-direct-adapter", "routing-maximal-compound-no-write",
+            "routing-bare-aili-direct-command-collision", "routing-bare-aili-direct-skill-collision",
+            "routing-interval-objective-ambiguity", "routing-interval-executable-block", "lp-nfc-same-key-race",
+        },
+    }
+    missing = sorted(required_by_name.get(name, set()) - set(ids))
+    if missing:
+        errors.append(f"{name}: missing required package cases {missing}")
+
+    if name == "cross-worktree-permission-fixtures.yaml":
+        exact_cases = [
+            ("effective-merged-tool-inventory", "exact-final-merged-profile"),
+            ("unexpected-tool-denied", "deny"),
+            ("direct-invocation-excluded", "outside-guarantees"),
+            ("seeded-parent-edit-allow-blocks", "block-effective-override"),
+            ("seeded-parent-bash-allow-blocks", "block-effective-override"),
+            ("seeded-parent-task-allow-blocks", "block-effective-override"),
+            ("external-always-read-broadens", "disclose-read-privacy"),
+            ("auto-read-privacy-caveat", "disclose-or-unverified"),
+            ("mutation-capable-effective-rule-blocks", "block"),
+            ("clean-external-read-positive", "pass-through-rose-task"),
+            ("clean-path-ask", "exact-path-ask"),
+            ("edit-denied", "no-effect"), ("bash-denied", "no-effect"),
+            ("task-denied", "no-effect"), ("commit-denied", "no-effect"),
+            ("merge-denied", "no-effect"), ("apply-denied", "no-effect"),
+            ("parent-unchanged", "equal"), ("target-unchanged", "equal"),
+            ("common-dir-unchanged", "equal"), ("no-real-user-state", "temporary-only"),
+        ]
+        observed_cases = [
+            (case.get("id"), case.get("expected")) for case in cases if isinstance(case, dict)
+        ]
+        if observed_cases != exact_cases:
+            errors.append(f"{name}: cases must equal the exact canonical id/expected matrix")
+        text = data.get("text", "")
+        runtime_modes = re.findall(r"^runtime_mode:\s*(\S+)\s*$", text, re.MULTILINE)
+        if runtime_modes != ["real"] or "mode: a30-same-instance-readonly" not in text or "provider: local-mock" not in text:
+            errors.append(f"{name}: runtime mode/provider must be exact A30 real declarations")
+        fields_block = re.search(
+            r"^required_report_fields:\s*\n((?:\s+-\s+[^\n]+\n?)+)", text, re.MULTILINE
+        )
+        observed_fields = re.findall(r"^\s+-\s+([^\s#]+)\s*$", fields_block.group(1), re.MULTILINE) if fields_block else []
+        expected_fields = [
+            "schema_version", "mode", "status", "roles", "fixture_identity", "effective_permissions",
+            "cases", "parent_before", "parent_after", "target_before", "target_after",
+            "common_dir_before", "common_dir_after", "clean_ask", "seeded_always",
+            "override_observability", "blocked", "unverified", "errors", "cleanup",
+        ]
+        if observed_fields != expected_fields:
+            errors.append(f"{name}: required_report_fields differs from the exact operational schema")
+    elif name == "dcp-removal-fixtures.yaml":
+        if data.get("owner_package") != "P4":
+            errors.append(f"{name}: owner_package must be P4")
+        parser_ids = {
+            row.get("id") for row in data.get("parser_cases", []) if isinstance(row, dict)
+        }
+        expected_parser = {
+            "supported-command-option", "unknown-command-option-precedence", "bare-removed-flag",
+            "command-help-invalid-option", "top-level-help-precedence",
+        }
+        if parser_ids != expected_parser:
+            errors.append(f"{name}: parser case ids differ from the exact removed-flag matrix")
+    elif name == "review-convergence-fixtures.yaml":
+        task_path = ROOT / "openspec/changes/complete-aili-workflow-orchestration/tasks.md"
+        canonical_ids = set(re.findall(r"^- \[[ xX]\] (\d+\.\d+)\b", task_path.read_text(encoding="utf-8"), re.MULTILINE))
+        fixture_task_ids = data.get("task_ids")
+        if len(canonical_ids) != 74 or not isinstance(fixture_task_ids, list) or set(fixture_task_ids) != canonical_ids or len(fixture_task_ids) != len(set(fixture_task_ids)):
+            errors.append(f"{name}: task_ids must equal all 74 canonical task checklist rows exactly once")
+        expected_fields = [
+            "task_id", "accepted requirement/decision/risk", "expected behavior",
+            "implementation files/artifacts", "fresh tests/inspection/review evidence",
+            "status", "findings", "disposition", "freshness",
+        ]
+        if data.get("matrix_fields") != expected_fields:
+            errors.append(f"{name}: matrix_fields differs from DEF-E3 canonical order")
+        if data.get("statuses") != ["Done", "Partial", "Missing", "Blocked", "N/A"]:
+            errors.append(f"{name}: status vocabulary differs from DEF-E3")
+        expected_overlay_agents = {
+            "agents/agent-evaluator.md", "agents/ai-regression-scout.md", "agents/code-reviewer.md",
+            "agents/code-scout.md", "agents/convergence-reviewer.md", "agents/doc-researcher.md",
+            "agents/opensource-sanitizer.md", "agents/plan-auditor.md", "agents/pr-test-analyzer.md",
+            "agents/security-auditor.md", "agents/silent-failure-reviewer.md", "agents/spec-miner.md",
+            "agents/test-coverage-reviewer.md", "agents/test-engineer.md",
+            "agents/web-performance-auditor.md", "agents/web-researcher.md",
+        }
+        overlays = data.get("final_review_overlays")
+        overlay_map = {
+            row.get("agent"): row for row in overlays if isinstance(row, dict)
+        } if isinstance(overlays, list) else {}
+        if set(overlay_map) != expected_overlay_agents or len(overlay_map) != len(overlays or []):
+            errors.append(f"{name}: final review overlays must cover every read-only lane exactly once")
+        for agent in sorted(expected_overlay_agents):
+            row = overlay_map.get(agent, {})
+            if row.get("edit") != "deny":
+                errors.append(f"{name}: {agent} final overlay edit must deny")
+            if row.get("task") != "deny":
+                errors.append(f"{name}: {agent} final overlay task must deny")
+        edit_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "final-overlay-edit-attempt-denied"), {})
+        if edit_case.get("input", {}).get("overlay_edit") != "deny" or edit_case.get("expected") != "deny-before-mutation":
+            errors.append(f"{name}: executable final overlay edit attempt must be denied before mutation")
+        reviewer_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "review-ai-vs-product-routing"), {})
+        if reviewer_case.get("input", {}).get("candidate_lanes") != ["AI-regression", "code-review", "product decision"] or "ROSE/user" not in reviewer_case.get("expected", ""):
+            errors.append(f"{name}: AI-vs-product reviewer routing collision differs from the exact contract")
+        routing_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "review-ai-regression-vs-test-engineer-routing"), {})
+        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout", "ordinary_test_surface": "test-engineer", "overlap": "dispatch both with distinct evidence questions"}:
+            errors.append(f"{name}: AI-regression-scout vs test-engineer routing must remain explicit")
+        runtime_enforcement = data.get("runtime_enforcement", {})
+        if runtime_enforcement.get("id") != "UV-001" or runtime_enforcement.get("status") != "Unverified" or "do not prove" not in runtime_enforcement.get("reason", ""):
+            errors.append(f"{name}: final read-only overlay runtime enforcement must remain UV-001 Unverified")
+    elif name == "generated-openspec-adapter-fixtures.yaml":
+        by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+        exact_collisions = {
+            "routing-natural-aili-vs-direct-adapter": "natural AILI BUILD route wins; direct adapter remains outside AILI and is not invoked",
+            "routing-bare-aili-direct-command-collision": "ask one AILI-versus-direct-route question; zero write and execution",
+            "routing-bare-aili-direct-skill-collision": "ask one AILI-versus-direct-route question; zero write and execution",
+            "routing-maximal-compound-no-write": "no-write wins; zero persistence/execution; BUILD and SHIP remain unauthorized",
+            "routing-interval-objective-ambiguity": "ask one documentation-protocol question; zero write and execution",
+            "routing-interval-executable-block": "block executable interval request; zero mutation and LP",
+            "lp-nfc-same-key-race": "one allocation may win; one re-read reuses the same key; no duplicate ID/body",
+        }
+        for case_id, expected in exact_collisions.items():
+            if by_id.get(case_id, {}).get("expected") != expected:
+                errors.append(f"{name}: exact routing collision {case_id} differs")
+    elif name == "upstream-reference-fixtures.yaml":
+        mappings = data.get("required_mappings", [])
+        for mapping in mappings:
+            kinds = {
+                case.get("kind") for case in cases if isinstance(case, dict) and case.get("mapping") == mapping
+            }
+            if kinds != {"positive", "near-miss", "negative"}:
+                errors.append(f"{name}: {mapping} must have positive/near-miss/negative cases")
+        if any(case.get("upstream_runnable") is not False for case in cases if isinstance(case, dict)):
+            errors.append(f"{name}: every upstream reference case must remain non-runnable")
+    elif name == "graphify-local-review-fixtures.yaml":
+        categories = {case.get("category") for case in cases if isinstance(case, dict)}
+        if categories != set(data.get("required_categories", [])):
+            errors.append(f"{name}: cases must cover every required category exactly as declared")
     return errors
 
 
@@ -275,298 +523,40 @@ def validate_skill_routing(cases: list, name: str) -> list[str]:
 
 def validate_command_routing(cases: list, name: str) -> list[str]:
     errors: list[str] = []
+    for mode, scope in [("IDEATE", "evidence-scouting"), ("DEFINE", "artifact-fan-out"), ("BUILD", "implementation-quality"), ("SHIP", "release-readiness")]:
+        case = find_trigger_case(cases, mode)
+        if case is None:
+            errors.append(f"{name}: missing trigger case for {mode}")
+        elif case.get("expected_scope") != scope:
+            errors.append(f"{name}: {mode} expected_scope must be {scope!r}")
 
-    ideate_case = find_trigger_case(cases, "IDEATE")
-    if ideate_case is None:
-        errors.append(f"{name}: missing trigger case for IDEATE")
+    neutral = [case for case in cases if isinstance(case, dict) and case.get("id") == "cmd-build-neutral-queue"]
+    if not neutral:
+        errors.append(f"{name}: missing cmd-build-neutral-queue")
     else:
-        if ideate_case.get("expected_scope") != "evidence-scouting":
-            errors.append(f"{name}: IDEATE expected_scope must be 'evidence-scouting'")
-        errors.extend(require_checks(ideate_case, "expected_delegation", ["code-scout"], name, "IDEATE"))
+        case = neutral[0]
+        if case.get("expected_execution") != "neutral-build" or case.get("package_gate") != "no-per-package-gate":
+            errors.append(f"{name}: neutral BUILD must use no per-package gate")
+        if case.get("final_gate") != "package-12-final-gate":
+            errors.append(f"{name}: neutral BUILD final gate must be Package 12")
+        if case.get("target_repo_root") != "infer-canonical-from-backend-context" or case.get("cwd_authority") is not False:
+            errors.append(f"{name}: neutral BUILD must infer canonical root and reject cwd authority")
+        errors.extend(require_checks(case, "queue_inputs", ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], name, "neutral BUILD"))
 
-    build_case = find_trigger_case(cases, "BUILD")
-    if build_case is None:
-        errors.append(f"{name}: missing trigger case for BUILD")
-    else:
-        if build_case.get("expected_scope") != "implementation-quality":
-            errors.append(f"{name}: BUILD expected_scope must be 'implementation-quality'")
-        errors.extend(require_checks(build_case, "expected_checks", ["code-reviewer", "test-engineer"], name, "BUILD"))
-        errors.extend(require_checks(build_case, "expected_conditional_checks", ["security-auditor"], name, "BUILD"))
-        build_checks = build_case.get("expected_checks", []) + build_case.get("expected_conditional_checks", [])
-        if "release-readiness" in build_checks:
-            errors.append(f"{name}: BUILD must not include release-readiness in any expected check list")
-        goal_cases = [
-            case
-            for case in cases
-            if isinstance(case, dict)
-            and case.get("expected_mode") == "BUILD"
-            and case.get("trigger") is True
-            and case.get("expected_execution") == "goal-mode"
-        ]
-        if not goal_cases:
-            errors.append(f"{name}: missing BUILD goal-mode trigger case")
-        else:
-            goal_case = goal_cases[0]
-            if goal_case.get("expected_package_source") != "package-queue":
-                errors.append(f"{name}: BUILD goal-mode expected_package_source must be 'package-queue'")
-            if goal_case.get("target_repo_root") != "infer-canonical-from-backend-context":
-                errors.append(f"{name}: BUILD goal-mode target_repo_root must infer canonical root from backend context")
-            if goal_case.get("cwd_authority") is not False:
-                errors.append(f"{name}: BUILD goal-mode cwd_authority must be false")
-            errors.extend(require_checks(goal_case, "queue_inputs", ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], name, "BUILD goal-mode"))
-            errors.extend(require_checks(goal_case, "expected_delegation", ["implementer"], name, "BUILD goal-mode"))
-            errors.extend(require_checks(goal_case, "expected_checks", ["code-reviewer", "test-engineer"], name, "BUILD goal-mode"))
-            errors.extend(require_checks(goal_case, "expected_conditional_checks", ["security-auditor"], name, "BUILD goal-mode"))
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "parallelism_analysis",
-                    [
-                        "shared scaffold/source-of-truth work",
-                        "safe parallel lanes",
-                        "serial dependencies",
-                        "concurrent research/review/test/search lanes",
-                        "ownership boundaries",
-                        "join points",
-                        "blockers",
-                        "no-parallel reason",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "lane_preservation_reasons",
-                    ["dependency", "ownership", "verification", "safety", "user-scope"],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "research_first_gate",
-                    [
-                        "official/API docs",
-                        "prior-art",
-                        "fast-changing",
-                        "platform/runtime",
-                        "security/permissions",
-                        "external integrations",
-                        "UI/animation/product-form",
-                        "model uncertainty",
-                        "user-requested research",
-                        "industry/GitHub similar projects",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(require_checks(goal_case, "plan_approval_gate", ["evidence-backed 方案", "approval", "waiver", "UNVERIFIED before implementation"], name, "BUILD goal-mode"))
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "packaging_flow",
-                    [
-                        "confirm target/platform",
-                        "test first",
-                        "repair failures",
-                        "package",
-                        "classify package-time failures",
-                        "repair/retest/repackage",
-                        "artifact path or blocker",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "high_risk_packaging_stop",
-                    [
-                        "signing",
-                        "notarization",
-                        "platform certificates",
-                        "dependency or lockfile changes",
-                        "external publishing",
-                        "destructive cleanup",
-                        "secret handling",
-                        "unsupported platform assumptions",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "stop_conditions",
-                    [
-                        "ambiguous-target",
-                        "missing-readiness",
-                        "external-repo-root",
-                        "high-risk-gate",
-                        "scope-expansion",
-                        "unverifiable-acceptance",
-                        "unavailable-review-lane",
-                        "repair-limit",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
-            errors.extend(require_checks(goal_case, "non_stop_conditions", ["missing-manual-package"], name, "BUILD goal-mode"))
-            errors.extend(require_checks(goal_case, "implementation_objective", ["complete, appropriately scoped, verified", "accepted scope", "not artificially tiny"], name, "BUILD goal-mode"))
-            errors.extend(require_checks(goal_case, "verification_order", ["most relevant focused verification"], name, "BUILD goal-mode"))
-            errors.extend(
-                require_checks(
-                    goal_case,
-                    "cleanup_gate",
-                    [
-                        "branch/status",
-                        "classify dirty paths",
-                        "task-scoped",
-                        "unrelated/pre-existing",
-                        "generated/ignored",
-                        "scratch",
-                        "unknown",
-                        "cleanup proposal",
-                        "approval-gated cleanup",
-                        "push",
-                        "destructive clean/reset",
-                        "branch deletion",
-                        "worktree removal",
-                        "OpenSpec archive",
-                        "stashing unrelated changes",
-                        "deleting user-visible artifacts",
-                        "task-scoped verified commits",
-                        "cleanup package",
-                    ],
-                    name,
-                    "BUILD goal-mode",
-                )
-            )
+    for case in cases:
+        if isinstance(case, dict) and case.get("expected_mode") == "BUILD":
+            if case.get("expected_checks") or case.get("expected_conditional_checks"):
+                errors.append(f"{name}: {case.get('id')} encodes a forbidden per-package mandatory quality gate")
 
-    ordinary_multiunit = [
-        case
-        for case in cases
-        if isinstance(case, dict) and case.get("id") == "ordinary-chat-multiunit-planning"
-    ]
-    if not ordinary_multiunit:
-        errors.append(f"{name}: missing ordinary-chat-multiunit-planning case")
-    else:
-        if ordinary_multiunit[0].get("trigger") is not True:
-            errors.append(f"{name}: ordinary-chat-multiunit-planning must trigger proactive planning")
-        errors.extend(
-            require_checks(
-                ordinary_multiunit[0],
-                "expected_parallelism_analysis",
-                ["parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason"],
-                name,
-                "ordinary-chat-multiunit-planning",
-            )
-        )
-
-    define_case = find_trigger_case(cases, "DEFINE")
-    if define_case is None:
-        errors.append(f"{name}: missing trigger case for DEFINE")
-    else:
-        if define_case.get("expected_scope") != "artifact-fan-out":
-            errors.append(f"{name}: DEFINE expected_scope must be 'artifact-fan-out'")
-        errors.extend(require_checks(define_case, "expected_artifacts", ["interview.md", "test-plan.md"], name, "DEFINE"))
-        errors.extend(require_checks(define_case, "expected_forbidden_artifacts", ["grill.md", "requirements-grilling.md"], name, "DEFINE"))
-        errors.extend(
-            require_checks(
-                define_case,
-                "expected_skills",
-                ["requirements-grilling", "test-document-generator"],
-                name,
-                "DEFINE",
-            )
-        )
-        errors.extend(
-            require_checks(
-                define_case,
-                "expected_readiness",
-                ["READY", "BLOCKED", "WAIVED", "UNVERIFIED"],
-                name,
-                "DEFINE",
-            )
-        )
-
-    ship_case = find_trigger_case(cases, "SHIP")
-    if ship_case is None:
-        errors.append(f"{name}: missing trigger case for SHIP")
-    else:
-        if ship_case.get("expected_scope") != "release-readiness":
-            errors.append(f"{name}: SHIP expected_scope must be 'release-readiness'")
-        errors.extend(
-            require_checks(
-                ship_case,
-                "expected_checks",
-                ["code-reviewer", "test-engineer", "release-readiness", "release-blocker-audit"],
-                name,
-                "SHIP",
-            )
-        )
-        errors.extend(require_checks(ship_case, "expected_conditional_checks", ["security-auditor"], name, "SHIP"))
-
-    local_review_cases = [
-        case
-        for case in cases
-        if isinstance(case, dict)
-        and case.get("expected_mode") == "LOCAL_REVIEW"
-        and case.get("trigger") is True
-    ]
-    if not local_review_cases:
-        errors.append(f"{name}: missing trigger case for LOCAL_REVIEW")
-    else:
-        target_modes = {case.get("target_mode") for case in local_review_cases}
-        for target_mode in ["default-local-changes", "base-branch", "commit", "pr", "OpenSpec change", "focus-adversarial", "repair"]:
-            if target_mode not in target_modes:
-                errors.append(f"{name}: missing /local-review target mode {target_mode!r}")
-        default_cases = [case for case in local_review_cases if case.get("target_mode") == "default-local-changes"]
-        if default_cases:
-            default_case = default_cases[0]
-            if default_case.get("expected_scope") != "local-review-gate":
-                errors.append(f"{name}: /local-review expected_scope must be 'local-review-gate'")
-            errors.extend(require_checks(default_case, "expected_targets", ["staged", "unstaged", "untracked"], name, "LOCAL_REVIEW default"))
-            errors.extend(require_checks(default_case, "expected_report", ["categorized report", "skipped lanes", "Unverified", "PASS_WITH_UNVERIFIED", "no secrets", "no raw logs", "redacted path:line/type evidence"], name, "LOCAL_REVIEW default"))
-            errors.extend(require_checks(default_case, "expected_forbidden", ["OpenCode-owned /review", "replace /ship", "remote mutation"], name, "LOCAL_REVIEW default"))
-        pr_cases = [case for case in local_review_cases if case.get("target_mode") == "pr"]
-        if pr_cases:
-            errors.extend(require_exact_checks(pr_cases[0], "expected_readonly_tools", ["gh pr view", "gh pr diff", "gh pr list --head"], name, "LOCAL_REVIEW pr"))
-            errors.extend(require_checks(pr_cases[0], "expected_forbidden", ["gh api", "gh pr checkout", "gh pr comment", "gh pr review", "gh pr merge", "gh pr create", "gh repo clone", "push", "merge", "comment", "review", "checkout", "clone", "equivalents"], name, "LOCAL_REVIEW pr"))
-        change_cases = [case for case in local_review_cases if case.get("target_mode") == "OpenSpec change"]
-        if change_cases:
-            errors.extend(require_checks(change_cases[0], "expected_artifacts", ["proposal.md", "design.md", "tasks.md", "specs", "interview.md", "test-plan.md", "context.md", "progress.txt", "drift-log.md", "legacy implementation-notes.html", "review-report.md"], name, "LOCAL_REVIEW change"))
-            errors.extend(require_checks(change_cases[0], "expected_acceptance", ["NEEDS_FIXES", "BLOCKED", "PASS_WITH_UNVERIFIED", "user accepts each named Unverified item"], name, "LOCAL_REVIEW change"))
-            errors.extend(require_checks(change_cases[0], "expected_lanes", ["convergence-reviewer"], name, "LOCAL_REVIEW change"))
-            errors.extend(require_checks(change_cases[0], "expected_provenance", ["provenance boundaries", "ecc-code-review-adaptation.md", "review-repair-lane-adaptation.md", "orchestration-adaptation.md", "addyosmani-code-review-rubric.md", "codex-github-compatibility.md", "Codex behavior-only", "no official docs text copied"], name, "LOCAL_REVIEW change"))
-            errors.extend(require_checks(change_cases[0], "expected_rubric", ["five axes", "Critical/Important/Suggestion", "spec/task-first", "concrete fixes", "uncertainty/proof gates"], name, "LOCAL_REVIEW change"))
-        repair_cases = [case for case in local_review_cases if case.get("target_mode") == "repair"]
-        if repair_cases:
-            errors.extend(require_checks(repair_cases[0], "expected_prerequisites", ["categorized report", "explicit authorization", "report before repair", "separate repair ownership", "re-review after fixes", "re-review"], name, "LOCAL_REVIEW repair"))
+    local_modes = {case.get("target_mode") for case in cases if isinstance(case, dict) and case.get("expected_mode") == "LOCAL_REVIEW" and case.get("trigger") is True}
+    for target_mode in ["default-local-changes", "base-branch", "commit", "pr", "OpenSpec change", "focus-adversarial", "repair"]:
+        if target_mode not in local_modes:
+            errors.append(f"{name}: missing /local-review target mode {target_mode!r}")
 
     for internal_command in ["/research", "/review", "/release-blocker-audit"]:
-        matching = [case for case in cases if isinstance(case, dict) and case.get("input", "").startswith(internal_command)]
-        if not matching:
-            errors.append(f"{name}: missing non-trigger case for {internal_command}")
-        elif any(case.get("trigger") is not False for case in matching):
-            errors.append(f"{name}: {internal_command} must remain a non-trigger")
-
-    release_blocker_cases = [
-        case
-        for case in cases
-        if isinstance(case, dict) and case.get("expected_mode") == "SHIP" and case.get("trigger") is True
-    ]
-    if release_blocker_cases:
-        ship_case = release_blocker_cases[0]
-        errors.extend(require_checks(ship_case, "expected_checks", ["release-blocker-audit"], name, "SHIP release-blocker audit"))
-
+        matching = [case for case in cases if isinstance(case, dict) and str(case.get("input", "")).startswith(internal_command)]
+        if not matching or any(case.get("trigger") is not False for case in matching):
+            errors.append(f"{name}: {internal_command} must remain a covered non-trigger")
     return errors
 
 
@@ -611,9 +601,9 @@ def validate_verification_claims(cases: list, name: str) -> list[str]:
 
 def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
     errors: list[str] = []
-    goal_packets = [case for case in cases if isinstance(case, dict) and case.get("id") == "packet-build-goal-mode"]
+    goal_packets = [case for case in cases if isinstance(case, dict) and case.get("id") == "packet-build-neutral-package"]
     if not goal_packets:
-        return [f"{name}: missing packet-build-goal-mode case"]
+        return [f"{name}: missing packet-build-neutral-package case"]
 
     packet = goal_packets[0]
     expected_scalars = {
@@ -625,13 +615,14 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
     }
     for field, expected in expected_scalars.items():
         if packet.get(field) != expected:
-            errors.append(f"{name}: packet-build-goal-mode {field} must be {expected!r}")
-    errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval"], name, "packet-build-goal-mode"))
-    errors.extend(require_checks(packet, "parallelism_analysis", ["parallelism analysis", "no-parallel reason", "join completeness", "package/lane preservation"], name, "packet-build-goal-mode"))
-    errors.extend(require_checks(packet, "join_contract", ["join points", "blockers", "expected evidence"], name, "packet-build-goal-mode"))
-    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "verification", "changed_files", "scope_boundary"], name, "packet-build-goal-mode"))
-    errors.extend(require_checks(packet, "implementation_objective", ["complete, appropriately scoped, verified", "complete task-scoped", "not artificially tiny"], name, "packet-build-goal-mode"))
-    errors.extend(require_checks(packet, "verification_order", ["most relevant focused verification"], name, "packet-build-goal-mode"))
+            errors.append(f"{name}: packet-build-neutral-package {field} must be {expected!r}")
+    errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval", "package-local mandatory quality gate"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "parallelism_analysis", ["parallelism analysis", "no-parallel reason", "join completeness", "package/lane preservation"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "join_contract", ["join points", "blockers", "expected evidence"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "changed_files", "scope_boundary", "lightweight savepoint"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "implementation_objective", ["complete, appropriately scoped, verified", "complete task-scoped", "not artificially tiny"], name, "packet-build-neutral-package"))
+    if packet.get("review_repair", "missing") is not None:
+        errors.append(f"{name}: packet-build-neutral-package review_repair must be null for Package 1-11")
     errors.extend(
         require_checks(
             packet,
@@ -657,7 +648,7 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
                 "cleanup package",
             ],
             name,
-            "packet-build-goal-mode",
+            "packet-build-neutral-package",
         )
     )
 
@@ -675,6 +666,12 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
 def validate_agent_permissions() -> list[str]:
     errors: list[str] = []
     agent_dir = ROOT / "agents"
+    a30_selected = {
+        "agent-evaluator.md", "ai-regression-scout.md", "code-reviewer.md", "code-scout.md",
+        "convergence-reviewer.md", "doc-researcher.md", "opensource-sanitizer.md", "plan-auditor.md",
+        "pr-test-analyzer.md", "security-auditor.md", "silent-failure-reviewer.md", "spec-miner.md",
+        "test-coverage-reviewer.md", "web-performance-auditor.md", "web-researcher.md",
+    }
     for path in sorted(agent_dir.glob("*.md")):
         text = path.read_text(encoding="utf-8")
         if not text.startswith("---\n"):
@@ -687,7 +684,18 @@ def validate_agent_permissions() -> list[str]:
         frontmatter = parts[1]
         if "\npermission:\n" not in frontmatter:
             errors.append(f"{path.relative_to(ROOT)}: missing permission block")
-        if path.name == "rose.md":
+        if path.name in a30_selected:
+            if '\n  "*": deny\n' not in frontmatter:
+                errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing deny-by-default wildcard")
+            if "\n  external_directory: ask\n" not in frontmatter:
+                errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing external_directory ask")
+            for key in ["list", "glob", "grep"]:
+                if f"\n  {key}: allow\n" not in frontmatter:
+                    errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing {key} allow")
+            for key in ["edit", "bash", "task", "lsp", "skill", "webfetch", "websearch"]:
+                if f"\n  {key}: deny\n" not in frontmatter:
+                    errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing {key} deny")
+        elif path.name == "rose.md":
             if "\n  skill: allow\n" not in frontmatter and "\n  \"*\": allow\n" not in frontmatter:
                 errors.append(f"{path.relative_to(ROOT)}: missing skill allowance via permission.skill or wildcard")
         elif "\n  skill: allow\n" not in frontmatter:
@@ -696,6 +704,10 @@ def validate_agent_permissions() -> list[str]:
             errors.append(f"{path.relative_to(ROOT)}: missing permission.read block")
         elif "\n    \"*\": allow\n" not in frontmatter:
             errors.append(f"{path.relative_to(ROOT)}: missing permission.read wildcard allow")
+        if path.name != "rose.md" and path.name not in a30_selected and "\n  external_directory: deny\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: nonselected subagent must deny external_directory")
+        if path.name != "rose.md" and "\n  task: deny\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: non-ROSE subagent must deny task")
     return errors
 
 
@@ -1136,59 +1148,65 @@ def validate_define_artifact_contracts() -> list[str]:
     return errors
 
 
-def validate_build_goal_mode_contracts() -> list[str]:
+def validate_neutral_build_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
-        "commands/build.md": [
-            "autonomous goal mode",
-            "implementation package queue",
-            "target repository root",
-            "allowed external directories",
-            "Do not ask for manual package approval",
-        ],
-        ".agents/skills/aili-delivery-flow/SKILL.md": [
-            "references/build-goal-mode.md",
-            "resolved ready target",
-            "synthesize a package queue",
-        ],
-        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "autonomous goal mode",
-            "synthesize an ordered implementation package queue",
-            "current active contract",
-            "allowed external directories",
-        ],
-        ".agents/skills/aili-delivery-flow/references/backend-routing.md": [
-            "autonomous package queue synthesis",
-            "canonicalizes the target repository root",
-            "allowed external directories",
-        ],
-        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
-            "synthesize an ordered package queue",
-            "scoped subagent packet",
-            "missing manual package text is not a stop condition",
-        ],
-        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
-            "BUILD goal mode",
-            "Target and Repository Root Resolution",
-            "Package Queue Synthesis",
-            "Execution Loop",
-            "Stop Conditions",
-            "allowed external directories",
-        ],
-        "docs/harness/command-lifecycle.md": ["goal mode", "package queue"],
-        "docs/harness/aili-harness-contract.md": ["BUILD goal mode", "package queue"],
+        "commands/build.md": ["neutral", "implementation package queue", "target repository root", "Package 12", "lightweight savepoint", "Do not ask for manual package approval"],
+        ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "resolved ready target", "synthesize a package queue", "Package 12"],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize an ordered implementation package queue", "allowed external directories"],
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["neutral package queue", "canonicalizes the target repository root", "allowed external directories"],
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "scoped subagent packet", "missing manual package text is not a stop condition", "Package 12"],
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "Exactly six inner loops", "Exactly four outer profiles", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "Native command non-ownership"],
+        "docs/harness/command-lifecycle.md": ["lightweight savepoints", "Package 12", "exactly six inner loops"],
+        "docs/harness/aili-harness-contract.md": ["Neutral BUILD execution", "Package 12", "no per-package quality gate"],
     }
-
     for relative, markers in required_markers.items():
-        path = ROOT / relative
-        if not path.exists():
-            errors.append(f"{relative}: missing BUILD goal-mode contract file")
-            continue
-        text = path.read_text(encoding="utf-8")
-        for marker in markers:
-            if marker not in text:
-                errors.append(f"{relative}: missing BUILD goal-mode marker {marker!r}")
+        errors.extend(require_text_markers(relative, markers, "neutral BUILD"))
 
+    active_files = list(required_markers) + [
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
+        ".agents/skills/aili-delivery-flow/references/review-repair-loop.md",
+    ]
+    forbidden = ["goal_id", "goal-style", "scoped goal marker", "scoped BUILD goal", "BUILD Goal Mode", "autonomous goal mode"]
+    for relative in active_files:
+        text = read_repo_text(relative).lower()
+        for marker in forbidden:
+            if marker.lower() in text:
+                errors.append(f"{relative}: forbidden active pseudo-goal semantic {marker!r}")
+    return errors
+
+
+def validate_package5_loop_fixtures() -> list[str]:
+    data = load_fixture(FIXTURE_DIR / "command-routing-fixtures.yaml")
+    cases = data.get("cases", [])
+    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+    required_ids = """loop-six-inner-four-outer loop-turn-executable loop-turn-no-recursion loop-objective-bounded loop-objective-budget-invalid loop-objective-max-attempt-stop loop-objective-exhaustion loop-objective-resume-no-reset loop-review-budget-separate loop-envelope-complete loop-envelope-terminal-writeback budget-representation-objective budget-representation-turn budget-protocol-template-instantiation budget-invalid-iteration-review budget-invalid-time-unit-value budget-invalid-token-unit-value tokens-not-configured-null tokens-requested-accounting-unavailable-prestart tokens-midrun-accounting-loss budget-exhaustion-evidence budget-resume-no-reset lp-budget-valid-instantiation lp-budget-invalid-iteration-zero lp-budget-invalid-iteration-negative lp-budget-invalid-iteration-fractional lp-budget-invalid-iteration-nonnumeric lp-budget-invalid-review-zero lp-budget-invalid-review-negative lp-budget-invalid-review-fractional lp-budget-invalid-review-nonnumeric lp-budget-review-capable-null lp-budget-review-incapable-nonnull budget-iteration-preflight-unit budget-review-preflight-unit budget-time-overshoot-actual budget-token-overshoot-actual budget-resume-preserves-overshoot-accounting loop-interval-protocol-only loop-event-protocol-only loop-automation-no-registration loop-formal-runbook-protocol-only loop-no-background-primitive loop-interval-documentation-ambiguity loop-interval-executable-request-block neutral-build-native-goal-nonownership ordinary-goal-language-preserved native-goal-partii-na def-e2-no-per-package-gate def-e3-final-matrix-compatibility budget-consumed-over-limit-terminal budget-iteration-consumed-over-limit-corruption budget-review-consumed-over-limit-corruption""".split()
+    errors = [f"command-routing-fixtures.yaml: missing Package 5 fixture {case_id}" for case_id in required_ids if case_id not in by_id]
+    taxonomy = by_id.get("loop-six-inner-four-outer", {})
+    if taxonomy.get("inner") != ["question", "delta", "evidence/plan", "neutral BUILD", "review/repair", "convergence"] or taxonomy.get("outer") != ["turn", "objective", "interval", "event"] or taxonomy.get("seventh_loop") is not False:
+        errors.append("command-routing-fixtures.yaml: loop taxonomy must be exactly six inner/four outer with no seventh loop")
+    unavailable = by_id.get("tokens-requested-accounting-unavailable-prestart", {}).get("tokens", {})
+    if unavailable.get("accounting_status") != "unavailable" or unavailable.get("remaining") != unavailable.get("limit"):
+        errors.append("command-routing-fixtures.yaml: unavailable token accounting must preserve requested non-null counters")
+    lost = by_id.get("tokens-midrun-accounting-loss", {}).get("tokens", {})
+    if lost.get("accounting_status") != "lost" or not isinstance(lost.get("consumed"), int):
+        errors.append("command-routing-fixtures.yaml: midrun token loss must preserve non-null counters")
+    if by_id.get("def-e2-no-per-package-gate", {}).get("mandatory_quality_gate") is not False:
+        errors.append("command-routing-fixtures.yaml: DEF-E2 compatibility must forbid per-package mandatory gates")
+    final_case = by_id.get("def-e3-final-matrix-compatibility", {})
+    if final_case.get("review_repair_limit") != 3 or final_case.get("max_holistic_cycles") != 3 or final_case.get("task_matrix") != "canonical-all-task":
+        errors.append("command-routing-fixtures.yaml: DEF-E3 final matrix must be canonical and limited to three cycles")
+    over_limit = by_id.get("budget-consumed-over-limit-terminal", {})
+    if over_limit.get("counter") != {"limit": 3, "consumed": 4, "remaining": 0} or over_limit.get("stop_reason") != "budget-exhausted" or over_limit.get("outcome") != "budget-exhausted" or over_limit.get("resume") != "blocked":
+        errors.append("command-routing-fixtures.yaml: consumed>limit must preserve consumed, clamp remaining, and remain terminal")
+    for case_id in ("budget-iteration-consumed-over-limit-corruption", "budget-review-consumed-over-limit-corruption"):
+        case = by_id.get(case_id, {})
+        if case.get("expected") not in {"corruption-block-no-action", "corruption-block-no-repair"} or case.get("overshoot_allowed") is not False or case.get("resume") != "blocked":
+            errors.append(f"command-routing-fixtures.yaml: {case_id} must treat discrete consumed>limit as corruption and block")
+    automation = by_id.get("loop-automation-no-registration", {})
+    expected_automation = ["install", "register", "run", "modify", "update", "reconfigure", "enable", "reuse"]
+    if automation.get("pure_inputs") != expected_automation or automation.get("mixed_documentation") != "block-whole-request" or automation.get("later_documentation_only") != "may-define-or-reuse-lp":
+        errors.append("command-routing-fixtures.yaml: automation fixture must block pure/mixed requests with zero mutation/LP and require later documentation-only restatement")
     return errors
 
 
@@ -1282,9 +1300,9 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "not artificially tiny patches",
             "run the most relevant focused verification first",
         ],
-        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": [
             "run the most relevant focused tests/checks first",
-            "Run focused verification.",
+            "Run focused verification when useful",
         ],
     }
 
@@ -1327,9 +1345,9 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         else:
             errors.extend(require_absent_in_section("templates/opencode-global-AGENTS.md", verification, ["smallest relevant", "minimal verification", "minimum verification"], "verification-order wording"))
 
-    build_goal_text = read_repo_text(".agents/skills/aili-delivery-flow/references/build-goal-mode.md") if (ROOT / ".agents/skills/aili-delivery-flow/references/build-goal-mode.md").exists() else ""
+    build_goal_text = read_repo_text(".agents/skills/aili-delivery-flow/references/build-execution-loop.md") if (ROOT / ".agents/skills/aili-delivery-flow/references/build-execution-loop.md").exists() else ""
     if "run the smallest relevant tests/checks first" in build_goal_text:
-        errors.append(".agents/skills/aili-delivery-flow/references/build-goal-mode.md: packaging flow must use most relevant focused tests/checks wording")
+        errors.append(".agents/skills/aili-delivery-flow/references/build-execution-loop.md: packaging flow must use most relevant focused tests/checks wording")
 
     active_agents_markers = [
         "<!-- AILI_AGENTS_TEMPLATE_VERSION: 2 -->",
@@ -1448,7 +1466,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
             "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
         ],
-        ".agents/skills/aili-delivery-flow/references/build-goal-mode.md": [
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": [
             "inspect `git status --short --branch`",
             "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",
             "Propose cleanup for remaining residue",
@@ -1470,7 +1488,8 @@ def main() -> int:
     errors.extend(validate_command_contracts())
     errors.extend(validate_local_review_gate_contracts())
     errors.extend(validate_define_artifact_contracts())
-    errors.extend(validate_build_goal_mode_contracts())
+    errors.extend(validate_neutral_build_contracts())
+    errors.extend(validate_package5_loop_fixtures())
     errors.extend(validate_traceability_contracts())
     errors.extend(validate_complete_scoped_work_contracts())
 

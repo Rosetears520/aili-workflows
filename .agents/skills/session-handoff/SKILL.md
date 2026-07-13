@@ -5,25 +5,25 @@ description: 当用户明确要求交接、恢复提示或会话 handoff 时，�
 
 # Session Handoff
 
-这个技能用于当前任务交接，不是长期 memory。只有用户明确要求 handoff，或后续已批准的命令合同明确要求写 handoff 时，才创建或更新交接文件。
+这个技能用于给下一模型导航当前任务，不是长期 memory、正式合同、权限、Git 真相、验证结果或完成证明。只有用户明确要求 handoff、已接受生命周期明确指定 handoff 点，或用户明确选择会话切换/blocked-state 交接时，才创建或更新交接文件。
 
 ## 什么时候使用
 
 - 用户说“生成 handoff / 交接文档 / 下一 session 继续提示 / 帮我恢复上下文”。
-- 长会话、压缩前、BLOCKED/IDLE、切换 session 时，且用户明确要求保存交接。
+- BLOCKED/IDLE、切换 session 或恢复场景中，用户明确选择保存交接。
 - OpenSpec change、计划文件、测试文档或实现包需要给下一位 agent 接续。
 
-普通任务不要自动创建 handoff 文件。可以在最终回复里简短总结，但不要写文件，除非用户明确要求。
+普通任务不要自动创建 handoff 文件。上下文比例、压缩/DCP、阶段结束、命令完成、checkpoint 或后台 hook 都不是自动触发器；没有明确触发时只更新正常 progress/checkpoint（如适用），不要创建 handoff。
 
 ## 默认位置
 
 - OpenSpec change：`openspec/changes/<change-id>/handoff.md`
 - 已存在 current-task 目录：写入该任务目录下的 `handoff.md`
-- 非 OpenSpec 且无明确目录：先问用户放哪里
+- 非 OpenSpec 且无明确目录：先问一次用户选择 repository-local 路径
 
 不要默认写入 OS temp 目录、全局 docs/current、SQLite durable memory、或不相关目录。
 
-🔴 CHECKPOINT / 🛑 STOP：写入或更新文件前，先确认三件事：目标路径已知且在任务范围内、内容不含 secrets/raw logs/full files、用户或上游合同明确允许写 handoff。任一条件不满足，只在回复中给草稿，不创建文件。
+🔴 CHECKPOINT / 🛑 STOP：写入或更新文件前，先确认三件事：目标路径已知、位于已确认 repository root 内且在任务范围内；内容不含 secrets/raw logs/full files/private data；明确触发已存在。任一条件不满足，只在回复中给脱敏草稿，不创建文件。
 
 ## Handoff 字段
 
@@ -32,13 +32,15 @@ description: 当用户明确要求交接、恢复提示或会话 handoff 时，�
 
 ## Goal
 
-## Active Contract
+## Active Change / Contract References
 
 ## Lifecycle / Backend
 
 ## Scope Boundary
 
-## Touched Files / Artifacts
+## Completed / Pending / Blocked Packages
+
+## Touched Files / Artifact References
 
 ## Evidence Anchors
 
@@ -56,6 +58,8 @@ description: 当用户明确要求交接、恢复提示或会话 handoff 时，�
 
 ## Next Action
 
+## Forbidden Actions
+
 ## Suggested Next-Session Prompt
 ```
 
@@ -71,7 +75,20 @@ MUST NOT include:
 - unredacted private data
 - durable memory promotion by default
 
-如果内容适合长期复用项目记忆，另走 `rose-memory`，并只写 evidence-backed durable finding 或 requirement memory。
+如果内容适合项目记忆，另走 `rose-memory` 的独立 scope/metadata/permission/security gate；创建 handoff 本身不得自动 promotion。
+
+## Resume revalidation
+
+恢复时先把 handoff 当作路径索引，而不是状态事实：
+
+1. 重新确认 canonical repository root、worktree、branch/HEAD、dirty/untracked 状态和当前 session 权限；外部 root 重新取得当前 session 的明确批准。
+2. 重新读取 active OpenSpec proposal/specs/design/tasks、`interview.md`、已接受的 `test-plan.md`、`context.md`、`progress.txt` 和 bounded `drift-log.md`。
+3. 按当前 diff/scope/risk 检查 review/test/security/verification evidence 的 freshness，重跑 stale、缺失或受影响的检查。
+4. 对 handoff 与当前证据的冲突标记 `Open Question` / `Unverified` 并停止受影响动作；不得从 handoff 推断授权、完成或 lifecycle phase。
+
+## Pinned upstream adaptation
+
+Matt Pocock 的 pinned `handoff` 原文仅作为 inert reference data 保存在 `references/upstream/`。本 canonical skill 薄适配其 compact、引用已有 artifacts、不重复全文、脱敏和建议下一步 skills 的做法；AILI 规则优先：写入已确认的 repository-local 目标，不写 OS temp，触发、权限、artifact authority、resume revalidation 和 stop conditions 仍由当前 lifecycle contract 决定。不得加载该 reference 为第二个 skill，或从其 frontmatter 推断权限。
 
 ## Fallbacks
 

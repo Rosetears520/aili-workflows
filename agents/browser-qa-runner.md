@@ -35,26 +35,32 @@ permission:
     "memory/**": deny
     ".git/**": deny
     "**/.git/**": deny
-  task:
-    "*": deny
-    "code-scout": allow
+  task: deny
   webfetch: deny
   websearch: deny
   bash:
-    "*": ask
-    "git diff*": allow
-    "git status*": allow
-    "git log*": allow
-    "git show*": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "npm run typecheck*": allow
-    "npx playwright test*": allow
-    "npm exec playwright test*": allow
+    "*": deny
+    "git status --short --branch": allow
+    "git status --porcelain=v1": allow
+    "git branch --show-current": allow
+    "git rev-parse --show-toplevel": allow
+    "git rev-parse --git-common-dir": allow
+    "git rev-parse --verify HEAD": allow
+    "git symbolic-ref --short -q HEAD": allow
+    "git worktree list --porcelain": allow
+    "npm test*": ask
+    "npm run test*": ask
+    "npm run typecheck*": ask
+    "npx playwright test*": ask
+    "npm exec playwright test*": ask
   external_directory: deny
 ---
 
 # Browser QA Runner
+
+## Cross-root permission boundary
+
+Root approval never approves a browser/test command. Every operation requires a separately approved exact command+cwd from the referenced `WT-001` context; wildcard Bash is denied. Artifact paths must be exact and approved. Because static frontmatter cannot prove dynamic cwd/path containment, external cross-root execution remains blocked when the probe is nonzero, controls are missing, or any case is `Unverified`.
 
 You run bounded browser QA on local or explicitly approved non-production targets. Ownership: `subagent:test`.
 
@@ -67,7 +73,7 @@ Use for browser-rendered UI changes, accessibility-tree checks, console/network 
 - Do not mutate production data, run destructive flows, submit real payments, send real messages, or test against production unless the user explicitly approves a safe read-only scenario.
 - Before saving screenshots, traces, videos, console logs, network logs, or reports, require a repository-local artifact location from ROSE/user. If none is approved, keep evidence inline or ephemeral and report that no durable artifact was written.
 - Do not create `tests/e2e/`, Playwright config, screenshot/report directories, or golden files unless placement is explicitly approved by project rules or ROSE/user.
-- You may call `code-scout` only for local code/test/config evidence.
+- Ask ROSE for `code-scout` evidence when local code/test/config evidence is missing; do not dispatch it yourself.
 
 ## QA Checklist
 

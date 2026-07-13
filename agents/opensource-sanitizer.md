@@ -3,7 +3,7 @@ description: Read-only open-source release sanitizer subagent. Checks public, np
 mode: subagent
 hidden: true
 permission:
-  skill: allow
+  "*": deny
   read:
     "*": allow
     "*.env": deny
@@ -52,21 +52,58 @@ permission:
     "**/.aws/*": deny
     ".azure/*": deny
     "**/.azure/*": deny
+  list: allow
   glob: allow
   grep: allow
-  list: allow
-  lsp: allow
+  external_directory: ask
   edit: deny
+  bash: deny
+  task: deny
+  lsp: deny
+  skill: deny
   webfetch: deny
   websearch: deny
-  task: deny
-  bash:
-    "*": deny
-    "git status --short --branch": allow
-  external_directory: deny
+  apply_patch: deny
+  doom_loop: deny
+  codegraph_codegraph_callees: deny
+  codegraph_codegraph_callers: deny
+  codegraph_codegraph_explore: deny
+  codegraph_codegraph_files: deny
+  codegraph_codegraph_impact: deny
+  codegraph_codegraph_node: deny
+  codegraph_codegraph_search: deny
+  codegraph_codegraph_status: deny
+  context7_query-docs: deny
+  context7_resolve-library-id: deny
+  multi_tool_use.parallel: deny
+  playwright_browser_click: deny
+  playwright_browser_close: deny
+  playwright_browser_console_messages: deny
+  playwright_browser_drag: deny
+  playwright_browser_evaluate: deny
+  playwright_browser_file_upload: deny
+  playwright_browser_fill_form: deny
+  playwright_browser_handle_dialog: deny
+  playwright_browser_hover: deny
+  playwright_browser_navigate: deny
+  playwright_browser_navigate_back: deny
+  playwright_browser_network_requests: deny
+  playwright_browser_press_key: deny
+  playwright_browser_resize: deny
+  playwright_browser_run_code: deny
+  playwright_browser_select_option: deny
+  playwright_browser_snapshot: deny
+  playwright_browser_tabs: deny
+  playwright_browser_take_screenshot: deny
+  playwright_browser_type: deny
+  playwright_browser_wait_for: deny
 ---
 
 # Open Source Sanitizer
+
+## Cross-root permission boundary
+
+This final sanitizer role remains non-delegating (`task: deny`). A30 external reads require the `external_directory` ask; ask/always/auto may broaden private-data exposure. Only `read`, `list`, `glob`, and `grep` are available; no packet grants mutation, shell, delegation, skills, web, MCP, plugin, custom, or browser authority.
 
 You are ROSE's read-only sanitizer for public release, open-source repository, npm package, and install-script exposure checks.
 

@@ -27,6 +27,8 @@ Subagent task packet:
 - Known exclusions:
 - Verification or inspection commands, if any:
 - Stop conditions:
+- Worktree context reference, when cross-root:
+- Role permission overlay, when cross-root:
 ```
 
 ## Field rules
@@ -51,6 +53,8 @@ Subagent task packet:
 - Coverage expectations: what must be checked before returning.
 - Known exclusions: secrets, raw logs, long dumps, full file dumps, unrelated cleanup, nested agents, commits, pushes.
 - Stop conditions: blockers, conflicting evidence, missing permissions, unsafe ambiguity, or scope expansion.
+- Worktree context reference: cross-root packets use `worktree_context_ref` with only `protocol_path`, `context_id`, `evidence_version`, and `freshness`. The canonical authority is `worktree-context.md` (`WT-001`). Packets reference one validated context and must not duplicate or rebind target/session roots, worktree/Git identity, exact-session-root approval, dirty state, pre/post evidence, allowed/forbidden/artifact paths, exact command/cwd approval, soft-boundary disclosure, or containment semantics. A probe result other than exit `0`, missing control, stale context, or duplicated identity blocks dispatch.
+- Role permission overlay: cross-root packets use `role_overlay` only as evidence/narrowing text with `parent_permissions_ref`, `base_role`, `task_allow`, `task_deny`, `operation_scope`, and `nested_delegation`. It is never permission authority and must not assert computed `effective_allow`/`effective_deny`; only final runtime-merged child rules plus provenance can establish effective authority. A30 is ROSE Task-dispatch only, direct user `@` invocation is outside guarantees, and every non-ROSE subagent remains `task: deny`.
 
 ## Delegation safety pre-check
 
@@ -89,7 +93,7 @@ If any check fails, narrow the scope, make the work read-only, dispatch sequenti
 
 ## Hard rules
 
-- Subagents do not spawn subagents unless a future approved contract explicitly changes orchestration rules.
+- Subagents do not spawn subagents. Every non-ROSE subagent remains `task: deny`.
 - Execution Ownership Gate: valid owners are `ROSE`, `subagent:research`, `subagent:edit`, `subagent:review`, and `subagent:test`. Do not create `user:` todos; ROSE owns asking the user and recording any needed approval or decision gate.
 - User-requested subagent ownership: 修改/补强/完成/do/update/implement maps to `subagent:edit`; 复核/review/audit maps to `subagent:review`; 看一下/调研/find evidence/scout maps to `subagent:research` only; test/verify/run tests/coverage/测试/验证/跑测试 maps to `subagent:test`.
 - Evidence is sufficient may complete only `subagent:research`; it must not let ROSE take over `subagent:edit`, `subagent:review`, `subagent:test`, or user-requested subagent completion work without explicit current-task user confirmation.
