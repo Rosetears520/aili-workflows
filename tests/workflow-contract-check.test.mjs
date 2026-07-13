@@ -83,6 +83,42 @@ async function saveJson(root, relative, value) {
   await writeFile(path.join(root, relative), `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
+async function writeSyntheticOpenSpecFixture(root) {
+  const fixture = await loadJson(root, workflowFixture);
+  const adapters = await loadJson(root, generatedFixture);
+  const changeRoot = path.join(root, "openspec/changes", change);
+  const taskIds = fixture.aggregate_traceability.task_evidence_catalog.map((row) => row.task_id);
+  assert.equal(taskIds.length, 74);
+
+  await mkdir(path.join(changeRoot, "specs/codegraph-evidence-provider"), { recursive: true });
+  await mkdir(path.join(changeRoot, "specs/graphify-periodic-review"), { recursive: true });
+  await mkdir(path.join(root, "openspec/changes/integrate-codegraph-graphify-workflow"), { recursive: true });
+  await writeFile(
+    path.join(changeRoot, "tasks.md"),
+    `${taskIds.map((taskId) => `- [ ] ${taskId} Synthetic canonical task ${taskId}`).join("\n")}\n`,
+    "utf8"
+  );
+  await writeFile(path.join(changeRoot, "design.md"), "# Synthetic canonical workflow design\n", "utf8");
+  await writeFile(
+    path.join(changeRoot, "specs/codegraph-evidence-provider/spec.md"),
+    "# Synthetic CodeGraph evidence provider contract\n",
+    "utf8"
+  );
+  await writeFile(
+    path.join(changeRoot, "specs/graphify-periodic-review/spec.md"),
+    "# Synthetic Graphify periodic review contract\n",
+    "utf8"
+  );
+  for (const adapter of adapters.generated_adapter_boundary.direct_adapter_cases) {
+    const target = path.join(root, adapter.adapter_path);
+    await mkdir(path.dirname(target), { recursive: true });
+    const content = adapter.adapter_path.startsWith(".opencode/commands/")
+      ? `# Synthetic OpenSpec adapter\nRoute: /${path.basename(adapter.adapter_path, ".md")}\n`
+      : `---\ngeneratedBy: openspec\n---\n# Synthetic OpenSpec adapter\n`;
+    await writeFile(target, content, "utf8");
+  }
+}
+
 test("Package 11 aggregate checkers derive canonical evidence and reject mutated contracts", { timeout: 180_000 }, async (t) => {
   const scratch = await mkdtemp(path.join(tmpdir(), "aili-p11-contract-"));
   const root = path.join(scratch, "repo");
@@ -91,9 +127,10 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     filter(source) {
       const relative = path.relative(sourceRoot, source);
       const first = relative.split(path.sep)[0];
-      return ![".git", ".codegraph", "node_modules", "dist", "memory", "__pycache__", "ideas"].includes(first);
+      return ![".git", ".codegraph", "node_modules", "dist", "memory", "__pycache__", "ideas", "openspec"].includes(first);
     },
   });
+  await writeSyntheticOpenSpecFixture(root);
 
   const pristineWorkflow = await readFile(path.join(root, workflowFixture), "utf8");
   const pristineGenerated = await readFile(path.join(root, generatedFixture), "utf8");
