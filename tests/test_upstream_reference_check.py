@@ -393,6 +393,20 @@ class MutationTests(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["closures"][0]["mappings"][0]["mode"] = "0755"
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        package_files = {
+            "manifests/upstream-references.json",
+            manifest["checker"],
+            manifest["fixture"],
+            manifest["component_manifest"],
+            manifest["package_manifest"],
+        }
+        for closure in manifest["closures"]:
+            package_files.update((closure["license_local_path"], closure["notice_local_path"]))
+            package_files.update(mapping["local_path"] for mapping in closure["mappings"])
+        (self.root / "package.json").write_text(
+            json.dumps({"name": "mode-policy-fixture", "version": "1.0.0", "files": sorted(package_files)}),
+            encoding="utf-8",
+        )
         args = argparse.Namespace(
             project=str(self.root), manifest="manifests/upstream-references.json",
             fixture="docs/harness/fixtures/upstream-reference-fixtures.yaml",
