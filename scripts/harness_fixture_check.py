@@ -282,6 +282,41 @@ def require_absent_in_section(relative_path: str, section: str, forbidden: list[
     return errors
 
 
+def canonical_task_ids() -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    catalog_path = FIXTURE_DIR / "workflow-orchestration-fixtures.yaml"
+    try:
+        catalog = load_fixture(catalog_path).get("aggregate_traceability", {}).get("task_evidence_catalog")
+    except ValueError as exc:
+        return [], [str(exc)]
+    if not isinstance(catalog, list):
+        return [], [f"{catalog_path.name}: task_evidence_catalog must be a list"]
+
+    catalog_ids = [row.get("task_id") if isinstance(row, dict) else None for row in catalog]
+    catalog_format_valid = all(
+        isinstance(task_id, str) and re.fullmatch(r"\d+\.\d+", task_id) is not None
+        for task_id in catalog_ids
+    )
+    if (
+        len(catalog_ids) != 74
+        or not catalog_format_valid
+        or len(catalog_ids) != len(set(catalog_ids))
+    ):
+        errors.append(
+            f"{catalog_path.name}: task_evidence_catalog must contain exactly 74 unique task ids in N.N format"
+        )
+
+    task_path = ROOT / "openspec/changes/complete-aili-workflow-orchestration/tasks.md"
+    if task_path.exists():
+        task_ids = re.findall(r"^- \[[ xX]\] (\d+\.\d+)\b", task_path.read_text(encoding="utf-8"), re.MULTILINE)
+        if len(task_ids) != 74 or len(task_ids) != len(set(task_ids)) or set(task_ids) != set(catalog_ids):
+            errors.append(
+                f"{task_path}: checklist ids must equal the tracked 74-task evidence catalog exactly once"
+            )
+        return task_ids, errors
+    return catalog_ids, errors
+
+
 def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
     errors: list[str] = []
     ids = [case.get("id") for case in cases if isinstance(case, dict)]
@@ -381,10 +416,14 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         if parser_ids != expected_parser:
             errors.append(f"{name}: parser case ids differ from the exact removed-flag matrix")
     elif name == "review-convergence-fixtures.yaml":
-        task_path = ROOT / "openspec/changes/complete-aili-workflow-orchestration/tasks.md"
-        canonical_ids = set(re.findall(r"^- \[[ xX]\] (\d+\.\d+)\b", task_path.read_text(encoding="utf-8"), re.MULTILINE))
+        canonical_ids, canonical_errors = canonical_task_ids()
+        errors.extend(canonical_errors)
         fixture_task_ids = data.get("task_ids")
-        if len(canonical_ids) != 74 or not isinstance(fixture_task_ids, list) or set(fixture_task_ids) != canonical_ids or len(fixture_task_ids) != len(set(fixture_task_ids)):
+        fixture_ids_valid = isinstance(fixture_task_ids, list) and all(
+            isinstance(task_id, str) and re.fullmatch(r"\d+\.\d+", task_id) is not None
+            for task_id in fixture_task_ids
+        )
+        if not fixture_ids_valid or set(fixture_task_ids) != set(canonical_ids) or len(fixture_task_ids) != len(set(fixture_task_ids)):
             errors.append(f"{name}: task_ids must equal all 74 canonical task checklist rows exactly once")
         expected_fields = [
             "task_id", "accepted requirement/decision/risk", "expected behavior",

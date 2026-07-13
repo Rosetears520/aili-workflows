@@ -152,6 +152,7 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     await writeFile(path.join(root, "manifests/rose-aili.components.json"), pristineManifest, "utf8");
     await writeFile(path.join(root, "package.json"), pristinePackage, "utf8");
     await writeFile(path.join(root, "workflow.components.yaml"), pristineComponents, "utf8");
+    await writeSyntheticOpenSpecFixture(root);
   });
 
   await t.test("emits stable JSON and exit contracts for all three profiles", () => {
@@ -453,6 +454,33 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     const result = run(root, ["scripts/harness_fixture_check.py"]);
     assert.equal(result.status, 1, result.stdout + result.stderr);
     assert.match(result.stdout, /test-engineer.*edit.*deny/i);
+  });
+
+  await t.test("harness fixture check derives all 74 task ids from the tracked catalog without OpenSpec", async () => {
+    await rm(path.join(root, "openspec"), { recursive: true, force: true });
+    const result = run(root, ["scripts/harness_fixture_check.py"]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+  });
+
+  await t.test("harness fixture check rejects a shrunken tracked task catalog without OpenSpec", async () => {
+    await rm(path.join(root, "openspec"), { recursive: true, force: true });
+    const fixture = await loadJson(root, workflowFixture);
+    fixture.aggregate_traceability.task_evidence_catalog = fixture.aggregate_traceability.task_evidence_catalog.slice(1);
+    await saveJson(root, workflowFixture, fixture);
+    const result = run(root, ["scripts/harness_fixture_check.py"]);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /task_evidence_catalog must contain exactly 74 unique task ids/i);
+  });
+
+  await t.test("harness fixture check rejects duplicate tracked task ids without OpenSpec", async () => {
+    await rm(path.join(root, "openspec"), { recursive: true, force: true });
+    const fixture = await loadJson(root, workflowFixture);
+    const catalog = fixture.aggregate_traceability.task_evidence_catalog;
+    catalog[catalog.length - 1] = structuredClone(catalog[0]);
+    await saveJson(root, workflowFixture, fixture);
+    const result = run(root, ["scripts/harness_fixture_check.py"]);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stdout, /task_evidence_catalog must contain exactly 74 unique task ids/i);
   });
 
   await t.test("distinguishes negative documentation but rejects an unsupported active concept", async () => {
