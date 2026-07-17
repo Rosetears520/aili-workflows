@@ -25,12 +25,9 @@ REQUIRED = {
             "/local-review",
             "code-scout",
             "implementer",
-            "code-reviewer",
-            "test-engineer",
-            "security-auditor",
             "neutral-build",
-            "package-queue",
-            "external-repo-root",
+            "active-contract-queue",
+            "IMPLEMENTED_TARGETED_VERIFIED",
             "release-readiness",
             "release-blocker-audit",
             "local-review-gate",
@@ -64,10 +61,10 @@ REQUIRED = {
             "official/API docs",
             "evidence-backed 方案",
             "UNVERIFIED before implementation",
-            "test first",
             "complete, appropriately scoped, verified",
             "not artificially tiny",
-            "most relevant focused verification",
+            "risk-or-need-triggered-feedback",
+            "one minimal completion check",
             "classify dirty paths",
             "approval-gated cleanup",
             "cleanup package",
@@ -84,7 +81,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "package-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "most relevant focused verification", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason"],
         "case_key": "packet_cases",
         "min_cases": 3,
     },
@@ -111,14 +108,12 @@ REQUIRED = {
         "package": "P4",
     },
     "cross-worktree-permission-fixtures.yaml": {
-        "markers": ["aili.cross-worktree-permission-fixtures.v2", "effective-merged-tool-inventory", "direct-invocation-excluded", "seeded-parent-edit-allow-blocks", "external-always-read-broadens", "no-real-user-state"],
-        "case_key": "cases",
-        "min_cases": 21,
+        "markers": ["aili.cross-worktree-permission-fixtures.v3", "historical_a30", "static_mandatory_case_ids", "runtime_mandatory_case_ids", "contract_mutation_ids", "attachments"],
+        "case_key": None,
         "package": "P6",
-        "format": "text-yaml",
     },
     "review-convergence-fixtures.yaml": {
-        "markers": ["all-task-one-row", "task-audit-na-accepted-source-pass", "subagent-nesting-forbidden", "diverse-lane-join", "no-majority-vote"],
+        "markers": ["all-task-one-row", "task-audit-na-accepted-source-pass", "subagent-nesting-forbidden", "optional-specialist-join", "no-majority-vote"],
         "case_key": "cases",
         "min_cases": 25,
         "package": "P7",
@@ -193,9 +188,19 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
         except ValueError as exc:
             return [str(exc)]
 
-    cases = data.get(spec["case_key"])
-    if not isinstance(cases, list) or len(cases) < spec["min_cases"]:
-        errors.append(f"{name}: expected at least {spec['min_cases']} cases in {spec['case_key']}")
+    if name == "cross-worktree-permission-fixtures.yaml":
+        a33 = data.get("a33", {})
+        static_ids = a33.get("static_mandatory_case_ids", []) if isinstance(a33, dict) else []
+        runtime_ids = a33.get("runtime_mandatory_case_ids", []) if isinstance(a33, dict) else []
+        cases = [
+            {"id": case_id}
+            for case_id in [*static_ids, *runtime_ids]
+            if isinstance(case_id, str)
+        ]
+    else:
+        cases = data.get(spec["case_key"])
+        if not isinstance(cases, list) or len(cases) < spec["min_cases"]:
+            errors.append(f"{name}: expected at least {spec['min_cases']} cases in {spec['case_key']}")
 
     marker_data = {key: value for key, value in data.items() if key != "required_markers"}
     for marker in spec["markers"]:
@@ -331,21 +336,12 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
             "handoff-trigger", "handoff-no-threshold-trigger", "resume-hydration", "handoff-resume",
             "memory-stage1-boundary", "artifact-authority-boundaries", "artifact-integrity-documentation-only",
         },
-        "cross-worktree-permission-fixtures.yaml": {
-            "effective-merged-tool-inventory", "unexpected-tool-denied", "direct-invocation-excluded",
-            "seeded-parent-edit-allow-blocks", "seeded-parent-bash-allow-blocks",
-            "seeded-parent-task-allow-blocks", "external-always-read-broadens",
-            "auto-read-privacy-caveat", "mutation-capable-effective-rule-blocks",
-            "clean-external-read-positive", "clean-path-ask", "edit-denied", "bash-denied",
-            "task-denied", "commit-denied", "merge-denied", "apply-denied", "parent-unchanged",
-            "target-unchanged", "common-dir-unchanged", "no-real-user-state",
-        },
         "review-convergence-fixtures.yaml": {
             "all-task-one-row", "task-row-missing", "task-row-duplicate", "task-row-undefined",
             "task-audit-all-five-statuses", "task-audit-na-accepted-source-pass", "pseudo-complete",
             "task-status-invalid", "unchecked-task", "stale-evidence", "task-file-mismatch",
             "task-test-mismatch", "na-without-accepted-source", "drift-unrequested",
-            "subagent-nesting-forbidden", "diverse-lane-join", "no-majority-vote",
+            "subagent-nesting-forbidden", "optional-specialist-join", "no-majority-vote",
             "final-overlay-edit-attempt-denied", "review-ai-vs-product-routing",
             "review-ai-regression-vs-test-engineer-routing",
         },
@@ -364,45 +360,86 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         errors.append(f"{name}: missing required package cases {missing}")
 
     if name == "cross-worktree-permission-fixtures.yaml":
-        exact_cases = [
-            ("effective-merged-tool-inventory", "exact-final-merged-profile"),
-            ("unexpected-tool-denied", "deny"),
-            ("direct-invocation-excluded", "outside-guarantees"),
-            ("seeded-parent-edit-allow-blocks", "block-effective-override"),
-            ("seeded-parent-bash-allow-blocks", "block-effective-override"),
-            ("seeded-parent-task-allow-blocks", "block-effective-override"),
-            ("external-always-read-broadens", "disclose-read-privacy"),
-            ("auto-read-privacy-caveat", "disclose-or-unverified"),
-            ("mutation-capable-effective-rule-blocks", "block"),
-            ("clean-external-read-positive", "pass-through-rose-task"),
-            ("clean-path-ask", "exact-path-ask"),
-            ("edit-denied", "no-effect"), ("bash-denied", "no-effect"),
-            ("task-denied", "no-effect"), ("commit-denied", "no-effect"),
-            ("merge-denied", "no-effect"), ("apply-denied", "no-effect"),
-            ("parent-unchanged", "equal"), ("target-unchanged", "equal"),
-            ("common-dir-unchanged", "equal"), ("no-real-user-state", "temporary-only"),
+        historical_case_ids = [
+            "effective-merged-tool-inventory", "unexpected-tool-denied", "direct-invocation-excluded",
+            "seeded-parent-edit-allow-blocks", "seeded-parent-bash-allow-blocks", "seeded-parent-task-allow-blocks",
+            "external-always-read-broadens", "auto-read-privacy-caveat", "mutation-capable-effective-rule-blocks",
+            "clean-external-read-positive", "clean-path-ask", "edit-denied", "bash-denied", "task-denied",
+            "commit-denied", "merge-denied", "apply-denied", "parent-unchanged", "target-unchanged",
+            "common-dir-unchanged", "no-real-user-state",
         ]
-        observed_cases = [
-            (case.get("id"), case.get("expected")) for case in cases if isinstance(case, dict)
+        static_mandatory = [
+            "a33-host-non-git-block", "a33-host-no-ranking", "a33-ignore-missing-block", "a33-ignore-reinclude-block", "a33-destination-tracked-block", "a33-key-valid", "a33-key-invalid-block", "a33-collision-no-guess-block", "a33-shared-trust-disclosure", "a33-hard-isolation-claim-reject", "a33-managed-19-external-deny", "a33-managed-external-ask-reject", "a33-builtins-excluded", "a33-web-profile-unchanged", "a33-install-equality", "a33-rules-narrow", "a33-rules-broaden-block", "a33-rules-conflict-block", "a33-lane-one-repository", "a33-no-recursive-host-scan", "a33-artifact-owning-repository", "a33-topology-submodule-block", "a33-path-ambiguity-block", "a33-result-null-representation", "a33-result-null-field-omission-rejected", "a33-result-not-applicable-string-misuse-rejected", "a33-result-null-wrong-type-rejected", "a33-join-static-row-null-shape", "a33-join-runtime-nonoperation-null-shape", "a33-join-runtime-operation-populated-shape", "a33-forbidden-git-block", "a33-rollback-preserves", "a33-codegraph-per-target", "a33-no-new-machinery", "a33-package-excludes-worktrees", "a33-acceptance-item43-only",
+            "a33-operation-key-omission-rejected", "a33-operation-key-wrong-type-rejected", "a33-approval-key-omission-rejected", "a33-approval-key-wrong-type-rejected", "a33-identity-field-omission-rejected", "a33-identity-field-wrong-type-rejected", "a33-identity-string-sentinel-rejected", "a33-identity-populated-required-null-rejected", "a33-identity-absent-forbidden-nonnull-rejected", "a33-identity-detached-branch-mismatch-rejected", "a33-identity-file-array-invalid-rejected", "a33-identity-dirty-count-invalid-rejected",
         ]
-        if observed_cases != exact_cases:
-            errors.append(f"{name}: cases must equal the exact canonical id/expected matrix")
-        text = data.get("text", "")
-        runtime_modes = re.findall(r"^runtime_mode:\s*(\S+)\s*$", text, re.MULTILINE)
-        if runtime_modes != ["real"] or "mode: a30-same-instance-readonly" not in text or "provider: local-mock" not in text:
-            errors.append(f"{name}: runtime mode/provider must be exact A30 real declarations")
-        fields_block = re.search(
-            r"^required_report_fields:\s*\n((?:\s+-\s+[^\n]+\n?)+)", text, re.MULTILINE
+        runtime_mandatory = [
+            "a33-host-git-positive", "a33-ignore-positive", "a33-multiple-attachments", "a33-runtime-prepare-no-worktree-effect", "a33-runtime-effective-profile-observed", "a33-runtime-install-observed", "a33-runtime-nested-repository-observed", "a33-runtime-approval-positive", "a33-runtime-each-attachment-add-separate-approval", "a33-runtime-each-attachment-remove-separate-approval", "a33-runtime-add-approval-wrong-zero-effect", "a33-runtime-add-approval-reused-zero-effect", "a33-runtime-remove-approval-wrong-zero-effect", "a33-runtime-remove-approval-reused-zero-effect", "a33-runtime-fixture-add-real-approval-zero-effect", "a33-runtime-fixture-remove-real-approval-zero-effect", "a33-runtime-operation-class-mismatch-zero-effect", "a33-runtime-approval-missing-zero-effect", "a33-runtime-missing-approval-null-fields", "a33-runtime-approval-stale-zero-effect", "a33-runtime-approval-mismatched-zero-effect", "a33-runtime-approval-expired-zero-effect", "a33-runtime-approval-wrong-source-zero-effect", "a33-runtime-approval-wrong-destination-zero-effect", "a33-runtime-approval-wrong-branch-zero-effect", "a33-runtime-approval-wrong-ref-zero-effect", "a33-runtime-add-approval-reused-real-remove-zero-effect", "a33-runtime-approval-other-operation-zero-effect", "a33-runtime-approval-declined-unavailable", "a33-runtime-add-trusted-code-risk-accepted", "a33-runtime-add-trusted-code-risk-declined-zero-effect", "a33-runtime-add-trusted-code-risk-unavailable-zero-effect", "a33-runtime-remove-trusted-code-risk-not-applicable", "a33-pre-add-target-absent", "a33-add-delta-exact", "a33-add-common-dir-exact-allowed-delta", "a33-add-common-dir-identity-preserved", "a33-add-existing-branch-no-ref-reflog-creation", "a33-add-new-branch-reflog-enabled-created", "a33-add-new-branch-reflog-disabled-absent", "a33-unrelated-common-dir-preserved", "a33-add-unrelated-preserved", "a33-pre-remove-target-populated", "a33-remove-delta-exact", "a33-remove-common-dir-exact-allowed-delta", "a33-remove-common-dir-identity-preserved", "a33-remove-dirty-block", "a33-remove-unknown-block", "a33-remove-user-visible-block", "a33-remove-ignored-block", "a33-remove-untracked-block", "a33-remove-artifact-block", "a33-remove-locked-block", "a33-remove-wrong-source-block", "a33-remove-wrong-path-block", "a33-remove-missing-target-block", "a33-runtime-cleanup-after-approved-removes", "a33-runtime-cleanup-retain-registered", "a33-residual-nongoal-exit0", "a33-material-missing-exit3", "a33-contract-violation-exit5",
+            "a33-common-dir-identity-change-block", "a33-add-common-dir-unrelated-mutation-block", "a33-remove-common-dir-unrelated-mutation-block", "a33-add-new-branch-reflog-enabled-missing-block", "a33-add-new-branch-reflog-disabled-unexpected-block", "a33-remove-branch-deletion-block", "a33-remove-branch-reflog-mutation-block", "a33-runtime-key-mismatch-zero-effect", "a33-runtime-identity-transition-schema",
+        ]
+        expected_fields = {
+            "identity_fields": ["identity_state", "declared_root", "path_state", "canonical_root", "git_toplevel", "git_private_dir", "git_common_dir", "git_head", "git_branch", "detached_head", "worktree_membership", "dirty_state", "tracked_files", "untracked_files", "ignored_files", "artifact_files", "unknown_files"],
+            "dirty_state_fields": ["tracked_modified", "tracked_deleted", "untracked_count", "ignored_count"],
+            "delta_fields": ["target_path", "worktree_membership", "common_dir_identity", "common_dir_admin_entry", "branch_ref", "branch_reflog", "unrelated_common_dir_entries", "unrelated_refs", "config", "hooks", "unrelated_worktree_records", "unrelated_prunable_entries", "other_files"],
+            "pending_operation_fields": ["operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy", "approval_required"],
+            "operation_fields": ["operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy"],
+            "approval_fields": ["approval_id", "run_id", "operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy", "expiry", "decision_ref", "trusted_code_risk", "status"],
+            "prepare_result_fields": ["schema_version", "command", "status", "exit_code", "run_id", "run_root", "pending_operations", "worktree_effects", "unverified"],
+            "operation_result_fields": ["schema_version", "command", "status", "exit_code", "run_id", "operation", "approval", "effect_started", "expected_delta", "observed_delta", "evidence_refs", "unverified"],
+            "static_result_fields": ["schema_version", "command", "mode", "status", "exit_code", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "contract_mutations", "summary", "unverified", "ephemeral_result"],
+            "runtime_join_fields": ["schema_version", "command", "mode", "status", "exit_code", "run_id", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "operations", "cleanup", "summary", "unverified", "ephemeral_result"],
+            "runtime_case_fields": ["id", "subset", "status", "exit_code", "run_id", "operation_id", "approval_ref", "host_identity", "source_identity", "target_identity", "expected_delta", "observed_delta", "evidence_refs", "unverified", "cleanup_state"],
+            "joined_case_fields": ["id", "subset", "status", "exit_code", "operation_id", "approval_ref", "host_identity", "source_identity", "target_identity", "expected_delta", "observed_delta", "evidence_refs", "unverified", "cleanup_state"],
+            "join_result_fields": ["schema_version", "command", "mode", "status", "exit_code", "static_result_ref", "runtime_result_ref", "static_mandatory_case_ids", "runtime_mandatory_case_ids", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "mutation_summary", "cleanup", "summary", "unverified"],
+        }
+        expected_mutations = ["a33-contract-missing-case-rejected", "a33-contract-duplicate-case-rejected", "a33-contract-extra-case-rejected", "a33-contract-skipped-case-rejected", "a33-contract-evidence-empty-case-rejected", "a33-contract-schema-mismatch-rejected"]
+        expected_attachments = [
+            {"repo_key": "foreign-a", "worktree_key": "existing", "branch": "fixture-existing", "base_ref": "HEAD", "branch_mode": "existing", "reflog_policy": "enabled"},
+            {"repo_key": "foreign-b", "worktree_key": "create-enabled", "branch": "fixture-create-enabled", "base_ref": "HEAD", "branch_mode": "create", "reflog_policy": "enabled"},
+            {"repo_key": "foreign-c", "worktree_key": "create-disabled", "branch": "fixture-create-disabled", "base_ref": "HEAD", "branch_mode": "create", "reflog_policy": "disabled"},
+        ]
+        historical_a30 = data.get("historical_a30", {})
+        if not isinstance(historical_a30, dict):
+            historical_a30 = {}
+        a33 = data.get("a33", {})
+        if not isinstance(a33, dict):
+            a33 = {}
+        expected_top_level_keys = ["schema", "version", "exit_codes", "historical_a30", "a33"]
+        expected_a33_keys = [
+            "mode", "provider", "destination_template", "key_pattern", "reserved_keys",
+            *expected_fields,
+            "contract_mutation_ids", "static_mandatory_case_ids", "runtime_mandatory_case_ids",
+            "attachments", "null_semantics", "soft_boundary", "operation_scope",
+        ]
+        if list(data) != expected_top_level_keys:
+            errors.append(f"{name}: top-level keys differ from the exact ordered v3 schema")
+        if list(a33) != expected_a33_keys:
+            errors.append(f"{name}: a33 keys differ from the exact ordered v3 schema")
+        if data.get("schema") != "aili.cross-worktree-permission-fixtures.v3" or data.get("version") != "3.0":
+            errors.append(f"{name}: schema/version must be exact v3")
+        if data.get("exit_codes") != {"safe_observed": 0, "usage_or_fixture_error": 2, "blocked_or_unverified": 3, "unsafe": 5}:
+            errors.append(f"{name}: exit_codes must equal the exact v3 map")
+        if historical_a30.get("case_ids") != historical_case_ids:
+            errors.append(f"{name}: historical_a30.case_ids must preserve the exact ordered 21-case history")
+        for field, expected in expected_fields.items():
+            if a33.get(field) != expected:
+                errors.append(f"{name}: a33.{field} differs from the exact ordered v3 schema")
+        if a33.get("static_mandatory_case_ids") != static_mandatory:
+            errors.append(f"{name}: static_mandatory_case_ids differs from the exact ordered v3 set")
+        if a33.get("runtime_mandatory_case_ids") != runtime_mandatory:
+            errors.append(f"{name}: runtime_mandatory_case_ids differs from the exact ordered v3 set")
+        observed_static = a33.get("static_mandatory_case_ids", [])
+        observed_runtime = a33.get("runtime_mandatory_case_ids", [])
+        observed_sets_valid = (
+            isinstance(observed_static, list)
+            and isinstance(observed_runtime, list)
+            and all(isinstance(case_id, str) for case_id in [*observed_static, *observed_runtime])
         )
-        observed_fields = re.findall(r"^\s+-\s+([^\s#]+)\s*$", fields_block.group(1), re.MULTILINE) if fields_block else []
-        expected_fields = [
-            "schema_version", "mode", "status", "roles", "fixture_identity", "effective_permissions",
-            "cases", "parent_before", "parent_after", "target_before", "target_after",
-            "common_dir_before", "common_dir_after", "clean_ask", "seeded_always",
-            "override_observability", "blocked", "unverified", "errors", "cleanup",
-        ]
-        if observed_fields != expected_fields:
-            errors.append(f"{name}: required_report_fields differs from the exact operational schema")
+        if not observed_sets_valid or not set(observed_static).isdisjoint(observed_runtime):
+            errors.append(f"{name}: observed static/runtime mandatory sets must be disjoint")
+        if a33.get("contract_mutation_ids") != expected_mutations:
+            errors.append(f"{name}: contract_mutation_ids must equal the exact six-mutation sequence")
+        if a33.get("attachments") != expected_attachments:
+            errors.append(f"{name}: attachments must equal the exact existing/create-enabled/create-disabled variants")
     elif name == "dcp-removal-fixtures.yaml":
         if data.get("owner_package") != "P4":
             errors.append(f"{name}: owner_package must be P4")
@@ -461,11 +498,12 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         if reviewer_case.get("input", {}).get("candidate_lanes") != ["AI-regression", "code-review", "product decision"] or "ROSE/user" not in reviewer_case.get("expected", ""):
             errors.append(f"{name}: AI-vs-product reviewer routing collision differs from the exact contract")
         routing_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "review-ai-regression-vs-test-engineer-routing"), {})
-        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout", "ordinary_test_surface": "test-engineer", "overlap": "dispatch both with distinct evidence questions"}:
-            errors.append(f"{name}: AI-regression-scout vs test-engineer routing must remain explicit")
+        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout when a specialist is needed", "ordinary_test_surface": "test-engineer when a specialist is needed", "overlap": "ROSE selects only the concrete missing capability, at most two specialists"}:
+            errors.append(f"{name}: optional AI-regression-scout vs test-engineer routing differs from the lean contract")
         runtime_enforcement = data.get("runtime_enforcement", {})
-        if runtime_enforcement.get("id") != "UV-001" or runtime_enforcement.get("status") != "Unverified" or "do not prove" not in runtime_enforcement.get("reason", ""):
-            errors.append(f"{name}: final read-only overlay runtime enforcement must remain UV-001 Unverified")
+        expected_policy = "an optional Package 12 or SHIP specialist uses a read-only edit-deny/task-deny overlay only when a concrete gap selects it"
+        if runtime_enforcement.get("id") != "UV-007" or runtime_enforcement.get("policy") != expected_policy or runtime_enforcement.get("status") != "Unverified" or "do not prove current A33 runtime overlay" not in runtime_enforcement.get("reason", ""):
+            errors.append(f"{name}: runtime enforcement must remain UV-007 Unverified under the exact concrete-gap policy")
     elif name == "generated-openspec-adapter-fixtures.yaml":
         by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
         exact_collisions = {
@@ -576,16 +614,25 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         case = neutral[0]
         if case.get("expected_execution") != "neutral-build" or case.get("package_gate") != "no-per-package-gate":
             errors.append(f"{name}: neutral BUILD must use no per-package gate")
-        if case.get("final_gate") != "package-12-final-gate":
-            errors.append(f"{name}: neutral BUILD final gate must be Package 12")
-        if case.get("target_repo_root") != "infer-canonical-from-backend-context" or case.get("cwd_authority") is not False:
-            errors.append(f"{name}: neutral BUILD must infer canonical root and reject cwd authority")
+        if case.get("expected_package_source") != "active-contract-queue" or case.get("final_gate") != "minimal-changed-scope-completion-check" or case.get("success_state") != "IMPLEMENTED_TARGETED_VERIFIED":
+            errors.append(f"{name}: neutral BUILD must derive the active-contract queue and stop at the minimal completion check")
+        if case.get("target_repo_root") != "user-selected-git-startup-root" or case.get("cwd_authority") != "startup-git-host-only":
+            errors.append(f"{name}: neutral BUILD must preserve the user-selected Git startup host")
+        if case.get("build_to_ship") != "fresh-intent-required":
+            errors.append(f"{name}: neutral BUILD must not preauthorize SHIP")
         errors.extend(require_checks(case, "queue_inputs", ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], name, "neutral BUILD"))
 
     for case in cases:
         if isinstance(case, dict) and case.get("expected_mode") == "BUILD":
             if case.get("expected_checks") or case.get("expected_conditional_checks"):
                 errors.append(f"{name}: {case.get('id')} encodes a forbidden per-package mandatory quality gate")
+
+    define = find_trigger_case(cases, "DEFINE")
+    if define is not None and define.get("expected_readiness") != ["READY", "BLOCKED"]:
+        errors.append(f"{name}: DEFINE readiness must be exactly READY or BLOCKED")
+    ship = find_trigger_case(cases, "SHIP")
+    if ship is not None and (ship.get("fresh_intent") is not True or ship.get("automatic_full_matrix") is not False):
+        errors.append(f"{name}: SHIP must require fresh intent without an automatic full matrix")
 
     local_modes = {case.get("target_mode") for case in cases if isinstance(case, dict) and case.get("expected_mode") == "LOCAL_REVIEW" and case.get("trigger") is True}
     for target_mode in ["default-local-changes", "base-branch", "commit", "pr", "OpenSpec change", "focus-adversarial", "repair"]:
@@ -647,21 +694,22 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
     packet = goal_packets[0]
     expected_scalars = {
         "agent": "implementer",
-        "artifact_target": "package-queue",
-        "allowed_scope": "single synthesized package",
+        "artifact_target": "active-contract-queue",
+        "allowed_scope": "one active-contract package",
         "edit_permission": "package-scoped",
-        "commit_allowance": "active-contract",
+        "commit_allowance": "none-without-exact-approval",
     }
     for field, expected in expected_scalars.items():
         if packet.get(field) != expected:
             errors.append(f"{name}: packet-build-neutral-package {field} must be {expected!r}")
-    errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval", "package-local mandatory quality gate"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval", "package-local mandatory quality gate", "automatic test", "automatic commit", "package approval"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "parallelism_analysis", ["parallelism analysis", "no-parallel reason", "join completeness", "package/lane preservation"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "join_contract", ["join points", "blockers", "expected evidence"], name, "packet-build-neutral-package"))
-    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "changed_files", "scope_boundary", "lightweight savepoint"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "changed_files", "scope_boundary", "progress-ledger savepoint"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "savepoint_fields", ["scope", "files_changed", "unresolved_items", "evidence_state", "next_package"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "implementation_objective", ["complete, appropriately scoped, verified", "complete task-scoped", "not artificially tiny"], name, "packet-build-neutral-package"))
     if packet.get("review_repair", "missing") is not None:
-        errors.append(f"{name}: packet-build-neutral-package review_repair must be null for Package 1-11")
+        errors.append(f"{name}: packet-build-neutral-package review_repair must be null for implementation-only packages")
     errors.extend(
         require_checks(
             packet,
@@ -704,49 +752,37 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
 
 def validate_agent_permissions() -> list[str]:
     errors: list[str] = []
-    agent_dir = ROOT / "agents"
-    a30_selected = {
-        "agent-evaluator.md", "ai-regression-scout.md", "code-reviewer.md", "code-scout.md",
-        "convergence-reviewer.md", "doc-researcher.md", "opensource-sanitizer.md", "plan-auditor.md",
-        "pr-test-analyzer.md", "security-auditor.md", "silent-failure-reviewer.md", "spec-miner.md",
-        "test-coverage-reviewer.md", "web-performance-auditor.md", "web-researcher.md",
-    }
-    for path in sorted(agent_dir.glob("*.md")):
+    paths = sorted((ROOT / "agents").glob("*.md"))
+    if len(paths) != 20:
+        errors.append(f"agent inventory: expected 20 files, found {len(paths)}")
+    headings = ["## Role", "## Goal", "## Success criteria", "## Constraints", "## Tools", "## Output", "## Stop"]
+    for path in paths:
         text = path.read_text(encoding="utf-8")
-        if not text.startswith("---\n"):
-            errors.append(f"{path.relative_to(ROOT)}: missing frontmatter")
+        if not text.startswith("---\n") or "\n---\n" not in text[4:]:
+            errors.append(f"{path.relative_to(ROOT)}: invalid frontmatter")
             continue
-        parts = text.split("---", 2)
-        if len(parts) < 3:
-            errors.append(f"{path.relative_to(ROOT)}: unterminated frontmatter")
-            continue
-        frontmatter = parts[1]
-        if "\npermission:\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: missing permission block")
-        if path.name in a30_selected:
-            if '\n  "*": deny\n' not in frontmatter:
-                errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing deny-by-default wildcard")
+        frontmatter = text.split("---", 2)[1]
+        for heading in headings:
+            if heading not in text:
+                errors.append(f"{path.relative_to(ROOT)}: missing {heading}")
+        if path.name == "rose.md":
             if "\n  external_directory: ask\n" not in frontmatter:
-                errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing external_directory ask")
-            for key in ["list", "glob", "grep"]:
-                if f"\n  {key}: allow\n" not in frontmatter:
-                    errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing {key} allow")
-            for key in ["edit", "bash", "task", "lsp", "skill", "webfetch", "websearch"]:
-                if f"\n  {key}: deny\n" not in frontmatter:
-                    errors.append(f"{path.relative_to(ROOT)}: A30 selected role missing {key} deny")
-        elif path.name == "rose.md":
-            if "\n  skill: allow\n" not in frontmatter and "\n  \"*\": allow\n" not in frontmatter:
-                errors.append(f"{path.relative_to(ROOT)}: missing skill allowance via permission.skill or wildcard")
-        elif "\n  skill: allow\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: missing permission.skill allow")
-        if "\n  read:\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: missing permission.read block")
-        elif "\n    \"*\": allow\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: missing permission.read wildcard allow")
-        if path.name != "rose.md" and path.name not in a30_selected and "\n  external_directory: deny\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: nonselected subagent must deny external_directory")
-        if path.name != "rose.md" and "\n  task: deny\n" not in frontmatter:
-            errors.append(f"{path.relative_to(ROOT)}: non-ROSE subagent must deny task")
+                errors.append("agents/rose.md: expected external_directory ask")
+            if "debug-investigator" in text:
+                errors.append("agents/rose.md: removed debug-investigator route remains")
+            continue
+        if "\n  external_directory: deny\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: managed agent must deny external_directory")
+        if "\n  task: deny\n" not in frontmatter:
+            errors.append(f"{path.relative_to(ROOT)}: managed agent must deny task")
+    web = (ROOT / "agents/web-researcher.md").read_text(encoding="utf-8")
+    for marker in ["\n  read: deny\n", "\n  list: deny\n", "\n  glob: deny\n", "\n  grep: deny\n", "\n  webfetch: ask\n", "\n  websearch: ask\n"]:
+        if marker not in web:
+            errors.append(f"agents/web-researcher.md: missing web-only marker {marker.strip()}")
+    if (ROOT / "agents/debug-investigator.md").exists():
+        errors.append("agents/debug-investigator.md: removed Agent still present")
+    if (ROOT / ".agents/skills/debugging-and-error-recovery").exists():
+        errors.append("debugging-and-error-recovery: removed skill still present")
     return errors
 
 
@@ -838,20 +874,32 @@ def validate_command_contracts() -> list[str]:
         if marker not in local_review_text:
             errors.append(f"commands/local-review.md: missing local-review contract marker {marker!r}")
 
-    define_text = read_repo_text("commands/define.md") if (command_dir / "define.md").exists() else ""
-    for marker in [
-        "requirements-grilling",
-        "test-document-generator",
-        "interview.md",
-        "test-plan.md",
-        "Artifact Freshness Gate",
-        "READY",
-        "BLOCKED",
-        "WAIVED",
-        "UNVERIFIED",
-    ]:
-        if marker not in define_text:
-            errors.append(f"commands/define.md: missing DEFINE contract marker {marker!r}")
+    thin_commands = {
+        "commands/define.md": {
+            "required": [
+                "Invoke `aili-delivery-flow` in DEFINE mode.",
+                "Produce or align the complete implementation-readiness contract before BUILD.",
+                "Do not implement; unresolved material decisions or decision-shaping research, invalid/incoherent artifacts, or missing explicit final `test-plan.md` acceptance block BUILD readiness.",
+                "readiness exactly `READY | BLOCKED`, named `Unverified` residuals separately",
+            ],
+            "forbidden": ["requirements-grilling", "test-document-generator", "interview.md", "Artifact Freshness Gate"],
+        },
+        "commands/ship.md": {
+            "required": [
+                "Invoke `aili-delivery-flow` in SHIP mode.",
+                "Reconcile final diff, release-blocker audit, review, repair, verification, and closeout before handoff, merge, release, or archive.",
+                "Do not review, repair, or claim readiness without fresh explicit SHIP intent, current implementation evidence, and fresh claim-relevant evidence; exact high-risk/Git/release operations retain separate approval.",
+                "Mode/target, closeout path when applicable, verdict, blocking or `Unverified` evidence, approvals needed, and next action.",
+            ],
+            "forbidden": ["git status --short --branch", "classify dirty paths", "propose cleanup for residue", "Savepoint commits"],
+        },
+    }
+    for relative, contract in thin_commands.items():
+        text = read_repo_text(relative)
+        errors.extend(require_text_markers(relative, contract["required"], "thin command"))
+        for marker in contract["forbidden"]:
+            if marker in text:
+                errors.append(f"{relative}: duplicates canonical detailed policy marker {marker!r}")
 
     return errors
 
@@ -956,56 +1004,39 @@ def validate_local_review_gate_contracts() -> list[str]:
             "exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "large or harness-sensitive `/local-review --change <id|path>` targets",
-            "`NEEDS_FIXES` and `BLOCKED` as BUILD blockers",
-            "`PASS_WITH_UNVERIFIED` only after the user accepts each named `Unverified` item",
+            "`/local-review` remains a standalone non-delivery audit",
+            "supplies no lifecycle acceptance or SHIP-readiness authority",
         ],
         "agents/convergence-reviewer.md": [
-            "edit: deny",
+            "external_directory: deny",
             "task: deny",
-            "proposal.md",
-            "design.md",
-            "tasks.md",
-            "interview.md",
-            "test-plan.md",
-            "context.md",
-            "progress.txt",
-            "drift-log.md",
-            "legacy `implementation-notes.html`",
-            "missing",
-            "partial",
-            "contradicts",
-            "unrequested",
-            "pseudo-complete",
-            "unchecked-task",
-            "stale-progress",
-            "evidence-gap",
-            "Merged-output verification evidence",
+            "Compare formal artifacts",
+            "partial, missing, stale, contradictory, or pseudo-complete",
+            "ROSE owns the verdict",
         ],
         ".agents/skills/review-pipeline/SKILL.md": [
-            "convergence-reviewer",
-            "formal-change, OpenSpec, multi-phase, or harness-sensitive convergence review",
-            "not final PASS authority",
-            "pseudo-complete",
-            "unchecked-task",
-            "stale-progress",
-            "evidence-gap",
+            "Direct ROSE diff inspection",
+            "at most two relevant specialists",
+            "one targeted recheck",
+            "Never creates an automatic review swarm",
         ],
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
-            "phase checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk",
-            "merged-output verification",
-            "statuses, evidence, conflicts, blockers, skipped checks, and missing evidence",
+            "Direct ROSE work is the default",
+            "Default to at most two concurrent subagents",
+            "## Compact packet",
+            "## Compact result",
         ],
         ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": [
-            "Phase checkpoint: command | static check | artifact inspection | diff inspection | skipped reason with risk",
-            "Parallel joins must reconcile every expected lane's status, evidence, skipped checks, conflicts, blockers, and missing evidence",
-            "merged-output verification",
-            "Review and convergence lanes remain read-only",
+            "Goal:",
+            "Scope:",
+            "Allowed actions:",
+            "Expected result:",
+            "Stop when:",
         ],
         "agents/rose.md": [
             '"convergence-reviewer": allow',
-            "Local review gate: `local-review-gate`",
-            "`convergence-reviewer` (`subagent:review`)",
+            "Prefer direct work",
+            "Default concurrency is at most two",
         ],
         ".agents/skills/aili-delivery-flow/SKILL.md": [
             "Only four top-level delivery commands are valid",
@@ -1043,20 +1074,13 @@ def validate_local_review_gate_contracts() -> list[str]:
 
     code_reviewer_text = read_repo_text("agents/code-reviewer.md") if (ROOT / "agents/code-reviewer.md").exists() else ""
     for marker in [
-        "96cac1d79edca4a9231cbe6af50415b5e4d6cf42",
-        "af791188ac87321f749a96f140a85c739303f453",
-        "five dimensions",
-        "Critical and Important finding",
-        "zero findings",
-        "file:line, trigger/input/state, bad outcome",
-        "Do not add optional praise",
-        "If context is insufficient for a material acceptance claim",
-        "Secret-path safety",
-        "must not run content-emitting git commands",
-        "report only the redacted path/type",
+        "Review a supplied change",
+        "path and line evidence",
+        "Do not edit",
+        "STATUS",
     ]:
         if marker not in code_reviewer_text:
-            errors.append(f"agents/code-reviewer.md: missing upstream review rubric marker {marker!r}")
+            errors.append(f"agents/code-reviewer.md: missing lean review marker {marker!r}")
     return errors
 
 
@@ -1073,8 +1097,7 @@ def validate_define_artifact_contracts() -> list[str]:
             "test-document-generator",
             "READY",
             "BLOCKED",
-            "WAIVED",
-            "UNVERIFIED",
+            "not a readiness alternative",
             "Change Revision Decision",
         ],
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": [
@@ -1111,7 +1134,7 @@ def validate_define_artifact_contracts() -> list[str]:
             "interview.md",
             "unresolved readiness follow-up defaults to chat-first interaction with AI write-back",
             "ask unresolved blocking follow-up questions in chat by default",
-            "write accepted answers, waivers, or accepted `UNVERIFIED` states back into the same artifact",
+            "write the user's accepted answer, accepted default, explicit waiver, or named `UNVERIFIED` state into `interview.md`",
             "re-read answers from disk before classification, readiness, or write-back",
             "Do not call the packet `READY` from chat-only content",
             "Round 2+",
@@ -1190,14 +1213,16 @@ def validate_define_artifact_contracts() -> list[str]:
 def validate_neutral_build_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
-        "commands/build.md": ["neutral", "implementation package queue", "target repository root", "Package 12", "lightweight savepoint", "Do not ask for manual package approval"],
-        ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "resolved ready target", "synthesize a package queue", "Package 12"],
-        ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize an ordered implementation package queue", "allowed external directories"],
-        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["neutral package queue", "canonicalizes the target repository root", "allowed external directories"],
-        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "scoped subagent packet", "missing manual package text is not a stop condition", "Package 12"],
-        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "Exactly six inner loops", "Exactly four outer profiles", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "Native command non-ownership"],
-        "docs/harness/command-lifecycle.md": ["lightweight savepoints", "Package 12", "exactly six inner loops"],
-        "docs/harness/aili-harness-contract.md": ["Neutral BUILD execution", "Package 12", "no per-package quality gate"],
+        "commands/build.md": ["neutral", "accepted scoped queue", "progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
+        ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "resolved ready target", "derive the queue from the active contract", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize the ordered queue from the active accepted contract", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["synthesize a queue from the active accepted contract", "user selects the A33 host", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "compact packet contract", "missing manual package text is not a stop condition", "Package 12"],
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "active accepted contract", "Exactly six inner loops", "Exactly four outer profiles", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "A33 admission and operation gates", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "one minimal direct changed-scope", "selected only for a concrete checklist/evidence gap", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
+        ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "IMPLEMENTED_TARGETED_VERIFIED", "fresh explicit intent", "exact commit/push/merge/release approvals"],
+        "docs/harness/command-lifecycle.md": ["progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "exactly six inner loops"],
+        "docs/harness/aili-harness-contract.md": ["Neutral BUILD execution", "IMPLEMENTED_TARGETED_VERIFIED", "Active-contract completion package"],
     }
     for relative, markers in required_markers.items():
         errors.extend(require_text_markers(relative, markers, "neutral BUILD"))
@@ -1219,8 +1244,16 @@ def validate_package5_loop_fixtures() -> list[str]:
     data = load_fixture(FIXTURE_DIR / "command-routing-fixtures.yaml")
     cases = data.get("cases", [])
     by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
-    required_ids = """loop-six-inner-four-outer loop-turn-executable loop-turn-no-recursion loop-objective-bounded loop-objective-budget-invalid loop-objective-max-attempt-stop loop-objective-exhaustion loop-objective-resume-no-reset loop-review-budget-separate loop-envelope-complete loop-envelope-terminal-writeback budget-representation-objective budget-representation-turn budget-protocol-template-instantiation budget-invalid-iteration-review budget-invalid-time-unit-value budget-invalid-token-unit-value tokens-not-configured-null tokens-requested-accounting-unavailable-prestart tokens-midrun-accounting-loss budget-exhaustion-evidence budget-resume-no-reset lp-budget-valid-instantiation lp-budget-invalid-iteration-zero lp-budget-invalid-iteration-negative lp-budget-invalid-iteration-fractional lp-budget-invalid-iteration-nonnumeric lp-budget-invalid-review-zero lp-budget-invalid-review-negative lp-budget-invalid-review-fractional lp-budget-invalid-review-nonnumeric lp-budget-review-capable-null lp-budget-review-incapable-nonnull budget-iteration-preflight-unit budget-review-preflight-unit budget-time-overshoot-actual budget-token-overshoot-actual budget-resume-preserves-overshoot-accounting loop-interval-protocol-only loop-event-protocol-only loop-automation-no-registration loop-formal-runbook-protocol-only loop-no-background-primitive loop-interval-documentation-ambiguity loop-interval-executable-request-block neutral-build-native-goal-nonownership ordinary-goal-language-preserved native-goal-partii-na def-e2-no-per-package-gate def-e3-final-matrix-compatibility budget-consumed-over-limit-terminal budget-iteration-consumed-over-limit-corruption budget-review-consumed-over-limit-corruption""".split()
+    case_ids = [case.get("id") for case in cases if isinstance(case, dict)]
+    duplicate_ids = sorted({case_id for case_id in case_ids if case_ids.count(case_id) > 1})
+    required_ids = """loop-six-inner-four-outer loop-turn-executable loop-turn-no-recursion loop-objective-bounded loop-objective-budget-invalid loop-objective-max-attempt-stop loop-objective-exhaustion loop-objective-resume-no-reset loop-review-budget-separate loop-envelope-complete loop-envelope-terminal-writeback budget-representation-objective budget-representation-turn budget-protocol-template-instantiation budget-invalid-iteration-review budget-invalid-time-unit-value budget-invalid-token-unit-value tokens-not-configured-null tokens-requested-accounting-unavailable-prestart tokens-midrun-accounting-loss budget-exhaustion-evidence budget-resume-no-reset lp-budget-valid-instantiation lp-budget-invalid-iteration-zero lp-budget-invalid-iteration-negative lp-budget-invalid-iteration-fractional lp-budget-invalid-iteration-nonnumeric lp-budget-invalid-review-zero lp-budget-invalid-review-negative lp-budget-invalid-review-fractional lp-budget-invalid-review-nonnumeric lp-budget-review-capable-null lp-budget-review-incapable-nonnull budget-iteration-preflight-unit budget-review-preflight-unit budget-time-overshoot-actual budget-token-overshoot-actual budget-resume-preserves-overshoot-accounting loop-interval-protocol-only loop-event-protocol-only loop-automation-no-registration loop-formal-runbook-protocol-only loop-no-background-primitive loop-interval-documentation-ambiguity loop-interval-executable-request-block neutral-build-native-goal-nonownership ordinary-goal-language-preserved native-goal-partii-na def-e2-no-per-package-gate def-e9-lean-final-inspection budget-consumed-over-limit-terminal budget-iteration-consumed-over-limit-corruption budget-review-consumed-over-limit-corruption""".split()
+    required_ids += """automation-hidden-aili-block automation-product-ci-formal-allowed automation-product-cron-formal-allowed automation-product-webhook-listener-formal-allowed automation-product-queue-daemon-hook-retry-formal-allowed automation-vocabulary-only-ordinary automation-required-risk-gates automation-aili-protocol-doc-only automation-hidden-plus-protocol-no-lp T-BUILD-NO-AUTO-SAVEPOINT-ACTIONS T-BUILD-MINIMUM-COMPLETION T-BUILD-COMPLETION-STOP T-SHIP-EVIDENCE-REUSE T-EVIDENCE-NONINVALIDATING-GIT T-EVIDENCE-INVALIDATION-EVENTS T-MERGE-EVIDENCE-SCOPE T-CI-FAILURE-USER-STOP T-USER-CONTROL-POINTS T-NO-FIFTH-COMMAND""".split()
+    required_ids += """a33-host-git-positive a33-host-non-git-block a33-host-no-ranking a33-ignore-positive a33-ignore-missing-block a33-ignore-reinclude-block a33-destination-tracked-block a33-key-valid a33-key-invalid-block a33-operation-key-omission-rejected a33-operation-key-wrong-type-rejected a33-approval-key-omission-rejected a33-approval-key-wrong-type-rejected a33-collision-no-guess-block a33-multiple-attachments a33-rules-narrow a33-rules-broaden-block a33-rules-conflict-block a33-topology-submodule-block a33-path-ambiguity-block a33-identity-field-omission-rejected a33-identity-field-wrong-type-rejected a33-identity-string-sentinel-rejected a33-identity-populated-required-null-rejected a33-identity-absent-forbidden-nonnull-rejected a33-identity-detached-branch-mismatch-rejected a33-identity-file-array-invalid-rejected a33-identity-dirty-count-invalid-rejected a33-runtime-identity-transition-schema""".split()
+    required_ids += """a33-runtime-prepare-no-worktree-effect a33-runtime-approval-positive a33-runtime-each-attachment-add-separate-approval a33-runtime-each-attachment-remove-separate-approval a33-runtime-add-approval-wrong-zero-effect a33-runtime-add-approval-reused-zero-effect a33-runtime-remove-approval-wrong-zero-effect a33-runtime-remove-approval-reused-zero-effect a33-runtime-fixture-add-real-approval-zero-effect a33-runtime-fixture-remove-real-approval-zero-effect a33-runtime-operation-class-mismatch-zero-effect a33-runtime-key-mismatch-zero-effect a33-runtime-approval-missing-zero-effect a33-runtime-missing-approval-null-fields a33-runtime-approval-stale-zero-effect a33-runtime-approval-mismatched-zero-effect a33-runtime-approval-expired-zero-effect a33-runtime-approval-wrong-source-zero-effect a33-runtime-approval-wrong-destination-zero-effect a33-runtime-approval-wrong-branch-zero-effect a33-runtime-approval-wrong-ref-zero-effect a33-runtime-add-approval-reused-real-remove-zero-effect a33-runtime-approval-other-operation-zero-effect a33-runtime-approval-declined-unavailable a33-runtime-add-trusted-code-risk-accepted a33-runtime-add-trusted-code-risk-declined-zero-effect a33-runtime-add-trusted-code-risk-unavailable-zero-effect a33-runtime-remove-trusted-code-risk-not-applicable""".split()
+    required_ids += """a33-pre-add-target-absent a33-add-delta-exact a33-add-common-dir-exact-allowed-delta a33-add-common-dir-identity-preserved a33-add-existing-branch-no-ref-reflog-creation a33-add-new-branch-reflog-enabled-created a33-add-new-branch-reflog-disabled-absent a33-add-new-branch-reflog-enabled-missing-block a33-add-new-branch-reflog-disabled-unexpected-block a33-unrelated-common-dir-preserved a33-add-unrelated-preserved a33-pre-remove-target-populated a33-remove-delta-exact a33-remove-common-dir-exact-allowed-delta a33-remove-common-dir-identity-preserved a33-common-dir-identity-change-block a33-add-common-dir-unrelated-mutation-block a33-remove-common-dir-unrelated-mutation-block a33-remove-branch-deletion-block a33-remove-branch-reflog-mutation-block a33-remove-dirty-block a33-remove-unknown-block a33-remove-user-visible-block a33-remove-ignored-block a33-remove-untracked-block a33-remove-artifact-block a33-remove-locked-block a33-remove-wrong-source-block a33-remove-wrong-path-block a33-remove-missing-target-block a33-forbidden-git-block a33-rollback-preserves""".split()
     errors = [f"command-routing-fixtures.yaml: missing Package 5 fixture {case_id}" for case_id in required_ids if case_id not in by_id]
+    if duplicate_ids:
+        errors.append(f"command-routing-fixtures.yaml: duplicate Package 5 fixture ids {duplicate_ids}")
     taxonomy = by_id.get("loop-six-inner-four-outer", {})
     if taxonomy.get("inner") != ["question", "delta", "evidence/plan", "neutral BUILD", "review/repair", "convergence"] or taxonomy.get("outer") != ["turn", "objective", "interval", "event"] or taxonomy.get("seventh_loop") is not False:
         errors.append("command-routing-fixtures.yaml: loop taxonomy must be exactly six inner/four outer with no seventh loop")
@@ -1230,11 +1263,12 @@ def validate_package5_loop_fixtures() -> list[str]:
     lost = by_id.get("tokens-midrun-accounting-loss", {}).get("tokens", {})
     if lost.get("accounting_status") != "lost" or not isinstance(lost.get("consumed"), int):
         errors.append("command-routing-fixtures.yaml: midrun token loss must preserve non-null counters")
-    if by_id.get("def-e2-no-per-package-gate", {}).get("mandatory_quality_gate") is not False:
+    package_gate_case = by_id.get("def-e2-no-per-package-gate", {})
+    if package_gate_case.get("mandatory_quality_gate") is not False or package_gate_case.get("generic_template") is not False or package_gate_case.get("change") != "complete-aili-workflow-orchestration":
         errors.append("command-routing-fixtures.yaml: DEF-E2 compatibility must forbid per-package mandatory gates")
-    final_case = by_id.get("def-e3-final-matrix-compatibility", {})
-    if final_case.get("review_repair_limit") != 3 or final_case.get("max_holistic_cycles") != 3 or final_case.get("task_matrix") != "canonical-all-task":
-        errors.append("command-routing-fixtures.yaml: DEF-E3 final matrix must be canonical and limited to three cycles")
+    final_case = by_id.get("def-e9-lean-final-inspection", {})
+    if final_case.get("change") != "complete-aili-workflow-orchestration" or final_case.get("generic_template") is not False or final_case.get("task_coverage") != "applicable-current-scope" or final_case.get("automatic_review_swarm") is not False or final_case.get("specialist_limit") != 2 or final_case.get("targeted_recheck_limit") != 1:
+        errors.append("command-routing-fixtures.yaml: DEF-E9 final inspection must be direct-first with at most two specialists and one targeted recheck")
     over_limit = by_id.get("budget-consumed-over-limit-terminal", {})
     if over_limit.get("counter") != {"limit": 3, "consumed": 4, "remaining": 0} or over_limit.get("stop_reason") != "budget-exhausted" or over_limit.get("outcome") != "budget-exhausted" or over_limit.get("resume") != "blocked":
         errors.append("command-routing-fixtures.yaml: consumed>limit must preserve consumed, clamp remaining, and remain terminal")
@@ -1243,9 +1277,98 @@ def validate_package5_loop_fixtures() -> list[str]:
         if case.get("expected") not in {"corruption-block-no-action", "corruption-block-no-repair"} or case.get("overshoot_allowed") is not False or case.get("resume") != "blocked":
             errors.append(f"command-routing-fixtures.yaml: {case_id} must treat discrete consumed>limit as corruption and block")
     automation = by_id.get("loop-automation-no-registration", {})
-    expected_automation = ["install", "register", "run", "modify", "update", "reconfigure", "enable", "reuse"]
-    if automation.get("pure_inputs") != expected_automation or automation.get("mixed_documentation") != "block-whole-request" or automation.get("later_documentation_only") != "may-define-or-reuse-lp":
-        errors.append("command-routing-fixtures.yaml: automation fixture must block pure/mixed requests with zero mutation/LP and require later documentation-only restatement")
+    if automation != {
+        "id": "loop-automation-no-registration",
+        "expected": "hidden-aili-block-product-gated",
+        "hidden_aili": "block-zero-mutation-zero-lp",
+        "explicit_product": "formal-high-risk-gates",
+        "vocabulary_only": "ordinary",
+        "protocol_only": "no-runtime-no-lifecycle-permission",
+    }:
+        errors.append("command-routing-fixtures.yaml: automation boundary must block hidden AILI runtime while allowing gated product automation")
+
+    product_cases = [
+        "automation-product-ci-formal-allowed",
+        "automation-product-cron-formal-allowed",
+        "automation-product-webhook-listener-formal-allowed",
+        "automation-product-queue-daemon-hook-retry-formal-allowed",
+    ]
+    if any(by_id.get(case_id, {}).get("expected") != "eligible-through-formal-high-risk-gates" for case_id in product_cases):
+        errors.append("command-routing-fixtures.yaml: explicit product automation must remain eligible through formal/high-risk gates")
+    if by_id.get("automation-hidden-aili-block", {}).get("expected") != "block-zero-mutation-zero-lp" or by_id.get("automation-hidden-plus-protocol-no-lp", {}).get("expected") != "block-zero-mutation-zero-lp":
+        errors.append("command-routing-fixtures.yaml: hidden AILI automation must block with zero mutation and zero LP")
+    if by_id.get("automation-vocabulary-only-ordinary", {}).get("expected") != "ordinary":
+        errors.append("command-routing-fixtures.yaml: automation vocabulary alone must remain ordinary")
+    risk_gates = by_id.get("automation-required-risk-gates", {}).get("gates", [])
+    for gate in ["permission", "external-write", "credential", "persistent-service", "dependency-lockfile", "destructive", "exact-operation"]:
+        if gate not in risk_gates:
+            errors.append(f"command-routing-fixtures.yaml: automation risk gates missing {gate!r}")
+
+    savepoint = by_id.get("T-BUILD-NO-AUTO-SAVEPOINT-ACTIONS", {})
+    if savepoint.get("savepoint_fields") != ["scope", "files_changed", "unresolved_items", "evidence_state", "next_package"] or any(savepoint.get(field) is not False for field in ("automatic_tests", "automatic_commit", "package_approval")):
+        errors.append("command-routing-fixtures.yaml: BUILD savepoint must use exact fields and trigger no test/commit/approval")
+    completion = by_id.get("T-BUILD-MINIMUM-COMPLETION", {})
+    if completion.get("expected") != "one-minimal-changed-scope-check" or completion.get("automatic_full_matrix") is not False or completion.get("automatic_review_test_security") is not False or completion.get("targeted_recheck_limit") != 1:
+        errors.append("command-routing-fixtures.yaml: BUILD completion must be one minimal changed-scope check")
+    if by_id.get("T-BUILD-COMPLETION-STOP", {}).get("expected") != "IMPLEMENTED_TARGETED_VERIFIED" or by_id.get("T-BUILD-COMPLETION-STOP", {}).get("enters_ship") is not False:
+        errors.append("command-routing-fixtures.yaml: BUILD must stop at IMPLEMENTED_TARGETED_VERIFIED")
+    ship_reuse = by_id.get("T-SHIP-EVIDENCE-REUSE", {})
+    if ship_reuse.get("fresh_intent") is not True or ship_reuse.get("reuse_event_fresh_build_evidence") is not True or ship_reuse.get("checks") != "stale-affected-risk-integration-packaging-release-merge-target-only":
+        errors.append("command-routing-fixtures.yaml: SHIP must require fresh intent and reuse event-fresh evidence")
+    if by_id.get("T-EVIDENCE-NONINVALIDATING-GIT", {}).get("stales_evidence") is not False or by_id.get("T-EVIDENCE-INVALIDATION-EVENTS", {}).get("invalidation") != "affected-only":
+        errors.append("command-routing-fixtures.yaml: evidence freshness must be event-based and affected-only")
+    merge_scope = by_id.get("T-MERGE-EVIDENCE-SCOPE", {})
+    if merge_scope.get("exact_verified_fast_forward") != "no-full-rerun" or merge_scope.get("changed_merge") != "affected-integration-checks":
+        errors.append("command-routing-fixtures.yaml: fast-forward/changed-merge evidence scope drift")
+    controls = by_id.get("T-USER-CONTROL-POINTS", {})
+    if controls.get("package_approval") is not False or controls.get("controls") != ["material-define-decisions", "one-final-test-plan-acceptance", "fresh-ship-intent", "exact-commit-approval", "exact-push-approval", "exact-merge-approval", "exact-release-approval", "ci-failure-user-return"]:
+        errors.append("command-routing-fixtures.yaml: DEF-E11 user control points must remain exact and package approval absent")
+    ci_stop = by_id.get("T-CI-FAILURE-USER-STOP", {})
+    if ci_stop.get("expected") != "need-user" or ci_stop.get("automatic_actions") != []:
+        errors.append("command-routing-fixtures.yaml: CI failure must return to the user without automatic actions")
+    commands = by_id.get("T-NO-FIFTH-COMMAND", {})
+    if commands.get("delivery_commands") != ["/ideate", "/define", "/build", "/ship"] or commands.get("local_review") != "standalone-non-delivery-no-lifecycle-or-ship-authority":
+        errors.append("command-routing-fixtures.yaml: four delivery commands and standalone /local-review boundary drift")
+
+    key_case = by_id.get("a33-key-valid", {})
+    if key_case.get("regex") != "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" or key_case.get("worktree_key") != "explicit":
+        errors.append("command-routing-fixtures.yaml: A33 key grammar/explicit worktree key drift")
+    collision = by_id.get("a33-collision-no-guess-block", {}).get("forbidden_recovery", [])
+    for value in ["suffix", "force", "-B", "orphan", "remote-guess", "implicit-base-ref"]:
+        if value not in collision:
+            errors.append(f"command-routing-fixtures.yaml: A33 collision recovery must forbid {value!r}")
+    ignore = by_id.get("a33-ignore-positive", {})
+    if ignore.get("ignore_rule") != "/.worktrees/" or ignore.get("reinclude") is not False or ignore.get("tracked_destination") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 exact ignore must reject re-inclusion and tracked destination")
+    if by_id.get("a33-host-git-positive", {}).get("expected") != "admit-static-only" or by_id.get("a33-host-non-git-block", {}).get("operation_authority") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 host admission is static-only and non-Git blocks")
+    if by_id.get("a33-rules-narrow", {}).get("reread_at") != "operation-dispatch-boundary" or by_id.get("a33-rules-broaden-block", {}).get("expected") != "block" or by_id.get("a33-rules-conflict-block", {}).get("expected") != "block-same-level-conflict":
+        errors.append("command-routing-fixtures.yaml: A33 target rules must be re-read, narrow-only, and conflict-blocking")
+    prepare = by_id.get("a33-runtime-prepare-no-worktree-effect", {})
+    if prepare.get("expected") != "zero-effect" or prepare.get("adds") != 0 or prepare.get("removes") != 0 or prepare.get("descriptor_authority") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 PREPARE must have zero worktree effect and no authority")
+    approval_positive = by_id.get("a33-runtime-approval-positive", {})
+    if approval_positive.get("operation_classes") != ["driver_fixture", "real"] or approval_positive.get("bound_fields") != ["repo_key", "worktree_key", "source", "destination", "branch", "base_ref", "branch_mode", "reflog_policy", "operation_class", "expiry", "operation"] or approval_positive.get("aggregate_authority") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 approval must bind one exact real/fixture operation, keys, branch/base-ref, and reflog policy")
+    key_mismatch = by_id.get("a33-runtime-key-mismatch-zero-effect", {})
+    if key_mismatch.get("expected") != "block-zero-effect" or key_mismatch.get("parameters") != {"keys": ["repo_key", "worktree_key"], "operations": ["ADD", "REMOVE"]}:
+        errors.append("command-routing-fixtures.yaml: A33 key mismatch must cover both keys and operations with zero effect")
+    remove_risk = by_id.get("a33-runtime-remove-trusted-code-risk-not-applicable", {})
+    if remove_risk.get("expected") != "observed-approval-not_applicable" or remove_risk.get("separate_deletion_risk_gate") is not True:
+        errors.append("command-routing-fixtures.yaml: observed REMOVE must use not_applicable trusted-code risk under a separate deletion gate")
+    missing_approval = by_id.get("a33-runtime-missing-approval-null-fields", {})
+    if missing_approval.get("expected") != "requested-fields-populated-approval-id-decision-expiry-risk-null" or missing_approval.get("effect_started") is not False:
+        errors.append("command-routing-fixtures.yaml: missing A33 approval must preserve requested fields, null approval evidence, and start no effect")
+    remove_delta = by_id.get("a33-remove-delta-exact", {})
+    if remove_delta.get("force") is not False or remove_delta.get("branch_ref_reflog") != "retained":
+        errors.append("command-routing-fixtures.yaml: A33 REMOVE must be non-force and retain branch ref/reflog")
+    identity = by_id.get("a33-runtime-identity-transition-schema", {})
+    if identity.get("expected") != "host-source-populated-target-absent-populated-absent" or identity.get("identity_hash_digest") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 identities must stay separate with exact target transitions and no digest authority")
+    if by_id.get("a33-add-existing-branch-no-ref-reflog-creation", {}).get("expected") != "unchanged-ref-reflog" or by_id.get("a33-add-new-branch-reflog-enabled-created", {}).get("expected") != "exact-ref-and-reflog-created" or by_id.get("a33-add-new-branch-reflog-disabled-absent", {}).get("expected") != "exact-ref-created-reflog-absent":
+        errors.append("command-routing-fixtures.yaml: A33 branch-mode/source-reflog outcomes must remain exact")
+    if by_id.get("a33-unrelated-common-dir-preserved", {}).get("parameters") != ["ADD", "REMOVE"] or by_id.get("a33-rollback-preserves", {}).get("automatic_remove") is not False:
+        errors.append("command-routing-fixtures.yaml: A33 unrelated state and rollback worktrees/evidence must be preserved")
     return errors
 
 
@@ -1285,7 +1408,8 @@ def validate_traceability_contracts() -> list[str]:
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "map each package from source requirement/decision/risk to task/package",
             "changed files/artifacts mapped to requirements/decisions/risks",
-            "spec coverage check for formal changes",
+            "changed-scope diff and affected requirement/task links",
+            "only for a concrete gap",
             "Open Question",
             "Unverified",
         ],
@@ -1297,9 +1421,8 @@ def validate_traceability_contracts() -> list[str]:
             "Unverified",
         ],
         ".agents/skills/verification-before-completion/SKILL.md": [
-            "spec coverage check mapping requirements/tasks/test-plan items",
-            "implementation, verification, review, and security evidence",
-            "Open Question",
+            "smallest fresh check",
+            "Do not automatically dispatch a verifier",
             "Unverified",
         ],
     }
@@ -1315,15 +1438,14 @@ def validate_complete_scoped_work_contracts() -> list[str]:
 
     complete_scoped_markers = {
         "agents/implementer.md": [
-            "Deliver a complete, appropriately scoped, verified implementation.",
-            "Do not sacrifice correctness, completeness, user goals, or long-term maintainability to minimize the diff.",
-            "Run the most relevant focused verification first, then broaden only when needed.",
-            "Do not stay artificially small when the assigned task is inherently cross-module",
+            "Implement one complete, scoped code-change assignment.",
+            "Change only task-owned files",
+            "Run the smallest relevant check",
         ],
         "agents/rose.md": [
-            "choose a complete, appropriately scoped, verified implementation",
-            "do not sacrifice correctness, completeness, user goals, or long-term maintainability to minimize the diff",
-            "Stage only task-scoped files",
+            "Deliver the complete accepted scope",
+            "Prefer direct work",
+            "run the smallest claim-matched check",
         ],
         "templates/opencode-global-AGENTS.md": [
             "Implement the complete, appropriately scoped change that satisfies the accepted task.",
@@ -1331,8 +1453,9 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "the diff is task-scoped and non-speculative",
         ],
         "commands/build.md": [
-            "Implement complete package behavior inside the accepted scope",
-            "not artificially tiny or partial patches",
+            "complete accepted scoped queue",
+            "progress-ledger savepoints",
+            "one minimal changed-scope completion check",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "require complete implementation for accepted scope",
@@ -1340,36 +1463,13 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "run the most relevant focused verification first",
         ],
         ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": [
-            "run the most relevant focused tests/checks first",
-            "Run focused verification when useful",
+            "Implement its complete accepted behavior",
+            "Run a focused test/check only when the changed behavior, risk, package need, or bounded failure diagnosis triggers it",
         ],
     }
 
     for relative, markers in complete_scoped_markers.items():
         errors.extend(require_text_markers(relative, markers, "complete scoped work"))
-
-    if (ROOT / "agents/implementer.md").exists():
-        implementer_text = read_repo_text("agents/implementer.md")
-        objective = section_between(implementer_text, "## Primary Objective", "## Implementation Discipline")
-        if not objective:
-            errors.append("agents/implementer.md: missing Primary Objective section")
-        else:
-            errors.extend(require_absent_in_section("agents/implementer.md", objective, ["smallest", "minimal", "minimum"], "Primary Objective"))
-        verification = section_between(implementer_text, "### Goal-Driven Verification", "### Stop Instead")
-        if not verification:
-            errors.append("agents/implementer.md: missing Goal-Driven Verification section")
-        else:
-            errors.extend(require_absent_in_section("agents/implementer.md", verification, ["smallest relevant", "minimal verification", "minimum verification"], "verification-order wording"))
-        errors.extend(
-            require_text_markers(
-                "agents/implementer.md",
-                [
-                    "current task explicitly allows a private unverified `wip:` checkpoint",
-                    "use a private `wip:` prefix only when the current task explicitly allows an unverified checkpoint",
-                ],
-                "implementer wip checkpoint allowance",
-            )
-        )
 
     if (ROOT / "templates/opencode-global-AGENTS.md").exists():
         global_text = read_repo_text("templates/opencode-global-AGENTS.md")
@@ -1435,7 +1535,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
     errors.extend(require_text_markers(".agents/skills/git-workflow-and-versioning/SKILL.md", git_workflow_markers, "commit allowance"))
 
     external_lookup_markers = [
-        "Use external web/Context7/public-project lookup only when the current user, task, or project contract allows source lookup",
+        "external lookup only when authorized",
         "never send secrets or sensitive context",
         "External public-project lookup is allowed only when the current user request, task packet, or project contract allows source lookup",
         "Never send secrets, private data, proprietary code, or sensitive repository context to external search",
@@ -1484,20 +1584,6 @@ def validate_complete_scoped_work_contracts() -> list[str]:
     errors.extend(require_text_markers(".agents/skills/aili-delivery-flow/references/protocols/implementation-package.md", implementation_package_markers, "task-end hygiene"))
 
     cleanup_gate_markers = {
-        "commands/build.md": [
-            "inspect target repo branch/status",
-            "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",
-            "propose cleanup for residue",
-            "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
-            "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
-        ],
-        "commands/ship.md": [
-            "inspect target repo branch/status",
-            "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",
-            "propose cleanup for residue",
-            "ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts",
-            "Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package",
-        ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "inspect `git status --short --branch`",
             "classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown",

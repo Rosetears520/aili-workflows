@@ -79,7 +79,7 @@ REFERENCE_CONTEXT_DIGESTS = frozenset("""
 0bc2d1ee170b13e6af2985e734fa881d96ef13db0c8cd1c7449d31daae3e8e7a 0c5eef839b4550632eabec1be538589fb21af8deaab9b2576f64c8fc04525b37 0c922d7014a8a45aab9e3d000ae8b626504dea944c182514822e854bcbfa4e70 0e352863a13a8b407a631abed8ca6f5e164c4cd81bbf39a8f029e05e37b53e1c 0f09b8e894d76d78f496daaf1b2d170a11d090634052bf3ebb2873ece137a687 191adc033219773e0c8030f14ab19581cc0f1da57449d7459fe93d563c8d18aa 2741a203fb9ddabf52957085e120aba2be02046257aafc866f8fa10f4db06e4f 27e56626e75bb060117f2907d4ed8b3e18a0d1bc0fab5a69041e4a9347bf0898 3c723a3727ccb4df022d78fd1c3ea5197c3641170aa7fa6001cf523123e2ec7f 46f0bf633a1d8d591ac3c17735e541e6ed0cd395371554a59f62dc4ec688b941 480e28f9d430c7998f9605a4218faf5bc75a812fbba8c4aa70e90e776033e650 492aec1942e51185676ffe5efd47c02171557a0a1ffa2ce70b0e9b46fb3f6e0d 4c3e133ba19fd46c55dd033028006d3555800d3b2699b47f0f5c5b0c9671a9e3 59cc34429543c470be735e0dbe250f0a98c65aa55d48cec760999c10e689f4b0 5b9904e288371426c61c4abd45549b6b3a81adfbf4741b3596653ef987c25919 66f5d8d6f88d52fb6a020bb640d7ece32b41b12951d72c447e5f12d88896f1ca 6deb313078ee3214183fbbb0cc7ad40fdb3b3977518b2a143da2614e3b2e20f3 7208b437b758c039e169f5a3672da59b9eabe7ec1c3cb5782b816ecf074e7799 76614fad5d252522a698dad615bceb704fd56a9d2888f45fc0b1155887cbf979 81ff453c6361c0d713bd762474e5350eedd5cac47235acf4fb616a2543384b33 83a24a8063cd7f7ccaef53b2ae5bafd034aba2fd4d40471643d9c0f07fa01bf2 8433f128764e382900cc73c8615d84d31435d1ead8c398e8bc12783e4b1059dd 8dc85c42a2a9362ed1a177f5e292a0269b56917688c8275d449c7aef4df3c7fe 95c60cf102820059f01608c4e46ac9c3eb21ab79c9f18bc479ebf0644eda9f33 a3a0909875f7eca0001bfa609523da0e8009221d327a0ab56cc5868667f086ef a4cb05925d3cc033c6cbbfe76b7da0768634aa603a16ae7533ce088b7a0f8497 a7ef36ca276a6abc4028a950a873d566a45654c7db9ec14907b2b953925edd60 c608b7296b3773010042f48a05802ebb58ddde1dabea20caf0b796af0ea0c22e c9e43fea34e11b76daa73fd672b6ecebb2156bb1792a2c9185fdf643fefaa090 d199a4715649247c32de7174d147c42d0aa927e6d755ff05da7aec7dfdaa0649 ecf58fbf8315757d9b191307afe24e7b7c466ecd44fc3d4bbe1e3144cb87d148
 """.split())
 REFERENCE_CONTEXT_DIGESTS = (REFERENCE_CONTEXT_DIGESTS - {"66f5d8d6f88d52fb6a020bb640d7ece32b41b12951d72c447e5f12d88896f1ca", "a3a0909875f7eca0001bfa609523da0e8009221d327a0ab56cc5868667f086ef"}) | {"5553b3530f55e1b84a024b5a66f3d024da37f598c397db5a4d14a41afb63bbe7", "730aa7d89605a1800893f49b37c416139a1319b9892aaa801f962bfa9f153b79"}
-CHECKER_OCCURRENCE_COUNT = 82
+CHECKER_OCCURRENCE_COUNT = 80
 
 EXPECTED_CASE_OUTCOMES = {
     "no-install": "forbidden-no-process", "no-opencode-install": "forbidden-no-process",
@@ -312,7 +312,7 @@ def repository_surface_scan(root: Path, result: dict[str, Any]) -> dict[str, Any
         ".agents/skills/local-review-gate/SKILL.md": "- `references/graphify-local-review.md`: explicit-operation-only Graphify adapter, pinned provenance/security concerns, sole guarded launcher, exact argv/network/environment/output controls, local-uncommitted output, and advisory-only findings. It adds no install, registration, hook/plugin, scheduler, lifecycle gate, or completion authority.",
         ".agents/skills/using-agent-skills/SKILL.md": "These are exactly four delivery shortcuts, not separate capabilities from natural language. Do not create or route to `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, worktree-maintenance, or Graphify commands, and do not turn interval/event protocol descriptions into schedulers, watchers, hooks, queues, or other background runtime.",
         ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": "[KNOWN] Each convergence claim uses one link with `requirement_or_decision`, `task_or_package`, `file_or_artifact`, `fresh_verification`, `review_or_security_disposition`, `freshness`, and `status`. Status is `linked`, `missing`, `stale`, `conflicting`, `blocked`, or `Unverified`. A checked task, generated summary, CodeGraph result, or Graphify result is not a substitute for the link.",
-        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": "Pre-action gates remain mandatory for destructive/high-risk operations, external roots, dependencies/lockfiles, secrets, Graphify execution, and unsafe runtime behavior. Before non-trivial closeout, inspect `git status --short --branch` and classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown. Propose cleanup for remaining residue; ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.",
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": "Pre-action gates remain mandatory for destructive/high-risk operations, dependencies/lockfiles, secrets, Graphify execution, and unsafe runtime behavior. Material DEFINE decisions and one final test-plan acceptance remain user controls; package boundaries add no approval. BUILD success does not preauthorize SHIP. Commit, push, merge, and release each require exact action-specific approval. CI failure reports the failed check, target, and commit/tree evidence and returns to the user without automatic repair, commit, push, merge, or release.",
     }
     names = {os.fsdecode(raw) for raw in (proc.stdout + ignored.stdout).split(b"\0") if raw}
     for relative in sorted(names, key=os.fsencode):
@@ -394,14 +394,10 @@ def contract_mode(root: Path, fixture_path: Path, args: argparse.Namespace) -> t
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         unsafe(result, f"fixture unavailable: {exc}")
     required_surfaces = {
-        ".agents/skills/local-review-gate/references/graphify-local-review.md": ("sole guarded launcher", "graphify install --platform opencode", "subprocess.run([...], shell=False)"),
-        "agents/rose.md": ("CodeGraph", "exact current repository root"),
-        "agents/code-scout.md": ("CodeGraph", "exact current repository root"),
+        ".agents/skills/local-review-gate/references/graphify-local-review.md": ("sole guarded launcher", "graphify install --platform opencode", "subprocess.Popen(..., shell=False)"),
         ".agents/skills/repo-evidence-first/SKILL.md": ("CodeGraph", "exact current repository root"),
         ".agents/skills/agents-md-initialization/SKILL.md": ("CodeGraph", "exact current repository root"),
         ".agents/skills/context-engineering/SKILL.md": ("CodeGraph", "exact current repository root"),
-        ".agents/skills/review-pipeline/SKILL.md": ("CodeGraph", "exact current repository root"),
-        ".agents/skills/parallel-subagent-dispatch/SKILL.md": ("CodeGraph", "exact current repository root"),
         "templates/opencode-global-AGENTS.md": ("CodeGraph", "exact current repository root"),
     }
     for relative, markers in required_surfaces.items():
@@ -681,11 +677,11 @@ def snapshot(roots: list[Path]) -> list[dict[str, Any]]:
     return entries
 
 
-def sanitized_environment(home: Path, config: Path, cache: Path, data: Path, temp: Path) -> tuple[dict[str, str], dict[str, Any]]:
+def sanitized_environment(home: Path, config: Path, cache: Path, data: Path, state: Path, runtime: Path, temp: Path) -> tuple[dict[str, str], dict[str, Any]]:
     kept = {key: value for key, value in os.environ.items() if key in {"LANG", "LC_ALL", "LC_CTYPE", "TZ"} and not SENSITIVE_ENV.search(key) and not FORBIDDEN_CONFIG_ENV.search(key)}
-    kept.update({"HOME": str(home), "XDG_CONFIG_HOME": str(config), "XDG_CACHE_HOME": str(cache), "XDG_DATA_HOME": str(data), "TMPDIR": str(temp), "GRAPHIFY_QUERY_LOG_DISABLE": "1", "PYTHONNOUSERSITE": "1"})
+    kept.update({"HOME": str(home), "XDG_CONFIG_HOME": str(config), "XDG_CACHE_HOME": str(cache), "XDG_DATA_HOME": str(data), "XDG_STATE_HOME": str(state), "XDG_RUNTIME_DIR": str(runtime), "TMPDIR": str(temp), "TMP": str(temp), "TEMP": str(temp), "GRAPHIFY_QUERY_LOG_DISABLE": "1", "PYTHONNOUSERSITE": "1"})
     kept.pop("GRAPHIFY_GOOGLE_WORKSPACE", None)
-    report = {"isolated": True, "allowlisted_ambient": sorted(key for key in kept if key in {"LANG", "LC_ALL", "LC_CTYPE", "TZ"}), "path_unset": "PATH" not in kept, "credential_variables_removed": sorted(key for key in os.environ if SENSITIVE_ENV.search(key)), "proxy_integration_variables_removed": sorted(key for key in os.environ if FORBIDDEN_CONFIG_ENV.search(key)), "workspace_integration_unset": "GRAPHIFY_GOOGLE_WORKSPACE" not in kept, "query_logging_disabled": kept.get("GRAPHIFY_QUERY_LOG_DISABLE") == "1", "paths": {key: kept[key] for key in ("HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "TMPDIR")}}
+    report = {"isolated": True, "allowlisted_ambient": sorted(key for key in kept if key in {"LANG", "LC_ALL", "LC_CTYPE", "TZ"}), "path_unset": "PATH" not in kept, "credential_variables_removed": sorted(key for key in os.environ if SENSITIVE_ENV.search(key)), "proxy_integration_variables_removed": sorted(key for key in os.environ if FORBIDDEN_CONFIG_ENV.search(key)), "workspace_integration_unset": "GRAPHIFY_GOOGLE_WORKSPACE" not in kept, "query_logging_disabled": kept.get("GRAPHIFY_QUERY_LOG_DISABLE") == "1", "paths": {key: kept[key] for key in ("HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP")}}
     return kept, report
 
 
@@ -910,7 +906,7 @@ def sandbox_command(bwrap: Path, target: Path, output: Path, writable: list[Path
         command.extend(["--ro-bind", str(target), str(target), "--bind", str(output), str(output)])
     for path in writable:
         command.extend(["--bind", str(path), str(path)])
-    command.extend(["--chdir", str(target if not canary else Path("/")), "--", *argv])
+    command.extend(["--chdir", str(writable[0] if not canary else Path("/")), "--", *argv])
     return command
 
 
@@ -1085,19 +1081,33 @@ def execute_mode(args: argparse.Namespace, root: Path, fixture_path: Path) -> tu
         try:
             output.mkdir(mode=0o700)
             isolation = temp_root / "isolation"
-            home, config, cache, data, temp = (isolation / name for name in ("home", "config", "cache", "data", "tmp"))
-            for path in (home, config, cache, data, temp):
+            home, config, cache, data, state, runtime_dir, temp = (isolation / name for name in ("home", "config", "cache", "data", "state", "runtime", "tmp"))
+            for path in (home, config, cache, data, state, runtime_dir, temp):
                 path.mkdir(parents=True, mode=0o700)
         finally:
             os.umask(old_umask)
-        if stat.S_IMODE(output.stat().st_mode) != 0o700 or has_symlink_component(output):
-            unsafe(result, "new output root is not private/non-symlink")
-        env, env_report = sanitized_environment(home, config, cache, data, temp)
+        private_roots = [output, home, config, cache, data, state, runtime_dir, temp]
+        if any(not path.is_dir() or path.is_symlink() or stat.S_IMODE(path.lstat().st_mode) != 0o700 or has_symlink_component(path) for path in private_roots):
+            unsafe(result, "new output/isolation root is not a private non-symlink directory")
+        try:
+            if any(output.iterdir()):
+                unsafe(result, "new output root is not empty")
+        except OSError as exc:
+            unverified(result, f"new output root cannot be inspected: {exc}")
+        if result["blocked"]:
+            raise StopExecution
+        env, env_report = sanitized_environment(home, config, cache, data, state, runtime_dir, temp)
+        env_report["working_directory"] = str(home)
         env_report["output_safety"] = output_safety
         result["environment"].update(env_report)
-        writable = [home, config, cache, data, temp]
+        writable = [home, config, cache, data, state, runtime_dir, temp]
         inventory_roots = [output, *writable]
-        before = snapshot(inventory_roots)
+        try:
+            before = snapshot(inventory_roots)
+        except OSError as exc:
+            unverified(result, f"complete pre-execution writable-root inventory unavailable: {exc}")
+            raise StopExecution
+        result["write_inventory"] = {"roots": [str(path) for path in inventory_roots], "sandbox_denies_other_writes": True, "before": before, "after": [], "complete": False}
         extract_argv = [str(executable), "-I", "-m", "graphify", "extract", str(target), "--code-only", "--no-cluster", "--out", str(output)]
         graph = output / "graphify-out" / "graph.json"
         cluster_argv = [str(executable), "-I", "-m", "graphify", "cluster-only", "--graph", str(graph), "--no-label", "--no-viz"]
@@ -1111,10 +1121,14 @@ def execute_mode(args: argparse.Namespace, root: Path, fixture_path: Path) -> tu
                 result["write_inventory"]["active_quota"] = supervised["usage"]
                 result["write_inventory"]["captured_output_bytes"] = supervised["captured_bytes"]
                 if supervised["violation"]:
+                    if result["process_started"] is not True:
+                        result["process_started"] = None
                     unsafe(result, f"Graphify supervisor stopped execution: {supervised['violation']}")
                     break
-                graphify_started = supervised["returncode"] not in {126, 127} and not supervised["stderr"].lstrip().startswith(b"bwrap:")
-                result["process_started"] = result["process_started"] or graphify_started
+                if supervised["returncode"] == 0:
+                    result["process_started"] = True
+                elif not supervised["stderr"].lstrip().startswith(b"bwrap:") and result["process_started"] is not True:
+                    result["process_started"] = None
                 returncodes.append(supervised["returncode"])
                 if supervised["returncode"] != 0:
                     unsafe(result, f"Graphify exact command failed with exit {supervised['returncode']}")
@@ -1123,13 +1137,21 @@ def execute_mode(args: argparse.Namespace, root: Path, fixture_path: Path) -> tu
             result["process_started"] = None
             unsafe(result, f"Graphify exact command timed out after launch; child start is unknown: {exc}")
         except (OSError, subprocess.SubprocessError) as exc:
+            if result["launch_attempted"] and result["process_started"] is not True:
+                result["process_started"] = None
             unsafe(result, f"Graphify exact command failed: {exc}")
-        after = snapshot(inventory_roots)
+        inventory_complete = True
+        try:
+            after = snapshot(inventory_roots)
+        except OSError as exc:
+            after = []
+            inventory_complete = False
+            unsafe(result, f"complete post-execution writable-root inventory unavailable: {exc}")
         quota = writable_usage(inventory_roots)
         if not quota["within_quota"]:
             unsafe(result, "final cumulative writable byte/inode quota is exceeded or incomplete")
-        result["write_inventory"].update({"roots": [str(path) for path in inventory_roots], "sandbox_denies_other_writes": True, "before": before, "after": after, "quota": quota, "complete": quota["within_quota"]})
-        result["output_inventory"] = snapshot([output])
+        result["write_inventory"].update({"after": after, "quota": quota, "complete": inventory_complete and quota["within_quota"]})
+        result["output_inventory"] = [item for item in after if item["root"] == str(output)]
         if len(returncodes) == 2 and returncodes == [0, 0] and not graph.is_file():
             unsafe(result, "both commands exited 0 but expected graph output is absent")
     except StopExecution:

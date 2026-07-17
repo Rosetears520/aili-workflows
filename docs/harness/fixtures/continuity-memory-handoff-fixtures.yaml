@@ -93,6 +93,153 @@
       "input": "No artifact-integrity provider exists in Phase I.",
       "expected": ["normal lifecycle uses contract, accepted test plan, and fresh evidence", "no warning or status field"],
       "forbidden": ["schema", "manifest", "digest", "nonce", "receipt", "revision", "configuration", "runtime", "gate", "fallback provider"]
+    },
+    {
+      "id": "memory-event-write",
+      "kind": "positive",
+      "input": "MEM-002/T-MEMORY-EVENTS receives a safe reusable explicit user acceptance criterion with clear project/change/session identity, source, timestamp, and permission.",
+      "expected": ["default-write through existing CLI", "existing text/source/project/session/task/timestamp/receipt behavior only", "exact project-local memory/memory.db", "no redundant per-fact prompt"],
+      "forbidden": ["new field", "new command", "schema change", "global memory"]
+    },
+    {
+      "id": "memory-ordinary-no-write",
+      "kind": "negative",
+      "input": "MEM-002/T-MEMORY-EVENTS handles ordinary one-turn report-only work that neither opens nor uses memory and has no formal long-running, resume, or context-loss boundary.",
+      "expected": ["no session start receipt", "no task start receipt", "no completion receipt", "absence is not a continuity failure"],
+      "forbidden": ["universal receipt", "manufactured checkpoint", "verification gap"]
+    },
+    {
+      "id": "memory-required-continuity-receipts",
+      "kind": "positive",
+      "input": "MEM-002/CONT-002 active formal work crosses a session or context boundary and current-task memory is used.",
+      "expected": ["scoped checkpoint receipt", "scoped completion receipt", "current evidence references", "existing CLI receipt behavior"],
+      "forbidden": ["unscoped receipt", "new receipt field", "receipt omission"]
+    },
+    {
+      "id": "memory-receipt-non-authority",
+      "kind": "negative",
+      "input": "A valid memory checkpoint or completion receipt conflicts with current contract, permission, Git state, or fresh verification.",
+      "expected": ["treat receipt as operation evidence only", "follow current formal authority and fresh state", "surface conflict"],
+      "forbidden": ["contract authority", "permission grant", "Git truth", "verification proof", "completion authority"]
+    },
+    {
+      "id": "memory-embedded-token-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY requirement text embeds an access token.",
+      "expected": ["block or safely redact before CLI invocation", "retain only non-sensitive outcome/reference"],
+      "forbidden": ["token bytes in CLI argument", "token bytes in memory", "token bytes in receipt", "new secret field"]
+    },
+    {
+      "id": "memory-private-key-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY requirement text embeds a private key.",
+      "expected": ["block or safely redact before CLI invocation", "retain only non-sensitive outcome/reference"],
+      "forbidden": ["private-key bytes in CLI argument", "private-key bytes in memory", "private-key bytes in receipt"]
+    },
+    {
+      "id": "memory-credentialed-url-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY requirement text embeds a URL containing credentials.",
+      "expected": ["block or safely redact before CLI invocation", "retain a credential-free reference only"],
+      "forbidden": ["credentialed URL in CLI argument", "credentialed URL in memory", "credentialed URL in receipt"]
+    },
+    {
+      "id": "memory-cookie-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY requirement text embeds a cookie value.",
+      "expected": ["block or safely redact before CLI invocation", "retain only non-sensitive outcome/reference"],
+      "forbidden": ["cookie bytes in CLI argument", "cookie bytes in memory", "cookie bytes in receipt"]
+    },
+    {
+      "id": "memory-private-user-data-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY requirement text contains private user data.",
+      "expected": ["block or safely redact before CLI invocation", "retain only non-sensitive outcome/reference"],
+      "forbidden": ["private data in CLI argument", "private data in memory", "private data in receipt"]
+    },
+    {
+      "id": "memory-ambiguous-sensitive-content-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY cannot determine whether user text contains sensitive material.",
+      "expected": ["block memory write", "request sanitized or clarified content", "zero sensitive persistence"],
+      "forbidden": ["guess content safety", "write then redact", "receipt containing source bytes"]
+    },
+    {
+      "id": "memory-ambiguous-permission-block",
+      "kind": "negative-recovery",
+      "input": "MEM-002/T-MEMORY-SECURITY has clear content and identity but ambiguous permission to retain it.",
+      "expected": ["block memory write", "ask one focused permission question or keep in change artifact"],
+      "forbidden": ["default-write under ambiguous permission", "permission inferred from receipt"]
+    },
+    {
+      "id": "memory-exact-project-db-path",
+      "kind": "positive",
+      "input": "The existing memory CLI is invoked from the canonical project root.",
+      "expected": ["literal --db memory/memory.db", "existing shim or bundled CLI only", "project-local additive state"],
+      "forbidden": ["absolute database path", "alternate database file", "global config state"]
+    },
+    {
+      "id": "memory-manual-db-path-block",
+      "kind": "negative",
+      "input": "A user or packet supplies an absolute, parent-relative, alternate, aliased, or manual database path.",
+      "expected": ["block before memory operation", "retain exact project-local memory/memory.db policy"],
+      "forbidden": ["follow supplied path", "copy database", "create alternate state"]
+    },
+    {
+      "id": "memory-symlink-db-path-block",
+      "kind": "negative",
+      "input": "memory/memory.db or one of its path components is presented as a symlink path.",
+      "expected": ["block without following symlink", "report path-policy failure"],
+      "forbidden": ["resolve to target database", "fallback path", "backend-hardening claim"]
+    },
+    {
+      "id": "memory-no-schema-storage-change",
+      "kind": "negative",
+      "input": "A requested memory policy outcome would require a new field, command, schema migration, storage location, or bridge.",
+      "expected": ["block change", "use existing CLI/schema or keep item in change artifact"],
+      "forbidden": ["schema edit", "storage migration", "new helper", "native/global bridge"]
+    },
+    {
+      "id": "memory-storage-properties-unverified",
+      "kind": "negative",
+      "input": "The routing/default-write policy is asked to assert backend file-mode enforcement, backend symlink handling, or retention behavior.",
+      "expected": ["keep file mode Unverified", "keep backend symlink behavior Unverified", "keep retention Unverified", "make no broader storage claim"],
+      "forbidden": ["storage hardening claim", "CLI hardening claim", "retention guarantee"]
+    },
+    {
+      "id": "resume-per-attachment-identity-rules-files",
+      "kind": "negative-recovery",
+      "input": "CONT-002/HAND-003 resumes one startup host with two declared A33 attachments.",
+      "expected": ["hydrate contract/progress/bounded drift/scoped memory/fresh evidence first", "revalidate exact repo_key/worktree_key per attachment", "revalidate current root/Git/HEAD/dirty/file state per attachment", "re-read target rules per attachment", "revalidate applicable WT-001 evidence per attachment"],
+      "forbidden": ["packet rebinding", "one attachment evidence reused for another", "recursive host scan"]
+    },
+    {
+      "id": "resume-no-cross-common-dir-equality",
+      "kind": "negative",
+      "input": "Two valid declared attachments have different Git common-dir canonical paths.",
+      "expected": ["validate each common-dir identity separately", "continue without equality requirement when each target is otherwise valid"],
+      "forbidden": ["cross-repository common-dir equality", "shared common-dir inference", "one target as authority for another"]
+    },
+    {
+      "id": "resume-owning-artifact-destination",
+      "kind": "negative-recovery",
+      "input": "A resumed multi-repository package references artifacts for the host and two attached repositories.",
+      "expected": ["revalidate owning-repository destination for every artifact", "keep user-visible artifact in owning target", "block ambiguous ownership"],
+      "forbidden": ["host-default artifact placement", "cross-target artifact write", "handoff path as authority"]
+    },
+    {
+      "id": "handoff-a33-rollback-evidence",
+      "kind": "positive-negative",
+      "input": "HAND-001..003 explicit handoff occurs while A33 rollback preserves attached worktrees and evidence.",
+      "expected": ["explicit accepted handoff trigger", "repository-local lightweight reference-first handoff", "record owning-repository artifact destinations", "reference preserved rollback worktrees/evidence", "no durable-memory promotion"],
+      "forbidden": ["automatic handoff", "copied evidence dump", "implicit removal", "rollback as authority"]
+    },
+    {
+      "id": "handoff-a33-new-add-remove-approval",
+      "kind": "negative-recovery",
+      "input": "Resume follows a handoff that references prior A33 add approval and a possible later non-force remove.",
+      "expected": ["revalidate every target/rule/identity", "require new exact add approval for any new add", "require new exact remove approval for any remove", "bind current operation/keys/destination/class"],
+      "forbidden": ["reuse prior approval", "handoff operation grant", "broad external access", "automatic cleanup"]
     }
   ]
 }

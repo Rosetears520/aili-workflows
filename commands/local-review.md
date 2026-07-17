@@ -12,7 +12,8 @@ $ARGUMENTS
 Invoke the local review gate workflow. If a dedicated `local-review-gate` skill is installed, route to that skill; otherwise apply this command contract as the local review gate authority until the skill exists.
 
 Purpose:
-- Review a selected local target before PR-time or SHIP-time gates, classify findings first, and report skipped or `Unverified` lanes without mutating remote state.
+- Review a selected local target as a standalone non-delivery audit, classify findings first, and report skipped or `Unverified` lanes without mutating remote state.
+- A `/local-review` result is not lifecycle acceptance or SHIP, release, merge, archive, or closeout evidence.
 
 Target modes:
 - No args: review staged, unstaged, and untracked local changes.
@@ -30,6 +31,8 @@ Required behavior:
 - Review across five axes — correctness, readability, architecture, security, and performance — after reading applicable spec/task artifacts and tests first when present.
 - Require Critical/Important findings to include evidence anchors, concrete failure mode, why existing guards do not catch it, and concrete fixes; zero findings is valid only with inspected scope, skipped checks, and confidence recorded.
 - Use fail-closed orchestration for selected lanes: missing/status-less lane output, unavailable required context, or unverifiable high-risk findings cannot become a clean `PASS`.
+- Require selected review/test lanes to return the canonical result/finding envelope from `aili-delivery-flow/references/protocols/subagent-result.md`.
+- For A33 targets, resolve exactly one declared repository/cwd, one current WT-001 reference, applicable narrowing target rules, and an owning-repository report destination; record soft-boundary limitations, do not scan the host broadly, and never duplicate or rebind identity, keys, approvals, Git state, rules, or command/cwd.
 - Produce a categorized report before repair. For OpenSpec targets, default to `openspec/changes/<change-id>/review-report.md`; for non-OpenSpec targets, ask once for a repository-local report path or obtain an explicit chat-only waiver with persistence marked `Unverified`.
 - Classify each finding by severity, category, source lane, evidence anchor, affected file or artifact, required action, repair owner, status, and re-review requirement.
 - Use verdicts: `BLOCKED`, `NEEDS_FIXES`, `NEEDS_REVIEW`, `PASS_WITH_UNVERIFIED`, `PASS`, `REPAIRING`, and `REREVIEW_REQUIRED`.
@@ -39,6 +42,7 @@ Required behavior:
 Hard stops:
 - Do not override, replace, or depend on OpenCode's built-in `/review` command.
 - Do not replace `/ship` or claim release-readiness, merge-readiness, handoff-readiness, archive-readiness, or closeout readiness.
+- Do not use this audit as lifecycle acceptance or as SHIP/release/merge/archive evidence.
 - Do not push, create PRs, comment on GitHub, approve/request changes, merge, tag, publish, delete, reset, clean, or otherwise mutate remote state.
 - Do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`, or any equivalent push, merge, comment, review, checkout, clone, or remote-mutating command in PR mode.
 - Do not perform repair until after the categorized report exists and the user or current active contract explicitly authorizes repair.

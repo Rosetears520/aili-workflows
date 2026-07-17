@@ -11,11 +11,11 @@
 | Harness change | harness change report, component map, verification trigger | security/review audit | silent apply | ROSE/command/skill/subagent/memory/install edits |
 | Security/trust boundary | security-hardening, threat/risk notes, targeted tests | independent security audit | unchecked completion claims | Weakening safety policy |
 | Package 1–11 implementation | complete assigned package behavior, dependency/file ownership, lightweight savepoint with scope/files/unresolved/next | focused tests/checkers as implementation feedback | mandatory independent package-local quality gate | Scope expansion or high-risk/pre-action operation |
-| Package 12 final gate | all 74 task rows exactly once, fresh mandatory command matrix, joined diverse non-nesting reviews, bounded holistic repair | affected-lane reruns within the accepted maximum | release-ready claim before convergence | Graphify execution, publish/push/archive, destructive action |
+| Package 12 final inspection | direct final diff and applicable task-coverage inspection, smallest relevant fresh checks | at most two specialists for a concrete gap, one targeted repair/recheck | automatic review swarm, full command matrix by default | Graphify execution, publish/push/archive, destructive action |
 
 ## Gate Intent
 
 - Prevent over-triggering for simple, local work.
 - Prevent under-triggering for harness, memory, security, subagent, install, or completion-claim changes.
 - Make proactive parallel planning, research-first planning evidence, and requested packaging sequencing visible without adding new public commands.
-- Keep Package 1–11 verification lightweight and traceable; only Package 12 is the mandatory comprehensive quality/convergence gate.
+- Keep Package 1–11 verification lightweight and traceable; Package 12 is a direct final inspection, not an automatic comprehensive review swarm.

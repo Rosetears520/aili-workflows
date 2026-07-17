@@ -42,6 +42,10 @@ description: 当用户明确要求交接、恢复提示或会话 handoff 时，�
 
 ## Touched Files / Artifact References
 
+## A33 Attachment / Owning-Repository Artifact Destinations
+
+## Preserved Rollback Worktrees / Evidence References
+
 ## Evidence Anchors
 
 ## Subagent Activity
@@ -81,10 +85,12 @@ MUST NOT include:
 
 恢复时先把 handoff 当作路径索引，而不是状态事实：
 
-1. 重新确认 canonical repository root、worktree、branch/HEAD、dirty/untracked 状态和当前 session 权限；外部 root 重新取得当前 session 的明确批准。
+1. 重新确认用户选择的 canonical Git startup root、worktree、branch/HEAD、dirty/untracked 状态和当前 session 权限；handoff 中的路径只用于导航。
 2. 重新读取 active OpenSpec proposal/specs/design/tasks、`interview.md`、已接受的 `test-plan.md`、`context.md`、`progress.txt` 和 bounded `drift-log.md`。
 3. 按当前 diff/scope/risk 检查 review/test/security/verification evidence 的 freshness，重跑 stale、缺失或受影响的检查。
-4. 对 handoff 与当前证据的冲突标记 `Open Question` / `Unverified` 并停止受影响动作；不得从 handoff 推断授权、完成或 lifecycle phase。
+4. 对每个已声明 A33 attachment 分别验证 exact `repo_key`/`worktree_key` 与目标路径、当前 applicable `WT-001`、host/source/target root 与 Git/toplevel/private-dir/common-dir/HEAD/branch/membership、dirty 与 tracked/untracked/ignored/artifact/unknown file state、目标 rules，以及 owning-repository artifact destination。不同 repository 不要求 common-dir 相等，也不得复用另一 attachment 的证据。
+5. 重新验证 handoff 引用的 preserved rollback worktree/evidence。Rollback 只保留状态；任何 ADD 或 non-force REMOVE 都需要针对当前 exact operation、keys、destination 和 operation class 的全新明确批准。此前批准、handoff、packet、memory 或 checkpoint 均不授权操作或扩大访问范围。
+6. 对 handoff 与当前证据的冲突标记 `Open Question` / `Unverified` 并停止受影响动作；不得从 handoff 推断授权、完成或 lifecycle phase。
 
 ## Pinned upstream adaptation
 

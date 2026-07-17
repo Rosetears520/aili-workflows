@@ -1,83 +1,53 @@
-schema: aili.cross-worktree-permission-fixtures.v2
-version: "2.0"
-mode: a30-same-instance-readonly
-provider: local-mock
-expected_opencode_version: "1.17.18"
-selected_role_count: 15
-runtime_mode: real
-exit_codes:
-  safe_observed: 0
-  usage_or_fixture_error: 2
-  blocked_or_unverified: 3
-  unsafe: 5
-required_report_fields:
-  - schema_version
-  - mode
-  - status
-  - roles
-  - fixture_identity
-  - effective_permissions
-  - cases
-  - parent_before
-  - parent_after
-  - target_before
-  - target_after
-  - common_dir_before
-  - common_dir_after
-  - clean_ask
-  - seeded_always
-  - override_observability
-  - blocked
-  - unverified
-  - errors
-  - cleanup
-cases:
-  - id: effective-merged-tool-inventory
-    expected: exact-final-merged-profile
-  - id: unexpected-tool-denied
-    expected: deny
-  - id: direct-invocation-excluded
-    expected: outside-guarantees
-  - id: seeded-parent-edit-allow-blocks
-    expected: block-effective-override
-  - id: seeded-parent-bash-allow-blocks
-    expected: block-effective-override
-  - id: seeded-parent-task-allow-blocks
-    expected: block-effective-override
-  - id: external-always-read-broadens
-    expected: disclose-read-privacy
-  - id: auto-read-privacy-caveat
-    expected: disclose-or-unverified
-  - id: mutation-capable-effective-rule-blocks
-    expected: block
-  - id: clean-external-read-positive
-    expected: pass-through-rose-task
-  - id: clean-path-ask
-    expected: exact-path-ask
-  - id: edit-denied
-    expected: no-effect
-  - id: bash-denied
-    expected: no-effect
-  - id: task-denied
-    expected: no-effect
-  - id: commit-denied
-    expected: no-effect
-  - id: merge-denied
-    expected: no-effect
-  - id: apply-denied
-    expected: no-effect
-  - id: parent-unchanged
-    expected: equal
-  - id: target-unchanged
-    expected: equal
-  - id: common-dir-unchanged
-    expected: equal
-  - id: no-real-user-state
-    expected: temporary-only
-fail_closed:
-  - direct user @ invocation is outside A30 guarantees
-  - ask always and auto may broaden external-read privacy
-  - no mutation or nesting claim without final merged denies and provenance
-  - unavailable provider executable effective rules provenance or override evidence exits 3
-  - controlled parser or unit stubs never produce rollout-eligible exit 0
-  - no automatic integration cleanup repair reset or rollback of source or target worktrees
+{
+  "schema": "aili.cross-worktree-permission-fixtures.v3",
+  "version": "3.0",
+  "exit_codes": {"safe_observed": 0, "usage_or_fixture_error": 2, "blocked_or_unverified": 3, "unsafe": 5},
+  "historical_a30": {
+    "mode": "a30-same-instance-readonly",
+    "authority": "historical-non-gating",
+    "provider": "local-mock",
+    "expected_opencode_version": "1.17.18",
+    "selected_role_count": 15,
+    "runtime_mode": "real",
+    "required_report_fields": ["schema_version", "mode", "status", "roles", "fixture_identity", "effective_permissions", "cases", "parent_before", "parent_after", "target_before", "target_after", "common_dir_before", "common_dir_after", "clean_ask", "seeded_always", "override_observability", "blocked", "unverified", "errors", "cleanup"],
+    "case_ids": ["effective-merged-tool-inventory", "unexpected-tool-denied", "direct-invocation-excluded", "seeded-parent-edit-allow-blocks", "seeded-parent-bash-allow-blocks", "seeded-parent-task-allow-blocks", "external-always-read-broadens", "auto-read-privacy-caveat", "mutation-capable-effective-rule-blocks", "clean-external-read-positive", "clean-path-ask", "edit-denied", "bash-denied", "task-denied", "commit-denied", "merge-denied", "apply-denied", "parent-unchanged", "target-unchanged", "common-dir-unchanged", "no-real-user-state"],
+    "fail_closed": ["direct user @ invocation is outside A30 guarantees", "A30 evidence never proves A33", "controlled parser or unit stubs never produce rollout-eligible exit 0", "no automatic integration cleanup repair reset or rollback"]
+  },
+  "a33": {
+    "mode": "a33-attached-shared-trust-domain",
+    "provider": "local-mock",
+    "destination_template": "<session-root>/.worktrees/<repo_key>/<worktree_key>",
+    "key_pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+    "reserved_keys": [".", "..", ".git", ".worktrees", "worktrees"],
+    "identity_fields": ["identity_state", "declared_root", "path_state", "canonical_root", "git_toplevel", "git_private_dir", "git_common_dir", "git_head", "git_branch", "detached_head", "worktree_membership", "dirty_state", "tracked_files", "untracked_files", "ignored_files", "artifact_files", "unknown_files"],
+    "dirty_state_fields": ["tracked_modified", "tracked_deleted", "untracked_count", "ignored_count"],
+    "delta_fields": ["target_path", "worktree_membership", "common_dir_identity", "common_dir_admin_entry", "branch_ref", "branch_reflog", "unrelated_common_dir_entries", "unrelated_refs", "config", "hooks", "unrelated_worktree_records", "unrelated_prunable_entries", "other_files"],
+    "pending_operation_fields": ["operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy", "approval_required"],
+    "operation_fields": ["operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy"],
+    "approval_fields": ["approval_id", "run_id", "operation_id", "kind", "operation_class", "source", "destination", "repo_key", "worktree_key", "branch", "base_ref", "branch_mode", "reflog_policy", "expiry", "decision_ref", "trusted_code_risk", "status"],
+    "prepare_result_fields": ["schema_version", "command", "status", "exit_code", "run_id", "run_root", "pending_operations", "worktree_effects", "unverified"],
+    "operation_result_fields": ["schema_version", "command", "status", "exit_code", "run_id", "operation", "approval", "effect_started", "expected_delta", "observed_delta", "evidence_refs", "unverified"],
+    "static_result_fields": ["schema_version", "command", "mode", "status", "exit_code", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "contract_mutations", "summary", "unverified", "ephemeral_result"],
+    "runtime_join_fields": ["schema_version", "command", "mode", "status", "exit_code", "run_id", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "operations", "cleanup", "summary", "unverified", "ephemeral_result"],
+    "runtime_case_fields": ["id", "subset", "status", "exit_code", "run_id", "operation_id", "approval_ref", "host_identity", "source_identity", "target_identity", "expected_delta", "observed_delta", "evidence_refs", "unverified", "cleanup_state"],
+    "joined_case_fields": ["id", "subset", "status", "exit_code", "operation_id", "approval_ref", "host_identity", "source_identity", "target_identity", "expected_delta", "observed_delta", "evidence_refs", "unverified", "cleanup_state"],
+    "join_result_fields": ["schema_version", "command", "mode", "status", "exit_code", "static_result_ref", "runtime_result_ref", "static_mandatory_case_ids", "runtime_mandatory_case_ids", "mandatory_case_ids", "observed_case_ids", "case_set_equal", "cases", "mutation_summary", "cleanup", "summary", "unverified"],
+    "contract_mutation_ids": ["a33-contract-missing-case-rejected", "a33-contract-duplicate-case-rejected", "a33-contract-extra-case-rejected", "a33-contract-skipped-case-rejected", "a33-contract-evidence-empty-case-rejected", "a33-contract-schema-mismatch-rejected"],
+    "static_mandatory_case_ids": [
+      "a33-host-non-git-block", "a33-host-no-ranking", "a33-ignore-missing-block", "a33-ignore-reinclude-block", "a33-destination-tracked-block", "a33-key-valid", "a33-key-invalid-block", "a33-collision-no-guess-block", "a33-shared-trust-disclosure", "a33-hard-isolation-claim-reject", "a33-managed-19-external-deny", "a33-managed-external-ask-reject", "a33-builtins-excluded", "a33-web-profile-unchanged", "a33-install-equality", "a33-rules-narrow", "a33-rules-broaden-block", "a33-rules-conflict-block", "a33-lane-one-repository", "a33-no-recursive-host-scan", "a33-artifact-owning-repository", "a33-topology-submodule-block", "a33-path-ambiguity-block", "a33-result-null-representation", "a33-result-null-field-omission-rejected", "a33-result-not-applicable-string-misuse-rejected", "a33-result-null-wrong-type-rejected", "a33-join-static-row-null-shape", "a33-join-runtime-nonoperation-null-shape", "a33-join-runtime-operation-populated-shape", "a33-forbidden-git-block", "a33-rollback-preserves", "a33-codegraph-per-target", "a33-no-new-machinery", "a33-package-excludes-worktrees", "a33-acceptance-item43-only",
+      "a33-operation-key-omission-rejected", "a33-operation-key-wrong-type-rejected", "a33-approval-key-omission-rejected", "a33-approval-key-wrong-type-rejected", "a33-identity-field-omission-rejected", "a33-identity-field-wrong-type-rejected", "a33-identity-string-sentinel-rejected", "a33-identity-populated-required-null-rejected", "a33-identity-absent-forbidden-nonnull-rejected", "a33-identity-detached-branch-mismatch-rejected", "a33-identity-file-array-invalid-rejected", "a33-identity-dirty-count-invalid-rejected"
+    ],
+    "runtime_mandatory_case_ids": [
+      "a33-host-git-positive", "a33-ignore-positive", "a33-multiple-attachments", "a33-runtime-prepare-no-worktree-effect", "a33-runtime-effective-profile-observed", "a33-runtime-install-observed", "a33-runtime-nested-repository-observed", "a33-runtime-approval-positive", "a33-runtime-each-attachment-add-separate-approval", "a33-runtime-each-attachment-remove-separate-approval", "a33-runtime-add-approval-wrong-zero-effect", "a33-runtime-add-approval-reused-zero-effect", "a33-runtime-remove-approval-wrong-zero-effect", "a33-runtime-remove-approval-reused-zero-effect", "a33-runtime-fixture-add-real-approval-zero-effect", "a33-runtime-fixture-remove-real-approval-zero-effect", "a33-runtime-operation-class-mismatch-zero-effect", "a33-runtime-approval-missing-zero-effect", "a33-runtime-missing-approval-null-fields", "a33-runtime-approval-stale-zero-effect", "a33-runtime-approval-mismatched-zero-effect", "a33-runtime-approval-expired-zero-effect", "a33-runtime-approval-wrong-source-zero-effect", "a33-runtime-approval-wrong-destination-zero-effect", "a33-runtime-approval-wrong-branch-zero-effect", "a33-runtime-approval-wrong-ref-zero-effect", "a33-runtime-add-approval-reused-real-remove-zero-effect", "a33-runtime-approval-other-operation-zero-effect", "a33-runtime-approval-declined-unavailable", "a33-runtime-add-trusted-code-risk-accepted", "a33-runtime-add-trusted-code-risk-declined-zero-effect", "a33-runtime-add-trusted-code-risk-unavailable-zero-effect", "a33-runtime-remove-trusted-code-risk-not-applicable", "a33-pre-add-target-absent", "a33-add-delta-exact", "a33-add-common-dir-exact-allowed-delta", "a33-add-common-dir-identity-preserved", "a33-add-existing-branch-no-ref-reflog-creation", "a33-add-new-branch-reflog-enabled-created", "a33-add-new-branch-reflog-disabled-absent", "a33-unrelated-common-dir-preserved", "a33-add-unrelated-preserved", "a33-pre-remove-target-populated", "a33-remove-delta-exact", "a33-remove-common-dir-exact-allowed-delta", "a33-remove-common-dir-identity-preserved", "a33-remove-dirty-block", "a33-remove-unknown-block", "a33-remove-user-visible-block", "a33-remove-ignored-block", "a33-remove-untracked-block", "a33-remove-artifact-block", "a33-remove-locked-block", "a33-remove-wrong-source-block", "a33-remove-wrong-path-block", "a33-remove-missing-target-block", "a33-runtime-cleanup-after-approved-removes", "a33-runtime-cleanup-retain-registered", "a33-residual-nongoal-exit0", "a33-material-missing-exit3", "a33-contract-violation-exit5",
+      "a33-common-dir-identity-change-block", "a33-add-common-dir-unrelated-mutation-block", "a33-remove-common-dir-unrelated-mutation-block", "a33-add-new-branch-reflog-enabled-missing-block", "a33-add-new-branch-reflog-disabled-unexpected-block", "a33-remove-branch-deletion-block", "a33-remove-branch-reflog-mutation-block", "a33-runtime-key-mismatch-zero-effect", "a33-runtime-identity-transition-schema"
+    ],
+    "attachments": [
+      {"repo_key": "foreign-a", "worktree_key": "existing", "branch": "fixture-existing", "base_ref": "HEAD", "branch_mode": "existing", "reflog_policy": "enabled"},
+      {"repo_key": "foreign-b", "worktree_key": "create-enabled", "branch": "fixture-create-enabled", "base_ref": "HEAD", "branch_mode": "create", "reflog_policy": "enabled"},
+      {"repo_key": "foreign-c", "worktree_key": "create-disabled", "branch": "fixture-create-disabled", "base_ref": "HEAD", "branch_mode": "create", "reflog_policy": "disabled"}
+    ],
+    "null_semantics": {"all_declared_fields_present": true, "absent_or_inapplicable": null, "string_sentinel_forbidden": true, "observed_remove_trusted_code_risk": "not_applicable"},
+    "soft_boundary": ["same-owner same-sensitivity mutually-readable-writable trust domain", "no hard repository isolation", "trusted hooks config filters and tests may execute with user privileges and ambient network", "no sandbox DLP network isolation universal TOCTOU or arbitrary-process containment", "no cross-repository common-dir equality claim"],
+    "operation_scope": {"allowed": ["separately approved git worktree add", "separately approved non-force git worktree remove"], "forbidden": ["prune", "move", "repair", "lock", "unlock", "force remove", "clean", "reset", "merge", "rebase", "commit", "push", "branch deletion", "automatic integration", "real repository cleanup"]}
+  }
+}

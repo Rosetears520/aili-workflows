@@ -277,10 +277,9 @@ describe("CartStore", () => {
 
 Maestro is the recommended E2E tool for Expo — no build configuration needed.
 
-```bash
-# Install
-curl -Ls "https://get.maestro.mobile.dev" | bash
+Install Maestro by following the [official platform-specific installation guide](https://docs.maestro.dev/getting-started/installing-maestro).
 
+```bash
 # Run flow
 maestro test flows/login.yaml
 ```

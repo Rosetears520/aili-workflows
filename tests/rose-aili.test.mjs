@@ -15,7 +15,7 @@ const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? fa
 const SPECIALIZED_QA_LANES = [
   { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing or modifying tests: use `test-engineer`" },
   { agent: "pr-test-analyzer", skill: "pr-test-analysis", owner: "subagent:review", nearMiss: "General code correctness review: `code-reviewer`" },
-  { agent: "ai-regression-scout", skill: "ai-regression-scout", owner: "subagent:test", nearMiss: "Product-code behavior regression: use `test-engineer` or `debug-investigator`" },
+  { agent: "ai-regression-scout", skill: "ai-regression-scout", owner: "subagent:test", nearMiss: "Product-code behavior regression: use `test-engineer` or direct root-cause investigation" },
   { agent: "silent-failure-reviewer", skill: "silent-failure-hunting", owner: "subagent:review", nearMiss: "Coverage adequacy: `coverage-review`" },
   { agent: "browser-qa-runner", skill: "browser-qa", owner: "subagent:test", nearMiss: "Persistent E2E report/trace packaging: `e2e-artifact-handling`" },
   { agent: "e2e-artifact-runner", skill: "e2e-artifact-handling", owner: "subagent:test", nearMiss: "Browser manual QA without durable artifacts: `browser-qa`" }
@@ -955,7 +955,7 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
 
   await rm(fixture.ailiHome, { recursive: true, force: true });
-  assert.match(await readFile(roseTarget, "utf8"), /ROSE Runtime Charter/);
+  assert.match(await readFile(roseTarget, "utf8"), /# ROSE\n[\s\S]*## Role\n[\s\S]*## Goal\n[\s\S]*## Success criteria/);
   assert.match(await readFile(skillTarget, "utf8"), /rose-memory/);
   assert.match(await readFile(globalAgentsTarget, "utf8"), /installer-owned-global-file/);
   await fixture.cleanup();
@@ -1214,13 +1214,17 @@ test("manifest registers specialized QA agents and skills", async () => {
   const roseText = await readFile(path.join(repoRoot, "agents", "rose.md"), "utf8");
   const reviewPipelineText = await readFile(path.join(repoRoot, ".agents", "skills", "review-pipeline", "SKILL.md"), "utf8");
 
-  for (const { agent: name, owner } of SPECIALIZED_QA_LANES) {
+  for (const { agent: name } of SPECIALIZED_QA_LANES) {
     assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
-    await stat(path.join(repoRoot, "agents", `${name}.md`));
+    const agentText = await readFile(path.join(repoRoot, "agents", `${name}.md`), "utf8");
     assert.ok(roseText.includes(`"${name}": allow`));
-    assert.ok(roseText.includes(`- \`${name}\` (\`${owner}\`):`));
-    assert.ok(reviewPipelineText.includes(`- \`${name}\`:`));
+    assert.match(agentText, /## Role\n[\s\S]*## Goal\n[\s\S]*## Success criteria/);
+    assert.ok(agentText.includes("external_directory: deny"));
+    assert.ok(agentText.includes("task: deny"));
   }
+
+  assert.ok(reviewPipelineText.includes("Choose at most two relevant specialists"));
+  assert.ok(reviewPipelineText.includes("Do not automatically fan out"));
 
   for (const { agent, skill: name, nearMiss } of SPECIALIZED_QA_LANES) {
     assert.ok(skillNames.has(name), `expected manifest skill ${name}`);
@@ -1243,19 +1247,17 @@ test("manifest registers ECC-derived selected agents and skills", async () => {
   const roseText = await readFile(path.join(repoRoot, "agents", "rose.md"), "utf8");
   const reviewPipelineText = await readFile(path.join(repoRoot, ".agents", "skills", "review-pipeline", "SKILL.md"), "utf8");
 
-  for (const { name, owner } of ECC_SELECTED_AGENTS) {
+  for (const { name } of ECC_SELECTED_AGENTS) {
     const agent = manifest.components.agents.find((entry) => entry.name === name);
     assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
     assert.equal(agent.path, `agents/${name}.md`);
     assert.equal(agent.defaultInstalled, true);
     await stat(path.join(repoRoot, "agents", `${name}.md`));
     assert.ok(roseText.includes(`"${name}": allow`));
-    assert.ok(roseText.includes(`- \`${name}\` (\`${owner}\`):`));
   }
 
-  assert.ok(reviewPipelineText.includes("- `agent-evaluator`:"));
-  assert.ok(reviewPipelineText.includes("- `opensource-sanitizer`:"));
-  assert.ok(reviewPipelineText.includes("- `code-review-quality-gates`:"));
+  assert.ok(reviewPipelineText.includes("Choose at most two relevant specialists"));
+  assert.ok(reviewPipelineText.includes("ROSE owns the final judgment"));
 
   for (const name of ECC_SELECTED_SKILLS) {
     assert.ok(skillNames.has(name), `expected manifest skill ${name}`);
@@ -1288,7 +1290,7 @@ test("ECC-derived components preserve safety boundaries and exclusions", async (
     const agentText = await readFile(path.join(repoRoot, "agents", `${name}.md`), "utf8");
     assert.ok(agentText.includes("edit: deny"));
     assert.ok(agentText.includes("task: deny"));
-    assert.ok(agentText.includes("external_directory: ask"));
+    assert.ok(agentText.includes("external_directory: deny"));
     assert.ok(agentText.includes("bash: deny"));
     assert.doesNotMatch(agentText, /"git diff[^"]*": allow/);
     assert.doesNotMatch(agentText, /"git show[^"]*": allow/);
@@ -1297,8 +1299,8 @@ test("ECC-derived components preserve safety boundaries and exclusions", async (
   }
 
   const sanitizerText = await readFile(path.join(repoRoot, "agents", "opensource-sanitizer.md"), "utf8");
-  assert.ok(sanitizerText.includes("Do not edit, delete, move, rename, publish, unpublish"));
-  assert.ok(sanitizerText.includes("report only `path:line`, type, and `<redacted>`"));
+  assert.ok(sanitizerText.includes("Never publish, delete, rewrite history, or print secrets."));
+  assert.ok(sanitizerText.includes("Report redacted evidence and concrete exposure paths."));
 
   const expectedSkillBoundaries = new Map([
     ["comment-accuracy-review", "General correctness, architecture, performance, or security review"],
@@ -1313,8 +1315,8 @@ test("ECC-derived components preserve safety boundaries and exclusions", async (
     assert.ok(skillText.includes(marker), `expected ${name} to include boundary marker`);
   }
 
-  assert.ok(reviewPipelineText.includes("only for disputed, critical, acceptance-blocking, or user-requested agent/subagent outputs"));
-  assert.ok(reviewPipelineText.includes("- `oss-release-readiness`:"));
+  assert.ok(reviewPipelineText.includes("a specialist capability is required for a concrete unresolved risk"));
+  assert.ok(reviewPipelineText.includes("Never creates an automatic review swarm"));
 });
 
 test("manifest registers DeerFlow clean-room pattern skills", async () => {

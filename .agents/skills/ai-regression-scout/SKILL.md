@@ -15,7 +15,7 @@ Use this skill to route AI-workflow regression discovery to `ai-regression-scout
 
 ## Near Misses
 
-- Product-code behavior regression: use `test-engineer` or `debug-investigator`.
+- Product-code behavior regression: use `test-engineer` or direct root-cause investigation.
 - General prompt editing: use the assigned implementation lane.
 - Review of false success gates: use `silent-failure-hunting`.
 

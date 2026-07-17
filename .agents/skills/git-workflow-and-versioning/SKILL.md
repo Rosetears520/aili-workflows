@@ -273,6 +273,21 @@ refactor/<short-description>  → refactor/auth-module
 
 ## Working with Worktrees
 
+### A33 session-root attached repositories
+
+When the active contract selects `a33-attached-shared-trust-domain`, this section overrides the generic sibling-worktree examples below.
+
+- The Git repository where the user started OpenCode is the host. Do not rank, move, broadly scan for, or auto-select another host.
+- Every attachment destination is exactly `<session-root>/.worktrees/<repo_key>/<worktree_key>`. Both keys must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`; reserved/path-like/control values and all path, key, branch, or worktree collisions block without guessing, suffixing, forcing, `-B`, orphan creation, remote guessing, or implicit ref selection.
+- Require the exact prospective destination ignored through root `/.worktrees/`, with no re-inclusion or tracked destination. Missing ignore admission blocks and requires an explicit user-owned host ignore change.
+- Reject tracked `.gitmodules`, mode-160000 gitlinks, source/superproject relations, malformed submodule topology, and ambiguous symlink/junction/mount/path escape.
+- PREPARE describes operations only. Every add binds exact source/destination/keys/branch/base-ref, `branch_mode:existing|create`, source `reflog_policy:enabled|disabled`, operation class, expiry, and accepted trusted-code risk under one fresh approval. Every later non-force remove requires a distinct fresh approval after complete deletion inventory.
+- Existing branch mode creates no ref/reflog. Create mode creates the exact branch ref and creates the exact branch reflog only when the bound source policy is enabled. Remove preserves branch ref/reflog. Common-dir identity and every unrelated/prunable entry/ref/reflog/config/hook/worktree record remain unchanged.
+- Only ROSE owns exact add/non-force-remove. Managed subagents remain external-denied and non-delegating. Prune, move, repair, lock/unlock, force removal, clean/reset, merge/rebase, commit/push, branch deletion, auto-integration, and real-repository cleanup are excluded unless separately authorized by another explicit contract.
+- Host and attachments are one trusted same-owner/same-sensitivity mutually readable/writable domain. Path/cwd is coordination, not hard isolation. Trusted hooks/config/filters/tests can run with user privileges and ambient network; there is no sandbox, DLP, network isolation, universal TOCTOU, or arbitrary-process-containment guarantee. Different repositories need not share a common-dir.
+
+Record exact no-digest `A33Identity` host/source/target objects and compare typed fields, sorted canonical repository-relative file arrays, and explicit before/after admin deltas directly. Re-read target rules at each operation/dispatch boundary; they may narrow but never broaden, and same-level conflicts block. One lane targets one declared repository and writes artifacts there. All declared result fields are present; JSON `null` represents absent/inapplicable data, except observed REMOVE approval `trusted_code_risk:not_applicable`.
+
 For parallel AI agent work, use git worktrees to run multiple branches simultaneously:
 
 ```bash
@@ -295,7 +310,7 @@ Benefits:
 - Multiple agents can work on different features simultaneously
 - No branch switching needed (each directory has its own branch)
 - If one experiment fails, abandon it until cleanup is approved; do not remove worktrees without approval
-- Changes are isolated until explicitly merged
+- Working directories are separated until explicitly merged; this is not process, permission, or hard repository isolation
 
 ## The Save Point Pattern
 

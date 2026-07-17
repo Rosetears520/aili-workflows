@@ -6,23 +6,25 @@ This is the active authority for neutral BUILD package execution. It defines no 
 
 `/build` or equivalent explicit natural-language implementation intent may start only when exactly one target, current final-test-plan acceptance, a dependency-ready package, verifiable exit criteria, required operation permission, and a valid canonical `CONT-005` envelope are established. Acceptance or vague continuation alone performs zero execution.
 
-When no package is supplied, synthesize the queue from `tasks.md`, specs, design, `test-plan.md`, and repository evidence. Resolve and canonicalize the target repository root from backend/change context before Git safety checks; the shell cwd is not authority. External roots require exact current-session approval and the applicable fail-closed worktree protocol.
+When no package is supplied, synthesize the queue from the active accepted contract: current `tasks.md`, specs, design, `test-plan.md`, dependencies, and repository evidence. Generic execution must not assume Package 1–12 or a fixed task count. For `complete-aili-workflow-orchestration` only, the preserved queue is 1→2→5→3→pairwise-disjoint 6/7/8→join→9→10→11→12, with Package 4 complete/history and overlap serialized.
+
+The current A33 host is the Git repository where the user started OpenCode; a non-Git startup root blocks, and AILI never ranks, moves, scans for, or auto-selects another host. Resolve exactly one declared target under current `WT-001` evidence before work. Target rules are re-read at the operation/dispatch boundary, may narrow but never broaden, and same-level conflict blocks.
 
 ## Queue contract and lightweight savepoints
 
 Packages preserve identity, dependency order, non-overlapping edit ownership, complete accepted behavior, forbidden scope, pre-action safety gates, traceability, and stop conditions. Before multiple work units, record shared source-of-truth work, safe parallel lanes, serial dependencies, ownership boundaries, join points, expected evidence, blockers, and the reason for serialization.
 
-For each Package 1–11:
+For each implementation package defined by the active contract before its completion package:
 
 1. Hydrate the accepted contract, context, progress, bounded drift, and fresh repository evidence.
 2. Implement its complete accepted behavior; scoped work is not a partial patch.
-3. Run focused verification when useful; for packaging, run the most relevant focused tests/checks first.
-4. Record a lightweight savepoint with scope, files changed, unresolved items, and next package.
+3. Run a focused test/check only when the changed behavior, risk, package need, or bounded failure diagnosis triggers it; a package boundary alone triggers none.
+4. Record a progress-ledger savepoint with exactly the package identity plus `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package`.
 5. Continue only when dependencies are ready and no material/safety/budget stop applies.
 
-Optional feedback is not package closure, readiness, convergence, or a mandatory local code-review/test/security gate. Package 1–11 implementation-only objectives have no package-quality review-repair budget. Known quality findings remain inputs to Package 12.
+The savepoint is not a test, commit, package approval, closure verdict, or readiness evidence and triggers none of them automatically. Optional feedback is not a mandatory local code-review/test/security gate. Implementation-only objectives have no package-quality review-repair budget. For this umbrella, these rules apply to Packages 1–11 and known relevant findings remain visible to the Package-12 completion inspection.
 
-Package 12 begins only after complete Package 1–11 implementations/savepoints. It owns the single mandatory comprehensive gate: canonical all-task matrix, fresh full command matrix, diverse read-only non-nesting review lanes joined by ROSE without voting, and at most three holistic repair/retest/re-review cycles.
+After all active-contract implementation packages/savepoints, ROSE directly inspects the changed-scope diff, affected requirement/task links, and the smallest targeted evidence needed for the exact completion claim. A full task matrix, convergence review, or review/test/security lane is optional only for a concrete checklist/evidence gap; at most two read-only specialists may be used for such a gap. One targeted repair/recheck is allowed. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD; any remaining blocker is reported without an automatic swarm, broad integration/release matrix, fixed multi-cycle loop, commit, push, PR, or SHIP transition. Package 12 is this umbrella's name for that completion package, not a generic package identity.
 
 ## Loop taxonomy
 
@@ -34,8 +36,8 @@ Exactly six inner loops exist:
 | delta | correction or material feedback | covered, or DEFINE writeback/revalidation |
 | evidence/plan | formal, unfamiliar, risky, or version-sensitive planning | sufficient stressed plan or blocked/`Unverified` |
 | neutral BUILD | accepted plan plus runnable package | complete package/savepoint or material/safety/budget/cancel stop |
-| review/repair | Package 12 findings | resolved within three holistic cycles or blocked/material delta |
-| convergence | Package 12 after Package 1–11 | complete links or `/ship` blocked/`Unverified` |
+| review/repair | Direct inspection or focused specialist finding | one targeted repair/recheck, then resolved or blocked/material delta |
+| convergence | active-contract completion or affected SHIP claim | required links complete or the applicable claim blocked/`Unverified` |
 
 Exactly four outer profiles select initiation and boundary:
 
@@ -66,8 +68,8 @@ For each non-null counter, `remaining = max(limit - consumed, 0)`. Zero, negativ
 - A requested token budget without reliable pre-start accounting remains non-null with `accounting_status: unavailable`, `consumed: 0`, and `remaining: limit`; execution blocks before the first action.
 - Midrun accounting loss is valid only after active accounting. Preserve the non-null counter, last actual counters/overshoot, set `accounting_status: lost`, and block before another action.
 - A turn uses iteration `{limit: 1, consumed: 0, remaining: 1}` and `review_repair: null`.
-- Package 1–11 implementation-only objectives use `review_repair: null`.
-- Package 12 holistic review/repair uses exactly `review_repair.limit: 3`.
+- Implementation-only package objectives use `review_repair: null`.
+- The direct completion inspection uses `review_repair: null` unless one targeted repair/recheck is needed; that bounded recheck uses exactly `review_repair.limit: 1`. For this umbrella that inspection is Package 12.
 - LP templates consume zero. Each external/manual run instantiates all four entries with concrete zeroed counters before execution.
 
 Iteration and non-null review actions preflight one remaining unit, consume exactly one, and never exceed limit. For these discrete counters, `consumed > limit` is corrupted state: block before any action or repair, preserve the observed values for diagnosis, and do not classify the excess as an allowed overshoot. Time/token actions preflight current remaining and any reliable known bound. Only an indivisible observed time/token overshoot preserves actual consumed, sets remaining zero, records exact `overshoot`, stops, and permits no subsequent action. Resume preserves every counter, status, overshoot, and stop condition without reset or evasion.
@@ -82,9 +84,11 @@ A material delta returns to DEFINE. A current no-write/chat-only clause override
 
 ## Protocol-only automation boundary
 
-Formal documentation-only interval/event requests may define or reuse one `LP-INTERVAL-*` or `LP-EVENT-*` body only under the active change's `design.md` `## Loop Protocols`. If that documentation request lacks protocol scope or an external/manual trigger source, ask one focused documentation-protocol question without execution. An executable interval/event request blocks immediately with zero mutation and zero LP; do not mislabel it as documentation ambiguity. Tasks, tests, and context may reference a valid LP ID but not duplicate its body.
+Formal documentation-only AILI interval/event requests may define or reuse one `LP-INTERVAL-*` or `LP-EVENT-*` body only under the active change's `design.md` `## Loop Protocols`. If that documentation request lacks protocol scope or an external/manual trigger source, ask one focused documentation-protocol question without execution. Protocol definition creates no runtime, listener, scheduler, queue, hook, daemon, or lifecycle permission. Tasks, tests, and context may reference a valid LP ID but not duplicate its body.
 
-Any pure or mixed request to install, register, run, modify, update, reconfigure, enable, or reuse cron, a scheduler, watcher, webhook listener, queue, daemon, dependency, hook, or auto-retry runtime blocks wholly with zero mutation and zero LP. Only a later restated documentation-only external/manual protocol request may define or reuse an LP. No background primitive is provided.
+Hidden or unrequested AILI self-automation, background lifecycle registration, or execution blocks with zero mutation and zero LP. A request mixing that hidden AILI automation with protocol documentation also creates no LP until the user later restates a documentation-only request.
+
+An explicitly scoped product/repository CI, cron, scheduler, watcher, webhook/listener, queue, daemon, hook, dependency, or auto-retry outcome is eligible through the ordinary/formal classifier and every applicable formal, permission, ownership, verification, credential, persistent-service, external-write, dependency/lockfile, destructive, and exact-operation gate. Automation vocabulary in an ordinary comparison is ordinary; it is neither blanket rejection nor permission. Product automation must not be replaced by an AILI LP, and documentation-only interval/event definitions grant no runtime or lifecycle permission. AILI itself provides no hidden background primitive.
 
 ## Native command non-ownership
 
@@ -92,4 +96,18 @@ Ordinary user, package, implementation, and Goal-Driven Verification wording rem
 
 ## Safety and closeout
 
-Pre-action gates remain mandatory for destructive/high-risk operations, external roots, dependencies/lockfiles, secrets, Graphify execution, and unsafe runtime behavior. Before non-trivial closeout, inspect `git status --short --branch` and classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown. Propose cleanup for remaining residue; ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.
+Pre-action gates remain mandatory for destructive/high-risk operations, dependencies/lockfiles, secrets, Graphify execution, and unsafe runtime behavior. Material DEFINE decisions and one final test-plan acceptance remain user controls; package boundaries add no approval. BUILD success does not preauthorize SHIP. Commit, push, merge, and release each require exact action-specific approval. CI failure reports the failed check, target, and commit/tree evidence and returns to the user without automatic repair, commit, push, merge, or release.
+
+### A33 admission and operation gates
+
+These are static admission/approval requirements only; they do not create, remove, inspect, or authorize a worktree operation.
+
+- Destination is exactly `<session-root>/.worktrees/<repo_key>/<worktree_key>`. The host must ignore the exact prospective destination through root `/.worktrees/`, with no re-inclusion and no tracked destination; otherwise block for an explicit host ignore change.
+- Both keys match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`; empty, dot/dotdot, reserved `.git`/`.worktrees`, separator, absolute, control, newline, NUL, collision, or path-like values block. A safe unique source basename may default only `repo_key`; `worktree_key` is explicit. Never suffix, guess, force, use `-B`, create orphan state, guess a remote, or infer branch/base-ref.
+- Admission requires trusted source/path topology with no tracked `.gitmodules`, mode-160000 gitlink, malformed submodule/superproject relation, or unresolved symlink/junction/mount/path escape. Host, source, and target evidence stay distinct; populated host/source and exact target absent→populated ADD / populated→absent REMOVE `A33Identity` transitions are compared directly. Target rules may narrow only; conflict blocks.
+- Every operation binds explicit branch, base ref, `branch_mode: existing|create`, source `reflog_policy: enabled|disabled`, both keys, source, destination, expiry, and `operation_class: driver_fixture|real`. Existing mode creates no ref/reflog; create mode creates the exact branch ref and only enabled policy creates its exact reflog. Missing enabled reflog, unexpected disabled/existing reflog/ref, or any remove-time branch ref/reflog mutation blocks.
+- PREPARE performs zero add/remove. Every real or fixture ADD has its own fresh exact key/class-bound approval and accepted trusted-code risk. Every later REMOVE has a different fresh exact approval after complete deletion inventory, uses `trusted_code_risk:not_applicable` only for an observed approval, and passes a separate deletion-risk gate. Approval mismatch, reuse, wrong class, wrong key, absent/declined/unavailable risk, or stale/expired/wrong operation has zero effect.
+- ADD may change only the exact declared common-dir admin entry/membership plus its branch-mode/reflog-policy-authorized ref transaction. REMOVE is non-force and may delete only the declared target path/private admin entry/membership while retaining branch ref/reflog. Dirty, unknown, user-visible, ignored, untracked, artifact, locked, wrong-source, wrong-path, or missing target state blocks.
+- Common-dir canonical path identity and every unrelated entry/ref/reflog/config/hook/worktree record, unrelated/prunable state, evidence, and other file remain unchanged. Prune/move/repair/lock/unlock/force/clean/reset/merge/rebase/commit/push/integration/branch deletion and undeclared ref/reflog mutation are outside this gate. Rollback disables routing but preserves worktrees/evidence; removal still needs a new exact approval.
+
+Before non-trivial closeout, inspect `git status --short --branch` and classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown. Propose cleanup for remaining residue; ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts. Savepoint commits may be proactive only when current task/project rules explicitly allow task-scoped verified commits; otherwise ask once with the cleanup package.

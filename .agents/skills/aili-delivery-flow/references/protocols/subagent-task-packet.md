@@ -1,113 +1,25 @@
-# Subagent Task Packet Protocol
+# Subagent Task Packet
 
-Repository source path: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`. Installed runtime target: `$HOME/.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`.
-
-Use this packet for non-trivial, harness-sensitive, evidence-heavy, review, test, security, debugging, or implementation subagent work. Do not rely on a subagent inheriting the main conversation.
+Use only when delegation meets `direct-vs-delegated-work.md`. Keep packets small enough to read in one pass.
 
 ```text
-Subagent task packet:
-- Trace/work package id:
-- Owner: ROSE | subagent:research | subagent:edit | subagent:review | subagent:test
-- Work package type:
-- Artifact target:
-- Goal:
-- Context / required context:
-- Active contract / source artifacts:
-- Allowed scope:
-- Forbidden scope:
-- Edit permission / allowed edits:
-- Evidence required:
-- Claim hygiene / confidence requirements:
-- Optional evidence provider request: CodeGraph if available/useful, or N/A
-- Expected return format:
-- Phase checkpoint: command | static check | artifact inspection | diff inspection | skipped reason with risk
-- Join contract for parallel lanes:
-- Placement / artifact rules:
-- Coverage expectations:
-- Known exclusions:
-- Verification or inspection commands, if any:
-- Stop conditions:
-- Worktree context reference, when cross-root:
-- Role permission overlay, when cross-root:
+Goal:
+Scope:
+WT-001 context ref: <context_id, evidence_version, freshness, mode> | N/A
+Allowed actions:
+Expected result:
+Stop when:
 ```
 
-## Field rules
+## Rules
 
-- Owner: explicit execution owner. Preserve the owner prefix in todos and task packets; ROSE must not mark `subagent:*` todos complete based on ROSE's own edits, reviews, tests, or completion work.
-- Trace/work package id: stable lane/package id used in dispatch, todos, and join reporting. Preserve existing ids from user packets, DEFINE artifacts, BUILD package queues, or prior ROSE plans unless a boundary change is explicitly justified.
-- Goal: one bounded outcome.
-- Context: only the facts needed to start; include current user decisions when relevant.
-- Active contract / source artifacts: paths to specs, tasks, diffs, issues, or docs that define scope.
-- Work package type: classify as implementation, scout, review, test, security, debug, or documentation so ROSE can reconcile lanes independently.
-- Allowed scope: exact files, directories, systems, or evidence sources the subagent may inspect or edit.
-- Forbidden scope: files, commands, subsystems, or decisions that are out of bounds.
-- Edit permission: `read-only`, `may edit listed files`, or `ask before edits`.
-- Evidence required: anchors, tests, compact evidence packs, command summaries, or inspected sections required for ROSE to reconcile; request minimal key failure excerpts instead of raw logs.
-- Claim hygiene / confidence requirements: for results containing facts, inferences, recommendations, verification claims, readiness claims, or unknowns, require internal English claim tags and `CONFIDENCE: HIGH | MED | LOW | VERY LOW | UNKNOWN`; require unknowns and unsupported claims to remain `Unknown`, `Open Question`, `Unverified`, `[GUESS]`, or the relevant protocol field instead of being smoothed into facts.
-- Optional evidence provider request: CodeGraph may be requested only for eligible lane-local discovery; it must remain optional, compact, fallback-capable, and separate from final proof.
-- Expected return format: normally the canonical `subagent-result.md` format, `compact-evidence-pack.md`, or a named compact variant.
-- Phase checkpoint: required for serial phases and recommended for review/implementation/test handoffs. Declare one focused boundary proof: command, static check, artifact inspection, diff inspection, or explicit skipped reason with risk. ROSE must reconcile this checkpoint before starting a dependent next phase unless the user accepts the risk.
-- Join contract for parallel lanes: expected evidence for this lane, lane owner, editable scope or read-only source, status vocabulary, blocker conditions, how ROSE will handle conflicts or missing/empty evidence, ROSE final decision ownership, any required user approval/decision gate, and stop conditions that block reconciliation.
-- Review/adversarial verification contract: for local-review or review-pipeline lanes, state whether findings are blocking or advisory, require evidence anchors for Critical/Important findings, require disproof checks against context/tests/types/guards before blocking, and fail closed on missing/status-less lane output.
-- Placement / artifact rules: where generated artifacts go, or `no files`; raw evidence artifacts require an explicit repository-local placement and are not created by default.
-- Coverage expectations: what must be checked before returning.
-- Known exclusions: secrets, raw logs, long dumps, full file dumps, unrelated cleanup, nested agents, commits, pushes.
-- Stop conditions: blockers, conflicting evidence, missing permissions, unsafe ambiguity, or scope expansion.
-- Worktree context reference: cross-root packets use `worktree_context_ref` with only `protocol_path`, `context_id`, `evidence_version`, and `freshness`. The canonical authority is `worktree-context.md` (`WT-001`). Packets reference one validated context and must not duplicate or rebind target/session roots, worktree/Git identity, exact-session-root approval, dirty state, pre/post evidence, allowed/forbidden/artifact paths, exact command/cwd approval, soft-boundary disclosure, or containment semantics. A probe result other than exit `0`, missing control, stale context, or duplicated identity blocks dispatch.
-- Role permission overlay: cross-root packets use `role_overlay` only as evidence/narrowing text with `parent_permissions_ref`, `base_role`, `task_allow`, `task_deny`, `operation_scope`, and `nested_delegation`. It is never permission authority and must not assert computed `effective_allow`/`effective_deny`; only final runtime-merged child rules plus provenance can establish effective authority. A30 is ROSE Task-dispatch only, direct user `@` invocation is outside guarantees, and every non-ROSE subagent remains `task: deny`.
-
-## Delegation safety pre-check
-
-Before ROSE sends a packet, confirm:
-
-1. ROSE can cheaply inspect the returned anchors, artifact, diff, or command summary.
-2. Inspecting the returned result is cheaper than doing the work directly.
-3. Likely errors are reversible, bounded, or caught by verification/review.
-4. The subagent has enough context, allowed scope, forbidden scope, and stop conditions.
-5. The output shape requires fixed evidence anchors, artifacts, commands, residual uncertainty, and any decision or approval gate ROSE must resolve with the user.
-6. ROSE remains the final decision owner and records any required user decision/approval before acting.
-7. Existing package/lane boundaries are preserved or every merge, serialization, scope reassignment, or owner change has an explicit dependency, ownership-overlap, verification, safety, missing-evidence, failed-result, or current-user reason.
-
-If any check fails, narrow the scope, make the work read-only, dispatch sequentially, or ask the user before delegating.
-
-## Proactive parallelism and boundary rules
-
-- Before dispatching or presenting work with two or more independently actionable units, ROSE must perform visible proactive parallelism analysis: shared scaffold/source-of-truth work, safe parallel lanes, serial dependencies, concurrent research/review/test/search lanes, ownership boundaries, join points, and blockers.
-- If no parallelism is safe, the packet or plan must name the no-parallel reason, such as `1 must complete before 2/3/4 can parallelize`, `1/2/3/4 must run strictly serially`, overlapping editable scope, shared mutable state, missing scaffold, or user-directed ordering.
-- Preserve existing package/lane boundaries in packet ids, owners, scopes, todos, and expected return formats. Do not collapse or serialize separated lanes without a stated dependency, ownership conflict, verification coupling, safety gate, failed/missing evidence, or explicit current-task user direction.
-
-## Join completeness rules
-
-- Multi-lane or parallel packet sets must define the join contract before dispatch: lane id, owner, expected evidence, editable scope or read-only evidence source, status vocabulary (`completed`, `partial`, `blocked`, `skipped`, `unverified`), blocker conditions, conflict handling, missing/empty-evidence handling, ROSE final decision owner, and any required user approval/decision gate.
-- Parallel joins must reconcile every expected lane's status, evidence, skipped checks, conflicts, blockers, and missing evidence, then run or request verification over the merged output before later phases continue.
-- A missing, empty, status-less, or evidence-less lane result is not complete. ROSE must not infer completion from file state, adjacent lane success, or ROSE's own inspection.
-- If required lane evidence is missing, ROSE requests a bounded evidence-only follow-up, marks the lane `partial`/`blocked`/`unverified`, or reassigns only with explicit current-task approval when ownership rules require it.
-- Join reporting must list every expected lane with status, changed or inspected scope, verification result or skipped-verification reason, conflicts, remaining blockers, missing evidence, and merged-output verification before integration or completion claims.
-
-## Phase checkpoint rules
-
-- Each serial phase packet must declare a checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk.
-- ROSE must run, inspect, or delegate the checkpoint after the phase returns and before the next dependent phase starts.
-- If a checkpoint is skipped, blocked, failing, or materially unverified, ROSE records the reason and risk as `Open Question`, `Unverified`, waived, or accepted risk and must not claim complete verification for that phase.
-- Review and convergence lanes remain read-only. Repair after review is routed to separate edit/repair or edit/test lanes and then re-reviewed with fresh target identity and evidence.
-
-## Hard rules
-
-- Subagents do not spawn subagents. Every non-ROSE subagent remains `task: deny`.
-- Execution Ownership Gate: valid owners are `ROSE`, `subagent:research`, `subagent:edit`, `subagent:review`, and `subagent:test`. Do not create `user:` todos; ROSE owns asking the user and recording any needed approval or decision gate.
-- User-requested subagent ownership: 修改/补强/完成/do/update/implement maps to `subagent:edit`; 复核/review/audit maps to `subagent:review`; 看一下/调研/find evidence/scout maps to `subagent:research` only; test/verify/run tests/coverage/测试/验证/跑测试 maps to `subagent:test`.
-- Evidence is sufficient may complete only `subagent:research`; it must not let ROSE take over `subagent:edit`, `subagent:review`, `subagent:test`, or user-requested subagent completion work without explicit current-task user confirmation.
-- After decomposing non-trivial work, ROSE actively looks for independent evidence/search directions, implementation packages, documentation checks, review, test, and security lanes before choosing dispatch shape.
-- Two or more independently actionable work units require proactive parallelism analysis before dispatch or serialization.
-- Split broad research/search by subsystem, hypothesis, evidence source, or direction when that increases coverage and lanes can return structured evidence-only results.
-- Read-heavy delegation is preferred; write-heavy parallel work requires non-overlapping file ownership and clear verification/review boundaries.
-- If independent implementation, research, review, test, documentation, or security lanes can proceed without each other's outputs and return evidence without overlapping edits or hidden dependencies, prefer parallel subagents.
-- After non-trivial implementation, review, test/verification, and security lanes should normally be separate evidence lanes when relevant; they return recommendations and evidence only.
-- Non-trivial repository work is subagent-first unless the current task explicitly opts out; clear paths, short context, and DCP summaries are not opt-outs.
-- Worker increments are dynamically sized by verifiability, reviewability, lack of parallel conflicts, and clean handoff boundaries.
-- Workers return compact reports and evidence only. They do not write `progress.txt` and do not issue final PASS/FAIL/`Unverified` judgments.
-- Worker packets for harness-sensitive or decision-relevant work must carry the English internal claim-tag and canonical confidence requirement instead of relying on implicit main-context inheritance.
-- CodeGraph, when requested or provided, is discovery evidence only; workers must fall back to normal search/read if it is unavailable, stale, noisy, or unhelpful, and acting edit/review/test/doc lanes must still inspect final targets before conclusions.
-- A subagent packet is a scope boundary, not a license to broaden work.
-- Package/lane ids, owners, allowed scopes, and expected evidence are boundary markers and must survive dispatch and reconciliation unless ROSE records an approved boundary-change reason.
-- ROSE remains responsible for reconciliation, verification judgment, and final acceptance.
+- `Goal` names one bounded outcome.
+- `Scope` names the files, repository, cwd, or evidence sources.
+- `Allowed actions` says read-only or lists exact editable files and approved commands.
+- `Expected result` asks for compact evidence, artifacts, or a command result.
+- `Stop when` names missing permission, conflicting rules, scope expansion, or unavailable evidence.
+- A packet narrows runtime authority; it never grants a tool, path, edit, command, network call, or delegation permission.
+- Every non-ROSE subagent remains non-delegating.
+- For an approved A33 attached repository, `Scope` names exactly one declared repository/cwd and the packet references exactly one current `WT-001` context. The compact reference contains only context id, evidence version, freshness, and mode.
+- Never copy, rebind, or reinterpret WT-001 host/source/target identity, keys, paths, Git state, approval, operation class, risk, delta, command/cwd, or containment facts. A duplicate is non-authoritative and blocks dispatch.
+- Target rules are re-read at dispatch. They may narrow the packet but never broaden it; same-level conflicts block. User-visible artifacts remain in the owning target repository.

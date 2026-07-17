@@ -18,6 +18,12 @@
     "11.1", "11.2", "11.3", "11.4", "11.5",
     "12.1", "12.2", "12.3", "12.4", "12.5", "12.6", "12.7"
   ],
+  "task_derivation": {
+    "generic_changes": "derive every current on-disk tasks.md checklist row exactly once with dynamic IDs and checkbox state",
+    "this_change_id_oracle": "the ordered duplicate-free 74 IDs above only",
+    "this_change_state": "derive checked_task_ids, checked, and unchecked fresh from current on-disk tasks.md on every use",
+    "forbidden_authority": ["task-audit.json", "A33-era 32/42 snapshot", "A41 31/43 snapshot", "count-only equality"]
+  },
   "matrix_fields": [
     "task_id",
     "accepted requirement/decision/risk",
@@ -30,7 +36,7 @@
     "freshness"
   ],
   "statuses": ["Done", "Partial", "Missing", "Blocked", "N/A"],
-  "runtime_enforcement": {"id":"UV-001","policy":"Package 12 final lanes require a read-only edit-deny/task-deny overlay","status":"Unverified","reason":"declarative agent and fixture fields do not prove runtime overlay enforcement"},
+  "runtime_enforcement": {"id":"UV-007","policy":"an optional Package 12 or SHIP specialist uses a read-only edit-deny/task-deny overlay only when a concrete gap selects it","status":"Unverified","reason":"declarative agent and fixture fields do not prove current A33 runtime overlay, installed equality, nested-repository behavior, or operation effects"},
   "final_review_overlays": [
     {"agent":"agents/agent-evaluator.md","edit":"deny","task":"deny"},
     {"agent":"agents/ai-regression-scout.md","edit":"deny","task":"deny"},
@@ -50,10 +56,17 @@
     {"agent":"agents/web-researcher.md","edit":"deny","task":"deny"}
   ],
   "shared_result_envelope": {
-    "result_fields": ["result_id", "trace_id", "lane", "owner", "status", "confidence", "inspected_scope", "checks", "freshness", "skipped_checks", "blockers", "unverified", "findings", "convergence_links", "review_arbitration_ref"],
+    "result_fields": ["result_id", "trace_id", "lane", "owner", "status", "confidence", "worktree_context_ref", "declared_repository", "cwd", "target_rules_ref", "artifact_destination", "inspected_scope", "checks", "freshness", "skipped_checks", "soft_boundary_limitations", "blockers", "unverified", "findings", "convergence_links", "review_arbitration_ref"],
     "finding_fields": ["finding_id", "source", "claim", "severity", "evidence_anchors", "affected_requirement", "proposed_disposition", "required_action", "verification"],
     "proposed_dispositions": ["fix", "refute-with-counter-evidence", "accept-named-risk", "Unverified-block"],
     "final_disposition_owner": "ROSE"
+  },
+  "a33_managed_inventory": {
+    "count": 19,
+    "external_directory": "deny",
+    "agents": ["agent-evaluator", "ai-regression-scout", "browser-qa-runner", "code-reviewer", "code-scout", "convergence-reviewer", "doc-researcher", "e2e-artifact-runner", "implementer", "opensource-sanitizer", "plan-auditor", "pr-test-analyzer", "security-auditor", "silent-failure-reviewer", "spec-miner", "test-coverage-reviewer", "test-engineer", "web-performance-auditor", "web-researcher"],
+    "builtins_excluded": ["explore", "general"],
+    "rollback": "disable A33 routing; preserve worktrees/evidence and all 19 external denials; removal still needs a new exact approval"
   },
   "arbitration": {
     "path": "openspec/changes/<change-id>/review-arbitration.md",
@@ -146,19 +159,19 @@
     },
     {
       "id": "subagent-nesting-forbidden",
-      "input": {"phase": "Package 12 final review", "lane_permission": "task: allow", "nested_dispatch_attempted": true},
+      "input": {"phase": "optional specialist review", "lane_permission": "task: allow", "nested_dispatch_attempted": true},
       "expected": "block",
-      "required": "every final-review lane is read-only, task-denied, and returns directly to ROSE"
+      "required": "a selected specialist remains task-denied and returns directly to ROSE"
     },
     {
       "id": "final-overlay-edit-attempt-denied",
-      "input": {"phase":"Package 12 final review","agent":"agents/test-engineer.md","attempt":"edit tests/workflow-contract-check.test.mjs","overlay_edit":"deny","overlay_task":"deny"},
+      "input": {"phase":"optional Package 12 specialist review","agent":"agents/test-engineer.md","attempt":"edit tests/workflow-contract-check.test.mjs","overlay_edit":"deny","overlay_task":"deny"},
       "expected": "deny-before-mutation",
       "required": "the final-review overlay denies edit and task even when the base role can write tests"
     },
     {
-      "id": "diverse-lane-join",
-      "input": {"expected_lanes": ["convergence", "code", "test/coverage", "security", "AI-regression", "silent-failure", "generated/docs/manifests"], "independently_dispatched": true, "read_only": true, "all_return_to": "ROSE", "all_results_use_shared_envelope": true, "all_lanes_joined": true},
+      "id": "optional-specialist-join",
+      "input": {"selected_lanes": ["code", "test/coverage"], "specialist_limit": 2, "concrete_capability_gaps": ["implementation review", "coverage adequacy"], "read_only": true, "all_return_to": "ROSE", "compact_results_joined": true},
       "expected": "pass"
     },
     {
@@ -175,12 +188,12 @@
     {
       "id":"review-ai-vs-product-routing",
       "input":{"finding":"prompt routing regression changes product-visible lifecycle behavior","candidate_lanes":["AI-regression","code-review","product decision"]},
-      "expected":"AI-regression and code lanes inspect implementation; unresolved product semantics return to ROSE/user and are not decided by reviewers"
+      "expected":"ROSE inspects directly and may select at most two relevant specialists for a concrete gap; unresolved product semantics return to ROSE/user"
     },
     {
       "id":"review-ai-regression-vs-test-engineer-routing",
       "input":{"ai_surface":"prompt/agent/skill/model or tool routing/generated-output expectation","ordinary_test_surface":"product-code test design, writing, execution, or coverage"},
-      "expected":{"ai_surface":"ai-regression-scout","ordinary_test_surface":"test-engineer","overlap":"dispatch both with distinct evidence questions"}
+      "expected":{"ai_surface":"ai-regression-scout when a specialist is needed","ordinary_test_surface":"test-engineer when a specialist is needed","overlap":"ROSE selects only the concrete missing capability, at most two specialists"}
     },
     {
       "id": "no-finding-with-scope",
@@ -189,30 +202,30 @@
       "reason": "zero findings is valid only with complete scope and evidence metadata"
     },
     {
-      "id": "final-holistic-recheck",
-      "input": {"cycle": 2, "repairs_applied": true, "affected_lanes_rerun": true, "complete_task_matrix_rerun": true},
-      "expected": "continue-reconciliation"
+      "id": "direct-final-inspection",
+      "input": {"final_diff_inspected": true, "applicable_task_coverage_inspected": true, "smallest_relevant_checks_run": true, "specialists_dispatched": 0},
+      "expected": "eligible-for-ROSE-disposition"
     },
     {
-      "id": "max-three-cycle-repair-budget",
-      "input": {"completed_holistic_cycles": 3, "blocking_findings_remain": true, "requested_next_cycle": 4},
+      "id": "automatic-review-swarm-forbidden",
+      "input": {"automatic_specialist_lanes": 7, "concrete_capability_gap": false},
       "expected": "block",
-      "reason": "a fourth holistic cycle is forbidden"
+      "reason": "Package 12 is direct-first and does not create an automatic review swarm"
     },
     {
-      "id": "repair-budget",
-      "input": {"budget_scope": "single Package 12 holistic loop", "limit": 3, "per_finding_reset": false, "per_lane_reset": false},
+      "id": "one-targeted-recheck-limit",
+      "input": {"budget_scope": "one targeted Package 12 repair/recheck", "limit": 1, "per_finding_reset": false, "per_lane_reset": false},
       "expected": "valid"
     },
     {
-      "id": "consolidated-final-repair-max-three",
-      "input": {"completed_holistic_cycles": 3, "requested_next_cycle": 4},
+      "id": "second-targeted-recheck-block",
+      "input": {"completed_targeted_rechecks": 1, "requested_next_recheck": 2},
       "expected": "block"
     },
     {
-      "id": "consolidated-final-holistic-gate",
-      "input": {"packages_1_through_11_complete": true, "package_12_matrix_complete": true, "fresh_command_matrix": true, "diverse_lanes_joined": true},
-      "expected": "eligible-for-ROSE-reconciliation"
+      "id": "direct-final-inspection-gate",
+      "input": {"accepted_scope_complete": true, "applicable_task_coverage_inspected": true, "final_diff_inspected": true, "smallest_relevant_checks_run": true, "automatic_review_swarm": false},
+      "expected": "eligible-for-ROSE-disposition"
     },
     {
       "id": "material-delta",
@@ -238,7 +251,392 @@
       "id": "package-local-quality-gate-forbidden",
       "input": {"package": 7, "mandatory_independent_review": true, "package_closure_from_optional_feedback": true},
       "expected": "block",
-      "required": "Package 12 is the sole mandatory convergence gate"
+      "required": "Package 12 performs one direct final inspection after the accepted scoped queue"
+    },
+    {
+      "id": "generic-current-task-rows-dynamic",
+      "input": {"change": "another-change", "current_task_ids": ["A", "B", "C"], "matrix_ids": ["A", "B", "C"], "padded_to_74": false},
+      "expected": "pass"
+    },
+    {
+      "id": "umbrella-ordered-74-exact",
+      "input": {"change": "complete-aili-workflow-orchestration", "ordered_ids_equal_fixture": true, "duplicate_ids": [], "checkbox_state_derived_from_disk": true},
+      "expected": "pass"
+    },
+    {
+      "id": "historical-task-count-snapshot-rejected",
+      "input": {"ordered_ids_equal_fixture": true, "asserted_current_state": "31 checked/43 unchecked", "on_disk_state_changed": true},
+      "expected": "block-stale-authority"
+    },
+    {
+      "id": "convergence-link-missing",
+      "input": {"requirement_to_task": true, "task_to_file": false, "file_to_fresh_evidence": false},
+      "expected": "block"
+    },
+    {
+      "id": "convergence-link-duplicate",
+      "input": {"task_id": "7.5", "current_rows_for_task": 2},
+      "expected": "block"
+    },
+    {
+      "id": "convergence-link-undefined",
+      "input": {"task_id": "undefined", "accepted_source": null},
+      "expected": "block"
+    },
+    {
+      "id": "convergence-link-stale-or-conflicting",
+      "input": {"freshness": "stale", "review_dispositions": ["fixed", "open"]},
+      "expected": "block"
+    },
+    {
+      "id": "a33-lane-one-repository",
+      "input": {"host_attachments": 3, "declared_repositories": 1, "declared_cwds": 1, "worktree_context_refs": 1},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-lane-multiple-repository-claim",
+      "input": {"declared_repositories": 2, "single_lane": true},
+      "expected": "block"
+    },
+    {
+      "id": "a33-current-wt-reference-required",
+      "input": {"mode": "a33-attached-shared-trust-domain", "worktree_context_refs": 1, "reference_fresh": true},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-wt-duplicate-or-rebind-block",
+      "input": {"worktree_context_refs": 2, "duplicated_facts": ["identity", "keys", "approval", "Git state", "command/cwd"]},
+      "expected": "block"
+    },
+    {
+      "id": "a33-rules-narrow",
+      "input": {"target_rules_ref": "current-dispatch-read", "effect": "narrow", "same_level_conflict": false},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-rules-broaden-block",
+      "input": {"target_rules_effect": "broaden"},
+      "expected": "block"
+    },
+    {
+      "id": "a33-rules-conflict-block",
+      "input": {"same_level_conflict": true},
+      "expected": "block"
+    },
+    {
+      "id": "a33-no-recursive-host-scan",
+      "input": {"declared_repository_only": false, "recursive_host_scan": true},
+      "expected": "block"
+    },
+    {
+      "id": "a33-artifact-owning-repository",
+      "input": {"artifact_destination_owner_matches_lane_repository": true},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-soft-boundary-disclosed",
+      "input": {"hard_isolation_claim": false, "shared_trust_limitations_recorded": true},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-operation-key-binding",
+      "input": {"locations": ["PREPARE pending operation", "ADD operation", "ADD approval", "REMOVE operation", "REMOVE approval"], "repo_key_exact": true, "worktree_key_exact": true, "destination_components_match": true},
+      "expected": "pass"
+    },
+    {"id":"a33-operation-key-omission-rejected","input":{"mutation":"omit repo_key or worktree_key from operation"},"expected":"exit-5"},
+    {"id":"a33-operation-key-wrong-type-rejected","input":{"mutation":"non-string operation key"},"expected":"exit-5"},
+    {"id":"a33-approval-key-omission-rejected","input":{"mutation":"omit repo_key or worktree_key from approval"},"expected":"exit-5"},
+    {"id":"a33-approval-key-wrong-type-rejected","input":{"mutation":"non-string approval key"},"expected":"exit-5"},
+    {
+      "id": "a33-runtime-key-mismatch-zero-effect",
+      "input": {"parameterized": {"keys": ["repo_key", "worktree_key"], "operations": ["ADD", "REMOVE"]}, "effect_started": false},
+      "expected": "exit-3",
+      "effect_observed_expected": "exit-5"
+    },
+    {
+      "id": "a33-runtime-identity-transition-schema",
+      "input": {"host": "populated", "source": "populated", "add_target": "absent->populated", "remove_target": "populated->absent", "schema_exact": true},
+      "expected": "pass"
+    },
+    {"id":"a33-identity-field-omission-rejected","input":{"mutation":"omit any A33Identity field"},"expected":"exit-5"},
+    {"id":"a33-identity-field-wrong-type-rejected","input":{"mutation":"wrong identity field type"},"expected":"exit-5"},
+    {"id":"a33-identity-string-sentinel-rejected","input":{"mutation":"use not_applicable for identity absence"},"expected":"exit-5"},
+    {"id":"a33-identity-populated-required-null-rejected","input":{"mutation":"null populated-required field"},"expected":"exit-5"},
+    {"id":"a33-identity-absent-forbidden-nonnull-rejected","input":{"mutation":"populate absent-forbidden field"},"expected":"exit-5"},
+    {"id":"a33-identity-detached-branch-mismatch-rejected","input":{"mutation":"detached_head disagrees with git_branch nullability"},"expected":"exit-5"},
+    {"id":"a33-identity-file-array-invalid-rejected","input":{"mutation":"unsorted duplicate or non-relative file array"},"expected":"exit-5"},
+    {"id":"a33-identity-dirty-count-invalid-rejected","input":{"mutation":"negative or non-integer dirty count"},"expected":"exit-5"},
+    {
+      "id": "a33-runtime-prepare-no-worktree-effect",
+      "input": {"command": "PREPARE", "pending_descriptors": 2, "worktree_effects": {"adds": 0, "removes": 0}, "descriptor_grants_approval": false},
+      "expected": "pass"
+    },
+    {"id":"a33-host-git-positive","input":{"startup_host_git":true,"host_selected_by_user_start":true},"expected":"pass"},
+    {"id":"a33-multiple-attachments","input":{"declared_attachments":3,"one_total_attachment_limit":false},"expected":"pass"},
+    {"id":"a33-runtime-effective-profile-observed","input":{"managed_profiles_observed":19,"external_denied":19},"expected":"pass"},
+    {"id":"a33-runtime-install-observed","input":{"installed_profile_equality_observed":true},"expected":"pass"},
+    {"id":"a33-runtime-nested-repository-observed","input":{"nested_attached_repositories_observed":true,"hard_isolation_claim":false},"expected":"pass"},
+    {
+      "id": "a33-runtime-each-attachment-add-separate-approval",
+      "input": {"attachments": 2, "fresh_exact_add_approvals": 2, "reused": false},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-runtime-each-attachment-remove-separate-approval",
+      "input": {"attachments": 2, "post_inventory_remove_approvals": 2, "different_from_add": true},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-result-null-representation",
+      "input": {"all_fields_present": true, "absence": "JSON null", "string_sentinel": false},
+      "expected": "pass"
+    },
+    {"id":"a33-result-null-field-omission-rejected","input":{"mutation":"omit declared result field"},"expected":"exit-5"},
+    {"id":"a33-result-not-applicable-string-misuse-rejected","input":{"mutation":"use string sentinel outside observed REMOVE trusted_code_risk"},"expected":"exit-5"},
+    {"id":"a33-result-null-wrong-type-rejected","input":{"mutation":"replace required null with wrong JSON type"},"expected":"exit-5"},
+    {
+      "id": "a33-join-static-row-null-shape",
+      "input": {"subset": "static", "operation_approval_identity_delta_cleanup_outer_fields": "all JSON null"},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-join-runtime-nonoperation-null-shape",
+      "input": {"subset": "runtime", "operation_row": false, "inapplicable_outer_fields": "JSON null"},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-join-runtime-operation-populated-shape",
+      "input": {"subset": "runtime", "operation_row": true, "applicable_fields_populated": true, "missing_approval_ref_may_be_null": true},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-runtime-invalid-approval-zero-effect",
+      "input": {"variants": ["wrong", "reused", "real-to-fixture", "operation-class-mismatch", "risk-invalid"], "operations": ["ADD", "REMOVE"], "effect_started": false},
+      "expected": "exit-3",
+      "effect_observed_expected": "exit-5"
+    },
+    {"id":"a33-runtime-approval-positive","input":{"operation_envelopes":1,"approval_exact_and_fresh":true,"effect_matches_declared_operation":true},"expected":"pass"},
+    {"id":"a33-runtime-add-approval-wrong-zero-effect","input":{"operation":"ADD","approval":"wrong","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-add-approval-reused-zero-effect","input":{"operation":"ADD","approval":"reused","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-remove-approval-wrong-zero-effect","input":{"operation":"REMOVE","approval":"wrong","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-remove-approval-reused-zero-effect","input":{"operation":"REMOVE","approval":"reused","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-fixture-add-real-approval-zero-effect","input":{"operation":"fixture ADD","approval_class":"real","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-fixture-remove-real-approval-zero-effect","input":{"operation":"fixture REMOVE","approval_class":"real","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-operation-class-mismatch-zero-effect","input":{"operation_class":"driver_fixture","approval_class":"real","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-missing-zero-effect","input":{"approval_status":"missing","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-missing-approval-null-fields","input":{"requested_operation_fields":"populated","approval_id":null,"decision_ref":null,"expiry":null,"trusted_code_risk":null},"expected":"pass"},
+    {"id":"a33-runtime-approval-stale-zero-effect","input":{"approval_status":"stale","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-mismatched-zero-effect","input":{"approval_status":"mismatched","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-expired-zero-effect","input":{"approval_status":"expired","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-wrong-source-zero-effect","input":{"approval_source_matches":false,"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-wrong-destination-zero-effect","input":{"approval_destination_matches":false,"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-wrong-branch-zero-effect","input":{"approval_branch_matches":false,"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-wrong-ref-zero-effect","input":{"approval_base_ref_matches":false,"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-add-approval-reused-real-remove-zero-effect","input":{"add_approval_reused_for":"real REMOVE","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-other-operation-zero-effect","input":{"approval_operation_matches":false,"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-approval-declined-unavailable","input":{"approval_status":["declined","unavailable"],"effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-add-trusted-code-risk-accepted","input":{"operation":"ADD","trusted_code_risk":"accepted","effect_allowed":true},"expected":"pass"},
+    {"id":"a33-runtime-add-trusted-code-risk-declined-zero-effect","input":{"operation":"ADD","trusted_code_risk":"declined","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-add-trusted-code-risk-unavailable-zero-effect","input":{"operation":"ADD","trusted_code_risk":"unavailable","effect_started":false},"expected":"exit-3"},
+    {"id":"a33-runtime-remove-trusted-code-risk-not-applicable","input":{"operation":"REMOVE","approval_observed":true,"trusted_code_risk":"not_applicable"},"expected":"pass"},
+    {
+      "id": "a33-runtime-trusted-code-risk",
+      "input": {"add_effect_requires": "accepted", "declined_or_unavailable_add": "zero effect", "observed_remove": "not_applicable", "missing_approval": null},
+      "expected": "pass"
+    },
+    {"id":"a33-pre-add-target-absent","input":{"operation":"ADD","target_identity_pre":"absent"},"expected":"pass"},
+    {"id":"a33-add-delta-exact","input":{"operation":"ADD","target_transition":"absent->populated","delta_matches_expected":true},"expected":"pass"},
+    {"id":"a33-add-unrelated-preserved","input":{"operation":"ADD","unrelated_state":"unchanged"},"expected":"pass"},
+    {"id":"a33-pre-remove-target-populated","input":{"operation":"REMOVE","target_identity_pre":"populated"},"expected":"pass"},
+    {"id":"a33-remove-delta-exact","input":{"operation":"REMOVE","target_transition":"populated->absent","delta_matches_expected":true},"expected":"pass"},
+    {"id":"a33-remove-unrelated-preserved","input":{"operation":"REMOVE","unrelated_state":"unchanged"},"expected":"pass"},
+    {
+      "id": "a33-add-existing-branch-no-ref-reflog-creation",
+      "input": {"branch_mode": "existing", "branch_ref": "unchanged", "branch_reflog": "unchanged"},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-add-new-branch-reflog-enabled-created",
+      "input": {"branch_mode": "create", "reflog_policy": "enabled", "branch_ref": "created", "branch_reflog": "created"},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-add-new-branch-reflog-disabled-absent",
+      "input": {"branch_mode": "create", "reflog_policy": "disabled", "branch_ref": "created", "branch_reflog": "absent"},
+      "expected": "pass"
+    },
+    {"id":"a33-add-new-branch-reflog-enabled-missing-block","input":{"branch_mode":"create","reflog_policy":"enabled","branch_reflog":"missing"},"expected":"exit-5"},
+    {"id":"a33-add-new-branch-reflog-disabled-unexpected-block","input":{"branch_mode":"create","reflog_policy":"disabled","branch_reflog":"created"},"expected":"exit-5"},
+    {"id":"a33-remove-branch-deletion-block","input":{"operation":"REMOVE","branch_ref":"deleted"},"expected":"exit-5"},
+    {"id":"a33-remove-branch-reflog-mutation-block","input":{"operation":"REMOVE","branch_reflog":"changed"},"expected":"exit-5"},
+    {
+      "id": "a33-add-common-dir-exact-allowed-delta",
+      "input": {"common_dir_identity": "unchanged", "declared_admin_entry": "created", "only_bound_ref_reflog_delta": true},
+      "expected": "pass"
+    },
+    {"id":"a33-add-common-dir-identity-preserved","input":{"operation":"ADD","common_dir_identity":"unchanged"},"expected":"pass"},
+    {
+      "id": "a33-remove-common-dir-exact-allowed-delta",
+      "input": {"common_dir_identity": "unchanged", "declared_admin_entry": "deleted", "branch_ref_reflog": "unchanged"},
+      "expected": "pass"
+    },
+    {"id":"a33-remove-common-dir-identity-preserved","input":{"operation":"REMOVE","common_dir_identity":"unchanged"},"expected":"pass"},
+    {
+      "id": "a33-unrelated-common-dir-preserved",
+      "input": {"parameterized_operations": ["ADD", "REMOVE"], "unchanged": ["entries", "refs", "reflogs", "config", "hooks", "worktree records", "prunable entries", "other files"]},
+      "expected": "pass"
+    },
+    {"id":"a33-common-dir-identity-change-block","input":{"common_dir_identity":"changed"},"expected":"exit-5"},
+    {"id":"a33-add-common-dir-unrelated-mutation-block","input":{"operation":"ADD","unrelated_common_dir_state":"changed"},"expected":"exit-5"},
+    {"id":"a33-remove-common-dir-unrelated-mutation-block","input":{"operation":"REMOVE","unrelated_common_dir_state":"changed"},"expected":"exit-5"},
+    {
+      "id": "a33-separate-git-identities",
+      "input": {"host_identity": "distinct", "source_identities": 2, "target_identities": 2, "cross_repository_common_dir_equality_required": false},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-a30-proof-stale",
+      "input": {"mode": "a33-attached-shared-trust-domain", "evidence": "A30 provider runtime probe"},
+      "expected": "reject-as-historical"
+    },
+    {
+      "id": "a33-managed-19-external-deny",
+      "input": {"managed_agents": 19, "external_directory_deny": 19, "external_ask_or_allow": 0},
+      "expected": "pass"
+    },
+    {"id":"a33-managed-external-ask-reject","input":{"managed_agents_with_external_ask_or_allow":1},"expected":"block"},
+    {"id":"a33-install-equality","input":{"source_and_installed_managed_agent_files_equal":true,"managed_agents":19},"expected":"pass"},
+    {
+      "id": "a33-builtins-excluded",
+      "input": {"builtins": ["explore", "general"], "claimed_covered": false},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-rollback-preserves",
+      "input": {"routing_disabled": true, "worktrees_preserved": true, "evidence_preserved": true, "managed_external_denials_preserved": 19, "automatic_removal": false},
+      "expected": "pass"
+    },
+    {"id":"a33-forbidden-git-block","input":{"operation":"prune/move/repair/lock/force/clean/reset/merge/rebase/commit/push/branch-delete"},"expected":"block-before-effect"},
+    {"id":"a33-codegraph-per-target","input":{"declared_targets":2,"exact_root_queries":2,"batch_init":false},"expected":"pass"},
+    {"id":"a33-no-new-machinery","input":{"new_helper_registry_manifest_command_dependency_daemon_or_cleanup_manager":false},"expected":"pass"},
+    {"id":"a33-package-excludes-worktrees","input":{"package_contains_attached_worktrees":false},"expected":"pass"},
+    {
+      "id": "a33-static-runtime-subsets-exact",
+      "input": {"static_runtime_disjoint": true, "each_mandatory_id_exactly_once": true, "per_command_case_set_equal": true},
+      "expected": "pass"
+    },
+    {"id":"a33-static-result-schema-exact","input":{"all_declared_fields_present":true,"mandatory_case_set_equal":true,"ephemeral_result":true},"expected":"pass"},
+    {"id":"a33-runtime-result-schema-exact","input":{"all_declared_fields_present":true,"operations_exact":true,"cleanup_shape_exact":true,"ephemeral_result":true},"expected":"pass"},
+    {"id":"a33-join-result-schema-exact","input":{"tagged_case_shape_exact":true,"all_inapplicable_values_json_null":true,"global_case_set_equal":true},"expected":"pass"},
+    {
+      "id": "a33-joined-global-union-exact",
+      "input": {"global_union_equals_static_plus_runtime": true, "missing": [], "duplicate": [], "extra": []},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-six-contract-mutations",
+      "input": {"mutation_ids": ["missing", "duplicate", "extra", "skipped", "evidence-empty", "schema-mismatch"], "count": 6, "all_validator_exit": 5},
+      "expected": "pass"
+    },
+    {
+      "id": "a33-delete-each-mandatory-id",
+      "input": {"global_mandatory_ids_each_deleted_once": true, "every_validator_exit": 5},
+      "expected": "pass"
+    },
+    {"id":"uv-007-exit-0","input":{"all_mandatory_current_platform_observations":true,"cleanup_eligible_after_approved_removes":true,"residual_soft_boundary_nongoals_named":true},"expected":"exit-0"},
+    {"id":"uv-007-exit-2","input":{"usage_error":true},"expected":"exit-2"},
+    {"id":"uv-007-exit-3","input":{"mandatory_runtime_evidence":"unavailable-or-unsupported","required_valid_operation_approval":"missing-declined-or-unavailable","effect_started":false},"expected":"exit-3"},
+    {"id":"uv-007-exit-5","input":{"violation":"case-set/schema/key/identity/null/class/risk/ref/reflog/mutation/effect/delta/unrelated-state/cleanup"},"expected":"exit-5"},
+    {
+      "id": "a32-item41-stale-current-readiness",
+      "input": {"authority": "A32/item-41", "use": "current readiness"},
+      "expected": "block-stale-authority"
+    },
+    {
+      "id": "oq008-item42-superseded-unaccepted",
+      "input": {"authority": "OQ-008/item-42", "claimed_accepted": true},
+      "expected": "block-false-authority"
+    },
+    {
+      "id": "a41-item43-accepted-but-stale",
+      "input": {"authority": "A41/item-43", "historical_acceptance": true, "claimed_current": true},
+      "expected": "block-stale-authority"
+    },
+    {"id":"a33-acceptance-item43-only","input":{"item43_historical_acceptance":true,"build_or_ship_started":false,"implementation_task_checked":false,"operation_authorized":false,"current_readiness":false},"expected":"pass-as-stale-history-only"},
+    {
+      "id": "a43-item44-acceptance-only",
+      "input": {"authority": "A43/item-44", "current_acceptance": true, "task_checked_by_acceptance": false, "runtime_or_git_authority": false, "build_started": false},
+      "expected": "pass"
+    },
+    {
+      "id": "umbrella-package-order-and-overlap",
+      "input": {"order": "1->2->5->3->pairwise-disjoint 6/7/8->join->9->10->11->12", "package4": "complete-history", "overlap": "serialize"},
+      "expected": "pass"
+    },
+    {
+      "id": "package12-minimal-build-stop",
+      "input": {"direct_changed_scope_check": 1, "specialists": 0, "broad_matrix": false, "outcome": "IMPLEMENTED_TARGETED_VERIFIED", "entered_ship": false},
+      "expected": "pass"
+    },
+    {
+      "id": "package12-specialists-concrete-gap-only",
+      "input": {"concrete_gap": true, "specialists": 2, "non_nesting": true, "automatic_swarm": false},
+      "expected": "pass"
+    },
+    {
+      "id": "package12-broad-full-matrix-forbidden",
+      "input": {"concrete_gap": false, "full_task_matrix": true, "automatic_review_test_security_lanes": true},
+      "expected": "block"
+    },
+    {
+      "id": "ship-fresh-explicit-intent-required",
+      "input": {"build_outcome": "IMPLEMENTED_TARGETED_VERIFIED", "fresh_ship_intent": false},
+      "expected": "stop-before-ship"
+    },
+    {
+      "id": "ship-reuses-fresh-build-evidence",
+      "input": {"fresh_ship_intent": true, "verified_content_unchanged": true, "affected_invalidating_events": [], "build_evidence_reused": true},
+      "expected": "pass"
+    },
+    {
+      "id": "unchanged-commit-push-pr-preserves-evidence",
+      "input": {"events": ["commit exact verified tree", "push exact commit", "open PR for exact commit"], "relevant_hook_executed": false, "content_changed": false},
+      "expected": "evidence-remains-fresh"
+    },
+    {
+      "id": "affected-freshness-events",
+      "input": {"events": ["hook", "content/tree", "config", "dependency", "toolchain", "target"], "stale_scope": "affected rows only", "automatic_full_rerun": false},
+      "expected": "pass"
+    },
+    {
+      "id": "exact-fast-forward-preserves-evidence",
+      "input": {"merge_kind": "fast-forward", "result": "exact verified commit", "full_rerun": false},
+      "expected": "pass"
+    },
+    {
+      "id": "changed-merge-stales-affected-integration",
+      "input": {"merge_result_differs_from_verified_tree": true, "rerun_scope": "affected integration checks", "full_rerun": false},
+      "expected": "pass"
+    },
+    {
+      "id": "ci-failure-user-stop",
+      "input": {"ci_failed": true, "reported": ["check", "target", "commit/tree", "failure", "options"], "auto_repair": false, "auto_commit": false, "auto_push": false},
+      "expected": "stop-for-user-decision"
+    },
+    {
+      "id": "def-e11-user-control-points",
+      "input": {"controls": ["material DEFINE decision", "one final test-plan acceptance", "fresh BUILD-to-SHIP intent", "exact commit approval", "exact push approval", "exact merge approval", "exact release approval", "CI failure return"], "package_approvals": 0},
+      "expected": "pass"
+    },
+    {
+      "id": "no-fifth-top-level-delivery-test-research-command",
+      "input": {"delivery_commands": ["ideate", "define", "build", "ship"], "new_top_level_delivery_test_research_command": false},
+      "expected": "pass"
+    },
+    {
+      "id": "local-review-standalone-nondelivery",
+      "input": {"command": "/local-review", "overrides_opencode_review": false, "delivery_mode": false, "lifecycle_acceptance_evidence": false, "ship_release_merge_archive_evidence": false},
+      "expected": "pass"
     }
   ]
 }

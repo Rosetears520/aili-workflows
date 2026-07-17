@@ -18,7 +18,7 @@ The CLI implementation is distributed with this skill:
 
 `~/.agents/skills/rose-memory/references/memory_cli.py`
 
-The memory database is always project-local:
+The memory database is always the exact project-local path, resolved from the canonical project root:
 
 `memory/memory.db`
 
@@ -41,11 +41,14 @@ Use this skill when:
 - Never edit `memory/memory.db` manually.
 - Never create `memory.md`, JSON sidecars, or alternate memory state files.
 - Never store project state under `~/.config/opencode/`.
-- Always use the `rose-memory` shim when available, otherwise use the bundled `memory_cli.py` directly.
+- Invoke only the existing `rose-memory` shim or bundled `memory_cli.py`, always with the literal project-relative argument `--db memory/memory.db` from the canonical project root. Reject an absolute, user-supplied, alternate, parent-relative, aliased, or manual database path. If `memory/memory.db` or a path component is presented as a symlink, stop without following it; do not substitute another path.
 - Memory is additive, scoped continuity context. It is never the active OpenSpec contract, test-plan acceptance, permission, Git truth, review verdict, or completion proof.
-- Default-write only explicit user requirements, preferences, corrections, decisions, and acceptance criteria when project/change/session identity, source reference/type, timestamp, permission, and non-secret content are clear. Do not ask a redundant per-fact write question in that safe case.
+- Default-write only explicit, reusable user requirements, preferences, corrections, decisions, and acceptance criteria when project/change/session identity, source reference/type, CLI timestamp, permission, and content safety are clear. Use only the existing `text`, `source`, `project`, session/task identity, timestamp, and receipt behavior. Do not ask a redundant per-fact write question in that safe case.
 - If identity, scope, required metadata, or permission is ambiguous, ask one focused scope/identity question or keep the item in the active change artifact; do not create an unscoped record.
-- Never persist secrets, credentials, private data, raw logs, full transcripts, or full file contents. Redact the value and retain only a safe outcome/reference when useful.
+- Before invoking the CLI, reject or rewrite to a safely redacted existing-field value any text containing an embedded token, private key, credentialed URL, cookie, credential, private user data, or ambiguous sensitive content. Ambiguous permission blocks the write. Sensitive bytes must not appear in CLI arguments, memory, a receipt, or a new field; retain only a non-sensitive outcome/reference when useful.
+- This policy does not add a command, field, schema, migration, storage path, or storage hardening. Existing backend file-mode enforcement, backend symlink handling, and retention behavior remain `Unverified`.
+- Ordinary one-turn or report-only work that neither opens nor uses memory and has no formal long-running, resume, or context-loss need writes no session/task start or completion receipt by default. A missing receipt in that case is not a continuity failure.
+- Active formal long-running, resume, or context-loss work, and any current task that actually opens or uses memory, records the applicable scoped checkpoint/completion receipt with current evidence references. The receipt remains navigation/evidence metadata and never establishes contract, permission, Git truth, verification, or completion.
 - Model-derived repository facts, patterns, risks, review findings, history/log observations, and procedural rules are not user facts. Keep them as evidence-backed candidates or change-local `Unverified` items. If the existing CLI cannot represent the exact candidate lifecycle, keep the item in the appropriate change artifact instead of inventing a command, schema, or bridge.
 - Memory does not depend on DCP, compression thresholds, stale chat, or old logs. None of those sources has active-task authority.
 - If memory writeback fails, retry once when the fix is obvious. If it still fails, continue safe task progress, keep a pending TodoWrite item for memory writeback, retry before final handoff, and report any remaining failure.
@@ -130,6 +133,8 @@ Start a task:
 rose-memory task start --db memory/memory.db --session-key "<session-key>" --title "<task summary>"
 ```
 
+Use session/task start and later checkpoint/completion operations only for the receipt-triggering cases above. Do not run them merely because an ordinary task started or ended.
+
 Record an event checkpoint:
 
 ```bash
@@ -202,6 +207,8 @@ A memory write succeeds only when the CLI returns JSON containing:
 - `result` with the operation-specific payload
 
 If the receipt is missing, treat the operation as failed and do not claim writeback completion.
+
+A valid receipt proves only that the existing CLI reported that scoped operation. It grants no authority over the active contract, permissions, Git/filesystem state, verification, or task completion.
 
 ## References
 

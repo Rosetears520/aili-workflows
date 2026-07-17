@@ -46,10 +46,10 @@ Task arrives
     ├── Spreadsheet/workbook/table? ───→ minimax-xlsx
     ├── Slides/deck/presentation? ─────→ pptx-generator
     ├── Need project memory? ──────────→ rose-memory
-    ├── Something broke? ──────────────→ debugging-and-error-recovery
+    ├── Something broke? ──────────────→ build-failure-repair when a quality gate fails
     ├── Multiple independent work packages? → parallel-subagent-dispatch
     ├── Explicitly stress-testing an existing artifact/claim? → strategy-stress-test
-    ├── Reviewing implementation after changes? → review-pipeline
+    ├── Explicit or specialist review need? → review-pipeline
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
@@ -83,8 +83,8 @@ Use these boundaries before defaulting to generic implementation skills:
 |---|---|---|
 | `/ideate`, `/define`, `/build`, `/ship` or equivalent natural-language delivery intent vs any phase skill | `aili-delivery-flow` | Stop and ask which lifecycle mode the user wants |
 | Harness behavior complaint vs approved harness edit | `harness-issue-triage` before `harness-evolution` | Do not edit core harness controls until approval exists |
-| Implementation plus independent subagent lanes | `parallel-subagent-dispatch` for packet routing, then the domain skill inside each packet | If edit scopes overlap, use sequential work or ask ROSE/user |
-| Review after implementation vs direct code review | `review-pipeline` for non-trivial completed changes; `code-review-and-quality` for a single review lane | If blockers cannot be reconciled, keep final PASS blocked |
+| Explicit or clearly beneficial independent subagent lanes | `parallel-subagent-dispatch` | Default to direct work; if edit scopes overlap, keep work direct or sequential |
+| Explicit review request or concrete specialist evidence gap | `review-pipeline`; otherwise direct diff inspection and the smallest check | Keep unsupported conclusions `Unverified` |
 | Artifact format skill vs generic docs/test planning | Use the explicit output format skill (`minimax-*`, `pptx-generator`) | Ask for output format/placement before writing |
 
 Interview packets and generated test documents are durable project artifacts. For OpenSpec changes, write the repository-local Markdown artifact in the change directory without asking.
@@ -125,9 +125,9 @@ For every non-OpenSpec source, including a single source document with an obviou
 | GLSL, shader code, ShaderToy/WebGL shader effects, SDF/ray marching/procedural visuals | `shader-dev` | Use only for shader/procedural visual-effect work, not generic CSS/JS animation. |
 | Durable project memory or focused retrieval/writeback | `rose-memory` | Use when a task needs ROSE project-local SQLite memory. |
 | Create/update/validate Agent Skills | `skill-authoring-and-validation` | Use for skill authoring and package validation work. |
-| Independent work packages for subagents | `parallel-subagent-dispatch` | Use when work can safely run in parallel and then be merged. |
+| Explicit or clearly beneficial independent subagent work | `parallel-subagent-dispatch` | Direct work is default; use at most two concurrent lanes. |
 | Explicit loophole/evidence-gap audit of an existing artifact or claim | `strategy-stress-test` | Use as standalone only when the user asks to stress-test/review a draft, plan, claim, or strategy. Otherwise call it as a sub-step inside the owning skill. |
-| Post-implementation review orchestration | `review-pipeline` | Use after non-trivial implementation to fan out relevant reviewer agents, reconcile findings, run a bounded fix loop, and gate final PASS. |
+| Focused post-implementation review | `review-pipeline` | Use only on user request or a concrete specialist capability gap; never create an automatic swarm. |
 | Read-only GitHub issue/PR triage | `github-evidence-triage` | Use when analyzing GitHub issues or PRs without comments, labels, reviews, merges, pushes, or other write actions. |
 | About to claim complete/fixed/passing/verified | `verification-before-completion` | Use fresh evidence before completion claims. |
 | Clarifying, grilling, or writing back change drafts | `requirements-grilling` | Use when an existing spec, plan, issue, or change draft needs source-grounded requirements grilling, change-interviewer compatibility, or a Chinese interview packet for user-filled decisions before write-back. |
@@ -164,7 +164,7 @@ Do not duplicate the full delivery lifecycle here. If the user invokes `/ideate`
 
 These are exactly four delivery shortcuts, not separate capabilities from natural language. Do not create or route to `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, worktree-maintenance, or Graphify commands, and do not turn interval/event protocol descriptions into schedulers, watchers, hooks, queues, or other background runtime.
 
-For ordinary non-lifecycle work, choose only the narrowest applicable chain. Example: a bug fix might need `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`; a completed non-trivial diff might go directly to `review-pipeline`.
+For ordinary non-lifecycle work, choose only the narrowest applicable chain. Example: a failing quality gate may use `build-failure-repair`; otherwise choose only the narrowest domain skill and verify the resulting claim directly.
 
 Use `strategy-stress-test` conditionally whenever a material artifact or claim exists and risk warrants it, such as before accepting a spec, plan, review, reconciliation, or completion claim. If the skill is not available in the current runtime, perform the same compact check directly instead of skipping the guardrail.
 
@@ -194,12 +194,11 @@ Use `strategy-stress-test` conditionally whenever a material artifact or claim e
 | Build | minimax-pdf | Print-ready PDF generation, styling, and form filling |
 | Build | minimax-xlsx | Excel/CSV/spreadsheet formulas and workbook formatting |
 | Build | pptx-generator | PowerPoint slides, decks, and presentations |
-| Build | parallel-subagent-dispatch | Split independent work packages across subagents |
+| Build | parallel-subagent-dispatch | Optional at-most-two lanes for explicit or clearly beneficial independent work |
 | Build | rose-memory | Project-local SQLite memory retrieval/writeback |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | test-document-generator | Generate evidence-grounded test plans, test matrices, QA docs, and regression checklists from specs/plans/descriptions |
 | Verify | browser-testing-with-devtools | OpenCode Playwright browser tools for runtime verification |
-| Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Verify | verification-before-completion | Fresh evidence before completion claims |
 | Verify | strategy-stress-test | Find material loopholes, evidence gaps, counterexamples, and verification gaps before accepting artifacts or claims |
 | Review | review-pipeline | Orchestrate post-implementation review, reconcile findings, and gate final PASS |

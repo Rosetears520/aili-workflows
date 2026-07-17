@@ -5,7 +5,6 @@ Backend adapters store and organize work; they do not weaken lifecycle gates.
 | Adapter | Used for | Must preserve |
 |---|---|---|
 | OpenSpec | proposal, design, specs, tasks, `interview.md`, `test-plan.md`, validation | approved scope, tasks, strict validation, `requirements-grilling` interview generation, `test-document-generator` test-plan generation |
-| Superpowers-style plan | task lists and implementation sequencing | explicit package boundaries and verification |
 | Custom files | repo-local plans, tickets, docs | source evidence and acceptance criteria |
 | Auto detection | inferring available backend from repo | conservative fallback and clarification when ambiguous |
 

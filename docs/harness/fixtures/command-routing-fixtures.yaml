@@ -1,11 +1,11 @@
 {
   "fixture": "command-routing",
-  "required_markers": ["/ideate", "/define", "/build", "/ship", "/local-review", "neutral-build", "package-queue", "code-scout", "implementer", "package-12-final-gate", "no-per-package-gate", "release-readiness", "release-blocker-audit", "local-review-gate", "OpenCode-owned /review", "categorized report", "PASS_WITH_UNVERIFIED", "complete, appropriately scoped, verified", "not artificially tiny", "most relevant focused verification", "classify dirty paths", "approval-gated cleanup", "cleanup package", "deleting user-visible artifacts", "ecc-code-review-adaptation.md", "review-repair-lane-adaptation.md", "orchestration-adaptation.md", "addyosmani-code-review-rubric.md", "codex-github-compatibility.md", "five axes", "Critical/Important/Suggestion", "spec/task-first", "concrete fixes", "uncertainty/proof gates", "Codex behavior-only", "no official docs text copied", "non-trigger"],
+  "required_markers": ["/ideate", "/define", "/build", "/ship", "/local-review", "neutral-build", "active-contract-queue", "code-scout", "implementer", "IMPLEMENTED_TARGETED_VERIFIED", "no-per-package-gate", "release-readiness", "release-blocker-audit", "local-review-gate", "OpenCode-owned /review", "categorized report", "PASS_WITH_UNVERIFIED", "complete, appropriately scoped, verified", "not artificially tiny", "risk-or-need-triggered-feedback", "one minimal completion check", "classify dirty paths", "approval-gated cleanup", "cleanup package", "deleting user-visible artifacts", "ecc-code-review-adaptation.md", "review-repair-lane-adaptation.md", "orchestration-adaptation.md", "addyosmani-code-review-rubric.md", "codex-github-compatibility.md", "five axes", "Critical/Important/Suggestion", "spec/task-first", "concrete fixes", "uncertainty/proof gates", "Codex behavior-only", "no official docs text copied", "non-trigger"],
   "cases": [
     {"id": "cmd-ideate", "input": "/ideate explore task", "expected_mode": "IDEATE", "trigger": true, "expected_scope": "evidence-scouting", "expected_delegation": ["code-scout"]},
-    {"id": "cmd-define", "input": "/define prepare spec", "expected_mode": "DEFINE", "trigger": true, "expected_scope": "artifact-fan-out", "expected_artifacts": ["interview.md", "test-plan.md"], "expected_forbidden_artifacts": ["grill.md", "requirements-grilling.md"], "expected_skills": ["requirements-grilling", "test-document-generator"], "expected_readiness": ["READY", "BLOCKED", "WAIVED", "UNVERIFIED"]},
+    {"id": "cmd-define", "input": "/define prepare spec", "expected_mode": "DEFINE", "trigger": true, "expected_scope": "artifact-fan-out", "expected_artifacts": ["interview.md", "test-plan.md"], "expected_forbidden_artifacts": ["grill.md", "requirements-grilling.md"], "expected_skills": ["requirements-grilling", "test-document-generator"], "expected_readiness": ["READY", "BLOCKED"]},
     {"id": "cmd-build", "input": "/build package 1", "expected_mode": "BUILD", "trigger": true, "expected_scope": "implementation-quality", "expected_execution": "neutral-build", "package_gate": "no-per-package-gate", "savepoint": "lightweight"},
-    {"id": "cmd-build-neutral-queue", "input": "/build", "expected_mode": "BUILD", "trigger": true, "expected_scope": "implementation-quality", "expected_execution": "neutral-build", "expected_package_source": "package-queue", "queue_inputs": ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], "target_repo_root": "infer-canonical-from-backend-context", "cwd_authority": false, "expected_delegation": ["implementer"], "package_gate": "no-per-package-gate", "final_gate": "package-12-final-gate", "parallelism_analysis": ["shared scaffold/source-of-truth work", "safe parallel lanes", "serial dependencies", "ownership boundaries", "join points", "blockers", "no-parallel reason"], "implementation_objective": ["complete, appropriately scoped, verified", "accepted scope", "not artificially tiny"], "verification_order": ["most relevant focused verification"], "preserved_gates": ["external-repo-root", "official/API docs", "evidence-backed 方案", "UNVERIFIED before implementation", "test first", "high-risk packaging stop"], "cleanup_gate": ["classify dirty paths", "approval-gated cleanup", "cleanup package", "deleting user-visible artifacts"]},
+    {"id": "cmd-build-neutral-queue", "input": "/build", "expected_mode": "BUILD", "trigger": true, "expected_scope": "implementation-quality", "expected_execution": "neutral-build", "expected_package_source": "active-contract-queue", "queue_inputs": ["tasks.md", "specs", "design", "test-plan.md", "repository-evidence"], "target_repo_root": "user-selected-git-startup-root", "cwd_authority": "startup-git-host-only", "expected_delegation": ["implementer"], "package_gate": "no-per-package-gate", "final_gate": "minimal-changed-scope-completion-check", "success_state": "IMPLEMENTED_TARGETED_VERIFIED", "build_to_ship": "fresh-intent-required", "parallelism_analysis": ["shared scaffold/source-of-truth work", "safe parallel lanes", "serial dependencies", "ownership boundaries", "join points", "blockers", "no-parallel reason"], "implementation_objective": ["complete, appropriately scoped, verified", "accepted scope", "not artificially tiny"], "verification_order": ["risk-or-need-triggered-feedback", "one minimal completion check"], "preserved_gates": ["A33 exact operation approval", "official/API docs", "evidence-backed 方案", "UNVERIFIED before implementation", "high-risk packaging stop", "exact commit/push/merge/release approvals"], "cleanup_gate": ["classify dirty paths", "approval-gated cleanup", "cleanup package", "deleting user-visible artifacts"]},
     {"id": "cmd-local-review-default", "input": "/local-review", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "default-local-changes", "expected_targets": ["staged", "unstaged", "untracked"], "expected_report": ["categorized report", "skipped lanes", "Unverified", "PASS_WITH_UNVERIFIED", "no secrets", "no raw logs", "redacted path:line/type evidence"], "expected_forbidden": ["OpenCode-owned /review", "replace /ship", "remote mutation"]},
     {"id": "cmd-local-review-base", "input": "/local-review --base main", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "base-branch", "expected_targets": ["merge-base", "base branch", "current branch"]},
     {"id": "cmd-local-review-commit", "input": "/local-review --commit abc123", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "commit"},
@@ -13,7 +13,7 @@
     {"id": "cmd-local-review-change", "input": "/local-review --change add-local-review-gate", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "OpenSpec change", "expected_artifacts": ["proposal.md", "design.md", "tasks.md", "specs", "interview.md", "test-plan.md", "context.md", "progress.txt", "drift-log.md", "legacy implementation-notes.html", "review-report.md"], "expected_acceptance": ["NEEDS_FIXES", "BLOCKED", "PASS_WITH_UNVERIFIED", "user accepts each named Unverified item"], "expected_lanes": ["convergence-reviewer"], "expected_provenance": ["provenance boundaries", "ecc-code-review-adaptation.md", "review-repair-lane-adaptation.md", "orchestration-adaptation.md", "addyosmani-code-review-rubric.md", "codex-github-compatibility.md", "Codex behavior-only", "no official docs text copied"], "expected_rubric": ["five axes", "Critical/Important/Suggestion", "spec/task-first", "concrete fixes", "uncertainty/proof gates"]},
     {"id": "cmd-local-review-focus", "input": "/local-review --focus adversarial security", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "focus-adversarial", "expected_focus": ["adversarial", "security"]},
     {"id": "cmd-local-review-repair", "input": "/local-review --repair", "expected_mode": "LOCAL_REVIEW", "trigger": true, "expected_scope": "local-review-gate", "target_mode": "repair", "expected_prerequisites": ["categorized report", "explicit authorization", "report before repair", "separate repair ownership", "re-review after fixes", "re-review"]},
-    {"id": "cmd-ship", "input": "/ship closeout", "expected_mode": "SHIP", "trigger": true, "expected_scope": "release-readiness", "expected_checks": ["code-reviewer", "test-engineer", "release-readiness", "release-blocker-audit"], "expected_conditional_checks": ["security-auditor"]},
+    {"id": "cmd-ship", "input": "/ship closeout", "expected_mode": "SHIP", "trigger": true, "expected_scope": "release-readiness", "fresh_intent": true, "expected_checks": ["reuse-fresh-build-evidence", "stale-or-affected-only"], "expected_conditional_checks": ["concrete-gap-specialist", "integration", "packaging", "release", "merge-result", "target-specific"], "automatic_full_matrix": false},
     {"id": "ordinary-chat-multiunit-planning", "input": "plan docs, implementation, tests, and packaging", "expected_mode": "ordinary-chat", "trigger": true, "expected_parallelism_analysis": ["parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason"]},
     {"id": "internal-research", "input": "/research topic", "expected_mode": "internal-stage", "expected": "non-trigger", "trigger": false},
     {"id": "internal-review", "input": "/review diff", "expected_mode": "internal-stage", "expected": "non-trigger", "trigger": false, "reserved_for": "OpenCode-owned /review"},
@@ -58,18 +58,126 @@
     {"id": "budget-resume-preserves-overshoot-accounting", "expected": "preserve-block", "accounting_status": "lost", "overshoot": 25},
     {"id": "loop-interval-protocol-only", "expected": "design-owned-lp-no-registration", "profile": "interval"},
     {"id": "loop-event-protocol-only", "expected": "design-owned-lp-no-listener", "profile": "event"},
-    {"id": "loop-automation-no-registration", "expected": "block-zero-mutation-zero-lp", "pure_inputs": ["install", "register", "run", "modify", "update", "reconfigure", "enable", "reuse"], "mixed_documentation": "block-whole-request", "later_documentation_only": "may-define-or-reuse-lp"},
+    {"id": "loop-automation-no-registration", "expected": "hidden-aili-block-product-gated", "hidden_aili": "block-zero-mutation-zero-lp", "explicit_product": "formal-high-risk-gates", "vocabulary_only": "ordinary", "protocol_only": "no-runtime-no-lifecycle-permission"},
     {"id": "loop-formal-runbook-protocol-only", "expected": "define-or-reuse-lp", "input": "document external/manual protocol only"},
-    {"id": "loop-no-background-primitive", "expected": "pass", "forbidden": ["scheduler", "listener", "daemon", "persistent queue", "hook", "dependency", "auto-retry"]},
+    {"id": "loop-no-background-primitive", "expected": "pass", "scope": "hidden-unrequested-aili-runtime", "forbidden": ["scheduler", "listener", "daemon", "persistent queue", "hook", "dependency", "auto-retry"]},
     {"id": "neutral-build-native-goal-nonownership", "expected": "negative-nonownership", "native_goal_modified": false},
     {"id": "ordinary-goal-language-preserved", "expected": "ordinary", "input": "user goal, package goal, implementation goal, Goal-Driven Verification"},
     {"id": "native-goal-partii-na", "expected": "Stage II / N/A", "coverage": ["successful /goal objective", "bare /goal", "persistent native goal"], "owned_by_aili": false},
-    {"id": "def-e2-no-per-package-gate", "expected": "pass", "packages": "P1-P11", "mandatory_quality_gate": false},
-    {"id": "def-e3-final-matrix-compatibility", "expected": "pass", "package": "P12", "task_matrix": "canonical-all-task", "review_repair_limit": 3, "max_holistic_cycles": 3},
+    {"id": "def-e2-no-per-package-gate", "expected": "pass", "change": "complete-aili-workflow-orchestration", "packages": "P1-P11", "generic_template": false, "mandatory_quality_gate": false},
+    {"id": "def-e9-lean-final-inspection", "expected": "pass", "change": "complete-aili-workflow-orchestration", "package": "P12", "generic_template": false, "task_coverage": "applicable-current-scope", "automatic_review_swarm": false, "specialist_limit": 2, "targeted_recheck_limit": 1},
     {"id":"budget-consumed-over-limit-terminal","expected":"budget-exhausted-no-action","counter":{"limit":3,"consumed":4,"remaining":0},"stop_reason":"budget-exhausted","outcome":"budget-exhausted","resume":"blocked"}
     ,{"id":"budget-iteration-consumed-over-limit-corruption","expected":"corruption-block-no-action","counter":{"limit":3,"consumed":4,"remaining":0},"overshoot_allowed":false,"resume":"blocked"}
     ,{"id":"budget-review-consumed-over-limit-corruption","expected":"corruption-block-no-repair","counter":{"limit":3,"consumed":4,"remaining":0},"overshoot_allowed":false,"resume":"blocked"}
     ,{"id":"loop-interval-documentation-ambiguity","input":"Document an interval protocol, but the external/manual trigger and scope are unclear","expected":"ask-one-documentation-protocol-question-zero-execution"}
-    ,{"id":"loop-interval-executable-request-block","input":"Run this objective every interval","expected":"block-executable-interval-zero-mutation-zero-lp"}
+    ,{"id":"loop-interval-executable-request-block","input":"Silently make AILI run this objective every interval","expected":"block-hidden-aili-automation-zero-mutation-zero-lp"}
+    ,{"id":"automation-hidden-aili-block","requirements":["LIFE-009","ROUTE-007"],"expected":"block-zero-mutation-zero-lp","scope":"hidden-or-unrequested-aili-lifecycle"}
+    ,{"id":"automation-product-ci-formal-allowed","requirements":["LIFE-009","ROUTE-007"],"expected":"eligible-through-formal-high-risk-gates","scope":"explicit-product-repository-ci"}
+    ,{"id":"automation-product-cron-formal-allowed","requirements":["LIFE-009","ROUTE-007"],"expected":"eligible-through-formal-high-risk-gates","scope":"explicit-product-repository-cron-scheduler"}
+    ,{"id":"automation-product-webhook-listener-formal-allowed","requirements":["LIFE-009","ROUTE-007"],"expected":"eligible-through-formal-high-risk-gates","scope":"explicit-product-repository-webhook-listener"}
+    ,{"id":"automation-product-queue-daemon-hook-retry-formal-allowed","requirements":["LIFE-009","ROUTE-007"],"expected":"eligible-through-formal-high-risk-gates","scope":"explicit-product-repository-queue-daemon-hook-auto-retry"}
+    ,{"id":"automation-vocabulary-only-ordinary","requirements":["ROUTE-001"],"expected":"ordinary","input":"compare CI cron webhook listener queue daemon hook auto-retry options"}
+    ,{"id":"automation-required-risk-gates","requirements":["LIFE-009","ROUTE-007"],"expected":"retain-all","gates":["permission","external-write","credential","persistent-service","dependency-lockfile","destructive","ownership","verification","exact-operation"]}
+    ,{"id":"automation-aili-protocol-doc-only","requirements":["LIFE-009","ROUTE-007","CONT-005"],"expected":"design-owned-lp-only","runtime_created":false,"lifecycle_permission":false}
+    ,{"id":"automation-hidden-plus-protocol-no-lp","requirements":["LIFE-009","ROUTE-007"],"expected":"block-zero-mutation-zero-lp","later_request":"documentation-only-restatement"}
+    ,{"id":"T-BUILD-NO-AUTO-SAVEPOINT-ACTIONS","requirements":["LIFE-001","LIFE-004","CONT-003"],"savepoint_fields":["scope","files_changed","unresolved_items","evidence_state","next_package"],"automatic_tests":false,"automatic_commit":false,"package_approval":false}
+    ,{"id":"T-BUILD-MINIMUM-COMPLETION","requirements":["LIFE-004","CONT-003","REV-003"],"expected":"one-minimal-changed-scope-check","automatic_full_matrix":false,"automatic_review_test_security":false,"targeted_recheck_limit":1}
+    ,{"id":"T-BUILD-COMPLETION-STOP","requirements":["LIFE-004","LIFE-006","ROUTE-008","CONT-003"],"expected":"IMPLEMENTED_TARGETED_VERIFIED","enters_ship":false}
+    ,{"id":"T-SHIP-EVIDENCE-REUSE","requirements":["LIFE-004","ROUTE-008","CONT-003","REV-003"],"fresh_intent":true,"reuse_event_fresh_build_evidence":true,"checks":"stale-affected-risk-integration-packaging-release-merge-target-only"}
+    ,{"id":"T-EVIDENCE-NONINVALIDATING-GIT","requirements":["LIFE-001","ROUTE-008","CONT-003"],"events":["unchanged-commit","exact-commit-push","pr-create"],"stales_evidence":false}
+    ,{"id":"T-EVIDENCE-INVALIDATION-EVENTS","requirements":["LIFE-001","ROUTE-008","CONT-003"],"events":["hook","content-tree","config","dependency","toolchain","target","changed-merge"],"invalidation":"affected-only"}
+    ,{"id":"T-MERGE-EVIDENCE-SCOPE","requirements":["LIFE-001","ROUTE-008","CONT-003","REV-003"],"exact_verified_fast_forward":"no-full-rerun","changed_merge":"affected-integration-checks"}
+    ,{"id":"T-CI-FAILURE-USER-STOP","requirements":["LIFE-001","LIFE-006","ROUTE-008","CONT-003","REV-004"],"expected":"need-user","automatic_actions":[]}
+    ,{"id":"T-USER-CONTROL-POINTS","requirements":["LIFE-001","LIFE-006","ROUTE-008","CONT-003"],"controls":["material-define-decisions","one-final-test-plan-acceptance","fresh-ship-intent","exact-commit-approval","exact-push-approval","exact-merge-approval","exact-release-approval","ci-failure-user-return"],"package_approval":false}
+    ,{"id":"T-NO-FIFTH-COMMAND","requirements":["LIFE-002","LIFE-004","REV-003"],"delivery_commands":["/ideate","/define","/build","/ship"],"local_review":"standalone-non-delivery-no-lifecycle-or-ship-authority"}
+    ,{"id":"a33-host-git-positive","requirements":["WT-001","WT-004","LIFE-004"],"expected":"admit-static-only","startup_root":"user-selected-git"}
+    ,{"id":"a33-host-non-git-block","requirements":["WT-001","WT-004"],"expected":"block","operation_authority":false}
+    ,{"id":"a33-host-no-ranking","requirements":["WT-001"],"expected":"user-selected-only","rank_move_scan_auto_select":false}
+    ,{"id":"a33-ignore-positive","requirements":["WT-004"],"expected":"exact-prospective-destination-ignored","ignore_rule":"/.worktrees/","reinclude":false,"tracked_destination":false}
+    ,{"id":"a33-ignore-missing-block","requirements":["WT-004"],"expected":"block-explicit-host-ignore-change"}
+    ,{"id":"a33-ignore-reinclude-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-destination-tracked-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-key-valid","requirements":["WT-001","WT-004"],"expected":"pass-grammar","regex":"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$","worktree_key":"explicit"}
+    ,{"id":"a33-key-invalid-block","requirements":["WT-001","WT-004"],"expected":"block","variants":["empty","dot","dotdot","reserved-.git","reserved-.worktrees","separator","absolute","control","newline","nul","path-like"]}
+    ,{"id":"a33-operation-key-omission-rejected","requirements":["WT-001","WT-002"],"expected":"reject"}
+    ,{"id":"a33-operation-key-wrong-type-rejected","requirements":["WT-001","WT-002"],"expected":"reject"}
+    ,{"id":"a33-approval-key-omission-rejected","requirements":["WT-001","WT-002"],"expected":"reject"}
+    ,{"id":"a33-approval-key-wrong-type-rejected","requirements":["WT-001","WT-002"],"expected":"reject"}
+    ,{"id":"a33-collision-no-guess-block","requirements":["WT-004"],"expected":"block","forbidden_recovery":["suffix","force","-B","orphan","remote-guess","implicit-base-ref"]}
+    ,{"id":"a33-multiple-attachments","requirements":["WT-001"],"expected":"allowed-with-separate-evidence-and-approval","one_total_limit":false}
+    ,{"id":"a33-rules-narrow","requirements":["WT-004"],"expected":"allow-narrow-only","reread_at":"operation-dispatch-boundary"}
+    ,{"id":"a33-rules-broaden-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-rules-conflict-block","requirements":["WT-004"],"expected":"block-same-level-conflict"}
+    ,{"id":"a33-topology-submodule-block","requirements":["WT-003","WT-004"],"expected":"block","variants":["tracked-.gitmodules","mode-160000","malformed-submodule","source-as-submodule","superproject-relation"]}
+    ,{"id":"a33-path-ambiguity-block","requirements":["WT-001","WT-003"],"expected":"block","variants":["symlink","junction","mount","path-escape"]}
+    ,{"id":"a33-identity-field-omission-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-field-wrong-type-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-string-sentinel-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-populated-required-null-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-absent-forbidden-nonnull-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-detached-branch-mismatch-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-identity-file-array-invalid-rejected","requirements":["WT-001"],"expected":"reject-unsorted-duplicate-nonrelative"}
+    ,{"id":"a33-identity-dirty-count-invalid-rejected","requirements":["WT-001"],"expected":"reject"}
+    ,{"id":"a33-runtime-identity-transition-schema","requirements":["WT-001"],"expected":"host-source-populated-target-absent-populated-absent","identity_hash_digest":false}
+    ,{"id":"a33-runtime-prepare-no-worktree-effect","requirements":["WT-004"],"expected":"zero-effect","adds":0,"removes":0,"descriptor_authority":false}
+    ,{"id":"a33-runtime-approval-positive","requirements":["WT-002","WT-003"],"expected":"one-exact-current-operation-only","operation_classes":["driver_fixture","real"],"bound_fields":["repo_key","worktree_key","source","destination","branch","base_ref","branch_mode","reflog_policy","operation_class","expiry","operation"],"aggregate_authority":false}
+    ,{"id":"a33-runtime-each-attachment-add-separate-approval","requirements":["WT-002","WT-004"],"expected":"fresh-distinct-key-class-bound-per-add"}
+    ,{"id":"a33-runtime-each-attachment-remove-separate-approval","requirements":["WT-002","WT-004"],"expected":"fresh-distinct-key-class-bound-per-remove-after-inventory"}
+    ,{"id":"a33-runtime-add-approval-wrong-zero-effect","requirements":["WT-002","WT-004"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-add-approval-reused-zero-effect","requirements":["WT-002","WT-004"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-remove-approval-wrong-zero-effect","requirements":["WT-002","WT-004"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-remove-approval-reused-zero-effect","requirements":["WT-002","WT-004"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-fixture-add-real-approval-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-fixture-remove-real-approval-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-operation-class-mismatch-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect","classes":["driver_fixture","real"]}
+    ,{"id":"a33-runtime-key-mismatch-zero-effect","requirements":["WT-001","WT-002"],"expected":"block-zero-effect","parameters":{"keys":["repo_key","worktree_key"],"operations":["ADD","REMOVE"]}}
+    ,{"id":"a33-runtime-approval-missing-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-missing-approval-null-fields","requirements":["WT-002"],"expected":"requested-fields-populated-approval-id-decision-expiry-risk-null","effect_started":false}
+    ,{"id":"a33-runtime-approval-stale-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-mismatched-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-expired-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-wrong-source-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-wrong-destination-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-wrong-branch-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-wrong-ref-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-add-approval-reused-real-remove-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-other-operation-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-approval-declined-unavailable","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-add-trusted-code-risk-accepted","requirements":["WT-002"],"expected":"required-before-add-effect"}
+    ,{"id":"a33-runtime-add-trusted-code-risk-declined-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-add-trusted-code-risk-unavailable-zero-effect","requirements":["WT-002"],"expected":"block-zero-effect"}
+    ,{"id":"a33-runtime-remove-trusted-code-risk-not-applicable","requirements":["WT-002","WT-004"],"expected":"observed-approval-not_applicable","separate_deletion_risk_gate":true}
+    ,{"id":"a33-pre-add-target-absent","requirements":["WT-001","WT-004"],"expected":"exact-absent-A33Identity"}
+    ,{"id":"a33-add-delta-exact","requirements":["WT-001","WT-004"],"expected":"target-absent-to-populated","allowed":"declared-admin-membership-and-authorized-ref-transaction-only"}
+    ,{"id":"a33-add-common-dir-exact-allowed-delta","requirements":["WT-001","WT-004"],"expected":"exact-declared-admin-created"}
+    ,{"id":"a33-add-common-dir-identity-preserved","requirements":["WT-001","WT-004"],"expected":"unchanged"}
+    ,{"id":"a33-add-existing-branch-no-ref-reflog-creation","requirements":["WT-001"],"expected":"unchanged-ref-reflog","branch_mode":"existing"}
+    ,{"id":"a33-add-new-branch-reflog-enabled-created","requirements":["WT-001"],"expected":"exact-ref-and-reflog-created","branch_mode":"create","reflog_policy":"enabled"}
+    ,{"id":"a33-add-new-branch-reflog-disabled-absent","requirements":["WT-001"],"expected":"exact-ref-created-reflog-absent","branch_mode":"create","reflog_policy":"disabled"}
+    ,{"id":"a33-add-new-branch-reflog-enabled-missing-block","requirements":["WT-001","WT-003"],"expected":"block"}
+    ,{"id":"a33-add-new-branch-reflog-disabled-unexpected-block","requirements":["WT-001","WT-003"],"expected":"block"}
+    ,{"id":"a33-unrelated-common-dir-preserved","requirements":["WT-003","WT-004"],"expected":"unchanged","parameters":["ADD","REMOVE"]}
+    ,{"id":"a33-add-unrelated-preserved","requirements":["WT-003","WT-004"],"expected":"unchanged"}
+    ,{"id":"a33-pre-remove-target-populated","requirements":["WT-001","WT-004"],"expected":"exact-populated-A33Identity"}
+    ,{"id":"a33-remove-delta-exact","requirements":["WT-001","WT-004"],"expected":"target-populated-to-absent","force":false,"branch_ref_reflog":"retained"}
+    ,{"id":"a33-remove-common-dir-exact-allowed-delta","requirements":["WT-001","WT-004"],"expected":"exact-declared-admin-deleted"}
+    ,{"id":"a33-remove-common-dir-identity-preserved","requirements":["WT-001","WT-004"],"expected":"unchanged"}
+    ,{"id":"a33-common-dir-identity-change-block","requirements":["WT-003","WT-004"],"expected":"block"}
+    ,{"id":"a33-add-common-dir-unrelated-mutation-block","requirements":["WT-003","WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-common-dir-unrelated-mutation-block","requirements":["WT-003","WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-branch-deletion-block","requirements":["WT-003","WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-branch-reflog-mutation-block","requirements":["WT-003","WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-dirty-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-unknown-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-user-visible-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-ignored-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-untracked-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-artifact-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-locked-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-wrong-source-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-wrong-path-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-remove-missing-target-block","requirements":["WT-004"],"expected":"block"}
+    ,{"id":"a33-forbidden-git-block","requirements":["WT-003","WT-004"],"expected":"block","forbidden":["other-ref-reflog","prune","move","repair","lock","unlock","force","clean","reset","merge","rebase","commit","push","integration","branch-deletion"]}
+    ,{"id":"a33-rollback-preserves","requirements":["WT-003","WT-004"],"expected":"preserve-worktrees-evidence-and-managed-denials","automatic_remove":false}
   ]
 }

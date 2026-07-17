@@ -528,10 +528,15 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     });
   }
 
-  await t.test("runs the P6 text fixture through the actual aggregate fixture validator", async () => {
+  await t.test("runs the P6 JSON-v3 fixture through the actual aggregate fixture validator", async () => {
     const relative = "docs/harness/fixtures/cross-worktree-permission-fixtures.yaml";
-    const original = await readFile(path.join(root, relative), "utf8");
-    await writeFile(path.join(root, relative), original.replace("  - id: effective-merged-tool-inventory\n    expected: exact-final-merged-profile\n", ""));
+    const fixture = await loadJson(root, relative);
+    assert.ok(fixture.historical_a30.case_ids.includes("effective-merged-tool-inventory"));
+    fixture.historical_a30.case_ids = fixture.historical_a30.case_ids.filter(
+      (caseId) => caseId !== "effective-merged-tool-inventory"
+    );
+    assert.equal(fixture.historical_a30.case_ids.includes("effective-merged-tool-inventory"), false);
+    await saveJson(root, relative, fixture);
     const result = run(root, ["scripts/harness_fixture_check.py"]);
     assert.equal(result.status, 1, result.stdout + result.stderr);
     assert.match(result.stdout, /cross-worktree-permission-fixtures\.yaml/);

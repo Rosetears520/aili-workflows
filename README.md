@@ -28,7 +28,6 @@ aili-workflows/
 │       ├── context-engineering/
 │       ├── coverage-review/
 │       ├── data-analysis/
-│       ├── debugging-and-error-recovery/
 │       ├── deprecation-and-migration/
 │       ├── documentation-and-adrs/
 │       ├── e2e-artifact-handling/
@@ -82,7 +81,6 @@ aili-workflows/
 │   ├── web-researcher.md         # 只读联网资料研究 subagent
 │   ├── plan-auditor.md           # 只读计划审计 subagent
 │   ├── implementer.md           # 单任务实现 subagent
-│   ├── debug-investigator.md     # 只读根因排查 subagent
 │   ├── code-reviewer.md         # 代码审查 subagent
 │   ├── convergence-reviewer.md  # 只读交付收敛审查 subagent
 │   ├── security-auditor.md      # 安全审计 subagent
@@ -92,7 +90,11 @@ aili-workflows/
 │   ├── ai-regression-scout.md   # 只读 AI 回归场景侦察 subagent
 │   ├── silent-failure-reviewer.md # 只读静默失败审查 subagent
 │   ├── browser-qa-runner.md     # 浏览器 QA 验证 subagent
-│   └── e2e-artifact-runner.md   # E2E 证据 artifact subagent
+│   ├── e2e-artifact-runner.md   # E2E 证据 artifact subagent
+│   ├── web-performance-auditor.md # 只读 Web 性能审计 subagent
+│   ├── spec-miner.md            # 只读 spec mining subagent
+│   ├── agent-evaluator.md       # 只读 agent 输出评估 subagent
+│   └── opensource-sanitizer.md  # 只读 OSS/public exposure 审查 subagent
 ├── commands/
 │   ├── ideate.md                # /ideate：进入 aili-delivery-flow IDEATE
 │   ├── define.md                # /define：进入 aili-delivery-flow DEFINE
@@ -125,8 +127,8 @@ aili-workflows/
 | `agents/web-researcher.md` | 只读联网资料研究 subagent，用于官方文档、公开 GitHub README/issues/releases、插件文档、安装命令、API 行为、兼容性和弃用检查 | Rosetears 个人工作流内容 |
 | `agents/plan-auditor.md` | 只读计划审计 subagent，用于实施前检查 plan/spec/tasks/acceptance/test-plan 的缺口、冲突、过度设计和验证薄弱点 | Rosetears 个人工作流内容 |
 | `agents/implementer.md` | 执行一个明确边界的代码实现任务 | Rosetears 个人工作流内容 |
-| `agents/debug-investigator.md` | 只读根因调查 subagent，用于修复前的失败定位和证据收集 | Rosetears 个人工作流内容，调试纪律参考 obra/superpowers |
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |
+| `agents/convergence-reviewer.md` | 对当前 contract、实现、验证和遗留风险做只读收敛审查，不替代 ROSE 的最终判断 | Rosetears 个人工作流内容 |
 | `agents/security-auditor.md` | 做安全审计、威胁建模和漏洞检查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/security-auditor.md`，遵循 MIT License |
 | `agents/test-engineer.md` | 做测试策略、测试补充和覆盖率分析 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/test-engineer.md`，遵循 MIT License |
 | `agents/web-performance-auditor.md` | 做 Web 性能审计，聚焦 Core Web Vitals、加载、渲染和网络性能，并严格区分测量数据与静态分析潜在影响 | 复制并做 OpenCode 安全包装自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/web-performance-auditor.md`，遵循 MIT License |
@@ -139,6 +141,8 @@ aili-workflows/
 | `agents/spec-miner.md` | 只读 spec mining subagent，从现有代码、测试、文档和 OpenSpec artifact 提炼候选 requirements / scenarios，不批准或编写 specs | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 | `agents/agent-evaluator.md` | 只读 agent / subagent 输出评估 subagent，检查任务匹配、证据质量、claim hygiene、约束遗漏、overclaiming 和 handoff 可用性 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 | `agents/opensource-sanitizer.md` | 只读 OSS / npm / public-release 暴露面审查 subagent，报告 secrets/private data/package/prompt/provenance 风险且必须脱敏 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
+
+Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subagents。19 个 managed profiles 全部保持 `external_directory: deny`；只有 ROSE 保留逐 operation 的 external-directory ask。`web-researcher` 的角色不变：它仍只负责外部网页研究，web 能力不授予外部本地目录、mutation 或 delegation 权限。内置 `explore` / `general` 不计入这 19 个 managed profiles。
 
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
@@ -163,6 +167,8 @@ aili-workflows/
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
 | `harness-optimization-audit` | 只读 report-first harness routing、context cost、subagent parallelism、review fan-out、false PASS 和 evidence-loss 审计；批准修改后转 `harness-evolution` |
+| `parallel-subagent-dispatch` | 仅在用户明确要求、需要 specialist、上下文明显嘈杂或至少两个独立单元有明确收益时使用；默认最多两个并发 lane |
+| `verification-before-completion` | 对变更或明确成功声明运行最小 claim-matched 检查；不自动启动 verifier、全量套件或 review loop |
 | `mature-project-pattern-research` | 在 IDEATE 或普通聊天中研究成熟公开项目的 prior art，输出来源、成熟度信号、可借鉴/不推荐模式、风险、不确定性和下一步决策 |
 | `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
@@ -176,17 +182,6 @@ aili-workflows/
 
 `requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
-### 来自 obra/superpowers
-
-以下内容参考或改编自 [obra/superpowers](https://github.com/obra/superpowers) 的 skills，原项目许可为 MIT License，版权归 Jesse Vincent 所有。本仓库未 vendoring Superpowers 整体系统，仅将部分流程思想改写为适合个人 OpenCode / ROSE 工作流的 skills 和 subagents。
-
-| 内容 | 说明 |
-|---|---|
-| `parallel-subagent-dispatch` | 将高噪音只读证据收集隔离到 subagent，或将独立 work packages 并行派发给 subagents，并由 ROSE 收敛证据 |
-| `verification-before-completion` | 在声明 complete/fixed/passing/verified 前要求 fresh evidence |
-| `debugging-and-error-recovery` | 合入 root-cause-first 调试纪律，避免先猜修复再找证据 |
-| `agents/debug-investigator.md` | 本地化为只读根因调查 subagent，配合 ROSE/implementer 分工 |
-
 ### 来自 addyosmani/agent-skills
 
 以下 skills 来自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)，原项目许可为 MIT License，版权归 Addy Osmani 所有。本仓库用于个人 OpenCode 工作流整理，并保留来源说明。
@@ -199,7 +194,6 @@ aili-workflows/
 | `code-review-and-quality` | 多维度代码审查流程 |
 | `code-simplification` | 保持行为不变的代码简化 |
 | `context-engineering` | agent 上下文组织和规则文件管理 |
-| `debugging-and-error-recovery` | 根因调试和错误恢复 |
 | `deprecation-and-migration` | 废弃、迁移和旧系统下线 |
 | `documentation-and-adrs` | 文档和 ADR 记录 |
 | `frontend-ui-engineering` | 生产级 UI 工程实践 |
@@ -284,7 +278,13 @@ aili-workflows/
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供且只提供四个 delivery shortcut：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供 `/local-review` 作为非 delivery-mode 的本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。`/build` 是批准范围内的自动实现流水线，会把实现结果带过本地 code review、test verification 和必要的 security review；`/ship` 是更完整的 release-readiness 流水线，会复用或刷新 BUILD 证据，对当前变更/最终 diff 或明确指定的 baseline/整库范围执行 release-blocker audit，并补上 closeout、交付/合并/发布风险与后续动作。仓库不提供 `/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供且只提供四个 delivery shortcut：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供 `/local-review` 作为非 delivery-mode 的本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。DEFINE 必须先关闭 decision-shaping research / material blockers、保证 artifacts coherent 且 strict-valid，并取得最终 `test-plan.md` acceptance。BUILD 只执行 active contract 导出的 accepted queue 和 progress savepoints，再做一次最小 changed-scope completion check，记录 `IMPLEMENTED_TARGETED_VERIFIED` 后停在 SHIP 之前；不自动增加 package-local tests/reviews/security fanout、commit 或 approval。SHIP 需要新的显式 intent 和当前 implementation evidence，复用仍覆盖 exact content/target/config/toolchain 的 BUILD evidence，只选择 stale、affected、risk、integration、packaging、release、merge-result 或 target-specific checks。仓库不提供 `/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册隐藏或未请求的 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime；显式 product/repository automation 仍须通过正常 formal/high-risk gates。
+
+### A33 attached-repository boundary
+
+用户通过在一个 Git repository 中启动 OpenCode 来选择 A33 host；AILI 不提供 host selector，也不移动、排名或广泛扫描 host。每个 attachment 独立使用 current `WT-001` 的 `a33-attached-shared-trust-domain` mode，目标只能是 `<session-root>/.worktrees/<repo_key>/<worktree_key>`；两个 key 都必须匹配 `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`、非保留且无 path/worktree/branch collision，并通过 exact root `/.worktrees/` ignore、no re-inclusion、no tracked destination 和 trusted topology admission。`a30-a31-external-read`、A30 runtime results 以及 A32/item-41 readiness evidence 只保留为 historical/stale evidence，不能证明当前 A33 readiness。
+
+一个 host 可以声明多个 attachment，但每个 repository lane 必须分别持有 exact keys、17-field no-digest `A33Identity` pre/post evidence、target rules、artifact destination 和 fresh operation state；不得跨 attachment 复制或重绑定。PREPARE 无 add/remove 效果；每次 real/fixture ADD 需要 fresh exact key/class-bound approval 和 accepted trusted-code risk，之后的 non-force REMOVE 需要另一份 fresh exact approval、完整 deletion inventory 和独立 risk gate。REMOVE 保留 branch ref/reflog，rollback 保留 worktrees 和 evidence。host 与 attachments 必须是 same-owner、same-sensitivity、mutually trusted 的 shared trust domain；OpenCode path/cwd/permission controls 只是 soft coordination boundary，不是 sandbox 或 hard isolation。target rules 只能收窄权限、同级冲突即 block，user-visible artifacts 只能写入 owning target repository。CodeGraph status/query/init evidence 也必须逐 declared target 单独确认，不能用 host 或另一个 attachment 的结果代替。
 
 ### OpenCode 设置
 
@@ -343,7 +343,7 @@ npx -y rose-aili update --skip-openspec
 
 CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
 
-项目内 CodeGraph 初始化不属于全局安装。AI agent 只能在确认当前仓库根目录后，对该仓库运行 `codegraph init -i` 和 `codegraph status`；不得因为 CodeGraph 初始化顺手运行 `openspec init`，也不得未经明确授权批量初始化多个仓库。
+项目内 CodeGraph 初始化不属于全局安装。AI agent 只能在确认当前仓库根目录后，对该仓库运行 `codegraph init -i` 和 `codegraph status`；A33 host 和每个 declared attachment 都必须逐 target 单独确认 root、状态和 approval，不能复用另一个 target 的 CodeGraph 结果。不得因为 CodeGraph 初始化顺手运行 `openspec init`，也不得未经明确授权批量初始化多个仓库。
 
 项目级 `AGENTS.md` 初始化 / 更新应联动检查 CodeGraph：生成或更新 `AGENTS.md` 后先运行/请求 `codegraph status`；如果该仓库尚未初始化，则询问用户是否在当前仓库运行 `codegraph init -i`，同意后再运行 `codegraph status`。CodeGraph 不可用、用户跳过或拒绝时，不阻塞 `AGENTS.md` 完成，但必须在结果中说明没有代码地图覆盖。
 
@@ -351,7 +351,7 @@ OpenSpec 是显式 opt-in：只有 `--enable-openspec` 才会先用 `openspec --
 
 ### 分发与来源边界
 
-`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、四个 delivery commands 与独立 `local-review`、`.agents/` 下的 canonical skills/protocols、`manifests/`、两个 AGENTS 模板、`agents_md.py`、Graphify guarded launcher 及其 contract fixture、兼容安装脚本以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime；任何已打包 helper/fixture 都不注册为 command 或 runnable skill。
+`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、四个 delivery commands 与独立 `local-review`、`.agents/` 下的 canonical skills/protocols、`manifests/`、两个 AGENTS 模板、`agents_md.py`、Graphify guarded launcher 及其 contract fixture、兼容安装脚本以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime；任何已打包 helper/fixture 都不注册为 command 或 runnable skill。root `.worktrees/`、visible `worktrees/` 和 historical `.tmp/worktrees/` 都不在 package allowlist 中。
 
 固定上游材料位于现有 canonical skills 的 `references/upstream/` 中，并由 `manifests/upstream-references.json` 记录精确 pin、blob/hash、license/notice、`0644` mode 和 source→local mapping。上游 `SKILL.md` 以 `SKILL.upstream.md` 保存，脚本必须作为 non-executable data；这些文件随 `.agents/` 作为 inert reference data 打包，但不出现在 component manifest 的 skills 列表中，不获得 routing、approval、permission 或 execution authority。canonical AILI adapters 仍是各 skill 顶层唯一的 `SKILL.md`。
 
@@ -393,7 +393,6 @@ Graphify 仅允许在另行明确批准具体 operation、且 guarded launcher �
 |---|---|---|---|
 | Addy Osmani | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT License | Copyright (c) 2025 Addy Osmani |
 | MiniMax | [MiniMax-AI/skills](https://github.com/MiniMax-AI/skills) | MIT License | Copyright (c) 2026 MiniMax |
-| Superpowers | [obra/superpowers](https://github.com/obra/superpowers) | MIT License | Copyright (c) 2025 Jesse Vincent |
 | Bytedance / DeerFlow Authors | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | MIT License；clean-room pattern absorption only in this repository | Copyright Bytedance Ltd. and/or its affiliates and DeerFlow Authors; no DeerFlow runtime, provider config, tool paths, branding text, or upstream skill正文 vendored |
 | affaan-m / ECC contributors | [affaan-m/ECC](https://github.com/affaan-m/ECC) | MIT License | Copyright (c) 2026 Affaan Mustafa；local-review references adapt ECC review/orchestration/build-fix patterns with provenance; no ECC runtime, tool config, public ECC command, or upstream prompt正文 vendored |
 | sanyuan0704 | [sanyuan-skills](https://github.com/sanyuan0704/sanyuan-skills/tree/main/skills/code-review-expert) | 未验证；pattern-only reference；no copied text | Review-quality rubric patterns only; no upstream skill正文 vendored |

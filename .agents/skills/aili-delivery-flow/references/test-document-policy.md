@@ -15,8 +15,11 @@ The test document turns requirements into verification evidence before implement
 
 - DEFINE should create or update the acceptance test document for non-trivial work. For OpenSpec-backed changes, DEFINE writes `openspec/changes/<change-id>/test-plan.md` through `test-document-generator`.
 - Formal changes must include a requirements/decisions/risks traceability matrix. Missing task/package, file/artifact, verification, or evidence links must be labeled `Open Question` when they need a decision, or `Unverified` when they need later evidence.
-- BUILD may start only when test expectations are accepted, explicitly waived, or explicitly accepted as `UNVERIFIED`.
-- SHIP must use fresh evidence, compare the traceability matrix against implementation/review/security evidence, and identify any `Open Question` or `Unverified` items before readiness claims.
+- BUILD may start only after applicable decision-shaping research is closed, the artifacts and traceability are coherent/validated, and the user explicitly accepts the final test plan. A waiver or accepted-`Unverified` label cannot substitute for either material research closure or final test-plan acceptance.
+- Named non-material runtime residuals such as UV-006/UV-007 may remain explicitly `Unverified` only when their runtime/operation paths fail closed; they continue to block any claim or operation that needs the missing evidence.
+- BUILD readiness is only `READY` or `BLOCKED`; `WAIVED` and accepted-`UNVERIFIED` are not readiness alternatives. Package savepoints and package boundaries add no test-plan or package approval.
+- BUILD ends after one minimal changed-scope completion check at `IMPLEMENTED_TARGETED_VERIFIED`. SHIP requires fresh explicit intent, reuses event-fresh BUILD evidence, and selects only stale/affected/risk/integration/packaging/release/merge-result/target checks. A full traceability matrix or review/test/security evidence lane is required only for a concrete gap or affected SHIP claim.
+- Material DEFINE decisions, the one final test-plan acceptance, fresh SHIP intent, and exact commit/push/merge/release approvals remain distinct controls. CI failure returns to the user and never authorizes automatic repair, commit, push, merge, or release.
 
 ## Artifact Freshness Gate
 

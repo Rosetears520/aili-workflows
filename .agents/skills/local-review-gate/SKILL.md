@@ -7,14 +7,15 @@ description: Use for `/local-review` or lifecycle-triggered local review gates o
 
 ## Purpose
 
-Use this skill when the user invokes `/local-review`, when BUILD or SHIP asks for a local review gate, or when a formal/multi-phase change needs a report-first audit before repair, PR submission, or final lifecycle acceptance.
+Use this skill when the user invokes `/local-review` or explicitly requests the same standalone report-first local audit before repair or PR submission.
 
-This skill is the workflow authority for the AILI-owned local review gate. It is not OpenCode's built-in `/review`, it does not replace `/ship`, and it does not make subagent PASS reports final acceptance authority.
+This skill is the workflow authority for the AILI-owned local review gate. It is not OpenCode's built-in `/review`, it does not replace `/ship`, and neither its report nor a subagent PASS is lifecycle acceptance or SHIP, release, merge, archive, or closeout evidence.
 
 ## Non-Negotiable Boundaries
 
 - Do not override, replace, or depend on OpenCode's built-in `/review` command.
 - Do not claim release-ready, archive-ready, merge-ready, or SHIP-ready status; `/local-review` verdicts apply only to the reviewed target and evidence scope.
+- Do not use a `/local-review` result as lifecycle acceptance or SHIP/release/merge/archive evidence.
 - Do not push, create PRs, comment on GitHub, approve/request changes, merge, tag, publish, delete, reset, clean, or mutate remote state.
 - PR mode may run only the exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`; do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`, or equivalent push, merge, comment, review, checkout, clone, or remote-mutating commands.
 - Do not perform repair until after a categorized report exists and `--repair` or an explicit user/current-contract approval authorizes repair.
@@ -90,7 +91,7 @@ The report must record:
 - previous findings, resolved/deferred/accepted-risk/out-of-scope items, and re-review history;
 - final verdict and named residual `Unverified` items.
 
-All review/test/security/coverage/convergence lane results embedded or referenced by the report must use the shared finding/result envelope in `aili-delivery-flow/references/protocols/subagent-result.md`. A worker proposes `fix`, `refute-with-counter-evidence`, `accept-named-risk`, or `Unverified-block`; ROSE owns final disposition. Do not reconcile by majority vote, lane count, or averaged confidence, and do not treat a worker verdict as final authority.
+All review/test/security/coverage/convergence lane results embedded or referenced by the report must use the exact canonical finding/result envelope in `aili-delivery-flow/references/protocols/subagent-result.md`. A worker proposes `fix`, `refute-with-counter-evidence`, `accept-named-risk`, or `Unverified-block`; ROSE owns final disposition. Do not reconcile by majority vote, lane count, or averaged confidence, and do not treat a worker verdict as final authority.
 
 ### Conditional arbitration artifact
 
@@ -132,6 +133,8 @@ Select relevant lanes; do not run every lane by default.
 
 Each lane packet must include target identity, accepted scope, source artifacts, diff/files, evidence already run, artifact placement rules, forbidden remote mutation, skipped-lane constraints, and expected return status. Review lanes are read-only and must not repair their own findings.
 
+For A33, each lane names exactly one packet-declared repository/cwd, references one current WT-001 context, re-reads applicable target rules that may narrow but never broaden, and writes any user-visible report to the owning repository. It records inspected scope, freshness, skipped checks, and the shared-trust soft-boundary limitation; it performs no broad host scan and never duplicates or rebinds identity, keys, approvals, Git state, rule bodies, verification command/cwd, or containment facts.
+
 Apply the adapted upstream lane gates:
 
 - run `code-reviewer` with five axes: correctness, readability, architecture, security, and performance;
@@ -143,17 +146,11 @@ Apply the adapted upstream lane gates:
 
 ## Convergence and Phase Checkpoints
 
-For formal or multi-phase work, include convergence review and phase checkpoint evidence:
+For formal or multi-phase work, compare the accepted source artifacts, relevant savepoints, final diff/worktree state, and fresh claim-matched checks. If parallel work was actually used, reconcile its compact status, evidence, and blockers before continuing.
 
-- serial phase packets declare a checkpoint: command, static check, artifact inspection, diff inspection, or skipped reason with risk;
-- after each serial phase, ROSE runs or delegates the checkpoint before the next dependent phase continues;
-- parallel lanes declare join evidence, and ROSE reconciles each lane's status, evidence, conflicts, blockers, skipped checks, and missing evidence;
-- the join point runs verification over the merged output before later phases continue;
-- final local review compares source artifacts, phase evidence, final diff/worktree state, review findings, and verification evidence.
+Package 12 remains outside `/local-review`: its lifecycle owner performs a direct ROSE final inspection of applicable changed-scope task links and the final diff, followed by the smallest relevant check. It may use at most two read-only specialists only for a concrete capability or evidence gap and one targeted repair/recheck, then records `IMPLEMENTED_TARGETED_VERIFIED` or blocks and stops BUILD. A local-review report neither triggers nor satisfies that gate.
 
-For a Package 12 formal final gate, all specialist lanes are independently dispatched by ROSE with explicit `edit: deny` and `task: deny` in the final-review overlay, including `test-engineer`, and return directly to ROSE. ROSE joins every expected lane without voting. The existing `convergence-reviewer` alone owns checklist completeness; `plan-auditor` is pre-implementation and `silent-failure-reviewer` is complementary.
-
-Packages 1–11 record lightweight savepoints containing complete behavior scope, files changed, unresolved items, and next package. Optional commands or diff feedback are not package closure or independent quality gates. Package 12 alone runs the mandatory canonical matrix and holistic convergence.
+Packages 1–11 record lightweight savepoints containing complete behavior scope, files changed, unresolved items, and next package. Optional commands or diff feedback are not package closure or independent quality gates.
 
 ## Anti-Pseudo-Completion Checks
 

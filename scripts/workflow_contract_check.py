@@ -17,6 +17,46 @@ from typing import Any
 
 SCHEMA_VERSION = "1.0"
 PROFILES = ("scaffold", "generated-adapter-boundary", "residual")
+UMBRELLA_CHANGE = "complete-aili-workflow-orchestration"
+UMBRELLA_TASK_IDS = tuple(
+    f"{major}.{minor}"
+    for major, final_minor in (
+        (1, 6),
+        (2, 9),
+        (3, 6),
+        (4, 6),
+        (5, 5),
+        (6, 5),
+        (7, 5),
+        (8, 7),
+        (9, 8),
+        (10, 5),
+        (11, 5),
+        (12, 7),
+    )
+    for minor in range(1, final_minor + 1)
+)
+TASK_ORACLE_CONTRACT = {
+    "scope": UMBRELLA_CHANGE,
+    "generic_lifecycle_derivation": "active accepted contract and current task rows",
+    "task_ids": list(UMBRELLA_TASK_IDS),
+    "task_state_source": f"openspec/changes/{UMBRELLA_CHANGE}/tasks.md",
+    "task_state_derivation": "checked_task_ids, checked, and unchecked are derived fresh from current checklist marks on every run",
+    "current_acceptance": {
+        "decision": "A43/DEF-E12-ACCEPT-DYNAMIC-TASK-STATE-ORACLE",
+        "item": 44,
+        "state": "accepted",
+        "checks_implementation_task": False,
+    },
+    "historical_or_stale": [
+        "A41/item-43 accepted with historical 31 checked/43 unchecked snapshot",
+        "A32/item-41",
+        "pre-A33 completion and task-audit evidence",
+        "A33-era 32 checked/42 unchecked",
+        "OQ-008/item-42 superseded-unaccepted",
+        "A30 runtime evidence for current A33",
+    ],
+}
 SOURCE_CLASSES = {
     "canonical source",
     "generated/installed adapter",
@@ -43,12 +83,12 @@ CANONICAL_PATH_CONTRACT = {
     },
     "artifact_contract": {
         "path": ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
-        "owner": "P1",
+        "owner": "P3/P5",
         "state": "present",
     },
     "finding_result": {
         "path": ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
-        "owner": "P1",
+        "owner": "P6/P7",
         "state": "present",
     },
     "worktree_context": {
@@ -58,12 +98,12 @@ CANONICAL_PATH_CONTRACT = {
     },
     "role_overlay": {
         "path": ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
-        "owner": "P1/P6",
+        "owner": "P6",
         "state": "present",
     },
     "loop_envelope": {
         "path": ".agents/skills/aili-delivery-flow/references/artifact-contracts.md#shared-loop-envelope",
-        "owner": "P1/P5",
+        "owner": "P3/P5",
         "state": "present",
     },
     "review_arbitration": {
@@ -99,24 +139,39 @@ REQUIRED_CASES = {
     "shared-protocol-fields",
     "repository-evidence-reuse-discipline",
     "active-dcp-goal-allowed-at-scaffold",
+    "inventory-exact-task-oracle",
+    "inventory-rose-plus-19-managed-agents",
+    "a33-scaffold-field-definitions",
+    "a33-rejected-expansion",
+    "package-worktree-roots-excluded",
+    "stale-authority-later-owner-flags",
     "repair-scaffold-blocked-unverified-exit3",
     "repair-ready-profiles-require-semantics",
     "repair-path-normalization",
     "repair-p6-role-and-wave-ownership",
     "repair-generated-agents-split",
-    "repair-finding-source-canonical-block",
+    "repair-compact-result-schema",
     "repair-rejected-machinery-semantic-scan",
 }
 FORBIDDEN_GRAPHIFY_PATH = "openspec/changes/integrate-codegraph-graphify-workflow"
 PACKAGE_IDS = {f"P{number}" for number in range(1, 13)}
+# Accepted serialization order for deriving shared edit-path package lists.
+ACCEPTED_SERIALIZATION_ORDER = (
+    "P2",
+    "P5",
+    "P3",
+    "P4",
+    "P6",
+    "P7",
+    "P8",
+    "P9",
+    "P10",
+    "P11",
+)
 PACKAGE_1_FILES = {
     "scripts/workflow_contract_check.py",
     "docs/harness/fixtures/workflow-orchestration-fixtures.yaml",
     "docs/harness/workflow-orchestration-source-register.md",
-    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
-    ".agents/skills/repo-evidence-first/SKILL.md",
 }
 P6_REQUIRED_ROLE_PATHS = {
     "agents/rose.md",
@@ -126,7 +181,6 @@ P6_REQUIRED_ROLE_PATHS = {
     "agents/code-reviewer.md",
     "agents/code-scout.md",
     "agents/convergence-reviewer.md",
-    "agents/debug-investigator.md",
     "agents/doc-researcher.md",
     "agents/e2e-artifact-runner.md",
     "agents/implementer.md",
@@ -142,6 +196,7 @@ P6_REQUIRED_ROLE_PATHS = {
     "agents/web-researcher.md",
 }
 P6_REQUIRED_CROSS_ROOT_PATHS = P6_REQUIRED_ROLE_PATHS | {
+    ".agents/skills/git-workflow-and-versioning/SKILL.md",
     ".agents/skills/aili-delivery-flow/references/protocols/worktree-context.md",
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
@@ -152,6 +207,360 @@ P6_REQUIRED_CROSS_ROOT_PATHS = P6_REQUIRED_ROLE_PATHS | {
     "scripts/opencode_permission_probe.mjs",
     "docs/harness/fixtures/cross-worktree-permission-fixtures.yaml",
     "tests/opencode-permission-probe.test.mjs",
+}
+MANAGED_AGENT_PATHS = P6_REQUIRED_ROLE_PATHS - {"agents/rose.md"}
+A33_IDENTITY_FIELDS = (
+    "identity_state",
+    "declared_root",
+    "path_state",
+    "canonical_root",
+    "git_toplevel",
+    "git_private_dir",
+    "git_common_dir",
+    "git_head",
+    "git_branch",
+    "detached_head",
+    "worktree_membership",
+    "dirty_state",
+    "tracked_files",
+    "untracked_files",
+    "ignored_files",
+    "artifact_files",
+    "unknown_files",
+)
+A33_RESULT_FIELDS = (
+    "id",
+    "subset",
+    "status",
+    "exit_code",
+    "operation_id",
+    "approval_ref",
+    "host_identity",
+    "source_identity",
+    "target_identity",
+    "expected_delta",
+    "observed_delta",
+    "evidence_refs",
+    "unverified",
+    "cleanup_state",
+)
+A33_PREPARE_FIELDS = (
+    "schema_version",
+    "command",
+    "status",
+    "exit_code",
+    "run_id",
+    "run_root",
+    "pending_operations",
+    "worktree_effects",
+    "unverified",
+)
+A33_OPERATION_RESULT_FIELDS = (
+    "schema_version",
+    "command",
+    "status",
+    "exit_code",
+    "run_id",
+    "operation",
+    "approval",
+    "effect_started",
+    "expected_delta",
+    "observed_delta",
+    "evidence_refs",
+    "unverified",
+)
+A33_STATIC_RESULT_FIELDS = (
+    "schema_version",
+    "command",
+    "mode",
+    "status",
+    "exit_code",
+    "mandatory_case_ids",
+    "observed_case_ids",
+    "case_set_equal",
+    "cases",
+    "contract_mutations",
+    "summary",
+    "unverified",
+    "ephemeral_result",
+)
+A33_RUNTIME_JOIN_FIELDS = (
+    "schema_version",
+    "command",
+    "mode",
+    "status",
+    "exit_code",
+    "run_id",
+    "mandatory_case_ids",
+    "observed_case_ids",
+    "case_set_equal",
+    "cases",
+    "operations",
+    "cleanup",
+    "summary",
+    "unverified",
+    "ephemeral_result",
+)
+A33_GLOBAL_JOIN_FIELDS = (
+    "schema_version",
+    "command",
+    "mode",
+    "status",
+    "exit_code",
+    "static_result_ref",
+    "runtime_result_ref",
+    "static_mandatory_case_ids",
+    "runtime_mandatory_case_ids",
+    "mandatory_case_ids",
+    "observed_case_ids",
+    "case_set_equal",
+    "cases",
+    "mutation_summary",
+    "cleanup",
+    "summary",
+    "unverified",
+)
+A33_OPERATION_FIELDS = (
+    "operation_id",
+    "kind",
+    "operation_class",
+    "source",
+    "destination",
+    "repo_key",
+    "worktree_key",
+    "branch",
+    "base_ref",
+    "branch_mode",
+    "reflog_policy",
+)
+A33_APPROVAL_FIELDS = (
+    "approval_id",
+    "run_id",
+    "operation_id",
+    "kind",
+    "operation_class",
+    "source",
+    "destination",
+    "repo_key",
+    "worktree_key",
+    "branch",
+    "base_ref",
+    "branch_mode",
+    "reflog_policy",
+    "expiry",
+    "decision_ref",
+    "trusted_code_risk",
+    "status",
+)
+A33_DELTA_FIELDS = (
+    "target_path",
+    "worktree_membership",
+    "common_dir_identity",
+    "common_dir_admin_entry",
+    "branch_ref",
+    "branch_reflog",
+    "unrelated_common_dir_entries",
+    "unrelated_refs",
+    "config",
+    "hooks",
+    "unrelated_worktree_records",
+    "unrelated_prunable_entries",
+    "other_files",
+)
+A33_SCAFFOLD_CONTRACT = {
+    "contract": "A33 scaffold definitions only",
+    "mode": {
+        "field": "mode",
+        "historical": "a30-a31-external-read",
+        "current": "a33-attached-shared-trust-domain",
+        "mixed_fields_or_guarantees": "reject",
+    },
+    "keys": {
+        "fields": ["repo_key", "worktree_key"],
+        "pattern": r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+        "nonempty": True,
+        "required_on": [
+            "runtime-prepare.pending_operations[]",
+            "add/remove.operation",
+            "add/remove.approval",
+        ],
+        "approval_operation_destination_exact_match": True,
+    },
+    "identity": {
+        "name": "A33Identity",
+        "fields": list(A33_IDENTITY_FIELDS),
+        "hash_or_digest_fields": [],
+        "host_state": "populated",
+        "source_state": "populated",
+        "add_target_transition": "absent->populated",
+        "remove_target_transition": "populated->absent",
+        "absent_nonnull_fields": [
+            "identity_state",
+            "declared_root",
+            "path_state",
+            "worktree_membership",
+        ],
+        "absent_other_fields": None,
+        "file_arrays": "duplicate-free sorted canonical repository-relative strings",
+        "dirty_state": {
+            "tracked_modified": "boolean",
+            "tracked_deleted": "boolean",
+            "untracked_count": "nonnegative_integer",
+            "ignored_count": "nonnegative_integer",
+        },
+    },
+    "target_rules_and_artifacts": {
+        "target_rules_read_at": ["operation", "dispatch"],
+        "target_rules_effect": "narrow-only",
+        "same_level_conflict": "block",
+        "broad_host_scan": False,
+        "lane_repository_count": 1,
+        "artifact_destination": "owning target repository",
+    },
+    "result_records": {
+        "runtime_prepare_fields": list(A33_PREPARE_FIELDS),
+        "operation_result_fields": list(A33_OPERATION_RESULT_FIELDS),
+        "static_result_fields": list(A33_STATIC_RESULT_FIELDS),
+        "runtime_join_fields": list(A33_RUNTIME_JOIN_FIELDS),
+        "global_join_fields": list(A33_GLOBAL_JOIN_FIELDS),
+        "joined_case_fields": list(A33_RESULT_FIELDS),
+        "all_fields_present": True,
+        "absent_or_inapplicable_value": None,
+        "absence_string_sentinel": "forbidden",
+        "observed_remove_trusted_code_risk_exception": "not_applicable",
+    },
+    "operation": {
+        "pending_operation_fields": [*A33_OPERATION_FIELDS, "approval_required"],
+        "operation_fields": list(A33_OPERATION_FIELDS),
+        "approval_fields": list(A33_APPROVAL_FIELDS),
+        "classes": ["driver_fixture", "real"],
+        "class_must_match_approval": True,
+        "add_trusted_code_risk": ["accepted", "declined", "unavailable", None],
+        "add_effect_requires": "accepted",
+        "observed_remove_trusted_code_risk": "not_applicable",
+        "missing_approval_trusted_code_risk": None,
+    },
+    "branch_and_reflog": {
+        "branch_modes": ["existing", "create"],
+        "reflog_policies": ["enabled", "disabled"],
+        "existing": "no branch ref or reflog creation",
+        "create_enabled": "exact branch ref and exact branch reflog created",
+        "create_disabled": "exact branch ref created and branch reflog remains absent",
+        "remove": "branch ref and branch reflog unchanged",
+    },
+    "admin_deltas": {
+        "fields": list(A33_DELTA_FIELDS),
+        "common_dir_identity": "unchanged",
+        "add_allowed": "declared admin entry/membership plus bound create-mode ref/reflog transaction",
+        "remove_allowed": "declared admin entry/membership deletion only",
+        "unrelated_fields": "unchanged",
+        "unrelated_prunable_entries": "unchanged",
+    },
+}
+A33_REJECTION_CONTRACT = {
+    "generic_lifecycle_counts": "derive from the active accepted contract; 12 packages/74 tasks are this umbrella only",
+    "forbidden_new_machinery": [
+        "helper",
+        "registry",
+        "manifest",
+        "public command",
+        "dependency",
+        "daemon",
+        "maintenance plane",
+        "host selector",
+        "cleanup manager",
+    ],
+    "forbidden_package_entries": [".worktrees", "worktrees", ".tmp/worktrees"],
+    "managed_subagents": {
+        "count": 19,
+        "external_directory": "deny",
+        "ask_or_allow": "reject",
+        "rose_distinction": "per-operation ask only",
+        "builtins_excluded": ["explore", "general"],
+    },
+    "historical_only": [
+        "A30 runtime evidence",
+        "A31 external-read routing",
+        "A32/item-41 readiness",
+        "A41/item-43 acceptance and its 31 checked/43 unchecked snapshot",
+        "pre-A33 completion/task-audit evidence",
+        "A33-era 32 checked/42 unchecked",
+        "OQ-008/item-42 readiness",
+    ],
+    "hard_isolation_claim": "reject; shared trust domain is a soft boundary",
+    "current_readiness": "A43/item-44 accepted; acceptance alone completes no task; mutable task state is derived from current tasks.md",
+    "package_12_authority": "minimal changed-scope BUILD completion check; broad integration/release review belongs to fresh SHIP intent",
+    "later_owner_flags": {
+        "A33 operation and runtime protocols": "P5/P6/P11",
+        "managed role and installed equality behavior": "P6/P10/P11",
+        "convergence and stale-evidence behavior": "P7/P11",
+        "documentation/template/package synchronization": "P10",
+        "minimal BUILD completion evidence": "P12",
+    },
+}
+A33_FORBIDDEN_NEW_PATHS = {
+    "scripts/opencode_worktree_worker.py",
+    "manifests/opencode-worker-runtime.json",
+    "tests/test_opencode_worktree_worker.py",
+    "baseline-manifest.json",
+}
+A33_FORBIDDEN_PACKAGE_ROOTS = {".worktrees", "worktrees", ".tmp/worktrees"}
+EXPECTED_PUBLIC_COMMANDS = {"build", "define", "ideate", "local-review", "ship"}
+WORKFLOW_PROFILE_CONTRACT = {
+    "scaffold": {
+        "ready": True,
+        "owner_package": "P1",
+        "contract_state": {"status": "pass", "blocked": [], "unverified": []},
+        "json_fields": [
+            "schema_version",
+            "profile",
+            "status",
+            "sources",
+            "ownership",
+            "generated",
+            "traceability",
+            "task_oracle",
+            "agent_inventory",
+            "a33_scaffold",
+            "a33_rejections",
+            "regression_probes",
+            "blocked",
+            "unverified",
+            "errors",
+        ],
+    },
+    "generated-adapter-boundary": {
+        "ready": True,
+        "owner_package": "P2",
+        "fixture": "docs/harness/fixtures/generated-openspec-adapter-fixtures.yaml",
+        "json_fields": [
+            "schema_version",
+            "profile",
+            "status",
+            "aili_routes",
+            "direct_adapter_cases",
+            "claim_boundary",
+            "cases",
+            "blocked",
+            "unverified",
+            "errors",
+        ],
+    },
+    "residual": {
+        "ready": True,
+        "owner_packages": ["P4", "P5", "P10", "P11"],
+        "contract_state": {"status": "pass", "blocked": [], "unverified": []},
+        "json_fields": [
+            "schema_version",
+            "profile",
+            "status",
+            "matches",
+            "classifications",
+            "blocked",
+            "unverified",
+            "errors",
+        ],
+    },
 }
 INSPECTION_ONLY_SOURCE_CONTRACT = {
     "id": "codegraph-generated-boundary-ignore",
@@ -271,17 +680,21 @@ RESULT_FIELD_ORDER = (
     "owner",
     "status",
     "confidence",
+    "worktree_context_ref",
+    "declared_repository",
+    "cwd",
+    "target_rules_ref",
+    "artifact_destination",
     "inspected_scope",
     "checks",
     "freshness",
     "skipped_checks",
+    "soft_boundary_limitations",
     "blockers",
     "unverified",
     "findings",
     "convergence_links",
     "review_arbitration_ref",
-    "worktree_context_ref",
-    "role_overlay",
 )
 RESULT_FIELDS = set(RESULT_FIELD_ORDER)
 FINDING_FIELD_ORDER = (
@@ -296,16 +709,6 @@ FINDING_FIELD_ORDER = (
     "verification",
 )
 FINDING_FIELDS = set(FINDING_FIELD_ORDER)
-NO_FINDINGS_FIELD_ORDER = (
-    "findings",
-    "inspected_scope",
-    "checks",
-    "freshness",
-    "skipped_checks",
-    "blockers",
-    "unverified",
-)
-NO_FINDINGS_FIELDS = set(NO_FINDINGS_FIELD_ORDER)
 GENERATED_ROUTE_MAP = {
     "IDEATE": "commands/ideate.md",
     "DEFINE": "commands/define.md",
@@ -374,7 +777,7 @@ REPAIR_CASE_EXPECTATIONS = {
     },
     "repair-p6-role-and-wave-ownership": {
         "probe": "permission-role-ownership",
-        "expected_p6_roles": 21,
+        "expected_p6_roles": 20,
         "wave_a_disjoint": True,
         "expected_exit": 5,
     },
@@ -384,10 +787,11 @@ REPAIR_CASE_EXPECTATIONS = {
         "expected_canonical": ["templates/AGENTS.md", "scripts/agents_md.py"],
         "expected_exit": 5,
     },
-    "repair-finding-source-canonical-block": {
+    "repair-compact-result-schema": {
         "probe": "result-schema-parse",
-        "required_finding_field": "source",
-        "canonical_blocks": ["FINDINGS", "NO FINDINGS"],
+        "result_fields": list(RESULT_FIELD_ORDER),
+        "finding_fields": list(FINDING_FIELD_ORDER),
+        "duplicate_reordered_or_ambiguous": "reject",
         "expected_exit": 5,
     },
     "repair-rejected-machinery-semantic-scan": {
@@ -707,13 +1111,30 @@ def collect_test_case_catalog(
 
     cross_path = fixture_root / "cross-worktree-permission-fixtures.yaml"
     try:
-        cross_text = cross_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
+        cross_fixture = load_fixture(cross_path)
+    except ValueError as exc:
         errors.append(f"cannot derive cross-worktree case catalog: {exc}")
     else:
         relative = cross_path.relative_to(project).as_posix()
-        for case_id in re.findall(r"^\s*- id:\s*([^\s#]+)\s*$", cross_text, re.MULTILINE):
-            add(case_id, "C-OPENCODE", relative)
+        case_arrays = (
+            ("historical_a30", "case_ids"),
+            ("a33", "static_mandatory_case_ids"),
+            ("a33", "runtime_mandatory_case_ids"),
+            ("a33", "contract_mutation_ids"),
+        )
+        for section_name, field_name in case_arrays:
+            section_value = cross_fixture.get(section_name)
+            case_ids = section_value.get(field_name) if isinstance(section_value, dict) else None
+            if not isinstance(case_ids, list) or any(
+                not isinstance(case_id, str) or not case_id for case_id in case_ids
+            ):
+                errors.append(
+                    f"cannot derive cross-worktree case catalog: {section_name}.{field_name} "
+                    "must be an array of non-empty strings"
+                )
+                continue
+            for case_id in case_ids:
+                add(case_id, "C-OPENCODE", relative)
 
     test_pattern = re.compile(r"\b(?:test|it)\(\s*[\"'`]([^\"'`]+)")
     for path in sorted((project / "tests").glob("*.test.mjs")):
@@ -858,40 +1279,223 @@ def apply_contract_state(
     payload["unverified"].extend(unverified)
 
 
+def validate_task_oracle(
+    project: Path, fixture: dict[str, Any], errors: list[str]
+) -> dict[str, Any]:
+    declared = fixture.get("task_oracle")
+    if declared != TASK_ORACLE_CONTRACT:
+        errors.append("task_oracle must equal the change-specific ordered-ID and current-tasks-derived-state contract")
+    tasks_path = project / "openspec/changes" / UMBRELLA_CHANGE / "tasks.md"
+    try:
+        task_text = tasks_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        errors.append(f"cannot read current umbrella task oracle: {exc}")
+        return {
+            "scope": UMBRELLA_CHANGE,
+            "task_ids": [],
+            "checked_task_ids": [],
+            "checked": 0,
+            "unchecked": 0,
+        }
+    matches = re.findall(r"^- \[([^\]]*)\] (\d+\.\d+)\s+", task_text, re.MULTILINE)
+    invalid_marks = [
+        {"task_id": task_id, "mark": mark}
+        for mark, task_id in matches
+        if mark not in {" ", "x", "X"}
+    ]
+    if invalid_marks:
+        errors.append(f"current umbrella tasks contain invalid checklist marks: {invalid_marks}")
+    observed_ids = [task_id for _, task_id in matches]
+    observed_checked = [task_id for mark, task_id in matches if mark.lower() == "x"]
+    observed_unchecked = [task_id for mark, task_id in matches if mark == " "]
+    duplicate_ids = sorted(
+        task_id for task_id, count in Counter(observed_ids).items() if count > 1
+    )
+    if duplicate_ids:
+        errors.append(f"current umbrella tasks contain duplicate checklist IDs: {duplicate_ids}")
+    if observed_ids != list(UMBRELLA_TASK_IDS):
+        errors.append("current umbrella task IDs or ordering differ from the exact tracked 74-ID oracle")
+    return {
+        "scope": UMBRELLA_CHANGE,
+        "task_ids": observed_ids,
+        "checked_task_ids": observed_checked,
+        "checked": len(observed_checked),
+        "unchecked": len(observed_unchecked),
+        "generic_lifecycle_derivation": TASK_ORACLE_CONTRACT["generic_lifecycle_derivation"],
+        "task_state_source": TASK_ORACLE_CONTRACT["task_state_source"],
+        "task_state_derivation": TASK_ORACLE_CONTRACT["task_state_derivation"],
+        "current_acceptance": TASK_ORACLE_CONTRACT["current_acceptance"],
+        "historical_or_stale": TASK_ORACLE_CONTRACT["historical_or_stale"],
+    }
+
+
+def inspect_agent_inventory(project: Path, errors: list[str]) -> dict[str, Any]:
+    disk_paths = sorted(path.relative_to(project).as_posix() for path in (project / "agents").glob("*.md"))
+    expected_paths = sorted(P6_REQUIRED_ROLE_PATHS)
+    if disk_paths != expected_paths:
+        errors.append(
+            "canonical Agent inventory must be exactly ROSE plus 19 managed subagents; "
+            f"missing={sorted(set(expected_paths) - set(disk_paths))}, "
+            f"extra={sorted(set(disk_paths) - set(expected_paths))}"
+        )
+
+    observed_modes: dict[str, str | None] = {}
+    observed_external: dict[str, str | None] = {}
+    for relative in expected_paths:
+        path = project / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"cannot inspect canonical Agent {relative}: {exc}")
+            continue
+        observed_modes[relative] = re.search(r"^mode:\s*(\S+)\s*$", text, re.MULTILINE).group(1) if re.search(r"^mode:\s*(\S+)\s*$", text, re.MULTILINE) else None
+        external_match = re.search(r"^  external_directory:\s*(\S+)\s*$", text, re.MULTILINE)
+        observed_external[relative] = external_match.group(1) if external_match else None
+
+    if observed_modes.get("agents/rose.md") != "primary":
+        errors.append("agents/rose.md must remain the one primary Agent")
+    if observed_external.get("agents/rose.md") != "ask":
+        errors.append("ROSE must remain distinct with per-operation external_directory ask")
+    invalid_managed = sorted(
+        relative
+        for relative in MANAGED_AGENT_PATHS
+        if observed_modes.get(relative) != "subagent" or observed_external.get(relative) != "deny"
+    )
+    if invalid_managed:
+        errors.append(f"all 19 managed subagents must be subagent/external_directory deny: {invalid_managed}")
+
+    manifest_path = project / "manifests/rose-aili.components.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot inspect Agent component manifest: {exc}")
+        manifest_paths: list[str] = []
+    else:
+        rows = manifest.get("components", {}).get("agents", [])
+        manifest_paths = sorted(
+            row.get("path") for row in rows if isinstance(row, dict) and isinstance(row.get("path"), str)
+        )
+        if manifest_paths != expected_paths:
+            errors.append("Agent component manifest differs from the exact ROSE-plus-19 source inventory")
+
+    web_path = project / "agents/web-researcher.md"
+    try:
+        web_text = web_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        web_text = ""
+    web_markers = {
+        '  "*": deny',
+        "  external_directory: deny",
+        "  webfetch: ask",
+        "  websearch: ask",
+        "  task: deny",
+    }
+    if not web_markers.issubset(set(web_text.splitlines())):
+        errors.append("web-researcher must preserve the inspected A31 web-only deny-by-default markers")
+    if (project / "agents/debug-investigator.md").exists():
+        errors.append("historical agents/debug-investigator.md must remain deleted")
+
+    return {
+        "primary": "agents/rose.md",
+        "managed": sorted(MANAGED_AGENT_PATHS),
+        "managed_count": len(MANAGED_AGENT_PATHS),
+        "canonical_count": len(expected_paths),
+        "all_managed_external_directory": "deny",
+        "rose_external_directory": "ask-per-operation",
+        "web_profile": "deny-by-default; webfetch/websearch ask; local/external/mutation/delegation deny",
+        "builtins_excluded": ["explore", "general"],
+        "historical_removed": ["agents/debug-investigator.md"],
+        "manifest_paths": manifest_paths,
+    }
+
+
+def validate_a33_scaffold_and_rejections(
+    project: Path, fixture: dict[str, Any], errors: list[str]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    scaffold_contract = fixture.get("a33_scaffold")
+    rejection_contract = fixture.get("a33_rejections")
+    if scaffold_contract != A33_SCAFFOLD_CONTRACT:
+        errors.append("a33_scaffold differs from the exact current A33 definition-only contract")
+    if rejection_contract != A33_REJECTION_CONTRACT:
+        errors.append("a33_rejections differs from the exact Package-1 rejection/later-owner contract")
+
+    for relative in sorted(A33_FORBIDDEN_NEW_PATHS):
+        if (project / relative).exists():
+            errors.append(f"forbidden A33 parallel machinery exists: {relative}")
+
+    package_path = project / "package.json"
+    manifest_path = project / "manifests/rose-aili.components.json"
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot inspect package boundary: {exc}")
+        package_files: list[str] = []
+        package_dependencies: list[str] = []
+    else:
+        package_files = package.get("files", []) if isinstance(package.get("files"), list) else []
+        package_dependencies = sorted(package.get("dependencies", {})) if isinstance(package.get("dependencies"), dict) else []
+        normalized_package_entries = {str(value).rstrip("/") for value in package_files}
+        included_forbidden = sorted(A33_FORBIDDEN_PACKAGE_ROOTS & normalized_package_entries)
+        if included_forbidden:
+            errors.append(f"package includes forbidden worktree roots: {included_forbidden}")
+        if set(package.get("bin", {})) != {"rose-aili"}:
+            errors.append("package bin registry must not add an A33 public command")
+        if package_dependencies != ["jsonc-parser"]:
+            errors.append("Package-1 dependency inventory changed; A33 adds no dependency")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot inspect public command manifest boundary: {exc}")
+        command_names: list[str] = []
+    else:
+        command_rows = manifest.get("components", {}).get("commands", [])
+        command_names = sorted(
+            row.get("name") for row in command_rows if isinstance(row, dict) and isinstance(row.get("name"), str)
+        )
+        if set(command_names) != EXPECTED_PUBLIC_COMMANDS:
+            errors.append("public command inventory differs from four delivery commands plus standalone local-review")
+
+    observed_rejections = dict(rejection_contract) if isinstance(rejection_contract, dict) else {}
+    observed_rejections["repository_inspection"] = {
+        "forbidden_new_paths_present": sorted(
+            relative for relative in A33_FORBIDDEN_NEW_PATHS if (project / relative).exists()
+        ),
+        "package_files": package_files,
+        "production_dependencies": package_dependencies,
+        "public_commands": command_names,
+    }
+    return (
+        dict(scaffold_contract) if isinstance(scaffold_contract, dict) else {},
+        observed_rejections,
+    )
+
+
 def parse_canonical_result_block(
     text: str,
-) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]] | None:
-    matches = list(
+) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
+    result_matches = list(
         re.finditer(r"```text\nCANONICAL RESULT:\n(?P<body>[\s\S]*?)\n```", text)
     )
-    if len(matches) != 1:
-        return None
-    body = matches[0].group("body")
-    if body.count("\nFINDINGS:\n") != 1 or body.count("\nNO FINDINGS:\n") != 1:
-        return None
-    result_part, remainder = body.split("\nFINDINGS:\n", 1)
-    if "\nNO FINDINGS:\n" not in remainder:
-        return None
-    finding_part, no_findings_part = remainder.split("\nNO FINDINGS:\n", 1)
-    if "FINDINGS:" in result_part or "NO FINDINGS:" in no_findings_part:
-        return None
-    result_fields = tuple(re.findall(r"^([a-z_]+):", result_part, re.MULTILINE))
-    finding_fields = tuple(
-        re.findall(r"^(?:- |  )([a-z_]+):", finding_part, re.MULTILINE)
+    finding_matches = list(
+        re.finditer(r"Each finding has exactly:\s*\n```text\n(?P<body>[\s\S]*?)\n```", text)
     )
-    no_findings_fields = tuple(
-        re.findall(r"^([a-z_]+):", no_findings_part, re.MULTILINE)
+    if len(result_matches) != 1 or len(finding_matches) != 1:
+        return None
+    result_fields = tuple(
+        re.findall(r"^([a-z_]+):", result_matches[0].group("body"), re.MULTILINE)
+    )
+    finding_fields = tuple(
+        re.findall(r"^([a-z_]+):", finding_matches[0].group("body"), re.MULTILINE)
     )
     if (
         len(result_fields) != len(set(result_fields))
-        or len(finding_fields) != len(set(finding_fields))
-        or len(no_findings_fields) != len(set(no_findings_fields))
         or result_fields != RESULT_FIELD_ORDER
+        or len(finding_fields) != len(set(finding_fields))
         or finding_fields != FINDING_FIELD_ORDER
-        or no_findings_fields != NO_FINDINGS_FIELD_ORDER
     ):
         return None
-    return result_fields, finding_fields, no_findings_fields
+    return result_fields, finding_fields
 
 
 def scan_rejected_machinery(
@@ -1078,7 +1682,9 @@ def validate_aggregate_traceability(
         errors.append("aggregate traceability commands must equal the exact command registry subset")
     result["commands"] = section.get("commands", {})
 
-    tasks_path = project / "openspec/changes/complete-aili-workflow-orchestration/tasks.md"
+    tasks_path = project / "openspec/changes" / UMBRELLA_CHANGE / "tasks.md"
+    canonical_task_text: dict[str, str] = {}
+    task_id_values: list[str] = []
     try:
         task_text = tasks_path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
@@ -1096,8 +1702,8 @@ def validate_aggregate_traceability(
             errors.append(f"canonical tasks contain duplicate checklist ids: {duplicate_task_ids}")
         canonical_task_ids = set(task_id_values)
         canonical_task_text = dict(task_matches)
-    if len(canonical_task_ids) != 74:
-        errors.append(f"canonical task inventory must contain 74 unique checklist ids, got {len(canonical_task_ids)}")
+    if task_id_values != list(UMBRELLA_TASK_IDS):
+        errors.append("canonical task inventory must equal this umbrella's exact ordered 74-ID oracle")
     result["task_ids"] = sorted(canonical_task_ids)
     test_case_catalog = collect_test_case_catalog(project, section, errors)
     result["test_case_catalog_size"] = len(test_case_catalog)
@@ -1286,7 +1892,7 @@ def validate_aggregate_traceability(
         "task-test-mismatch",
         "na-without-accepted-source",
         "subagent-nesting-forbidden",
-        "diverse-lane-join",
+        "optional-specialist-join",
         "no-majority-vote",
         "routing-bare-aili-direct-command-collision",
         "routing-bare-aili-direct-skill-collision",
@@ -1359,9 +1965,9 @@ def validate_final_task_audit(
     if duplicate_ids:
         errors.append(f"final task-audit duplicate task ids: {duplicate_ids}")
     expected_ids = set(expected_by_id)
-    if len(rows) != 74 or set(ids) != expected_ids:
+    if len(rows) != len(UMBRELLA_TASK_IDS) or set(ids) != expected_ids:
         errors.append(
-            "final task-audit must contain all 74 canonical rows exactly once; "
+            "this umbrella's final task-audit must contain its exact 74 canonical rows once; "
             f"rows={len(rows)}, missing={sorted(expected_ids - set(ids))}, "
             f"undefined={sorted(set(ids) - expected_ids)}"
         )
@@ -1947,16 +2553,29 @@ def run_internal_regression_probes(
             canonical_text = ""
         if canonical_text:
             duplicate = canonical_text.replace("result_id:\n", "result_id:\nresult_id:\n", 1)
-            reordered = canonical_text.replace("result_id:\ntrace_id:\n", "trace_id:\nresult_id:\n", 1)
-            ambiguous = canonical_text.replace("NO FINDINGS:\n", "NO FINDINGS:\nNO FINDINGS:\n", 1)
+            reordered = canonical_text.replace(
+                "result_id:\ntrace_id:\n", "trace_id:\nresult_id:\n", 1
+            )
+            finding_duplicate = canonical_text.replace(
+                "finding_id:\n", "finding_id:\nfinding_id:\n", 1
+            )
+            finding_reordered = canonical_text.replace(
+                "finding_id:\nsource:\n", "source:\nfinding_id:\n", 1
+            )
+            ambiguous = canonical_text + "\n" + canonical_text[canonical_text.index("```text\nCANONICAL RESULT:"):canonical_text.index("```", canonical_text.index("```text\nCANONICAL RESULT:") + 3) + 3]
             parser_valid = parse_canonical_result_block(canonical_text) == (
                 RESULT_FIELD_ORDER,
                 FINDING_FIELD_ORDER,
-                NO_FINDINGS_FIELD_ORDER,
             )
             parser_rejects = all(
                 parse_canonical_result_block(value) is None
-                for value in (duplicate, reordered, ambiguous)
+                for value in (
+                    duplicate,
+                    reordered,
+                    finding_duplicate,
+                    finding_reordered,
+                    ambiguous,
+                )
             )
             record(
                 "result-schema-parse",
@@ -2031,18 +2650,17 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
         errors.append("fixture must be 'workflow-orchestration'")
     if fixture.get("change") != change:
         errors.append(f"fixture change must equal requested change {change!r}")
+    if change != UMBRELLA_CHANGE:
+        errors.append(f"scaffold profile is change-specific and requires {UMBRELLA_CHANGE!r}")
 
     profiles = fixture.get("profiles")
-    if not isinstance(profiles, dict) or set(profiles) != set(PROFILES):
-        errors.append(f"profiles must contain exactly {list(PROFILES)!r}")
+    if profiles != WORKFLOW_PROFILE_CONTRACT:
+        errors.append("profiles must equal the three existing owner/readiness/JSON-field contracts")
     else:
         scaffold_profile = profiles.get("scaffold")
-        if not isinstance(scaffold_profile, dict) or scaffold_profile.get("ready") is not True:
-            errors.append("scaffold profile must be ready")
-        else:
-            apply_contract_state(
-                payload, scaffold_profile.get("contract_state"), "profiles.scaffold", errors
-            )
+        apply_contract_state(
+            payload, scaffold_profile.get("contract_state"), "profiles.scaffold", errors
+        )
 
     sources = fixture.get("sources")
     source_rows = sources if isinstance(sources, list) else []
@@ -2224,8 +2842,7 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
                     errors.append(f"Wave A ownership overlap {left}/{right}: {overlap}")
 
     derived_overlaps: dict[str, list[str]] = {}
-    for package_number in range(2, 12):
-        package = f"P{package_number}"
+    for package in ACCEPTED_SERIALIZATION_ORDER:
         for path in package_ownership.get(package, {}).get("files", []):
             derived_overlaps.setdefault(path, []).append(package)
     derived_overlaps = {
@@ -2432,7 +3049,6 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
             errors.append(path_error)
         result_values = result_contract.get("result_fields")
         finding_values = result_contract.get("finding_fields")
-        no_findings_values = result_contract.get("no_findings_fields")
         declared_result_fields = (
             tuple(result_values)
             if isinstance(result_values, list) and all(isinstance(item, str) for item in result_values)
@@ -2443,18 +3059,10 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
             if isinstance(finding_values, list) and all(isinstance(item, str) for item in finding_values)
             else ()
         )
-        declared_no_findings_fields = (
-            tuple(no_findings_values)
-            if isinstance(no_findings_values, list)
-            and all(isinstance(item, str) for item in no_findings_values)
-            else ()
-        )
         if declared_result_fields != RESULT_FIELD_ORDER:
             errors.append("protocol_contracts.result.result_fields differs from canonical schema")
         if declared_finding_fields != FINDING_FIELD_ORDER:
             errors.append("protocol_contracts.result.finding_fields differs from canonical schema")
-        if declared_no_findings_fields != NO_FINDINGS_FIELD_ORDER:
-            errors.append("protocol_contracts.result.no_findings_fields differs from canonical schema")
         if not path_error:
             result_target, resolution_error = resolve_repo_field_target(
                 project, result_path, "result protocol", allow_missing=False
@@ -2472,15 +3080,13 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
                     errors.append(resolution_error)
                 parsed = parse_canonical_result_block(result_text)
                 if parsed is None:
-                    errors.append("result protocol lacks a parseable CANONICAL RESULT block")
+                    errors.append("result protocol lacks parseable canonical result/finding blocks")
                 else:
-                    actual_result, actual_finding, actual_no_findings = parsed
+                    actual_result, actual_finding = parsed
                     if actual_result != RESULT_FIELD_ORDER:
                         errors.append("CANONICAL RESULT top-level fields differ from schema")
                     if actual_finding != FINDING_FIELD_ORDER:
                         errors.append("CANONICAL RESULT finding fields differ from schema")
-                    if actual_no_findings != NO_FINDINGS_FIELD_ORDER:
-                        errors.append("CANONICAL RESULT no-findings fields differ from schema")
 
     forbidden = fixture.get("forbidden_scopes")
     old_graphify = []
@@ -2575,6 +3181,11 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
     rejected_scan = scan_rejected_machinery(
         project, fixture, package_ownership, errors, payload["blocked"]
     )
+    task_oracle = validate_task_oracle(project, fixture, errors)
+    agent_inventory = inspect_agent_inventory(project, errors)
+    a33_scaffold, a33_rejections = validate_a33_scaffold_and_rejections(
+        project, fixture, errors
+    )
     aggregate_traceability = validate_aggregate_traceability(
         project, fixture, package_ownership, errors
     )
@@ -2619,6 +3230,10 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
     }
     payload["generated"] = generated_data
     payload["traceability"] = aggregate_traceability
+    payload["task_oracle"] = task_oracle
+    payload["agent_inventory"] = agent_inventory
+    payload["a33_scaffold"] = a33_scaffold
+    payload["a33_rejections"] = a33_rejections
     payload["regression_probes"] = regression_probes
     if errors:
         payload["status"] = "violation"
@@ -2839,6 +3454,8 @@ def residual(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
         errors.append(f"schema_version must be {SCHEMA_VERSION!r}")
     if fixture.get("change") != change:
         errors.append(f"fixture change must equal requested change {change!r}")
+    if change != UMBRELLA_CHANGE:
+        errors.append(f"residual profile is change-specific and requires {UMBRELLA_CHANGE!r}")
     profiles = fixture.get("profiles")
     profile = profiles.get("residual") if isinstance(profiles, dict) else None
     section = fixture.get("residual")
@@ -2865,6 +3482,10 @@ def residual(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
         errors.append("residual.schema_version must match checker version")
     if section.get("proof_scope") != "complete-active-source-scan-with-explicit-exclusions":
         errors.append("residual.proof_scope is incomplete")
+
+    validate_task_oracle(project, fixture, errors)
+    inspect_agent_inventory(project, errors)
+    validate_a33_scaffold_and_rejections(project, fixture, errors)
 
     semantic_rules = section.get("semantic_rules")
     if semantic_rules is not None and semantic_rules != sorted(REJECTED_SEMANTIC_RULES):

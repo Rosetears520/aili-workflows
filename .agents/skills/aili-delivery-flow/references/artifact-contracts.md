@@ -34,11 +34,13 @@ Use the skill-internal `references/protocols/` templates as the first version of
 
 [KNOWN] Each convergence claim uses one link with `requirement_or_decision`, `task_or_package`, `file_or_artifact`, `fresh_verification`, `review_or_security_disposition`, `freshness`, and `status`. Status is `linked`, `missing`, `stale`, `conflicting`, `blocked`, or `Unverified`. A checked task, generated summary, CodeGraph result, or Graphify result is not a substitute for the link.
 
-## Package savepoint and task-audit contracts
+## Package savepoint and completion-evidence contracts
 
-[KNOWN] Each Package 1–11 lightweight savepoint records `package`, `scope`, `files_changed`, `unresolved_items`, and `next_package` after the package's complete accepted behavior is implemented. Optional command or diff feedback may be referenced, but is not closure, a readiness verdict, or a package-local quality gate. Package 12 alone owns mandatory convergence.
+[KNOWN] Each implementation-package progress-ledger savepoint records `package`, `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package` after the package's complete accepted behavior is implemented. It triggers no automatic test, commit, package approval, independent convergence, or readiness verdict. Generic lifecycle sources derive package identities and the completion package from the active contract; Package 1–12 is history specific to `complete-aili-workflow-orchestration`.
 
-[KNOWN] Package 12 uses one canonical task matrix. Every `tasks.md` checklist row appears exactly once with exactly these nine fields: `task_id`; `accepted requirement/decision/risk`; `expected behavior`; `implementation files/artifacts`; `fresh tests/inspection/review evidence`; `status`; `findings`; `disposition`; `freshness`. Status is exactly `Done | Partial | Missing | Blocked | N/A`. `Done` and resolved source-backed `N/A` pass; every other status or unsupported/unresolved state blocks. P11's generated `Partial` traceability remains separate and non-final. After commands and review lanes are reconciled, ROSE—not the checker—owns creation of the separate final task-audit JSON consumed by final closure. The detailed evidence and mismatch rules are owned by `agents/convergence-reviewer.md`.
+[KNOWN] The active contract's completion package—Package 12 for this umbrella—performs one minimal direct changed-scope diff/affected requirement-task-link inspection plus the smallest sufficient targeted check. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD. A full task matrix, convergence review, or review/test/security evidence lane is selected only for a concrete checklist/evidence gap or an affected SHIP claim; none is mandatory merely because Package 12 or SHIP exists.
+
+[KNOWN] When a canonical task matrix is actually selected, every current `tasks.md` checklist row appears exactly once with exactly these nine fields: `task_id`; `accepted requirement/decision/risk`; `expected behavior`; `implementation files/artifacts`; `fresh tests/inspection/review evidence`; `status`; `findings`; `disposition`; `freshness`. Status is exactly `Done | Partial | Missing | Blocked | N/A`. `Done` and resolved source-backed `N/A` pass; every other status or unsupported/unresolved state blocks the affected claim. The detailed evidence and mismatch rules remain owned by `agents/convergence-reviewer.md`; optional matrix evidence is not a broad BUILD or release gate.
 
 ## Conditional review arbitration artifact
 
@@ -54,7 +56,7 @@ Use the skill-internal `references/protocols/` templates as the first version of
 |---|---|---|
 | IDEATE | `references/protocols/idea-brief.md`, optional research evidence pack, optional lightweight idea capsule, optional backend-neutral `ideas/workflow-inbox.md` | goal, options, assumptions, unknowns, next decision, candidate idea notes when preserved, promotion target when selected |
 | DEFINE | spec draft, alignment questionnaire/interview, acceptance test plan, backend-specific `context.md` for formal changes | scope, requirements, questions, requirements/decisions/risks traceability matrix, test cases, approval state, confirmed decisions, rejected options, BUILD readiness |
-| BUILD | implementation package, subagent packet/result when delegated, lightweight Package 1–11 savepoints, Package 12 review evidence, backend-neutral `progress.txt` ledger with backend-specific placement, `drift-log.md` for spec-backed drift notes, legacy `implementation-notes.html` as read-only migration evidence when present | requirement/decision/risk source, task/package, target files/artifacts, acceptance criteria, forbidden scope, expected/actual evidence, canonical `CONT-005` envelope and nested budgets, Package 12 review/test/security evidence, branch/status dirty-path classification, progress/checkpoint entries, ROSE decision, `Open Question` / `Unverified` items |
+| BUILD | implementation package, subagent packet/result when delegated, progress-ledger savepoints, one minimal completion inspection/check, backend-neutral `progress.txt` ledger with backend-specific placement, `drift-log.md` for spec-backed drift notes, legacy `implementation-notes.html` as read-only migration evidence when present | requirement/decision/risk source, task/package, target files/artifacts, acceptance criteria, forbidden scope, expected/actual evidence, canonical `CONT-005` envelope and nested budgets, changed-scope diff and affected links, smallest targeted completion evidence, branch/status dirty-path classification, progress/checkpoint entries, ROSE decision, `Open Question` / `Unverified` items |
 | SHIP | review report, compact evidence pack when evidence is noisy, required repository-local Markdown closeout report | closeout document path, BUILD gate status, release-blocker audit target/status, spec coverage check result, review findings, finding classifications, repair result, fresh evidence, branch/worktree hygiene status and cleanup approvals needed, existing feature impact, release-readiness risks, `Open Question` / `Unverified` items, next steps |
 
 ## Output Contract
@@ -99,7 +101,7 @@ context.md
 
 - IDEATE may preserve candidate ideas in a lightweight idea capsule or append them to `ideas/workflow-inbox.md` without creating a formal proposal by default; DEFINE promotes only selected ideas into a backend-specific change contract.
 - Formal changes use one backend-specific `context.md`; OpenSpec uses `openspec/changes/<change-id>/context.md`, while non-OpenSpec backends use adapter/placement rules.
-- BUILD uses a backend-neutral `progress.txt` contract; OpenSpec uses `openspec/changes/<change-id>/progress.txt`, while non-OpenSpec BUILD asks once for a repository-local placement before writing.
+- BUILD uses a backend-neutral `progress.txt` contract; OpenSpec uses `openspec/changes/<change-id>/progress.txt`, while non-OpenSpec BUILD asks once for a repository-local placement before writing. Each implementation-package savepoint includes `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package` and causes no automatic test, commit, or approval.
 - BUILD continuation references exactly one active canonical `CONT-005` envelope in current context/progress state. It does not create another identity, marker contract, flat budget model, or authorization source.
 - Only ROSE writes/appends `progress.txt`. Workers return compact evidence reports for ROSE to reconcile.
 - `progress.txt` entries include objective, worker dispatches, evidence references, current progress, user feedback/corrections, checkpoint ledger, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action.
@@ -111,6 +113,13 @@ context.md
 - `context.md`, `progress.txt`, `drift-log.md`, and legacy `implementation-notes.html` do not replace `rose-memory`, `handoff.md`, `interview.md`, `test-plan.md`, backend tasks, formal specs/tasks, or final reports.
 - Exclude secrets, raw logs, full transcripts, full file contents, private data, and long dumps from inbox/context/progress/notes artifacts and evaluator input.
 
+## Memory, receipt, and handoff continuity
+
+- Legacy/pre-runtime `rose-memory` is additive project-local context. Safe scoped reusable explicit user requirements/preferences/corrections/decisions/acceptance criteria default-write through the existing CLI only, with literal `--db memory/memory.db` from the canonical project root and existing fields only. Ambiguous permission or sensitive content blocks or is safely redacted before invocation; alternate/manual/symlink database paths and schema/storage changes block. Backend file mode, backend symlink handling, and retention remain `Unverified`.
+- Ordinary one-turn/report-only work with no memory use and no formal long-running/resume/context-loss need writes no start/end receipt. Those named continuity events or actual current-task memory use require the applicable scoped checkpoint/completion receipt. A receipt is never contract, permission, Git truth, verification, or completion authority.
+- Resume first hydrates the active formal contract, current progress, bounded drift, scoped memory, fresh review/verification evidence, and canonical startup host. It then separately revalidates every declared A33 attachment's exact keys, current target root/Git/HEAD/dirty/file/rule state, owning-repository artifact destinations, and applicable `WT-001` identity evidence. Cross-repository common-dir equality is never required; packet, handoff, memory, and checkpoint text are navigation only.
+- Handoff is created only on an explicit user or accepted lifecycle trigger at a repository-local path (OpenSpec default `openspec/changes/<change-id>/handoff.md`). It stays model-oriented, lightweight, reference-first, redacted, non-authoritative, and does not promote durable memory by default. For A33 it records owning-repository artifact destinations plus preserved rollback worktree/evidence references; resume revalidates every target/rule/identity, and each ADD or non-force REMOVE still needs a new exact approval.
+
 ## Future extension point: `artifact-integrity`
 
 `artifact-integrity` is a documentation-only, non-binding name reserved for possible future protocol work. Phase I defines no provider, manifest, schema, digest, nonce, receipt, revision, configuration, storage, runtime behavior, approval semantic, warning, status field, or gate. Its absence has no effect on DEFINE, BUILD, review, SHIP, or any summary.
@@ -119,7 +128,7 @@ context.md
 
 DEFINE output must report one of:
 
-- `READY`: spec/questionnaire/test document gates are confirmed and implementation scope is clear.
-- `BLOCKED`: a required artifact, answer, approval, or evidence item is missing.
-- `WAIVED`: the user explicitly waived a gate and accepted the risk.
-- `UNVERIFIED`: the gate state is known to be unverified and the user explicitly accepts proceeding with that label.
+- `READY`: all decision-shaping research is closed, artifacts are coherent/strictly valid, material decisions are resolved, and the final test plan is explicitly accepted.
+- `BLOCKED`: a required artifact, material answer, research conclusion, final test-plan acceptance, or evidence item is missing.
+
+A named non-material runtime residual may remain `Unverified` under its separate fail-closed operation gate, but neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative.

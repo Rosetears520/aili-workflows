@@ -122,10 +122,12 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/web-researcher.md` - external research subagent.
 - `agents/plan-auditor.md` - read-only plan audit subagent.
 - `agents/code-reviewer.md` - code review subagent.
+- `agents/convergence-reviewer.md` - read-only convergence subagent.
 - `agents/security-auditor.md` - security review subagent.
 - `agents/test-engineer.md` - testing subagent.
 - `agents/test-coverage-reviewer.md`, `agents/pr-test-analyzer.md`, `agents/ai-regression-scout.md`, and `agents/silent-failure-reviewer.md` - relevant-triggered read-only QA review/scouting subagents.
 - `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
+- `agents/web-performance-auditor.md` - read-only Web performance audit subagent.
 - `agents/spec-miner.md`, `agents/agent-evaluator.md`, and `agents/opensource-sanitizer.md` - relevant-triggered read-only spec-mining, agent-output evaluation, and OSS/public exposure review subagents.
 - `.agents/skills/*/SKILL.md` - repository source for OpenCode skills.
 - `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode delivery slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
@@ -138,6 +140,8 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global AGENTS rules, agents, skills, and commands.
 
 Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
+
+The canonical role inventory is primary ROSE plus 19 repository-managed subagents. All 19 managed profiles retain `external_directory: deny`; only ROSE has per-operation external-directory ask. `web-researcher` remains the web-only research role: its web capability does not grant external local-directory, mutation, or delegation access. Built-in `explore` and `general` are outside this managed inventory.
 
 ## Installation Decision Rule
 
@@ -176,7 +180,7 @@ AILI has no active DCP integration. `install`, `update`, and `doctor` do not ins
 
 CodeGraph opt-in is explicit: `rose-aili install --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`. Restart OpenCode after a configured CodeGraph install so OpenCode reloads the MCP integration. If either command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports CodeGraph recovery instructions separately.
 
-Project-local CodeGraph initialization is separate from global install/update. An AI agent should confirm the current repository root before running `codegraph init -i` and `codegraph status` for that repository only. It must not run `openspec init` as part of CodeGraph initialization, and it must not initialize multiple repositories without explicit approval for that batch scope.
+Project-local CodeGraph initialization is separate from global install/update. An AI agent should confirm the current repository root before running `codegraph init -i` and `codegraph status` for that repository only. For an A33 host and its declared attachments, confirm root, readiness, and any init approval separately per target; one repository's CodeGraph result never covers another. It must not run `openspec init` as part of CodeGraph initialization, and it must not initialize multiple repositories without explicit approval for each exact target.
 
 Project `AGENTS.md` initialization/update should also check CodeGraph readiness for the same repository. After generating or updating `AGENTS.md`, run or request `codegraph status`; if the repository is not initialized, ask whether to run `codegraph init -i`, then rerun `codegraph status` when approved. If CodeGraph is unavailable, skipped, or not approved, keep the `AGENTS.md` flow non-blocking but report that the project has no CodeGraph code-map coverage yet.
 
@@ -513,6 +517,18 @@ If both WSL OpenCode and Windows native OpenCode are used, install twice:
 
 Each runtime owns its own `~/.config/opencode`.
 
+## A33 Attached Repository Boundary
+
+Cross-repository AILI work starts only from the user-selected Git repository where OpenCode was started. The current `WT-001` mode is `a33-attached-shared-trust-domain`; historical `a30-a31-external-read`, A30 runtime results, and A32/item-41 readiness evidence are non-gating history. AILI supplies no host selector, attachment command, cleanup manager, registry, or additional manifest.
+
+Each declared attachment is admitted only at exact `<session-root>/.worktrees/<repo_key>/<worktree_key>`. Both keys must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`, be non-reserved and collision-free, and the prospective target must pass exact root `/.worktrees/` ignore with no re-inclusion, no tracked destination, and trusted non-submodule/path topology. Visible `worktrees/` and historical `.tmp/worktrees/` are not aliases. The npm `package.json#files` allowlist excludes all three worktree roots.
+
+Multiple attachments are allowed only as separate repository lanes. Each lane keeps its own current WT reference, exact keys, target rules, owning-repository artifact paths, operation approval, and no-digest `A33Identity` pre/post evidence with all and only these fields: `identity_state`, `declared_root`, `path_state`, `canonical_root`, `git_toplevel`, `git_private_dir`, `git_common_dir`, `git_head`, `git_branch`, `detached_head`, `worktree_membership`, `dirty_state`, `tracked_files`, `untracked_files`, `ignored_files`, `artifact_files`, and `unknown_files`. No attachment may reuse or rebind another attachment's identity, rules, approval, Git state, CodeGraph evidence, or artifact destination.
+
+PREPARE is descriptor-only. Every real or driver-fixture ADD requires a fresh exact key/class-bound approval and accepted trusted-code risk; every later non-force REMOVE requires a different fresh exact approval after complete deletion inventory and its own risk gate. REMOVE preserves branch ref/reflog, and rollback preserves worktrees and evidence. Add/remove approval grants no test, debug, verification, integration, cleanup, commit, push, merge, release, or other-operation authority.
+
+The host and all attachments must be an explicitly trusted same-owner, same-sensitivity, mutually readable/writable trust domain. OpenCode path/cwd/permission rules are a soft coordination boundary, not hard isolation or an OS sandbox. Target `AGENTS.md` and applicable rules are re-read per operation/dispatch, may only narrow authority, and block on same-level conflict. User-visible artifacts stay in the owning target repository.
+
 ## Repair: Restore Directory-Level Symlink Mistake
 
 Use this only if `~/.config/opencode/agents`, legacy `~/.config/opencode/skills`, or `~/.config/opencode/commands` was accidentally replaced by a directory-level symlink.
@@ -660,7 +676,7 @@ AILI provides no cron, scheduler, watcher, webhook, listener, daemon, persistent
 - Root `AGENTS.md`, `dist/`, installed OpenCode files, and installed shared skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
 - Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned outputs. They remain unchanged and directly callable outside AILI guarantees. AILI does not route to, recommend, wrap, suppress, prevent, control, or count their output as AILI acceptance/readiness/verification/completion evidence.
 - Pinned upstream files under canonical skill `references/upstream/` are inert licensed data, not another installed skill or runtime. They use `SKILL.upstream.md`; upstream scripts must remain non-executable data and must never become commands, hooks, or routing targets.
-- `package.json#files` ships canonical agents, `.agents/` (including protocols and inert references), commands, manifests, both AGENTS templates, `agents_md.py`, the Graphify guarded launcher and its contract fixture, the installer script, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; packaged helpers/data are not registered as commands or runnable skills.
+- `package.json#files` ships canonical agents, `.agents/` (including protocols and inert references), commands, manifests, both AGENTS templates, `agents_md.py`, the Graphify guarded launcher and its contract fixture, the installer script, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; packaged helpers/data are not registered as commands or runnable skills. Root `.worktrees/`, visible `worktrees/`, and historical `.tmp/worktrees/` are excluded.
 
 The upstream distribution path is currently fail-closed. OpenCode `1.17.18` installed-catalog recursion remains `UV-005`, and filesystem mode evidence may not prove required upstream `0644` modes; until both are resolved, do not claim distribution/registration/enablement or release readiness. `npm pack --dry-run` is content evidence only and does not publish or resolve runtime catalog/mode behavior.
 
@@ -672,7 +688,7 @@ Typical intent mapping:
 
 - Feature work: `spec-driven-development`, then `incremental-implementation` and `test-driven-development`.
 - Planning: `planning-and-task-breakdown`.
-- Bug or failure: `debugging-and-error-recovery`.
+- Build, typecheck, lint, test, or CI failure: `build-failure-repair`.
 - Review: `code-review-and-quality`.
 - UI work: `frontend-ui-engineering`.
 - Memory continuity: `rose-memory`.

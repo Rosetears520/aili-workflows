@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "fixture": "official-lean-agent-prompts",
+  "role_families": [
+    {"id": "rose", "agents": ["agents/rose.md"]},
+    {"id": "research", "agents": ["agents/code-scout.md", "agents/doc-researcher.md", "agents/spec-miner.md", "agents/web-researcher.md"]},
+    {"id": "review-security", "agents": ["agents/agent-evaluator.md", "agents/code-reviewer.md", "agents/convergence-reviewer.md", "agents/opensource-sanitizer.md", "agents/plan-auditor.md", "agents/pr-test-analyzer.md", "agents/security-auditor.md", "agents/silent-failure-reviewer.md", "agents/test-coverage-reviewer.md"]},
+    {"id": "test", "agents": ["agents/ai-regression-scout.md", "agents/test-engineer.md"]},
+    {"id": "implementer", "agents": ["agents/implementer.md"]},
+    {"id": "browser-e2e-specialist", "agents": ["agents/browser-qa-runner.md", "agents/e2e-artifact-runner.md", "agents/web-performance-auditor.md"]}
+  ],
+  "cases": [
+    {"id": "frontmatter-official-profile", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "required OpenCode frontmatter and role-specific permissions remain present"},
+    {"id": "outcome-first-role-contract", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "goal, outcome, scope, stop rules, and compact result precede optional process detail"},
+    {"id": "rose-direct-default", "families": ["rose"], "expected": "one bounded task is performed directly with zero Task calls"},
+    {"id": "task-explicit-request", "families": ["rose"], "expected": "Task is eligible only because the user explicitly requested it"},
+    {"id": "task-specialist-capability", "families": ["rose"], "expected": "Task is eligible when a selected specialist has a required capability"},
+    {"id": "task-noisy-context-benefit", "families": ["rose"], "expected": "Task is eligible when broad/noisy evidence would materially cost more in the main context"},
+    {"id": "task-independent-parallel-benefit", "families": ["rose"], "expected": "at least two independent units may use Task only with clear wall-clock or context benefit"},
+    {"id": "task-default-maximum-two", "families": ["rose"], "expected": "default Task concurrency is at most two"},
+    {"id": "compact-packet-result", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "packet contains goal, scope, allowed actions, expected result, and stop condition; result contains status, evidence, blockers, and confidence"},
+    {"id": "no-automatic-review-test-security-fanout", "families": ["rose", "review-security", "test"], "expected": "no automatic swarm or nested delegation"},
+    {"id": "minimum-claim-matched-verification", "families": ["rose", "test", "implementer", "browser-e2e-specialist"], "expected": "smallest check supporting the exact claim; no automatic verifier, full suite, or repair loop"},
+    {"id": "memory-owner-boundary", "families": ["rose"], "expected": "memory detail stays in rose-memory and is not duplicated in commands or ROSE"},
+    {"id": "product-automation-formal-gated", "families": ["rose", "implementer"], "expected": "explicit product/repository automation remains eligible through normal formal and high-risk gates"},
+    {"id": "hidden-aili-automation-block", "families": ["rose"], "expected": "hidden or unrequested AILI self-automation blocks with zero mutation and no LP substitution"},
+    {"id": "dynamic-convergence-current-contract", "families": ["rose", "review-security"], "expected": "generic queues and audits derive from the active contract and current task rows"},
+    {"id": "tracked-74-id-owner", "families": ["rose", "review-security"], "expected": "this umbrella's exact 74 IDs come from the tracked workflow fixture/catalog, never ignored task-audit.json; checkbox state comes from current tasks.md"},
+    {"id": "web-only-profile", "families": ["research"], "expected": "web-researcher remains web-only, non-delegating, local/external/mutation denied, and separately approval-gated"},
+    {"id": "inventory-20-files-19-managed", "families": ["rose"], "expected": "one ROSE plus exactly 19 managed Agent Markdown files"},
+    {"id": "debug-components-removed", "families": ["rose"], "expected": "debug-investigator and active debugging-and-error-recovery routes are absent"},
+    {"id": "zero-active-superpowers-wording", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "no active Superpowers backend, provenance, license, catalog, or process wording"},
+    {"id": "thin-command-exact-passthrough", "families": ["rose"], "expected": "each delivery command keeps exact $ARGUMENTS passthrough"},
+    {"id": "thin-command-shape", "families": ["rose"], "expected": "each delivery command contains only frontmatter, passthrough, mode/purpose, essential hard stop, and concise output"},
+    {"id": "owner-drift-command-policy-duplication", "families": ["rose"], "expected": "duplicated classifier, research, continuation, loop, automation, delegation, memory, or review policy in a command fails"},
+    {"id": "owner-drift-rose-policy-duplication", "families": ["rose"], "expected": "ROSE remains a compact router/invariant owner and detailed policy remains in canonical skill references"},
+    {"id": "claim-policy-unchanged", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "universal claim tags and confidence behavior remain unchanged in global AGENTS"}
+  ],
+  "corpus": {
+    "id": "official-lean-six-family-v1",
+    "owner": "docs/harness/fixtures/prompt-rationalization-fixtures.yaml",
+    "case_ids": [
+      "frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"
+    ],
+    "task_oracle": "docs/harness/fixtures/workflow-orchestration-fixtures.yaml",
+    "ignored_task_audit_is_authority": false
+  },
+  "quality_oracle": {
+    "id": "official-lean-quality-v1",
+    "requires_exact_case_set": true,
+    "requires_same_corpus_before_after": true,
+    "requires_same_oracle_before_after": true,
+    "requires_one_instruction_group_per_pair": true,
+    "requires_all_six_role_families": true,
+    "requires_direct_first": true,
+    "requires_default_task_concurrency_max": 2,
+    "requires_compact_packet_result": true,
+    "allows_automatic_fanout": false,
+    "requires_minimum_claim_matched_verification": true,
+    "requires_thin_commands": true,
+    "requires_owner_drift_rejection": true,
+    "requires_claim_policy_unchanged": true,
+    "requires_quality_pass_before_reduction_claim": true
+  },
+  "prompt_owner_map": {
+    "claim_tags_and_confidence": "global AGENTS",
+    "memory": ".agents/skills/rose-memory/SKILL.md",
+    "lifecycle_classifier_automation_convergence": ".agents/skills/aili-delivery-flow/references/",
+    "delegation": [".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md", ".agents/skills/aili-delivery-flow/references/protocols/"],
+    "compact_routers_only": ["agents/rose.md", "commands/ideate.md", "commands/define.md", "commands/build.md", "commands/ship.md"]
+  },
+  "baseline_result_ledger": {
+    "exact_record_fields": ["run_id", "prompt_revision", "instruction_group", "case_ids", "exact_command", "quality_oracle", "quality_result", "token_source", "token_value", "cost_source", "cost_value", "changed_files", "rollback_result", "evidence", "unverified"],
+    "pairs": [
+      {
+        "instruction_group": "rose",
+        "baseline": {"run_id": "P2-ROSE-BASELINE", "prompt_revision": "baseline", "instruction_group": "rose", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-ROSE-RESULT", "prompt_revision": "result", "instruction_group": "rose", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      },
+      {
+        "instruction_group": "research",
+        "baseline": {"run_id": "P2-RESEARCH-BASELINE", "prompt_revision": "baseline", "instruction_group": "research", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-RESEARCH-RESULT", "prompt_revision": "result", "instruction_group": "research", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      },
+      {
+        "instruction_group": "review-security",
+        "baseline": {"run_id": "P2-REVIEW-SECURITY-BASELINE", "prompt_revision": "baseline", "instruction_group": "review-security", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-REVIEW-SECURITY-RESULT", "prompt_revision": "result", "instruction_group": "review-security", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      },
+      {
+        "instruction_group": "test",
+        "baseline": {"run_id": "P2-TEST-BASELINE", "prompt_revision": "baseline", "instruction_group": "test", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-TEST-RESULT", "prompt_revision": "result", "instruction_group": "test", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      },
+      {
+        "instruction_group": "implementer",
+        "baseline": {"run_id": "P2-IMPLEMENTER-BASELINE", "prompt_revision": "baseline", "instruction_group": "implementer", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-IMPLEMENTER-RESULT", "prompt_revision": "result", "instruction_group": "implementer", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      },
+      {
+        "instruction_group": "browser-e2e-specialist",
+        "baseline": {"run_id": "P2-BROWSER-E2E-SPECIALIST-BASELINE", "prompt_revision": "baseline", "instruction_group": "browser-e2e-specialist", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]},
+        "result": {"run_id": "P2-BROWSER-E2E-SPECIALIST-RESULT", "prompt_revision": "result", "instruction_group": "browser-e2e-specialist", "case_ids": ["frontmatter-official-profile", "outcome-first-role-contract", "rose-direct-default", "task-explicit-request", "task-specialist-capability", "task-noisy-context-benefit", "task-independent-parallel-benefit", "task-default-maximum-two", "compact-packet-result", "no-automatic-review-test-security-fanout", "minimum-claim-matched-verification", "memory-owner-boundary", "product-automation-formal-gated", "hidden-aili-automation-block", "dynamic-convergence-current-contract", "tracked-74-id-owner", "web-only-profile", "inventory-20-files-19-managed", "debug-components-removed", "zero-active-superpowers-wording", "thin-command-exact-passthrough", "thin-command-shape", "owner-drift-command-policy-duplication", "owner-drift-rose-policy-duplication", "claim-policy-unchanged"], "exact_command": "python scripts/harness_fixture_check.py", "quality_oracle": "official-lean-quality-v1", "quality_result": null, "token_source": "unavailable", "token_value": null, "cost_source": "unavailable", "cost_value": null, "changed_files": [], "rollback_result": null, "evidence": [], "unverified": ["P11 aggregate checker/eval not run in Package 2"]}
+      }
+    ]
+  },
+  "metrics": ["prompt_bytes", "tool_calls", "task_calls", "elapsed_ms", "provider_usage_if_available"],
+  "usage_policy": {
+    "null_or_unavailable_provider_usage_allowed": true,
+    "null_or_unavailable_usage_supports_reduction_claim": false,
+    "comparable_baseline_required": true,
+    "same_case_ids_required": true,
+    "same_quality_oracle_required": true,
+    "quality_regression_requires_scoped_rollback": true,
+    "failed_evidence_retained": true,
+    "all_at_once_rewrite_allowed": false
+  },
+  "claim_policy": {
+    "local_percentage_reduction_claim_without_comparable_data": false,
+    "directional_external_ranges_are_local_forecasts": false,
+    "universal_claim_tags_and_confidence_changed": false
+  }
+}

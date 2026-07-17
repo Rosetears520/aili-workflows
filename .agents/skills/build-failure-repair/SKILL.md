@@ -15,16 +15,14 @@ Use this skill when an executable quality gate fails and the task is to get the 
 
 ## Near Misses
 
-- Runtime bug with no failing gate yet: use `debugging-and-error-recovery` to create or identify a repro first.
+- Runtime bug with no failing gate yet: establish the smallest reproducible loop before changing code.
 - Broad test strategy, coverage adequacy, or PR test matrix: use `pr-test-analysis` or `coverage-review`.
 - Dependency upgrades, lockfile regeneration, toolchain migration, or CI redesign: stop for explicit approval before repair.
 - Product behavior changes discovered during repair: return to the owner for scope clarification.
 
-## Required Routing
+## Execution
 
-- First lane: `debug-investigator` for read-only root-cause evidence when ROSE is orchestrating.
-- Repair lane: `implementer` only after the likely root cause, exact files, allowed scope, and verification command are known or approved.
-- Default repair style: minimal, task-scoped, reversible, and backed by a failing loop that becomes passing.
+ROSE or the assigned implementer reproduces and localizes the failure directly. Use a specialist only when a required capability or materially noisy evidence justifies it. Keep the repair minimal, task-scoped, reversible, and backed by a failing loop that becomes passing.
 
 ## Repair Workflow
 

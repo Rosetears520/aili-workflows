@@ -8,6 +8,7 @@
 - Forbidden files:
 - Acceptance criteria:
 - Required context reads:
+- WT-001 context ref: <context_id, evidence_version, freshness, mode> | N/A
 - Traceability mapping:
   - source requirement/decision/risk:
   - task/package:
@@ -19,11 +20,11 @@
   - shared scaffold/source-of-truth:
   - safe parallel lanes:
   - serial dependencies:
-  - concurrent research/review/test/search lanes:
+  - benefit-gated independent lanes (maximum two by default):
   - ownership boundaries:
   - join point and expected evidence:
   - blockers or no-parallel reason:
-- Research-first evidence gate: required | satisfied | waived | accepted as UNVERIFIED | not triggered
+- Research-first evidence gate: required-satisfied | not-triggered | blocked
 - Implementation constraints:
 - Delegation plan:
 - Verification command:
@@ -41,10 +42,12 @@
   - package/build command:
   - package failure classification:
   - repair/retest/repackage limit:
-- BUILD review lanes:
-  - code-reviewer:
-  - test-engineer:
-  - security-auditor: required | skipped with reason
 - Repair / retry limit:
 - Stop conditions:
 - Expected return format:
+
+An A33 package references exactly one current `WT-001` context per declared repository lane. It may not copy, rebind, or reinterpret roots, keys, Git identity/state, approvals, operation class/risk, deltas, target rules, command/cwd, or containment facts. Target rules are re-read at the operation/dispatch boundary, may only narrow authority, and same-level conflicts block. Artifacts stay in the owning target repository.
+
+Decision-shaping research that can affect scope, architecture, dependencies, public contract, permissions, acceptance, or verification strategy must be closed in DEFINE. It cannot be waived or accepted as `Unverified`; discovery during BUILD emits `BUILD_MATERIAL_DISCOVERY` and stops changed work. Named non-material runtime residuals remain under their separate fail-closed operation gates.
+
+Direct work is the default. Task use is optional and benefit-gated, with at most two concurrent lanes by default. A package never creates automatic review, test, security, verifier, full-suite, or repair-loop lanes. Verification is the smallest fresh check that proves the exact claim.

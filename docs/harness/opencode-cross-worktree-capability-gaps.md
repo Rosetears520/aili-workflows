@@ -207,7 +207,7 @@ type TargetTask = {
 
 [KNOWN] Every selected role has identical literal effective inventory: top-level/unknown/default `*`: deny; only `read`, `list`, `glob`, and `grep`: allow; only `external_directory`: ask; explicit `edit`, `bash`, `task`, `lsp`, `skill`, `webfetch`, `websearch`, and every enumerated plugin/MCP/custom/browser/other final merged tool: deny. Nested read-pattern denials may narrow reads. No other merged key may resolve allow/ask; Git-administrative read denial is optional defense-in-depth.
 
-[KNOWN] `implementer`, ROSE, `browser-qa-runner`, `debug-investigator`, `e2e-artifact-runner`, `test-engineer`, and every other edit- or command-capable role retain `external_directory: deny`. A30 supplies no external edit, exact task-path edit, test/debug/browser/e2e, shell, or Git-command capability.
+[KNOWN] `implementer`, ROSE, `browser-qa-runner`, `e2e-artifact-runner`, `test-engineer`, and every other edit- or command-capable role retain `external_directory: deny`. A30 supplies no external edit, exact task-path edit, test/debug/browser/e2e, shell, or Git-command capability.
 
 [KNOWN] A30 does not claim technical detection of auto/yolo/skip/global tool override or stored approval state when runtime does not expose it. Observable override state, `external_directory: allow`, or effective child edit/bash/task allow blocks; inability to prove absence leaves runtime `Unverified` and disabled. Isolated fixtures use no such flags. Auto/always may broaden external-read privacy and expose data.
 
