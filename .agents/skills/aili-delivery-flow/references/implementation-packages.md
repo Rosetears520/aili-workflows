@@ -13,7 +13,7 @@ BUILD may receive a package explicitly from the user or synthesize an ordered pa
 - traceability mapping from source requirement, decision, or risk to task/package, target files or artifacts, verification command or inspection, and expected evidence or `Unverified` status;
 - parallelism decision only when the package contains at least two independent units with a clear wall-clock or context benefit;
 - implementation owner, with direct ROSE work as the default;
-- verification command(s);
+- expected claim-matched evidence; the canonical verification owner selects the actual smallest check;
 - final direct-inspection relevance or an explicit reason a specialist capability is needed;
 - objective iteration budget and the optional one-recheck limit when a targeted repair is actually required;
 - rollback or pause condition;
@@ -25,7 +25,7 @@ BUILD may receive a package explicitly from the user or synthesize an ordered pa
 ## Rules
 
 - When no explicit package is supplied, synthesize packages from the highest-priority available artifacts: `tasks.md`, specs, design notes, `test-plan.md`, command arguments, and repository evidence.
-- Each synthesized package must still name goal and acceptance criteria, likely edit surface, forbidden scope, evidence source, traceability mapping, direct owner or justified delegation, optional feedback command, final-inspection relevance, canonical objective budget, rollback or pause condition, ledger handling, and commit allowance.
+- Each synthesized package names goal and acceptance criteria, likely edit surface, forbidden scope, evidence source, traceability mapping, direct owner or justified auxiliary capability, expected evidence, rollback/pause conditions, ledger handling, and commit allowance. It does not create a package approval or mandatory package-local test.
 - For formal changes, every package must map each covered requirement, decision, or risk to the package task, file/artifact boundary, and verification/evidence target. If any link cannot be established, label it `Open Question` before dispatch when a decision is missing, or `Unverified` when evidence cannot yet prove coverage.
 - Package implementation targets complete accepted behavior inside the package scope. `Surgical` or scoped means no unrelated changes, not artificially tiny or partial patches.
 - When two or more independent units have a clear wall-clock or context benefit, state the safe parallel split, dependencies, and join point. Otherwise work directly and serially without ceremony.
@@ -36,18 +36,18 @@ BUILD may receive a package explicitly from the user or synthesize an ordered pa
 - Work directly by default. Use Task only on explicit user request, required specialist capability, materially noisy context, or at least two independent units with clear benefit; default concurrency is at most two. ROSE remains responsible for integration, progress-ledger writes, and final judgment.
 - Keep packages independently reviewable where practical.
 - Do not combine unrelated feature, harness, install, and documentation work unless explicitly approved.
-- Package 1–11 finish complete accepted behavior and a lightweight savepoint; optional package-local feedback does not substitute for the final direct inspection.
-- Final quality is direct-first: ROSE inspects the final diff and applicable task matrix, runs the smallest relevant checks, optionally uses at most two specialists for a concrete gap, and allows one targeted repair/recheck.
-- If the user requested packaging, run the relevant tests/checks before packaging, repair in-scope failures first, run the package/build command as separate evidence, classify package-time failures, then repair/retest/repackage within the approved repair limit. Missing tests require an explicit waiver or `UNVERIFIED` risk before packaging proceeds.
+- Every package finishes complete accepted behavior and a lightweight savepoint; optional package-local feedback does not substitute for final direct inspection. Package 1–12 naming is historical to `complete-aili-workflow-orchestration`, not a generic queue shape.
+- Final quality is direct-first: ROSE inspects the final diff and affected links, selects the smallest claim-matched check, optionally uses one auxiliary capability for a concrete gap, and allows one targeted repair/recheck.
+- If the user requested packaging, run the claim-matched checks before packaging, repair an in-scope failure once, run the package/build command as separate evidence, and report any remaining blocker. External publishing, signing, credentials, dependency changes, or destructive cleanup retain exact approvals.
 - Workers return compact reports/evidence only. They do not write `progress.txt` and do not issue final PASS/FAIL/`Unverified` judgments. Their report must preserve the package traceability mapping by naming changed files/artifacts and verification evidence for each covered requirement, decision, or risk.
 - For non-trivial package closeout, inspect branch/status, classify dirty paths as task-scoped, unrelated/pre-existing, generated/ignored, scratch, or unknown, remove only safe task-owned non-user-visible scratch artifacts, and ask explicit approval before push, destructive clean/reset, branch deletion, worktree removal, OpenSpec archive, stashing unrelated changes, or deleting user-visible artifacts.
-- Pause if the package requires new dependencies, lockfile changes, schema changes, public API changes, forbidden files, broader scope than approved, signing/notarization credentials, external publishing, secret handling, destructive cleanup, or unsupported platform assumptions.
+- Pause if the package requires new dependencies, lockfile changes, schema changes, public API/auth/security changes, forbidden files, broader scope than approved, signing/notarization credentials, external access/publishing, secret handling, destructive cleanup, or unsupported platform assumptions.
 
 ## Autonomous Queue Exit Criteria
 
 Continue through the queue until one of these is true:
 
-- The accepted scoped queue is completely implemented/savepointed and Package 12 has completed its direct final inspection plus any one permitted targeted recheck;
+- The accepted scoped queue is completely implemented/savepointed and ROSE has completed its direct final inspection plus any one permitted targeted recheck;
 - a stop condition requires explicit user approval;
 - a package is blocked by missing target/readiness evidence, unverifiable accepted behavior, or exhausted canonical objective budgets;
 - the target repository root cannot be canonicalized inside the current workspace or allowed external directories;

@@ -5,7 +5,7 @@ description: PR test analysis routing. Use for pull request or diff test impact,
 
 # PR Test Analysis
 
-Use this skill to route PR or diff-level testing questions to `pr-test-analyzer`.
+Use this skill for one bounded read-only PR/diff test-impact question. ROSE may assign it to one fresh `pr-test-analyzer` context after the delegation gate; this skill does not dispatch or invoke another process skill.
 
 ## Trigger
 
@@ -15,12 +15,10 @@ Use this skill to route PR or diff-level testing questions to `pr-test-analyzer`
 
 ## Near Misses
 
-- General code correctness review: `code-reviewer`.
-- Coverage-only adequacy: `coverage-review`.
-- Running E2E or collecting artifacts: `e2e-artifact-handling`.
+- General correctness review, coverage-only adequacy, or E2E execution/artifacts are different primary intents; return the exact mismatch to ROSE.
 
 ## Required Routing
 
-- Owner lane: `subagent:review`.
-- Agent: `pr-test-analyzer`.
-- Read-only: no PR comments, labels, pushes, merges, or test edits.
+- Canonical owner: ROSE/`aili-delivery-flow`; direct read-only inspection is the default.
+- Optional agent: one fresh, terminal `pr-test-analyzer` assignment after a new benefit decision.
+- Read-only: no PR comments, labels, pushes, merges, test edits, retry chain, or final-verdict ownership.

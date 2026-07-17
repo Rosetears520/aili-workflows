@@ -140,7 +140,7 @@ If formula validation fails:
 3. **EDIT → XML**: Never openpyxl round-trip. Use unpack/edit/pack scripts
 4. **Always produce the output file** — this is the #1 priority
 5. **Validate before delivery**: `formula_check.py` exit code 0 = safe
-6. **Fresh evidence**: use `verification-before-completion` before claiming the workbook is complete, fixed, passing, or verified; cite formula/readback validation evidence.
+6. **Fresh evidence**: before claiming the workbook complete, fixed, passing, or verified, follow the canonical lifecycle/ordinary-task verification owner and cite the selected formula/readback evidence.
 
 ## Utility Scripts
 

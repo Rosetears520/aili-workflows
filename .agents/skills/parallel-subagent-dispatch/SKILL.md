@@ -9,7 +9,7 @@ compatibility: opencode
 
 ## Goal
 
-Use the smallest useful delegation shape without turning ordinary work into orchestration overhead.
+Work directly by default. When delegation has a concrete benefit, use the smallest fresh, single-use Task shape without turning ordinary work into orchestration overhead.
 
 ## Trigger
 
@@ -22,12 +22,22 @@ Use Task only when at least one condition is true:
 
 Otherwise work directly. Do not delegate a single straightforward task merely because a subagent exists.
 
+Every actual Task invocation must pass this benefit decision independently. A prior failure, partial result, empty result, or desire to continue is not by itself a reason to dispatch another Task.
+
 ## Parallelism
 
 - Default to at most two concurrent subagents.
 - Parallel units must not edit the same files or depend on each other's output.
 - If work overlaps or has a dependency, run it sequentially or keep it direct.
 - Do not automatically add review, test, security, or coverage agents after implementation.
+
+## Single-use sessions
+
+- Each Task context receives one bounded assignment and ends permanently with one terminal result or failure.
+- Never resume an old `task_id` for follow-up, clarification, continuation, repair, recheck, or additional work.
+- Do not automatically retry in a fresh session after a failed, empty, blocked, or partial result; ROSE handles the bounded gap directly or reports the blocker.
+- The same `subagent_type` may be selected later only in a fresh Task invocation with no prior `task_id`, after a new direct-first benefit decision for an independently justified assignment or changed evidence.
+- Subagents never nest or delegate. ROSE retains lifecycle, approval, integration, reconciliation, and final-verdict ownership.
 
 ## Compact packet
 
@@ -55,7 +65,7 @@ EVIDENCE: compact anchors, artifacts, or command result
 BLOCKERS: none or exact missing input/permission
 ```
 
-ROSE checks the returned evidence, resolves conflicts, and owns the decision. Missing or empty evidence is not completion.
+ROSE checks the returned evidence, resolves conflicts, and owns the lifecycle, integration, and final decision. Missing or empty evidence is not completion and does not authorize resume or an automatic fresh-session retry.
 
 ## Stop
 

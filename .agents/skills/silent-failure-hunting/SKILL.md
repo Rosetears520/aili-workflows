@@ -5,7 +5,7 @@ description: Silent failure hunting routing. Use when a change might pass while 
 
 # Silent Failure Hunting
 
-Use this skill to route false-success risk review to `silent-failure-reviewer`.
+Use this skill for one bounded read-only false-success question. ROSE may assign it to one fresh `silent-failure-reviewer` context after the delegation gate; this skill does not dispatch or invoke another process skill.
 
 ## Trigger
 
@@ -15,12 +15,10 @@ Use this skill to route false-success risk review to `silent-failure-reviewer`.
 
 ## Near Misses
 
-- Security exploitability: `security-auditor`.
-- Coverage adequacy: `coverage-review`.
-- Running the failing command: `test-engineer` or a relevant runner.
+- Security exploitability, coverage adequacy, or executing a failing command are different primary intents; return the exact mismatch to ROSE.
 
 ## Required Routing
 
-- Owner lane: `subagent:review`.
-- Agent: `silent-failure-reviewer`.
-- Read-only; recommendations may request fixes or negative tests.
+- Canonical owner: ROSE/`aili-delivery-flow`; direct read-only inspection is the default.
+- Optional agent: one fresh, terminal `silent-failure-reviewer` assignment after a new benefit decision.
+- Read-only; return fix/negative-test needs to ROSE and stop without retrying or owning the final verdict.

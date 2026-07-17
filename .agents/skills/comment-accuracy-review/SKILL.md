@@ -15,15 +15,12 @@ Use this skill when ROSE needs a narrow, read-only pass over whether explanatory
 
 ## Near Misses
 
-- General correctness, architecture, performance, or security review: use `code-reviewer` or the relevant review lane.
-- Large documentation authoring or product-facing docs: use `doc-researcher` or the repository documentation workflow.
-- Translation, copywriting, or style-only polishing without code consistency risk: use a writing/documentation workflow instead.
-- Implementing fixes: route to `implementer` only after a scoped change is approved.
+- General review, large documentation authoring, style-only writing, or implementation are different primary intents. Return the exact mismatch or approved edit need to ROSE; do not invoke another skill or agent here.
 
 ## Required Routing
 
-- Owner lane: `subagent:review` when used as a review lane.
-- Preferred agents: `code-reviewer` for code-adjacent comment accuracy; `doc-researcher` for README/docs-to-code evidence when available.
+- Owner: ROSE/`aili-delivery-flow`; direct read-only inspection is the default.
+- Optional agent: one fresh code-review or docs-research assignment only when a concrete capability/context gap independently passes the delegation gate.
 - Default mode: read-only; report findings and recommended edits, but do not modify comments automatically.
 
 ## Boundaries

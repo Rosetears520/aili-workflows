@@ -13,12 +13,12 @@ const cliPath = path.join(repoRoot, "dist", "cli.js");
 const SKIP_DEFAULT_ADDONS = ["--skip-openspec"];
 const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? false : "OpenSpec install success paths require Node.js 20.19.0+";
 const SPECIALIZED_QA_LANES = [
-  { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing or modifying tests: use `test-engineer`" },
-  { agent: "pr-test-analyzer", skill: "pr-test-analysis", owner: "subagent:review", nearMiss: "General code correctness review: `code-reviewer`" },
-  { agent: "ai-regression-scout", skill: "ai-regression-scout", owner: "subagent:test", nearMiss: "Product-code behavior regression: use `test-engineer` or direct root-cause investigation" },
-  { agent: "silent-failure-reviewer", skill: "silent-failure-hunting", owner: "subagent:review", nearMiss: "Coverage adequacy: `coverage-review`" },
-  { agent: "browser-qa-runner", skill: "browser-qa", owner: "subagent:test", nearMiss: "Persistent E2E report/trace packaging: `e2e-artifact-handling`" },
-  { agent: "e2e-artifact-runner", skill: "e2e-artifact-handling", owner: "subagent:test", nearMiss: "Browser manual QA without durable artifacts: `browser-qa`" }
+  { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing/modifying tests, PR-wide matrices, CI logs, or browser artifacts are different primary intents" },
+  { agent: "pr-test-analyzer", skill: "pr-test-analysis", owner: "subagent:review", nearMiss: "General correctness review, coverage-only adequacy, or E2E execution/artifacts are different primary intents" },
+  { agent: "ai-regression-scout", skill: "ai-regression-scout", owner: "subagent:test", nearMiss: "Product-code regression, prompt implementation, or false-success review are different primary intents" },
+  { agent: "silent-failure-reviewer", skill: "silent-failure-hunting", owner: "subagent:review", nearMiss: "Security exploitability, coverage adequacy, or executing a failing command are different primary intents" },
+  { agent: "browser-qa-runner", skill: "browser-qa", owner: "subagent:test", nearMiss: "Persistent E2E packaging, direct local browser inspection, or backend-only verification are different primary intents" },
+  { agent: "e2e-artifact-runner", skill: "e2e-artifact-handling", owner: "subagent:test", nearMiss: "Browser QA without durable artifacts, test design/unit/integration verification, or coverage review are different primary intents" }
 ];
 
 const ECC_SELECTED_AGENTS = [
@@ -1223,7 +1223,8 @@ test("manifest registers specialized QA agents and skills", async () => {
     assert.ok(agentText.includes("task: deny"));
   }
 
-  assert.ok(reviewPipelineText.includes("Choose at most two relevant specialists"));
+  assert.ok(reviewPipelineText.includes("Choose at most one auxiliary specialist capability"));
+  assert.ok(reviewPipelineText.includes("at most two independent contexts only when both units have a clear benefit"));
   assert.ok(reviewPipelineText.includes("Do not automatically fan out"));
 
   for (const { agent, skill: name, nearMiss } of SPECIALIZED_QA_LANES) {
@@ -1235,7 +1236,7 @@ test("manifest registers specialized QA agents and skills", async () => {
     ]);
     const skillText = await readFile(path.join(repoRoot, ".agents", "skills", name, "SKILL.md"), "utf8");
     assert.match(skillText, new RegExp(`---\\nname: ${name}\\n`));
-    assert.ok(skillText.includes(`Agent: \`${agent}\``));
+    assert.ok(skillText.includes(`one fresh, terminal \`${agent}\` assignment`));
     assert.match(skillText, new RegExp(escapeRegExp(nearMiss)));
   }
 });
@@ -1256,7 +1257,7 @@ test("manifest registers ECC-derived selected agents and skills", async () => {
     assert.ok(roseText.includes(`"${name}": allow`));
   }
 
-  assert.ok(reviewPipelineText.includes("Choose at most two relevant specialists"));
+  assert.ok(reviewPipelineText.includes("Choose at most one auxiliary specialist capability"));
   assert.ok(reviewPipelineText.includes("ROSE owns the final judgment"));
 
   for (const name of ECC_SELECTED_SKILLS) {
@@ -1303,10 +1304,10 @@ test("ECC-derived components preserve safety boundaries and exclusions", async (
   assert.ok(sanitizerText.includes("Report redacted evidence and concrete exposure paths."));
 
   const expectedSkillBoundaries = new Map([
-    ["comment-accuracy-review", "General correctness, architecture, performance, or security review"],
+    ["comment-accuracy-review", "General review, large documentation authoring, style-only writing, or implementation"],
     ["oss-release-readiness", "Actual publishing, tagging, release creation, deletion, history rewrite"],
     ["build-failure-repair", "Dependency upgrades, lockfile regeneration, toolchain migration, or CI redesign"],
-    ["code-review-quality-gates", "do not invent a new code-review agent"],
+    ["code-review-quality-gates", "It does not create a reviewer persona"],
     ["harness-optimization-audit", "Do not edit core harness controls from this skill"]
   ]);
 

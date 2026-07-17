@@ -1,6 +1,6 @@
 # Test Document Template
 
-Use this template from `test-document-generator` when producing a durable Markdown test document.
+Use this compact template from `test-document-generator`. Keep the core sections needed by the current acceptance decision and add a conditional section only when it has real rows. Do not emit empty unit/integration/E2E/security/performance matrices, execution ledgers, or defect tables merely because the template names them.
 
 ```markdown
 # 测试文档：<feature/change-name>
@@ -9,87 +9,37 @@ Use this template from `test-document-generator` when producing a durable Markdo
 - 来源：
 - 生成时间：
 - 适用版本 / 分支：
-- 测试负责人：
 - 状态：draft / reviewed / accepted
 
-## 1. 资料来源与证据
-| 来源 | 已检查内容 | 观察到的事实 | 置信度 | 备注 |
-|---|---|---|---|---|
-
-## 2. 被测对象与测试目标
+## 1. 被测对象、目标与边界
 - 被测对象：
-- 用户目标：
-- 业务目标：
-- 技术目标：
-- 不测试内容：
+- 要支持的完成 / 接受 claim：
+- In scope：
+- Explicitly not run / out of scope：
+- 适用假设：
 
-## 3. 测试范围
-### In Scope
-### Out of Scope
-### Assumptions
-### Open Questions
-
-## 4. 需求-测试追踪矩阵
+## 2. 需求 / 决策 / 风险追踪
 | 需求 / 决策 / 风险 | 来源 | 任务 / Package | 文件 / Artifact | 验证命令 / 检查 | 证据 | 覆盖状态 |
 |---|---|---|---|---|---|---|
 
-## 5. 测试策略
-- 单元测试：
-- 集成测试：
-- E2E / 浏览器测试：
-- API / 契约测试：
-- 手工验收：
-- 回归测试：
-- 非功能测试：
+## 3. 选定验证
+| 条件 / Claim | 命令或直接检查 | 为什么足够 | 不支持的结论 |
+|---|---|---|---|
 
-## 6. 测试环境与测试数据
-- 环境：
-- 依赖服务：
-- 测试账号 / 权限：
-- 测试数据：
-- 数据清理方式：
-
-## 7. 功能测试用例
-| ID | 场景 | 前置条件 | 步骤 | 预期结果 | 优先级 | 自动化建议 | 来源 |
-|---|---|---|---|---|---|---|---|
-
-## 8. 异常、边界与权限测试
-| ID | 类型 | 场景 | 输入 / 操作 | 预期结果 | 风险 |
-|---|---|---|---|---|---|
-
-## 9. 数据一致性 / 迁移 / 兼容性测试
-## 10. 性能、稳定性、安全、可观测性测试
-## 11. 回归范围
-
-## 12. 自动化验证命令
-
-| 层级 | 命令 | 目的 | 必须执行 | 备注 |
-|---|---|---|---|---|
-| Unit |  |  | yes/no |  |
-| Integration |  |  | yes/no |  |
-| CLI |  |  | yes/no |  |
-| API / Contract |  |  | yes/no |  |
-| GUI / Browser |  |  | yes/no |  |
-| Regression |  |  | yes/no |  |
-
-## 13. 手工验收清单
-
-- [ ]
-
-## 14. Open Questions / Unverified
+## 4. Open Questions / Unverified
 
 | 类型 | 内容 | 影响 | 处理方式 |
 |---|---|---|---|
 
-## 15. 测试执行记录
+## 5. Final acceptance gate
+- [ ] 用户明确接受最终测试计划（仅正式 lifecycle 需要）
 
-| Run ID | 时间 | 执行者 | 测试层级 | 命令 / 工具 | 结果 | 关键证据 | 未验证项 |
-|---|---|---|---|---|---|---|---|
-
-## 16. 缺陷与修复闭环
-
-| Bug ID | 来源测试 | 现象 | 根因 | 修复负责人 | 修复文件 | 复测命令 | 复测结果 | 状态 |
-|---|---|---|---|---|---|---|---|---|
-
-## 17. 变更记录
+<!-- 仅在存在真实内容时追加：
+## 条件性场景 / 边界 / 权限用例
+## 环境与数据
+## 手工验收
+## 执行记录
+## 缺陷与一次修复/复测
+## 变更记录
+-->
 ```

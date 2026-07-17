@@ -1,6 +1,6 @@
 ---
 name: planning-and-task-breakdown
-description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: Break a clear scope or accepted specification into ordered tasks/packages when the user explicitly asks for a plan, estimate, dependency order, or task breakdown; do not trigger for ordinary implementation, every multi-step task, speculative parallelism, review, or completion.
 ---
 
 # Planning and Task Breakdown
@@ -11,13 +11,15 @@ Decompose work into small, verifiable tasks with explicit acceptance criteria. G
 
 ## When to Use
 
-- You have a spec and need to break it into implementable units
-- A task feels too large or vague to start
-- Work needs to be parallelized across multiple agents or sessions
-- You need to communicate scope to a human
-- The implementation order isn't obvious
+- The user asks for an implementation plan, task breakdown, estimate, dependency order, or package split.
+- A formal DEFINE change has a dependency-ready tasks artifact to produce or revise.
+- One accepted scope is too large to execute coherently without an explicit bounded package order.
 
-**When NOT to use:** Single-file changes with obvious scope, or when the spec already contains well-defined tasks.
+**When NOT to use:** Ordinary implementation with a clear next step, a spec that already has usable tasks, generic discussion of possible parallelism, review, or verification.
+
+## Canonical loop contract
+
+This skill is one bounded ordinary-plan or DEFINE-tasks adapter. ROSE/`aili-delivery-flow` owns lifecycle state, artifact identity, approvals, progress, dispatch, and verification. Produce one dependency-ordered plan/task set and stop with `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Do not invoke spec, requirements, research, stress-test, implementation, TDD, review, or another process skill; return one named need to ROSE. No plan review/approval is added beyond material decisions and formal final `test-plan.md` acceptance. Canonical claim-matched verification overrides generic checklist commands.
 
 ## The Planning Process
 
@@ -105,7 +107,7 @@ Each task follows this structure:
 
 ### Prototype Before Committing to a Design
 
-Use a throwaway prototype only when it answers a concrete design question.
+Treat a throwaway prototype as a separately selected implementation action, not an automatic planning step. Use it only when explicitly in scope and it answers a concrete design question.
 
 Good prototype questions:
 - Does this state machine feel right?
@@ -148,22 +150,20 @@ Arrange tasks so that:
 
 1. Dependencies are satisfied (build foundation first)
 2. Each task leaves the system in a working state
-3. Verification checkpoints occur after every 2-3 tasks
+3. Verification points are attached only where a claim or dependency needs evidence
 4. High-risk tasks are early (fail fast)
 
 Add explicit checkpoints:
 
 ```markdown
 ## Checkpoint: After Tasks 1-3
-- [ ] All tests pass
-- [ ] Application builds without errors
-- [ ] Core user flow works end-to-end
-- [ ] Review with human before proceeding
+- [ ] The canonical owner selects the smallest check needed by the affected claim
+- [ ] Any material decision or exact risky operation is named before dependent work
 ```
 
 ### Plan Stress Test
 
-Before finalizing the plan or dispatching implementation work, use `strategy-stress-test`.
+Before finalizing, run this direct plan consistency checklist. Use a separate stress-test only on explicit user intent or one named material loophole selected by ROSE.
 
 Check whether:
 
@@ -186,7 +186,7 @@ Before assigning work to another agent, session, issue, or parallel lane, confir
 
 - each package has non-overlapping files or an explicit sequential dependency
 - shared contracts, schemas, APIs, and acceptance criteria are settled first
-- each package has a single owner, verification command, and blocked-by field
+- each package has a single owner, expected evidence, and blocked-by field; package boundaries do not mandate a command
 - risky work is marked `HITL` when it needs product, architecture, credential, migration, or release approval
 
 If any item is missing, stop and revise the plan; do not dispatch ambiguous or overlapping packages.
@@ -195,7 +195,7 @@ If any item is missing, stop and revise the plan; do not dispatch ambiguous or o
 
 | Trigger | First action | If still unresolved |
 |---|---|---|
-| Task is XL or touches independent subsystems | Split by vertical user-visible slice or dependency layer | Mark as `BLOCKED_OVERSIZED_TASK` and ask for scope reduction |
+| Task is XL or touches independent subsystems | Split by vertical user-visible slice or dependency layer | Mark as `BLOCKED_OVERSIZED_TASK` and return any material scope decision to ROSE |
 | Acceptance criteria cannot fit in 3 focused bullets | Separate behavior, edge cases, and verification into smaller tasks | Mark unclear criteria as `Open Question` |
 | Likely files overlap across parallel packages | Make the packages sequential or define a shared contract task first | Do not parallelize |
 | Task needs credentials, schema migration, release approval, or destructive action | Mark `HITL` and name the required approval/evidence | Block implementation until the human gate is cleared |
@@ -237,7 +237,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - [ ] Task 2: ...
 
 ### Checkpoint: Foundation
-- [ ] Tests pass, builds clean
+- [ ] Savepoint records completed scope, unresolved dependencies, and next task
 
 ### Phase 2: Core Features
 - [ ] Task 3: ...
@@ -252,7 +252,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 
 ### Checkpoint: Complete
 - [ ] All acceptance criteria met
-- [ ] Ready for review
+- [ ] Canonical owner has one claim-matched verification path
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
@@ -265,7 +265,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 
 ## Parallelization Opportunities
 
-When multiple agents or sessions are available:
+Include this section only when the user requests parallel work or at least two independent units have a clear wall-clock/context benefit. Otherwise omit it and keep the plan direct/serial.
 
 - **Safe to parallelize:** Independent feature slices, tests for already-implemented features, documentation
 - **Must be sequential:** Database migrations, shared state changes, dependency chains
@@ -277,7 +277,7 @@ When multiple agents or sessions are available:
 | Rationalization | Reality |
 |---|---|
 | "I'll figure it out as I go" | That's how you end up with a tangled mess and rework. 10 minutes of planning saves hours. |
-| "The tasks are obvious" | Write them down anyway. Explicit tasks surface hidden dependencies and forgotten edge cases. |
+| "The tasks are obvious" | When planning was explicitly requested, record only the dependency/order details that improve execution; do not manufacture ceremony. |
 | "Planning is overhead" | Planning is the task. Implementation without a plan is just typing. |
 | "I can hold it all in my head" | Context windows are finite. Written plans survive session boundaries and compaction. |
 
@@ -287,7 +287,7 @@ When multiple agents or sessions are available:
 - Tasks that say "implement the feature" without acceptance criteria
 - No verification steps in the plan
 - All tasks are XL-sized
-- No checkpoints between tasks
+- No savepoint where a long/resumable plan needs one
 - Dependency order isn't considered
 - Parallel dispatch before overlap, ownership, and verification are explicit
 - Blocked or oversized tasks passed to implementation without a fallback decision
@@ -299,6 +299,6 @@ Before starting implementation, confirm:
 - [ ] Every task has acceptance criteria
 - [ ] Every task has a verification step
 - [ ] Task dependencies are identified and ordered correctly
-- [ ] No task touches more than ~5 files
-- [ ] Checkpoints exist between major phases
-- [ ] The human has reviewed and approved the plan
+- [ ] Task boundaries follow dependencies and coherent behavior rather than an arbitrary file limit
+- [ ] Evidence points exist only where the affected claim needs them
+- [ ] Material decisions are resolved and formal final `test-plan.md` acceptance remains owned by the lifecycle

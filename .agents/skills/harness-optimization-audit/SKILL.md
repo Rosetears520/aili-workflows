@@ -1,6 +1,6 @@
 ---
 name: harness-optimization-audit
-description: Report-first audit for AILI/ROSE harness routing, context cost, review fan-out, subagent parallelism, trigger noise, false PASS risk, and evidence-loss risk. Use when optimizing harness quality or cost; do not edit core harness controls and route approved changes to harness-evolution.
+description: Report-first audit for AILI/ROSE harness routing, context cost, review fan-out, subagent parallelism, trigger noise, false PASS risk, and evidence-loss risk. Use when optimizing harness quality or cost; do not edit core harness controls or invoke another process skill.
 ---
 
 # Harness Optimization Audit
@@ -21,18 +21,14 @@ The default output is a report with evidence and recommendations. It is not an i
 
 ## Near Misses
 
-- User reports one concrete harness bug and wants localization: use `harness-issue-triage` first.
-- User has approved exact harness edits: use `harness-evolution` after this report, not this skill.
-- Ordinary product-code performance tuning: use `performance-optimization`.
-- Ordinary code review or coverage review: use `code-review-and-quality`, `review-pipeline`, or `coverage-review`.
-- False-success review for one implemented change: use `silent-failure-hunting` unless the question is about systemic harness routing or cost.
+- One concrete harness bug needing localization, approved harness edits, product-code performance, ordinary code/coverage review, or one-change false-success review are different primary intents. Return the exact mismatch and candidate owner to ROSE; do not invoke another skill here.
 
 ## Required Routing
 
-- Owner lane: `subagent:review` when delegated; ROSE may run it directly for a small report-only audit.
+- Owner: ROSE/`aili-delivery-flow`; direct report-only audit is the default, with one fresh read-only assignment only after a concrete benefit decision.
 - Mode: read-only report first.
 - Inputs: active user goal, relevant workflow files or docs, changed harness surfaces, observed failure or cost signal, current verification/review evidence, and any accepted OpenSpec or proposal constraints.
-- Handoff: approved edits to core harness controls route to `harness-evolution`; unlocalized defects route to `harness-issue-triage`.
+- Handoff: return an approved edit or unlocalized defect need to ROSE; ROSE separately selects the next bounded owner.
 
 ## Audit Dimensions
 
@@ -52,17 +48,19 @@ The default output is a report with evidence and recommendations. It is not an i
 
 ### 3. Subagent Parallelism
 
-- Are independent research, review, test, security, and implementation lanes dispatched in parallel when safe?
+- Was Task used only for explicit user request, a required specialist, materially noisy context, or at least two independent units with clear benefit?
+- Could ROSE have completed the work directly with less startup/reconciliation cost?
 - Are overlapping edit scopes, hidden dependencies, or shared mutable state forcing serial execution?
-- Are subagent packets complete enough to prevent rework and missing evidence?
+- Is each Task context single-use, fresh, terminal, non-delegating, and independently benefit-gated rather than resumed/retried?
+- Are packets compact but complete enough to prevent rework and missing evidence?
 - Are lane outputs reconciled by ROSE instead of copied as final truth?
 
 ### 4. Review-Pipeline Fan-Out
 
-- Are code, test, coverage, security, silent-failure, browser, E2E, and AI-regression lanes selected based on changed surface and risk?
-- Are irrelevant lanes skipped with a reason instead of being always-on?
-- Are relevant high-risk lanes missing because the change looked small?
-- Does the fix loop rerun only the lanes affected by the fix?
+- Does one primary review question use at most one auxiliary capability for a concrete gap instead of selecting a code/test/coverage/security/silent-failure/browser/E2E/AI-regression set?
+- Are unselected capabilities simply omitted rather than producing lane-selection ceremony?
+- Is a truly claim-required high-risk capability missing because the change looked small?
+- Does one targeted repair/recheck refresh only the affected claim instead of restarting review lanes?
 
 ### 5. False PASS and Evidence Loss
 
@@ -103,7 +101,7 @@ TRADEOFFS:
 - Risk introduced:
 
 APPROVED EDIT PATH:
-- No edit needed | route to harness-evolution | ask user for approval | run harness-issue-triage first
+- No edit needed | exact proposed edit and current approval state | exact read-only diagnosis need returned to ROSE
 
 VERIFICATION PLAN:
 - <fixture, smoke check, script, review lane, or manual/static check>

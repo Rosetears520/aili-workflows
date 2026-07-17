@@ -1,6 +1,6 @@
 ---
 name: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+description: Perform a bounded security design/hardening pass for explicit security or threat-model intent, or a concrete auth/authorization/secret/untrusted-input/file-upload/sensitive-data risk; do not trigger for every input, data store, third-party call, implementation, review, or release.
 ---
 
 # Security and Hardening
@@ -11,12 +11,13 @@ Security-first development practices for web applications. Treat every external 
 
 ## When to Use
 
-- Building anything that accepts user input
-- Implementing authentication or authorization
-- Storing or transmitting sensitive data
-- Integrating with external APIs or services
-- Adding file uploads, webhooks, or callbacks
-- Handling payment or PII data
+- The user explicitly asks for security review, hardening, or threat modeling.
+- The accepted scope changes authentication, authorization, sessions, secrets, permissions, sensitive/PII/payment data, uploads, or another named trust boundary.
+- A concrete untrusted-input or external-callback path has a material vulnerability question the primary owner cannot resolve inline.
+
+Near misses: ordinary validated form work, a routine API call, generic data storage, release preparation, or code review without a named security gap does not select this skill automatically.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, material decisions, exact security-sensitive operation approvals, and verification. This skill performs one bounded security loop and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It does not invoke review, audit, testing, source research, release, or another process skill. Exact auth/security/dependency/external/secret gates and canonical claim-matched verification override generic checklist breadth below.
 
 ## The Three-Tier Boundary System
 
@@ -29,7 +30,7 @@ Security-first development practices for web applications. Treat every external 
 - **Hash passwords** with bcrypt/scrypt/argon2 (never store plaintext)
 - **Set security headers** (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
 - **Use httpOnly, secure, sameSite cookies** for sessions
-- **Run `npm audit`** (or equivalent) before every release
+- **Use current dependency-advisory evidence** when the selected release/security claim needs it; never run a network-capable audit automatically
 
 ### Ask First (Requires Human Approval)
 
@@ -330,8 +331,8 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 
 | Trigger | First response | If unresolved |
 |---|---|---|
-| Security requirement conflicts with product request | Name the conflict and preserve the safer default | Ask for explicit product/security approval; do not silently weaken controls |
-| Audit finding has no patch | Check reachability and documented workaround | Track an allowlist with owner/review date or replace the dependency |
+| Security requirement conflicts with product request | Name the conflict and preserve the safer default | Return the exact product/security decision to ROSE; do not silently weaken controls |
+| Audit finding has no patch | Check reachability and documented workaround | Return allowlist-versus-dependency-change disposition to ROSE; do not mutate dependencies here |
 | Secret appears in diff/log | Stop, remove it from output, and tell the user rotation may be required | Do not commit or print more context; request incident handling guidance |
 | Upload/CORS/auth behavior cannot be verified | Report the unverified gate and keep restrictive behavior | Do not claim hardened/secure until evidence exists |
 
@@ -357,9 +358,9 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 
 ## Verification
 
-After implementing security-relevant code:
+For the selected affected security claim, use only applicable checks chosen by the canonical verification owner:
 
-- [ ] `npm audit` shows no critical or high vulnerabilities
+- [ ] Dependency audit evidence is present only when dependency/release risk makes it relevant
 - [ ] No secrets in source code or git history
 - [ ] All user input validated at system boundaries
 - [ ] Authentication and authorization checked on every protected endpoint

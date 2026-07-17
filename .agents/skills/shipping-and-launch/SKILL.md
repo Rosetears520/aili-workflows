@@ -1,6 +1,6 @@
 ---
 name: shipping-and-launch
-description: Prepares production launches. Use when preparing to deploy to production. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.
+description: Prepare an explicit production launch, staged rollout, launch-monitoring, or rollback plan; do not trigger from AILI SHIP, implementation completion, packaging, review, or release wording that lacks a concrete launch/rollout target.
 ---
 
 # Shipping and Launch
@@ -15,13 +15,19 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 - Releasing a significant change to users
 - Migrating data or infrastructure
 - Opening a beta or early access program
-- Any deployment that carries risk (all of them)
+- Explicitly planning monitoring, rollout thresholds, launch ownership, or rollback for a named release
+
+Near misses: `/ship` closeout, preparing a package/PR, ordinary deployment discussion, or completing implementation does not select this skill without concrete launch/rollout intent.
+
+ROSE/`aili-delivery-flow` owns lifecycle SHIP, material decisions, exact external/Git/release/deployment approvals, and verification. This skill performs one bounded launch-planning loop and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It does not invoke review, security, performance, documentation, deployment, or another process skill. Checklists are risk prompts, not automatic suites or second readiness authority; canonical claim-matched verification wins.
 
 ## The Pre-Launch Checklist
 
+Apply only rows relevant to the accepted launch claim and current project. Do not automatically run every test/review/security/performance/accessibility lane.
+
 ### Code Quality
 
-- [ ] All tests pass (unit, integration, e2e)
+- [ ] Claim-matched tests selected by the canonical owner pass
 - [ ] Build succeeds with no warnings
 - [ ] Lint and type checking pass
 - [ ] Code reviewed and approved
@@ -113,8 +119,8 @@ return null;
 
 ```
 1. DEPLOY to staging
-   └── Full test suite in staging environment
-   └── Manual smoke test of critical flows
+   └── Run only affected integration/smoke checks required by the launch claim
+   └── Check critical flows when they are in scope
 
 2. DEPLOY to production (feature flag OFF)
    └── Verify deployment succeeded (health check)
@@ -152,7 +158,7 @@ Use these thresholds to decide whether to advance, hold, or roll back at each st
 
 ### 🔴 CHECKPOINT / 🛑 STOP: Deploy Gate
 
-Do not deploy until all of these are true:
+Do not execute a deployment without exact operation approval. For a requested readiness plan, resolve only the applicable launch-owner evidence:
 
 - production owner, monitoring owner, and rollback owner are named
 - health check, error-rate dashboard, latency dashboard, and critical-flow smoke test are ready
@@ -308,7 +314,7 @@ Do not start or claim a rollback is ready until the rollback path is known and e
 
 ## Verification
 
-Use `verification-before-completion` before claiming a launch, rollout, rollback, or post-launch check is complete, passing, verified, or ready; cite fresh deploy, monitoring, health-check, or rollback evidence.
+The canonical lifecycle/ordinary-task owner selects the smallest fresh deploy, monitoring, health-check, or rollback evidence supporting the exact claim; this skill creates no additional completion gate.
 
 Before deploying:
 

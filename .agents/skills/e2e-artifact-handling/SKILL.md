@@ -5,7 +5,7 @@ description: E2E artifact handling routing. Use when traces, videos, screenshots
 
 # E2E Artifact Handling
 
-Use this skill to route E2E evidence collection or packaging to `e2e-artifact-runner`.
+Use this skill to define one bounded E2E evidence-collection/packaging need. ROSE may assign it to one fresh `e2e-artifact-runner` context after the delegation gate; this skill does not dispatch or invoke another process skill.
 
 ## Trigger
 
@@ -22,11 +22,9 @@ Use this skill to route E2E evidence collection or packaging to `e2e-artifact-ru
 
 ## Near Misses
 
-- Browser manual QA without durable artifacts: `browser-qa`.
-- Test design or unit/integration verification: `test-engineer`.
-- Coverage sufficiency review: `coverage-review`.
+- Browser QA without durable artifacts, test design/unit/integration verification, or coverage review are different primary intents; return the exact mismatch to ROSE.
 
 ## Required Routing
 
-- Owner lane: `subagent:test`.
-- Agent: `e2e-artifact-runner`.
+- Canonical owner: ROSE/`aili-delivery-flow`; direct artifact handling is preferred when no specialist context is needed.
+- Optional agent: one fresh, terminal `e2e-artifact-runner` assignment after a new benefit decision; no resume, automatic retry, or final-verdict ownership.

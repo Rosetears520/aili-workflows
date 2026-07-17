@@ -1,6 +1,6 @@
 ---
 name: mature-project-pattern-research
-description: Research mature public project patterns before方案/implementation for IDEATE, DEFINE, BUILD planning, or ordinary chat prior-art needs such as "看看别人怎么做", "GitHub 上别人怎么做", "look at how others do it", "reference mature projects", "how do mature projects handle this?", "compare prior art", industry/GitHub similar projects, or explicit user-requested research; wraps read-only web-researcher evidence and does not trigger for GitHub issue/PR triage, local code-only review, implementation, or command creation.
+description: Research one bounded mature-project/prior-art question when the user explicitly asks how established projects handle it or ROSE names a decision-shaping prior-art gap; do not trigger automatically for IDEATE, DEFINE, BUILD, implementation, local review, or every design choice.
 ---
 
 # Mature Project Pattern Research
@@ -9,9 +9,16 @@ description: Research mature public project patterns before方案/implementation
 
 Use this skill when a user needs source-grounded prior art from mature public projects before choosing a design, workflow, API shape, repository convention, or implementation pattern.
 
-It owns the industry/GitHub/mature-project prior-art lane of the research-first planning gate. Official/API documentation belongs to `source-driven-development`; local repository facts belong to `repo-evidence-first`; user-facing方案 clarification/write-back belongs to `requirements-grilling`; test-plan artifacts belong to `test-document-generator`.
+This skill owns one bounded prior-art result only. ROSE/`aili-delivery-flow` owns local evidence, lifecycle state, material decisions, approvals, writeback, and verification.
 
-This is a skill-first workflow. It coordinates research through the existing read-only `web-researcher` subagent when external evidence is needed. It does not add a `/research` command, GitHub MCP dependency, dedicated agent, or vendored external skill content.
+Work directly when the available tools can answer the bounded question. Return a named auxiliary research need to ROSE only when external evidence would materially pollute context or requires a specialist; this skill never dispatches or invokes another skill. It adds no command, dependency, agent, or vendored content.
+
+## Canonical loop contract
+
+- **Positive trigger:** explicit "看看别人怎么做"/prior-art/comparison request, or one named material design gap that mature public examples can answer.
+- **Near miss:** general planning, official API docs, local code patterns, implementation, GitHub issue/PR triage, or curiosity with no decision target.
+- **Bounded stop:** answer one research question with a small source set, then return `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified` to ROSE.
+- **No chain/gate:** do not invoke official-doc, local-evidence, requirements, test-plan, stress-test, or implementation workflows. Research creates no scheme acceptance or extra approval; canonical lifecycle approval and verification rules win.
 
 ## When to Use
 
@@ -26,16 +33,15 @@ Use for requests like:
 - "Compare established patterns in public projects."
 - "What patterns should we copy or avoid from mature tools?"
 - "Research industry/GitHub similar projects before we decide."
-- BUILD or implementation planning where mature examples can materially change the方案, architecture, UX, workflow, packaging, or implementation pattern.
 - Any explicit user request to research, compare, or source public-project approaches before implementation.
-- IDEATE-stage exploration that needs evidence from public projects.
+- A named decision-shaping gap in an existing IDEATE/DEFINE loop that cannot be resolved from current local/official evidence.
 
 External public-project lookup is allowed only when the current user request, task packet, or project contract allows source lookup. Never send secrets, private data, proprietary code, or sensitive repository context to external search; if external lookup is not allowed, use local/offline evidence and mark remaining prior-art gaps `Unverified`.
 
 Do not use for:
 
-- triaging a specific GitHub issue or PR; use `github-evidence-triage`
-- local repository-only evidence; use `repo-evidence-first` and local read-only search
+- triaging a specific GitHub issue or PR; return that narrower evidence-triage mismatch to ROSE
+- local repository-only evidence; inspect the targeted local owners directly
 - local code review; use the repository's review workflow
 - implementing the chosen pattern; use the relevant implementation workflow after a decision is made
 - broad web summaries without source anchors
@@ -70,14 +76,14 @@ Mark any unavailable signal as `[UNVERIFIED]`; do not infer maturity from popula
 
 1. Restate the research question and decision the user is trying to make.
 2. Define scope: domain, project types to compare, excluded sources, and minimum evidence needed.
-3. 🔴 CHECKPOINT / 🛑 STOP: confirm the scope with the user when the domain, comparison set, excluded sources, or decision target is ambiguous. Do not dispatch broad research until scope is confirmed.
-4. If external evidence is needed, ask ROSE to dispatch `web-researcher` with a narrow, read-only task packet that requests sources, maturity signals, pattern evidence, risks, and uncertainty.
+3. Ask one decision-shaped scope question only when the ambiguity can materially change the comparison; otherwise choose the narrowest evidence set and state the boundary.
+4. Research directly. If a specialist/noisy-context gap exists, return that exact auxiliary need to ROSE and stop.
 5. Compare at least two mature public examples when practical. If only one credible example is found, label the result `PARTIAL`.
 6. Extract patterns, not vendor text: describe the approach in your own words and cite evidence anchors.
 7. Separate applicable patterns from not-recommended patterns and explain fit for the current project or decision context.
 8. Feed the evidence into an evidence-backed方案: applicable patterns, rejected patterns, fit rationale, risks, assumptions, and `UNVERIFIED` gaps.
 9. State license, security, maintenance, complexity, and adoption risks.
-10. Recommend the next decision or follow-up question; do not proceed to implementation until the方案 is accepted, waived, or explicitly accepted as `UNVERIFIED` by the user.
+10. Recommend the next decision and return to ROSE; do not implement, request scheme acceptance, or continue into another process loop.
 
 See `references/research-rubric.md` for the compact scoring rubric and delegation packet.
 
@@ -98,7 +104,7 @@ See `references/research-rubric.md` for the compact scoring rubric and delegatio
 | No credible mature sources found | Return `STATUS: NOT_FOUND` with searched source types and queries | Ask the user to broaden scope or accept a hypothesis-only exploration |
 | Only one credible example found | Return `STATUS: PARTIAL`; separate supported pattern from `[UNVERIFIED]` fit claims | Do not generalize it as an industry pattern |
 | Sources conflict | Return `STATUS: PARTIAL`; list the conflict, source dates, and maturity signals | Ask for a decision criterion before recommending |
-| User scope is ambiguous | Ask a focused scope question before dispatch | If the user declines, state the chosen narrow assumption and mark it `[UNVERIFIED]` |
+| User scope is ambiguous | Return the focused scope decision to ROSE before research | If unresolved, stop `need-user`; do not dispatch or invent a scope |
 
 ## Output Contract
 

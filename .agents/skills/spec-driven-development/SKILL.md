@@ -1,6 +1,6 @@
 ---
 name: spec-driven-development
-description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea.
+description: Create or materially revise a durable specification when the user explicitly requests a spec/new feature contract or a named ambiguity requires formal DEFINE; do not trigger for ordinary bounded edits, implementation, task breakdown alone, review, or documentation of already-settled behavior.
 ---
 
 # Spec-Driven Development
@@ -11,23 +11,25 @@ Write a structured specification before writing any code. The spec is the shared
 
 ## When to Use
 
-- Starting a new project or feature
-- Requirements are ambiguous or incomplete
-- The change touches multiple files or modules
-- You're about to make an architectural decision
-- The task would take more than 30 minutes to implement
+- The user explicitly asks for a specification or formal feature/change contract.
+- A named material ambiguity requires durable scope, behavior, interface, or acceptance decisions before implementation.
+- A new project/feature has no current formal contract and the ordinary/formal classifier selects DEFINE.
 
-**When NOT to use:** Single-line fixes, typo corrections, or changes where requirements are unambiguous and self-contained.
+**When NOT to use:** Ordinary bounded edits, multi-file work with clear acceptance, task breakdown from an existing spec, implementation, review, or docs-only explanation.
+
+## Canonical loop contract
+
+This skill is a bounded adapter to the ordinary specification or canonical DEFINE loop. ROSE/`aili-delivery-flow` owns change identity, lifecycle state, approvals, progress, and verification. Produce only the next dependency-ready spec artifacts, reread each write once, and stop with `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Do not invoke planning, requirements, research, test-plan, TDD, implementation, review, or another process skill. Return a named need to ROSE. Lifecycle approval and claim-matched verification rules override generic upstream phase/checklist wording.
 
 ## The Validated Workflow
 
-Spec-driven development has four phases. Validate each before advancing. Formal AILI work maps SPECIFY/PLAN/TASKS to the active backend's canonical artifacts (for OpenSpec: proposal/specs/design/tasks/interview/context/test-plan) through `aili-delivery-flow`; do not create upstream `tasks/plan.md`, `tasks/todo.md`, public commands, or parallel approval authorities.
+Spec-driven development supplies SPECIFY/PLAN/TASKS techniques. Formal AILI work maps them to dependency-ready canonical artifacts through `aili-delivery-flow`; it does not own IMPLEMENT, create upstream task files, public commands, or parallel approval authorities.
 
 ```
-SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
+SPECIFY ──→ PLAN ──→ TASKS ──→ HANDOFF
    │          │        │          │
    ▼          ▼        ▼          ▼
- Validate   Validate Validate   Verify
+ Validate   Validate Validate   Return to owner
 ```
 
 🔴 **CHECKPOINT · AILI lifecycle gate:** phase validation may require clarification or revision, but is not a separate mandatory lifecycle approval. Resolve or label material `Open Question` / `Unverified` items, persist/re-read canonical artifacts, and preserve final accepted `test-plan.md` as the sole mandatory pre-BUILD user approval. Silence, inferred intent, drafts, and upstream phase language are never approval.
@@ -55,24 +57,24 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 
 | Trigger condition | First response | If still unresolved |
 |---|---|---|
-| User asks for a broad feature with no success criteria | Draft 2-4 concrete success criteria and ask the user to accept or edit them | Keep the item as `Open Question`; do not proceed to PLAN |
-| Architecture, data model, security, or migration behavior is unclear | List the competing options and the tradeoff of each | Add the decision to `Ask First` boundaries and stop before implementation |
-| Existing code/docs conflict with the user's description | Cite the conflicting evidence and ask which source wins | Mark the conflict `Unverified`; do not choose silently |
-| The spec would require public API, dependency, schema, or deployment changes | Move the change into `Ask First` and request explicit approval | Block implementation tasks until approval is recorded |
+| User asks for a broad feature with no success criteria | Draft 2-4 concrete success criteria and return the decision to ROSE | Keep the item as `Open Question`; do not proceed to PLAN |
+| Architecture, data model, security, or migration behavior is unclear | List the competing options and tradeoffs for ROSE | Return `need-user` or `material-delta`; stop before implementation |
+| Existing code/docs conflict with the user's description | Cite the conflict and return the source-of-truth decision to ROSE | Mark the conflict `Unverified`; do not choose silently |
+| The spec would require public API, dependency, schema, or deployment changes | Return the exact material/risky decision or operation to ROSE | Block implementation tasks until the canonical approval is recorded |
 
-**Write a spec document covering these six core areas:**
+Use only the sections needed by the current specification. Objective/success and material boundaries are normally required; commands, structure, style, and testing sections are conditional rather than a six-section completion form:
 
 1. **Objective** — What are we building and why? Who is the user? What does success look like?
 
-2. **Commands** — Full executable commands with flags, not just tool names.
+2. **Commands, when setup or verification is affected** — Use current project-documented commands with flags, not generic defaults.
    ```
-   Build: npm run build
-   Test: npm test -- --coverage
-   Lint: npm run lint --fix
-   Dev: npm run dev
+   Build: <project command, if applicable>
+   Test: <claim-matched command, if applicable>
+   Lint: <project command, if applicable>
+   Dev: <project command, if applicable>
    ```
 
-3. **Project Structure** — Where source code lives, where tests go, where docs belong.
+3. **Project Structure, when placement changes** — Where affected source, tests, or docs belong.
    ```
    src/           → Application source code
    src/components → React components
@@ -82,14 +84,11 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
    docs/          → Documentation
    ```
 
-4. **Code Style** — One real code snippet showing your style beats three paragraphs describing it. Include naming conventions, formatting rules, and examples of good output.
+4. **Code Style, when a new pattern is introduced** — Prefer one current repository example over generic prose.
 
-5. **Testing Strategy** — What framework, where tests live, coverage expectations, which test levels for which concerns.
+5. **Testing Strategy, when acceptance needs it** — Name only the checks and placement needed by the affected behavior.
 
-6. **Boundaries** — Three-tier system:
-   - **Always do:** Run tests before commits, follow naming conventions, validate inputs
-   - **Ask first:** Database schema changes, adding dependencies, changing CI config
-   - **Never do:** Commit secrets, edit vendor directories, remove failing tests without approval
+6. **Material boundaries** — Reference canonical rules for exact dependency, schema, auth/security, external, destructive, Git, and release gates instead of duplicating a generic checklist.
 
 **Spec template:**
 
@@ -142,7 +141,7 @@ This lets you loop, retry, and problem-solve toward a clear goal rather than gue
 
 ### Spec Loophole Pass
 
-After the first SPECIFY draft and before moving to PLAN, use `strategy-stress-test`.
+After the first SPECIFY draft, run the following direct loophole checklist. Invoke no separate stress-test unless the user explicitly requested it or ROSE identified a concrete material loophole.
 
 Check whether:
 
@@ -193,9 +192,9 @@ Break the plan into discrete, implementable tasks:
   - Files: [Which files will be touched]
 ```
 
-### Phase 4: Implement
+### Phase 4: Implementation Handoff
 
-Execute tasks one at a time following `incremental-implementation` and `test-driven-development` skills. Use `context-engineering` to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
+Return implementation readiness and the next dependency to ROSE. Implementation uses the canonical ordinary/BUILD owner; this skill does not invoke incremental, TDD, context, or other process skills.
 
 ## Keeping the Spec Alive
 
@@ -203,7 +202,7 @@ The spec is a living document, not a one-time artifact:
 
 - **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
 - **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Commit the spec** — The spec belongs in version control alongside the code.
+- **Version the spec when authorized** — The spec belongs in version control, but commit remains an exact Git operation approval.
 - **Reference the spec in PRs** — Link back to the spec section that each PR implements.
 
 ## Common Rationalizations
@@ -228,9 +227,9 @@ The spec is a living document, not a one-time artifact:
 
 Before proceeding to implementation, confirm:
 
-- [ ] The spec covers all six core areas
-- [ ] Canonical spec artifacts have been reviewed and validated
+- [ ] The directly applicable behavior, acceptance, and material boundaries are specified
+- [ ] Only dependency-ready canonical artifacts were written and reread
 - [ ] Success criteria are specific and testable
-- [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The spec is saved to a file in the repository
+- [ ] Open questions and `Unverified` items remain explicit
+- [ ] The lifecycle owner selected any required structural validation
 - [ ] For formal AILI work, the final `test-plan.md` has explicit user acceptance before implementation

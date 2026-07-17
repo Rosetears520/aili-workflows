@@ -1,6 +1,6 @@
 ---
 name: performance-optimization
-description: Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
+description: Optimize a measured performance problem when the user names a latency/load/Core Web Vitals/resource target or current profiling evidence identifies a bottleneck; do not trigger from generic implementation, review, or an unsupported suspicion that code may be slow.
 ---
 
 # Performance Optimization
@@ -43,15 +43,15 @@ Do not optimize because a change "seems faster" or an anti-pattern is familiar. 
 
 ### Step 1: Measure
 
-Two complementary approaches — use both:
+Choose the smallest measurement source that can establish the accepted performance claim; use both only when the claim explicitly spans lab reproducibility and real-user impact:
 
 - **Synthetic (Lighthouse, OpenCode Playwright/browser tooling, DevTools Performance tab):** Controlled conditions, reproducible. Best for CI regression detection and isolating specific issues.
-- **RUM (web-vitals library, CrUX):** Real user data in real conditions. Required to validate that a fix actually improved user experience.
+- **RUM (web-vitals library, CrUX):** Real-user data in real conditions. Use when the claim concerns production/user impact and current policy allows the data source.
 
 **Frontend:**
 ```bash
 # Synthetic: Lighthouse in CI/manual runs
-# OpenCode: use browser-testing-with-devtools / Playwright tooling for runtime evidence
+# OpenCode: return a concrete direct-browser evidence need to ROSE when runtime UI measurement is the smallest sufficient path
 # Manual reference: Chrome DevTools → Performance tab → Record
 
 # RUM: Web Vitals library in code
@@ -337,7 +337,7 @@ Use the workflow, bottleneck tables, budget, and verification checklist in this 
 | "We'll optimize later" | Performance debt compounds. Fix obvious anti-patterns now, defer micro-optimizations. |
 | "It's fast on my machine" | Your machine isn't the user's. Profile on representative hardware and networks. |
 | "This optimization is obvious" | If you didn't measure, you don't know. Profile first. |
-| "Users won't notice 100ms" | Research shows 100ms delays impact conversion rates. Users notice more than you think. |
+| "Users won't notice this delay" | Do not assume impact; compare the named budget or representative measurement. |
 | "The framework handles performance" | Frameworks prevent some issues but can't fix N+1 queries or oversized bundles. |
 
 ## Red Flags
@@ -353,12 +353,12 @@ Use the workflow, bottleneck tables, budget, and verification checklist in this 
 
 ## Verification
 
-After any performance-related change:
+For the selected measured performance claim, apply only relevant rows and let the canonical owner choose the final evidence:
 
 - [ ] Before and after measurements exist (specific numbers)
 - [ ] The specific bottleneck is identified and addressed
-- [ ] Core Web Vitals are within "Good" thresholds
-- [ ] Bundle size hasn't increased significantly
-- [ ] No N+1 queries in new data fetching code
+- [ ] Core Web Vitals are checked only when a Web Vitals claim is in scope
+- [ ] Bundle size is checked only when the changed bundle path is in scope
+- [ ] Query count is checked only when data-fetching/database behavior is in scope
 - [ ] Performance budget passes in CI (if configured)
-- [ ] Existing tests still pass (optimization didn't break behavior)
+- [ ] Behavior-regression evidence is run only when the exact changed claim requires it

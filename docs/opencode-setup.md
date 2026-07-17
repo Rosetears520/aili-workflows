@@ -141,7 +141,7 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 
 Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
 
-The canonical role inventory is primary ROSE plus 19 repository-managed subagents. All 19 managed profiles retain `external_directory: deny`; only ROSE has per-operation external-directory ask. `web-researcher` remains the web-only research role: its web capability does not grant external local-directory, mutation, or delegation access. Built-in `explore` and `general` are outside this managed inventory.
+The canonical role inventory is primary ROSE plus 19 repository-managed subagents. Every concrete Task context is single-use: one bounded assignment, one terminal result or failure, and no old-`task_id` follow-up, repair, recheck, clarification, continuation, or automatic retry. A later same-type Task must start fresh and independently pass the direct-first benefit gate. All 19 managed profiles remain non-delegating and retain `external_directory: deny`; only ROSE has per-operation external-directory ask and lifecycle/integration/final-verdict authority. `web-researcher` remains the web-only research role: its web capability does not grant external local-directory, mutation, or delegation access. Built-in `explore` and `general` are outside this managed inventory.
 
 ## Installation Decision Rule
 
@@ -177,6 +177,14 @@ OpenCode config sync is enabled by default for both `install` and `update`; use 
 Interactive `rose-aili install` asks, in order, about the default agent, a missing model override, Playwright MCP, CodeGraph OpenCode integration, and OpenSpec. Interactive `rose-aili update` asks only the CodeGraph integration question. Non-interactive setup performs optional integration work only for explicit enable flags. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
 
 AILI has no active DCP integration. `install`, `update`, and `doctor` do not install, detect, configure, report, migrate, or remove a third-party DCP plugin and do not read or mutate user `dcp.json`/`dcp.jsonc`. Former DCP flags are ordinary unknown options. Historical DCP evidence may remain in archived ideas, accepted-change history, or negative fixtures, but it is not setup/runtime authority.
+
+### Retired Skill Reconciliation
+
+`using-agent-skills`, `repo-evidence-first`, and `verification-before-completion` are no longer runnable or default-installed skills. Fresh install and doctor requirements come from the current component manifest and omit them.
+
+An explicit `install` or `update`, including `--dry-run`, checks only those three exact destinations under `$HOME/.agents/skills`. The installer proves managed ownership only when the destination is a symlink whose resolved target exactly equals `<AILI_HOME>/.agents/skills/<retired-name>`. A proven link is reported and unlinked (or reported as a planned unlink in dry-run). A copied directory, ordinary file, unreadable/modified symlink, different target, or any other ambiguous entry is preserved and reported; the installer never removes a sibling, parent directory, backup, or user file. The CLI exposes the per-name result under `componentInstall.retiredSkillReconciliation`. Doctor adds no stale-copy result field.
+
+Do not manually delete an ambiguous retired-name entry. Review it separately and decide whether it is user content. Rolling back to a prior repository/package version may reinstall that version's managed catalog through the normal installer, but cannot reconstruct user-owned content from guesses.
 
 CodeGraph opt-in is explicit: `rose-aili install --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`. Restart OpenCode after a configured CodeGraph install so OpenCode reloads the MCP integration. If either command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports CodeGraph recovery instructions separately.
 
@@ -261,7 +269,7 @@ WSL/Linux recommended command:
 scripts/install_opencode.sh --mode selective
 ```
 
-Equivalent WSL/Linux logic:
+Core WSL/Linux entry-linking logic is shown below for reference. It does not implement the exact retired-skill ownership reconciliation above; use the CLI or `scripts/install_opencode.sh` for install/update migration.
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -684,14 +692,15 @@ Cross-root delegation also fails closed against exact OpenCode `1.17.18` behavio
 
 Graphify remains a separate operation. A real or synthetic process starts only after explicit approval for that exact operation and successful provenance, advisory, network-denial, isolated-environment, argv, output-root, and write-inventory controls. Missing control means blocked/`Unverified` before process start; Graphify is never installation, command routing, scheduled behavior, or completion evidence.
 
-Typical intent mapping:
+Typical intent mapping selects one primary loop rather than a default skill chain:
 
-- Feature work: `spec-driven-development`, then `incremental-implementation` and `test-driven-development`.
-- Planning: `planning-and-task-breakdown`.
-- Build, typecheck, lint, test, or CI failure: `build-failure-repair`.
-- Review: `code-review-and-quality`.
-- UI work: `frontend-ui-engineering`.
-- Memory continuity: `rose-memory`.
+- Explicit specification or a named material contract gap: `spec-driven-development`.
+- Explicit task/package planning: `planning-and-task-breakdown`.
+- Accepted implementation that benefits from coherent slices: `incremental-implementation`; ROSE separately selects `test-driven-development` only for explicit TDD, accepted reproduction-first proof, or a named high-risk red/green need.
+- One concrete build, typecheck, lint, test, packaging, or CI failure: `build-failure-repair`.
+- Explicit bounded review: `code-review-and-quality`.
+- App UI as the primary deliverable: `frontend-ui-engineering`.
+- Explicit project-local memory continuity: `rose-memory`.
 
 ## Memory Setup
 

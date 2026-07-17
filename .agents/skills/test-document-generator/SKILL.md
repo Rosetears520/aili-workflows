@@ -1,6 +1,6 @@
 ---
 name: test-document-generator
-description: Generate a repository-local, evidence-grounded Markdown test document from specs, proposals, evidence-backed方案, plans, issues, or user descriptions; ask only for missing product decisions, map requirements/research risks/UNVERIFIED planning gaps to test cases, and persist the test plan before summarizing.
+description: Generate or materially revise a repository-local test plan, QA plan, acceptance matrix, or regression checklist on explicit request or when one concrete testability gap blocks formal DEFINE; do not trigger for ordinary implementation, test execution, TDD, review, or completion claims.
 ---
 
 # Test Document Generator
@@ -11,9 +11,17 @@ Use this skill to generate a durable Markdown test document, test matrix, accept
 
 This skill writes testing documentation. It does not replace `test-driven-development`, which writes or runs automated tests.
 
-In the AILI lifecycle, `aili-delivery-flow` owns when DEFINE must produce or confirm a test document before BUILD. This skill owns only the test-document artifact generation rules.
+In the AILI lifecycle, `aili-delivery-flow` owns mode, approvals, progress, and verification. This skill owns only one bounded test-document artifact loop.
 
-For the research-first planning gate, this skill owns testability mapping only. Official/API evidence belongs to `source-driven-development`; mature public-project prior art belongs to `mature-project-pattern-research`; local repository facts belong to `repo-evidence-first`; user-facing方案 approval/waiver belongs to `requirements-grilling` or the active lifecycle workflow.
+If a material product decision or exact source gap prevents testability, return that need to ROSE. Do not invoke requirements, source, prior-art, stress-test, TDD, review, or another process skill.
+
+## Canonical loop contract
+
+- **Positive trigger:** explicit test-plan/QA/acceptance-matrix/regression-checklist intent, or one named missing testability decision in formal DEFINE.
+- **Near miss:** writing/running tests, fixing a bug, checking coverage, reviewing a diff, or implementing a feature does not trigger document generation by itself.
+- **Owner/handoff:** produce the artifact under the current ordinary/DEFINE owner, then return its path, coverage, and exact gap to ROSE.
+- **Bounded stop:** one source-grounding pass, one direct consistency pass, one write/re-read; stop `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`.
+- **Precedence:** lifecycle approval and claim-matched verification rules win. The draft, research summary, or generated packet creates no extra approval or completion authority.
 
 ## When to Use
 
@@ -41,9 +49,9 @@ Do not ask questions that can be answered from repository code, docs, specs, tes
 
 ## Output Placement Contract
 
-When generating a test document, OpenSpec change output is the only deterministic no-question placement. For every non-OpenSpec source, including a single source document with an obvious sibling path, ask where to place the output before writing. Generate the draft, run the stress-test pass, repair the document, persist the final document, then summarize the path in chat.
+OpenSpec change output is the only deterministic no-question placement. For non-OpenSpec output without an approved project-local location, ask one placement decision. Generate the draft, run this skill's direct consistency pass, persist, reread once, then summarize the path.
 
-🔴 STOP before writing when the source is non-OpenSpec, the target path is ambiguous, the target already exists, or workspace/file permissions are uncertain. Ask the placement or merge question first; do not infer a path or overwrite.
+🔴 STOP before writing when a non-OpenSpec placement is unresolved, existing target ownership/scope conflicts, or workspace permissions are uncertain. An existing owned target is updated by scoped merge; existence alone does not create another question.
 
 Target path resolution:
 
@@ -62,7 +70,7 @@ Target path resolution:
 
 Target-exists merge fallbacks:
 
-- If an existing `test-plan.md` has the same section structure, merge new cases into matching sections and append a dated entry under `## 17. 变更记录`.
+- If an existing `test-plan.md` has the same section structure, merge affected rows into matching sections and append a dated entry to its existing change-record section when present.
 - If the existing target uses a different structure, add `## New Revision: <date/change>` and preserve the original content unchanged above it.
 - If merging would contradict accepted scope, requirements, or prior test history, stop and ask whether to supersede, append a revision, or choose a different target.
 
@@ -89,8 +97,8 @@ Chat response after persistence should include only:
 ### Phase A: Source Grounding
 
 1. Read the user-provided spec, plan, proposal, issue, PR description, or pasted description.
-2. If the source is an OpenSpec change, read `proposal.md`, `design.md`, `tasks.md`, and `specs/` when present.
-3. When needed, inspect related code, existing tests, README, package scripts, CI docs, API contracts, official-doc evidence, or prior-art research summaries to ground testability.
+2. If the source is an OpenSpec change, read only the requirement/decision/task dependencies needed by this test-plan revision.
+3. When needed, inspect only related code, existing tests, commands, contracts, or already-approved source evidence needed to ground testability.
 4. Build an evidence table that separates observed facts, official/API facts, prior-art patterns, rejected patterns, inferences, assumptions, open questions, and unverified claims.
 5. Do not ask the user for information that reliable source grounding can answer.
 
@@ -105,21 +113,21 @@ Ask the user only when a missing decision materially affects the test document, 
 - data lifecycle, retention, migration, or cleanup rules
 - supported platforms, browsers, versions, or integrations
 
-Small gaps can be recorded as `Open Question` without blocking document generation. For critical gaps, include a `需要你确认的问题` table in the document.
+Small gaps can be recorded as `Open Question` without blocking document generation. Return one material testability decision to ROSE; use a bounded question table only when several known independent blockers are cheaper to answer together.
 
 ### Phase C: Generate Test Document
 
-Generate a complete Markdown draft using the template below or `references/test-document-template.md`. Every test point must map back to a requirement, risk, decision, official-doc constraint, prior-art pattern, rejected option, assumption, `Unverified` item, or evidence source. For formal changes, the requirements/decisions/risks traceability matrix is mandatory and must include task/package, file/artifact, verification/evidence, and coverage status columns. Keep facts, inferences, assumptions, and unverified items separate; unresolved mapping gaps must be labeled `Open Question` or `Unverified`.
+Generate a compact Markdown draft using `references/test-document-template.md`. Every selected check maps to a requirement, risk, decision, assumption, `Unverified` item, or evidence source. For formal changes, keep the affected requirements/decisions/risks traceability needed by the acceptance decision; omit empty test levels and unrelated generic dimensions. Keep facts, inferences, assumptions, and unverified items separate.
 
-The document is both a plan and the durable execution ledger. Include sections for automation commands, manual checks, run history, defect/fix/retest closure, and change history even when they start empty.
+The document is a plan and may become the durable execution ledger. Include only applicable automation/manual checks; add run history, defect/fix/retest closure, or change history when entries exist or the user explicitly requests that ledger. Do not create empty ceremony.
 
-### Phase D: Stress-Test
+### Phase D: Direct Consistency Check
 
-Use `strategy-stress-test` to check whether the document misses failure paths, permission boundaries, data problems, regression scope, acceptance standards, or executable test cases.
+Inspect directly whether the document misses material failure paths, permission boundaries, data problems, regression scope, acceptance standards, or executable checks. Do not invoke another process skill automatically.
 
-🔴 STOP before persistence if the stress-test exposes an unhandled critical gap, ungrounded assumption, missing acceptance threshold, or test case that cannot be executed or labeled `Unverified`.
+🔴 STOP before persistence if this pass exposes an unhandled material gap, ungrounded assumption, missing acceptance threshold, or check that cannot be executed or labeled `Unverified`.
 
-Repair the document after stress-testing and before persistence.
+Repair the document in scope before persistence or return the exact blocker to ROSE.
 
 ### Phase E: Persist and Report
 
@@ -130,97 +138,7 @@ Repair the document after stress-testing and before persistence.
 
 ## Test Document Template
 
-```markdown
-# 测试文档：<feature/change-name>
-
-## 0. 文档元信息
-- 来源：
-- 生成时间：
-- 适用版本 / 分支：
-- 测试负责人：
-- 状态：draft / reviewed / accepted
-
-## 1. 资料来源与证据
-| 来源 | 已检查内容 | 观察到的事实 | 置信度 | 备注 |
-|---|---|---|---|---|
-
-## 2. 被测对象与测试目标
-- 被测对象：
-- 用户目标：
-- 业务目标：
-- 技术目标：
-- 不测试内容：
-
-## 3. 测试范围
-### In Scope
-### Out of Scope
-### Assumptions
-### Open Questions
-
-## 4. 需求-测试追踪矩阵
-| 需求 / 决策 / 风险 | 来源 | 任务 / Package | 文件 / Artifact | 验证命令 / 检查 | 证据 | 覆盖状态 |
-|---|---|---|---|---|---|---|
-
-## 5. 测试策略
-- 单元测试：
-- 集成测试：
-- E2E / 浏览器测试：
-- API / 契约测试：
-- 手工验收：
-- 回归测试：
-- 非功能测试：
-
-## 6. 测试环境与测试数据
-- 环境：
-- 依赖服务：
-- 测试账号 / 权限：
-- 测试数据：
-- 数据清理方式：
-
-## 7. 功能测试用例
-| ID | 场景 | 前置条件 | 步骤 | 预期结果 | 优先级 | 自动化建议 | 来源 |
-|---|---|---|---|---|---|---|---|
-
-## 8. 异常、边界与权限测试
-| ID | 类型 | 场景 | 输入 / 操作 | 预期结果 | 风险 |
-|---|---|---|---|---|---|
-
-## 9. 数据一致性 / 迁移 / 兼容性测试
-## 10. 性能、稳定性、安全、可观测性测试
-## 11. 回归范围
-
-## 12. 自动化验证命令
-
-| 层级 | 命令 | 目的 | 必须执行 | 备注 |
-|---|---|---|---|---|
-| Unit |  |  | yes/no |  |
-| Integration |  |  | yes/no |  |
-| CLI |  |  | yes/no |  |
-| API / Contract |  |  | yes/no |  |
-| GUI / Browser |  |  | yes/no |  |
-| Regression |  |  | yes/no |  |
-
-## 13. 手工验收清单
-
-- [ ]
-
-## 14. Open Questions / Unverified
-
-| 类型 | 内容 | 影响 | 处理方式 |
-|---|---|---|---|
-
-## 15. 测试执行记录
-
-| Run ID | 时间 | 执行者 | 测试层级 | 命令 / 工具 | 结果 | 关键证据 | 未验证项 |
-|---|---|---|---|---|---|---|---|
-
-## 16. 缺陷与修复闭环
-
-| Bug ID | 来源测试 | 现象 | 根因 | 修复负责人 | 修复文件 | 复测命令 | 复测结果 | 状态 |
-|---|---|---|---|---|---|---|---|---|
-
-## 17. 变更记录
-```
+Use the single compact source at `references/test-document-template.md`; do not duplicate or expand it in this skill body.
 
 ## Validation
 
@@ -230,5 +148,5 @@ Before finishing:
 - Confirm the document is source-grounded and unresolved items are labeled `Open Question` or `Unverified`.
 - Confirm formal changes include a traceability matrix from requirement/decision/risk to task/package, file/artifact, verification command or inspection, evidence, and coverage status.
 - Confirm the output location follows the placement contract.
-- Confirm the automation-command, execution-record, and defect-closure sections exist.
+- Confirm only applicable check, acceptance, execution, or defect sections exist; no empty matrix/ledger was emitted.
 - Confirm the chat response contains only the generated path, coverage summary, unresolved count, and next action.

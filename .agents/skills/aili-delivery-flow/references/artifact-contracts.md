@@ -36,9 +36,9 @@ Use the skill-internal `references/protocols/` templates as the first version of
 
 ## Package savepoint and completion-evidence contracts
 
-[KNOWN] Each implementation-package progress-ledger savepoint records `package`, `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package` after the package's complete accepted behavior is implemented. It triggers no automatic test, commit, package approval, independent convergence, or readiness verdict. Generic lifecycle sources derive package identities and the completion package from the active contract; Package 1–12 is history specific to `complete-aili-workflow-orchestration`.
+[KNOWN] Each implementation-package progress-ledger savepoint records `package`, `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package` after the package's complete accepted behavior is implemented. It triggers no automatic test, review, commit, package approval, independent convergence, or readiness verdict. Generic lifecycle sources derive package identities from the active contract; Package 1–12 is history specific to `complete-aili-workflow-orchestration`.
 
-[KNOWN] The active contract's completion package—Package 12 for this umbrella—performs one minimal direct changed-scope diff/affected requirement-task-link inspection plus the smallest sufficient targeted check. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD. A full task matrix, convergence review, or review/test/security evidence lane is selected only for a concrete checklist/evidence gap or an affected SHIP claim; none is mandatory merely because Package 12 or SHIP exists.
+[KNOWN] After the accepted queue is implemented, ROSE directly inspects the changed scope/affected links and selects the smallest fresh check supporting the completion claim. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD. A full task matrix, convergence review, or review/test/security capability is selected only for a concrete gap or affected SHIP claim; none is mandatory because a package or phase exists. Package 12 is only the historical name for this umbrella's completion inspection.
 
 [KNOWN] When a canonical task matrix is actually selected, every current `tasks.md` checklist row appears exactly once with exactly these nine fields: `task_id`; `accepted requirement/decision/risk`; `expected behavior`; `implementation files/artifacts`; `fresh tests/inspection/review evidence`; `status`; `findings`; `disposition`; `freshness`. Status is exactly `Done | Partial | Missing | Blocked | N/A`. `Done` and resolved source-backed `N/A` pass; every other status or unsupported/unresolved state blocks the affected claim. The detailed evidence and mismatch rules remain owned by `agents/convergence-reviewer.md`; optional matrix evidence is not a broad BUILD or release gate.
 
@@ -50,7 +50,7 @@ Use the skill-internal `references/protocols/` templates as the first version of
 
 [KNOWN] This file is the canonical repository protocol path for neutral loop-envelope references. Delivery continuity requirement `CONT-005` remains the sole normative owner of budget representation and invariants. Every profile references one envelope with `loop_kind`, `trigger`, `trigger_evidence`, `objective`, `accepted_contract`, `change_id`, `success_evidence`, one nested `budgets` object, `human_gate`, `operation_gate`, `allowed_actions`, `writeback_targets`, `stop_reason`, and `outcome`. Protocol-only interval/event definitions additionally reference the canonical `ROUTE-007` identity object and may add only `external_trigger_source`, `event_classifier`, or `cancellation`.
 
-[KNOWN] The neutral terminal outcomes are `complete`, `need-user`, `material-delta`, `blocked`, `Unverified`, `cancelled`, and `budget-exhausted`. Profiles and packages must reference this envelope; they must not create flat budget fields, a second envelope, a session registry, or a background runtime.
+[KNOWN] The neutral terminal outcomes are `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, `Unverified`, `cancelled`, and `budget-exhausted`. Profiles and packages must reference this envelope; they must not create flat budget fields, a second envelope, a session registry, or a background runtime.
 
 | Mode | Primary artifacts | Minimum fields |
 |---|---|---|
@@ -61,11 +61,11 @@ Use the skill-internal `references/protocols/` templates as the first version of
 
 ## Output Contract
 
-Every mode response should include:
+Every mode response includes only applicable fields:
 
 - selected mode and backend;
 - artifacts created, updated, or required;
-- gates satisfied, waived, blocked, or unverified;
+- gates satisfied, blocked, or unverified;
 - next action.
 
 ## SHIP Closeout Document
@@ -77,9 +77,9 @@ Every SHIP run must create or update a detailed, human-reviewable Markdown close
 - The document content should be written in Chinese unless the active contract explicitly requests another language.
 - Do not replace the document with chat-only output; if the document cannot be written, mark the SHIP result blocked or `Unverified` and explain why.
 
-## DEFINE Artifact Fan-Out
+## DEFINE Artifact Set
 
-For OpenSpec-backed changes, DEFINE should create or update the complete change contract under `openspec/changes/<change-id>/`:
+For OpenSpec-backed changes, DEFINE creates or updates only artifacts required by current dependencies under `openspec/changes/<change-id>/`:
 
 ```text
 proposal.md
@@ -91,6 +91,7 @@ test-plan.md
 context.md
 ```
 
+- The listed files are the possible formal set, not a requirement to reread or rewrite all files on each turn.
 - `proposal.md`, `design.md`, `tasks.md`, and `specs/**/spec.md` follow the OpenSpec backend.
 - `interview.md` is generated or updated through `requirements-grilling`.
 - `test-plan.md` is generated or updated through `test-document-generator`.
@@ -107,7 +108,7 @@ context.md
 - `progress.txt` entries include objective, worker dispatches, evidence references, current progress, user feedback/corrections, checkpoint ledger, changed/inspected files, verification/review/security status, blockers, ROSE decision, and next action.
 - For approved spec-backed implementation, maintain `drift-log.md` beside the change artifacts only for spec deviations, model drift/self-corrections, temporary decisions, trade-offs, open questions, unverified assumptions, and required DEFINE write-back. It is not a user-feedback log, progress ledger, review report, or formal contract substitute.
 - Legacy `implementation-notes.html` may be read during hydration or convergence as migration evidence, but new drift/self-correction entries go to `drift-log.md` unless the current active contract explicitly requires the legacy HTML format.
-- Before DEFINE/BUILD/SHIP or normal-chat continuation, resolve one active change and re-read its OpenSpec proposal/specs/design/tasks, `interview.md`, accepted `test-plan.md`, `context.md`, `progress.txt`, bounded `drift-log.md`, scoped legacy/pre-runtime memory, and fresh scope-relevant review/test/security/verification evidence. Revalidate canonical root/worktree/Git identity and summarize current goal, decisions, open questions, `Unverified` items, progress, bounded drift, evidence freshness, and next action before acting.
+- Apply `lifecycle.md`'s directed read set: no formal hydration for ordinary chat; next dependency plus direct dependents for DEFINE; accepted gate/current package/owning contract/target/affected verification for BUILD; implemented tree/current BUILD evidence/affected closeout owners for SHIP. Re-read each written file once before durable use and invalidate only dependents after a relevant event.
 - Idea capsules/inbox entries are IDEATE candidates and may guide selection; they are not a formal contract. Legacy `implementation-notes.html`, stale chat summaries, old logs, task checkboxes, handoff, and memory are navigation/migration context only and cannot establish acceptance, permission, completion, or fresh evidence.
 - Context pressure or compression thresholds may prompt an ordinary checkpoint but never authorize compression, handoff, persistence, or lifecycle movement. Continuity is provider-neutral and has no DCP dependency.
 - `context.md`, `progress.txt`, `drift-log.md`, and legacy `implementation-notes.html` do not replace `rose-memory`, `handoff.md`, `interview.md`, `test-plan.md`, backend tasks, formal specs/tasks, or final reports.
@@ -117,7 +118,7 @@ context.md
 
 - Legacy/pre-runtime `rose-memory` is additive project-local context. Safe scoped reusable explicit user requirements/preferences/corrections/decisions/acceptance criteria default-write through the existing CLI only, with literal `--db memory/memory.db` from the canonical project root and existing fields only. Ambiguous permission or sensitive content blocks or is safely redacted before invocation; alternate/manual/symlink database paths and schema/storage changes block. Backend file mode, backend symlink handling, and retention remain `Unverified`.
 - Ordinary one-turn/report-only work with no memory use and no formal long-running/resume/context-loss need writes no start/end receipt. Those named continuity events or actual current-task memory use require the applicable scoped checkpoint/completion receipt. A receipt is never contract, permission, Git truth, verification, or completion authority.
-- Resume first hydrates the active formal contract, current progress, bounded drift, scoped memory, fresh review/verification evidence, and canonical startup host. It then separately revalidates every declared A33 attachment's exact keys, current target root/Git/HEAD/dirty/file/rule state, owning-repository artifact destinations, and applicable `WT-001` identity evidence. Cross-repository common-dir equality is never required; packet, handoff, memory, and checkpoint text are navigation only.
+- Formal resume reads only the active package/decision and referenced progress, bounded drift, scoped memory, or fresh verification that can change the next action, then revalidates the canonical startup host. It separately revalidates every declared A33 attachment's exact keys, current target root/Git/HEAD/dirty/file/rule state, owning-repository artifact destinations, and applicable `WT-001` identity evidence. Cross-repository common-dir equality is never required; packet, handoff, memory, and checkpoint text are navigation only.
 - Handoff is created only on an explicit user or accepted lifecycle trigger at a repository-local path (OpenSpec default `openspec/changes/<change-id>/handoff.md`). It stays model-oriented, lightweight, reference-first, redacted, non-authoritative, and does not promote durable memory by default. For A33 it records owning-repository artifact destinations plus preserved rollback worktree/evidence references; resume revalidates every target/rule/identity, and each ADD or non-force REMOVE still needs a new exact approval.
 
 ## Future extension point: `artifact-integrity`

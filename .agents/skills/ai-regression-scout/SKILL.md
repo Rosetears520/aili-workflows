@@ -5,7 +5,7 @@ description: AI regression scouting routing. Use when agents, prompts, skills, m
 
 # AI Regression Scout
 
-Use this skill to route AI-workflow regression discovery to `ai-regression-scout`.
+Use this skill to define one bounded AI-workflow regression-scouting need. ROSE may assign it to one fresh `ai-regression-scout` context after the delegation gate; this skill does not dispatch or invoke another process skill.
 
 ## Trigger
 
@@ -15,12 +15,10 @@ Use this skill to route AI-workflow regression discovery to `ai-regression-scout
 
 ## Near Misses
 
-- Product-code behavior regression: use `test-engineer` or direct root-cause investigation.
-- General prompt editing: use the assigned implementation lane.
-- Review of false success gates: use `silent-failure-hunting`.
+- Product-code regression, prompt implementation, or false-success review are different primary intents; return the exact mismatch to ROSE.
 
 ## Required Routing
 
-- Owner lane: `subagent:test`.
-- Agent: `ai-regression-scout`.
-- Default mode: read-only; it recommends fixtures/checks but does not edit them.
+- Canonical owner: ROSE/`aili-delivery-flow`.
+- Optional agent: one fresh, terminal `ai-regression-scout` assignment after a new benefit decision.
+- Default evidence mode: read-only; return fixture/check recommendations and stop without editing, retrying, or owning the final verdict.

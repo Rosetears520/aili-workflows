@@ -7,6 +7,11 @@ AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 DRY_RUN="false"
 NO_UPDATE="false"
+RETIRED_SKILL_NAMES=("using-agent-skills" "repo-evidence-first" "verification-before-completion")
+RETIRED_RECONCILIATION_NAMES=()
+RETIRED_RECONCILIATION_TARGETS=()
+RETIRED_RECONCILIATION_ACTIONS=()
+RETIRED_RECONCILIATION_REASONS=()
 
 usage() {
   cat >&2 <<'EOF'
@@ -277,6 +282,80 @@ shared_skill_install_root() {
   printf '%s\n' "$root"
 }
 
+record_retired_skill_reconciliation() {
+  local name="$1"
+  local target="$2"
+  local action="$3"
+  local reason="$4"
+  local index="${#RETIRED_RECONCILIATION_NAMES[@]}"
+  RETIRED_RECONCILIATION_NAMES[$index]="$name"
+  RETIRED_RECONCILIATION_TARGETS[$index]="$target"
+  RETIRED_RECONCILIATION_ACTIONS[$index]="$action"
+  RETIRED_RECONCILIATION_REASONS[$index]="$reason"
+}
+
+reconcile_retired_skill_entries() {
+  local skills_target_root="$1"
+  local name target expected_source raw_target candidate resolved_target reason
+
+  for name in "${RETIRED_SKILL_NAMES[@]}"; do
+    target="$skills_target_root/$name"
+    expected_source="$(canonicalize_path "$AILI_HOME/.agents/skills/$name")"
+
+    if [ -L "$target" ]; then
+      if ! raw_target="$(readlink "$target")"; then
+        reason="symlink target could not be read; ownership is ambiguous"
+        log "Preserving ambiguous retired skill entry: $target ($reason)"
+        record_retired_skill_reconciliation "$name" "$target" "preserved" "$reason"
+        continue
+      fi
+      case "$raw_target" in
+        /*) candidate="$raw_target" ;;
+        *) candidate="$(dirname "$target")/$raw_target" ;;
+      esac
+      resolved_target="$(canonicalize_path "$candidate")"
+      if [ "$resolved_target" = "$expected_source" ]; then
+        reason="exact symlink target matches the canonical retired skill source"
+        if [ "$DRY_RUN" = "true" ]; then
+          log "DRY RUN: would unlink proven installer-managed retired skill: $target -> $raw_target"
+          record_retired_skill_reconciliation "$name" "$target" "planned-unlink" "$reason"
+        else
+          log "Unlinking proven installer-managed retired skill: $target -> $raw_target"
+          unlink "$target"
+          record_retired_skill_reconciliation "$name" "$target" "unlinked" "$reason"
+        fi
+      else
+        reason="symlink target differs from the canonical retired skill source; ownership is ambiguous"
+        log "Preserving ambiguous retired skill entry: $target -> $raw_target"
+        record_retired_skill_reconciliation "$name" "$target" "preserved" "$reason"
+      fi
+    elif [ -e "$target" ]; then
+      reason="entry is not a symlink to the canonical retired skill source; copied, modified, or user-owned content is preserved"
+      log "Preserving ambiguous retired skill entry: $target ($reason)"
+      record_retired_skill_reconciliation "$name" "$target" "preserved" "$reason"
+    else
+      reason="retired skill destination is absent"
+      log "Retired skill entry absent; no action: $target"
+      record_retired_skill_reconciliation "$name" "$target" "absent" "$reason"
+    fi
+  done
+}
+
+retired_skill_reconciliation_json() {
+  local index separator=""
+  printf '['
+  for index in "${!RETIRED_RECONCILIATION_NAMES[@]}"; do
+    printf '%s{"name":%s,"target":%s,"action":%s,"reason":%s}' \
+      "$separator" \
+      "$(json_escape "${RETIRED_RECONCILIATION_NAMES[$index]}")" \
+      "$(json_escape "${RETIRED_RECONCILIATION_TARGETS[$index]}")" \
+      "$(json_escape "${RETIRED_RECONCILIATION_ACTIONS[$index]}")" \
+      "$(json_escape "${RETIRED_RECONCILIATION_REASONS[$index]}")"
+    separator=','
+  done
+  printf ']'
+}
+
 validate_manifest_allowlist() {
   python3 - "$AILI_HOME" <<'PY'
 import json
@@ -411,6 +490,8 @@ install_entries() {
     mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands"
   fi
 
+  reconcile_retired_skill_entries "$skills_target_root"
+
   install_global_agents "$action"
 
   local file name target dir
@@ -452,6 +533,8 @@ managed_directory() {
     log "Set CONFIRM_MANAGED_DIRECTORY=yes only after the user approves replacing whole agents/ and commands/ directories."
     exit 2
   fi
+
+  reconcile_retired_skill_entries "$skills_target_root"
 
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
@@ -578,10 +661,12 @@ case "$MODE" in
     ;;
 esac
 
-printf '{"mode":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s}\n' \
+printf '{"mode":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
   "$(json_escape "$MODE")" \
   "$(json_escape "$RUNTIME")" \
   "$(json_escape "$AILI_HOME")" \
   "$(json_escape "$OPENCODE_HOME")" \
   "$(json_escape "$DRY_RUN")" \
   "$(json_escape "$NO_UPDATE")"
+retired_skill_reconciliation_json
+printf '}\n'

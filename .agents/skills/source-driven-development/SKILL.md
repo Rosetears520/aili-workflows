@@ -1,52 +1,41 @@
 ---
 name: source-driven-development
-description: Grounds every implementation decision in official/API documentation. Use when you want authoritative, source-cited code free from outdated patterns; when official/API docs such as DeepSeek, SDK/provider references, framework docs, changelog-sensitive behavior, fast-changing/version-sensitive sources, model uncertainty, or explicit user-requested verification can materially affect a方案 before implementation.
+description: Resolve one exact official/current documentation gap when the user requests source verification or a version-sensitive API/SDK/provider/framework question can materially change the current decision; do not trigger for every implementation decision, ordinary framework code, local business logic, or broad research.
 ---
 
 # Source-Driven Development
 
 ## Overview
 
-Every framework-specific code decision must be backed by official documentation. Don't implement from memory — verify, cite, and let the user see your sources. Training data goes stale, APIs get deprecated, best practices evolve. This skill ensures the user gets code they can trust because every pattern traces back to an authoritative source they can check.
+Use a narrow official source to resolve the named version-sensitive question. This is evidence for the current primary loop, not a second implementation or acceptance workflow.
 
 ## When to Use
 
-- The user wants code that follows current best practices for a given framework
-- Building boilerplate, starter code, or patterns that will be copied across a project
-- The user explicitly asks for documented, verified, or "correct" implementation
-- Implementing features where the framework's recommended approach matters (forms, routing, data fetching, state management, auth)
-- Reviewing or improving code that uses framework-specific patterns
-- Any time you are about to write framework-specific code from memory
-- Planning a方案 or implementation where official/API documentation can materially change the approach, including provider APIs such as DeepSeek, SDK/API references, packaging/runtime/platform constraints, changelog-sensitive behavior, or model uncertainty
-- The user explicitly asks to research, verify, source, compare, or confirm current API behavior before implementation
+- The user explicitly asks to verify or cite current official/API behavior.
+- One unresolved version-sensitive API, SDK, provider, framework, packaging, runtime, platform, or changelog question can materially change the current design or implementation.
+- Existing official docs and installed types/source conflict on the exact behavior being used.
 
 **When NOT to use:**
 
 - Correctness does not depend on a specific version (renaming variables, fixing typos, moving files)
 - Pure logic that works the same across all versions (loops, conditionals, data structures)
 - The user explicitly wants speed over verification ("just do it quickly") and the task does not involve version-sensitive framework/API/library behavior
+- The task merely uses a library/framework and local evidence already establishes the needed API.
+- The user asks for mature-project prior art, local repository facts, implementation, or review rather than one official-source answer.
 
 ## Planning Evidence Gate Ownership
 
-This skill owns the official/API documentation lane of the research-first planning gate. It does not own local repository evidence, mature public-project prior art, test-plan generation, or lifecycle orchestration:
-
-- local repository facts and peer patterns belong to `repo-evidence-first`
-- industry/GitHub/mature project patterns belong to `mature-project-pattern-research`
-- user-facing方案 clarification and write-back readiness belong to `requirements-grilling`
-- testability and durable test-plan artifacts belong to `test-document-generator`
-- lifecycle timing stays with the active delivery workflow; do not create a new public command or standalone lifecycle-owner skill
-
-When this gate triggers, gather official/current evidence first, summarize the evidence-backed方案 with risks and `UNVERIFIED` items, then implement only after the方案 is accepted, waived, or explicitly accepted as `UNVERIFIED` by the user. Use external web or Context7 lookup only when the current user, task, or project contract allows source lookup, and never send secrets or sensitive context; when external lookup is not allowed, use local/offline docs and mark remaining source gaps `UNVERIFIED`.
+ROSE/`aili-delivery-flow` owns lifecycle timing, local evidence, material questions, approvals, implementation, and verification. This skill performs one bounded lookup, cites the exact source, and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It must not invoke local/prior-art/requirements/test-plan/review skills or turn a source summary into scheme acceptance. Use external web or Context7 only when current policy allows the exact lookup; never send secrets or sensitive context. Lifecycle approval and verification rules win conflicts.
 
 ## The Process
 
 ```
-DETECT ──→ FETCH ──→ IMPLEMENT ──→ CITE
+DETECT ──→ FETCH ──→ RETURN ──→ CITE
   │          │           │            │
   ▼          ▼           ▼            ▼
- What       Get the    Follow the   Show your
- stack?     relevant   documented   sources
-            docs       patterns
+ What       Get the    Return the   Show the
+ gap?       relevant   bounded      exact source
+            docs       answer
 ```
 
 ### Step 1: Detect Stack and Versions
@@ -72,7 +61,7 @@ STACK DETECTED:
 → Fetching official docs for the relevant patterns.
 ```
 
-If versions are missing or ambiguous, **ask the user**. Don't guess — the version determines which patterns are correct.
+If the version is missing or materially ambiguous, return that exact decision/evidence gap to ROSE. Do not guess or ask a second workflow-owned question here.
 
 ### Step 2: Fetch Official Documentation
 
@@ -87,11 +76,11 @@ Speed requests may reduce citation verbosity, but they do not remove the require
 | Trigger | Next source | If still unavailable |
 |---|---|---|
 | Context7 is unavailable or has no matching library/version | Fetch the official documentation URL directly | Use the package's official README/changelog/release notes from the upstream repository |
-| Official docs page is unavailable, moved, or lacks the needed pattern | Check official blog, migration guide, API reference, or versioned docs | Mark the pattern `UNVERIFIED` and ask before implementing version-sensitive code |
+| Official docs page is unavailable, moved, or lacks the needed pattern | Check official blog, migration guide, API reference, or versioned docs | Mark the pattern `UNVERIFIED` and return the dependent implementation decision to ROSE |
 | Package docs and source disagree | Prefer versioned docs, then inspect installed package types/source for the detected version | Surface the discrepancy as a conflict; do not silently choose |
 | Network/tooling prevents source access | Use only already-present local docs/types/package files | Report `BLOCKED_VERIFICATION` or `NEEDS_REVIEW` for framework-specific code that cannot be sourced |
 
-🔴 CHECKPOINT / 🛑 STOP: If no authoritative source can confirm a version-sensitive API, stop before coding unless the user explicitly accepts an `UNVERIFIED` implementation.
+🔴 CHECKPOINT / 🛑 STOP: If no authoritative source can confirm a version-sensitive API, return `need-user` or `need-evidence` to ROSE before dependent coding. Only ROSE records explicit acceptance of an `UNVERIFIED` implementation.
 
 **Source hierarchy (in order of authority):**
 
@@ -123,9 +112,9 @@ After fetching, extract the key patterns and note any deprecation warnings or mi
 
 When official sources conflict with each other (e.g. a migration guide contradicts the API reference), surface the discrepancy to the user and verify which pattern actually works against the detected version.
 
-### Step 3: Implement Following Documented Patterns
+### Step 3: Return the Documented Pattern
 
-Write code that matches what the documentation shows:
+Return the exact supported pattern and constraints to the primary owner. If implementation is already in scope, ROSE may apply it directly; this skill does not start another implementation loop.
 
 - Use the API signatures from the docs, not from memory
 - If the docs show a new way to do something, use the new way
@@ -202,13 +191,13 @@ Honesty about what you couldn't verify is more valuable than false confidence.
 
 ## Red Flags
 
-- Writing framework-specific code without checking the docs for that version
-- Using "I believe" or "I think" about an API instead of citing the source
-- Implementing a pattern without knowing which version it applies to
+- Answering the selected version-sensitive gap without checking the applicable official source
+- Using "I believe" or "I think" about the selected API instead of citing the source
+- Returning a pattern without knowing which applicable version it describes
 - Citing Stack Overflow or blog posts instead of official documentation
 - Using deprecated APIs because they appear in training data
-- Not reading `package.json` / dependency files before implementing
-- Delivering code without source citations for framework-specific decisions
+- Ignoring the current dependency/version evidence when it controls the selected question
+- Returning a non-trivial framework/API conclusion without its source citation
 - Fetching an entire docs site when only one page is relevant
 
 ## Do Not Do
@@ -221,15 +210,14 @@ Honesty about what you couldn't verify is more valuable than false confidence.
 
 ## Verification
 
-After implementing with source-driven development:
+Before returning the bounded source result:
 
-- [ ] Framework and library versions were identified from the dependency file
-- [ ] Official documentation was fetched for framework-specific patterns
-- [ ] Official/API docs were checked when provider, SDK, platform, packaging, changelog-sensitive, fast-changing, uncertain, or user-requested verification could affect the方案
-- [ ] All sources are official documentation, not blog posts or training data
-- [ ] Evidence-backed方案 was discussed/accepted, waived, or marked `UNVERIFIED` before implementation when the planning gate triggered
-- [ ] Code follows the patterns shown in the current version's documentation
+- [ ] The applicable version was identified when the question is version-sensitive
+- [ ] The smallest relevant official/API source was read for the selected gap
+- [ ] Primary authority is official documentation rather than a blog post, tutorial, or training-memory claim
+- [ ] The exact decision/source gap is answered or marked `UNVERIFIED`
+- [ ] Any implementation need is returned to ROSE without an extra scheme approval
 - [ ] Non-trivial decisions include source citations with full URLs
-- [ ] No deprecated APIs are used (checked against migration guides)
+- [ ] Deprecation/migration guidance was checked when the selected gap involves an API transition
 - [ ] Conflicts between docs and existing code were surfaced to the user
 - [ ] Anything that could not be verified is explicitly flagged as unverified

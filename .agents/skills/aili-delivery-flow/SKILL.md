@@ -5,7 +5,7 @@ description: Run the AILI delivery lifecycle for /ideate, /define, /build, and /
 
 # AILI Delivery Flow
 
-This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP modes. Commands route here; they do not restate the lifecycle.
+This is the canonical lifecycle/router authority for IDEATE, DEFINE, BUILD, and SHIP. Equivalent natural-language intent and command shortcuts enter the same state, gates, progress, stop conditions, and verification owner.
 
 ## References
 
@@ -22,45 +22,70 @@ This skill is the workflow authority for the IDEATE, DEFINE, BUILD, and SHIP mod
 
 ## Workflow
 
-### Compact Mode Decision Table
+### Semantic router
 
-| User intent | Mode | Required gate before continuing | Must not do |
+For each current user intent, ROSE selects:
+
+1. command intent when present, otherwise equivalent natural-language intent;
+2. ordinary or formal/material handling;
+3. one primary process/domain/artifact loop;
+4. zero or one auxiliary capability only for a named gap the primary loop cannot cover directly;
+5. one terminal outcome: `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`.
+
+Explicit user intent wins, followed by the narrowest artifact/domain owner, then the lifecycle loop. A skill match is a route into this state, not a second workflow. Skills must not invoke another process skill, recurse, change phase, create another ledger/approval system, or automatically add planning, research, TDD, review, test, security, coverage, or convergence work.
+
+Near misses stay direct: lifecycle words used for explanation/status, code that merely has tests, multi-file work without a planning need, and completion wording without a concrete review or evidence gap do not activate extra skills.
+
+### Mode decision table
+
+| User intent | Mode/loop | Required gate | Stop boundary |
 |---|---|---|---|
-| One bounded analysis/options outcome satisfying every ordinary condition | IDEATE | classification evidence; no hard trigger | create formal work or edit production code |
-| Formal proposal/change/plan, implementation DEFINE, or any hard material trigger | DEFINE | one resolved OpenSpec change; coherent strict artifacts; final test-plan acceptance before BUILD | guess identity, ask per-artifact permission, or implement |
-| Explicit implementation of the resolved accepted change | BUILD | current final test-plan acceptance plus target/package/permission/verification/budget gates | execute from acceptance or vague continuation alone |
-| Explicit review/repair/closeout of implemented work | SHIP | new SHIP intent plus current implementation evidence; reuse or refresh only affected checks | infer preauthorization, require a broad matrix, or use DEFINE/direct-adapter output as proof |
+| Explore options without implementation | IDEATE | current request and relevant evidence | options/unknowns produced or material formal trigger found |
+| Create or materially revise a durable change contract | DEFINE | one resolved change identity | coherent artifacts plus final `test-plan.md` acceptance, or exact blocker |
+| Explicitly implement a resolved accepted formal change | BUILD | current acceptance, target, package, permission, and claim-verification path | accepted queue implemented and smallest completion check selected, or blocker/material delta |
+| Explicitly close out implemented work | SHIP | fresh SHIP intent and current implementation evidence | exact closeout claim supported or blocked |
+| Bounded work with no formal/material trigger | ordinary | clear scope and local rules | requested outcome and smallest claim-matched evidence |
 
-### 🔴 Red Gates
+### Execution and approval classes
 
-Stop immediately and report the missing next action when:
+- Safe local execution: perform requested in-scope reads, edits, deterministic diagnostics, and non-destructive claim-matched checks without asking for each step.
+- Material decision: ask one focused question only when the answer changes scope, architecture, public contract, dependency, permission, acceptance, verification strategy, product behavior, or target identity.
+- Risky operation: obtain the existing exact approval for destructive, external access/write/directory, dependency/lockfile, schema/migration, auth/permission/secret/security, Git/release, or A33 ADD/REMOVE operations.
 
-- the requested mode is not one of IDEATE, DEFINE, BUILD, or SHIP;
-- DEFINE has unresolved material decisions, incoherent/invalid artifacts, or no explicit acceptance of final `test-plan.md`;
-- BUILD lacks explicit implementation intent, current final test-plan acceptance, package scope, resolvable ready-target evidence, permission, verification, or valid budget;
-- an A33 attachment lacks the exact startup-root admission, identity/topology/rule, operation-class/risk, or fresh operation-approval gate;
-- SHIP lacks fresh explicit intent, current implementation evidence, or evidence required by its exact affected claim;
-- backend artifacts conflict with lifecycle state or make readiness ambiguous.
+Every question names the decision or operation, target, why now, risk/trade-off, options, recommendation or uncertainty, and denial effect. One answer/approval never authorizes another operation, target, or risk class.
 
-1. Apply one semantic classifier to command shortcuts and natural language. Record `ordinary` only when all ordinary conditions hold; record the hard trigger for `formal/material`. Explanation/comparison/translation/status lifecycle words are lexical near misses. A material clause wins conflicting ordinary-only wording, while an explicit no-write clause still controls persistence.
-2. Ask exactly one focused question only when one answer changes classification, change identity, target, or authorization. Do not run a generic questionnaire for ordinary work.
-3. On the first hard trigger, activate or reuse exactly one Stage-I OpenSpec change. Reuse same accepted scope; create a distinct change only after distinct scope is established; if two remain plausible or the answer is evasive, ask once and write nothing. Later material deltas update the same change.
-4. Apply the mode gate before any work:
-   - IDEATE explores options and uncertainty; do not edit production code.
-   - DEFINE follows current OpenSpec instructions/status dependency order for proposal → specs/design → tasks, automatically writes and re-reads applicable `proposal.md`, specs, `design.md`, `tasks.md`, `interview.md`, `test-plan.md`, and `context.md`, then runs strict validation. `requirements-grilling` solely owns clarification and `interview.md`; `test-document-generator` owns test-plan generation. Final acceptance stays blocked while any unresolved research could change scope, architecture, dependency, public contract, permissions, acceptance, or verification strategy; waiver or accepted-`Unverified` wording cannot clear that material gap.
-   - BUILD requires explicit implementation intent and current explicit acceptance of the final `test-plan.md`, plus a resolved ready target (or enough evidence to synthesize a package queue) and coherent validation/target/package/permission/verification/budget gates. BUILD may hydrate accepted evidence, confirm exact locality/contracts, and diagnose bounded failures; open-ended or mature-prior-art research blocks. A discovery changing scope, architecture, dependency, public contract, permissions, acceptance, or verification strategy emits `BUILD_MATERIAL_DISCOVERY`, stops before changed work, and returns to DEFINE writeback/revalidation/reacceptance. BUILD actions derive the queue from the active contract, complete every implementation package with progress-ledger savepoints, then ROSE directly inspects the changed-scope diff and affected task/contract links and runs the smallest sufficient completion check; at most two specialists are optional for a concrete capability gap. In this umbrella change only, Packages 1–11 are implementation history and Package 12 names that direct final inspection. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD without an automatic review swarm, test matrix, commit, push, PR, or SHIP transition. Acceptance alone executes nothing.
-   - SHIP requires new explicit closeout intent and current implementation evidence. Reuse event-fresh BUILD evidence and select only stale, scope-affected, risk-triggered, integration, packaging, release, merge-result, or target-specific checks; do not rerun a full matrix because phase or time changed.
-5. In DEFINE, close applicable local owner/architecture, official/current API/version, mature prior-art, dependency/security/platform, alternatives, and verification-strategy research before final acceptance. Separate source classes and named non-material runtime residuals, then stress-test the plan. Research and stress testing add no proposal approval, waiver, or bundled-artifact gate.
-6. Use the artifact/delta contract, persist and re-read answers, and record unknowns instead of guessing.
-7. Stop when a hard gate is missing, scope expands, backend evidence conflicts, or required verification cannot run.
+### Directed hydration
+
+Read only evidence needed for the current mode, dependency, event, and claim:
+
+| Entry | Required current evidence | Conditional evidence |
+|---|---|---|
+| new DEFINE | change identity and dependencies for the next artifact | interview/context only for a material question or term |
+| DEFINE continuation | changed artifact and direct dependents | progress/drift only for resume, deviation, or conflict |
+| BUILD start/resume | accepted final-test-plan gate, current tasks/package and owning contract sections, target/Git/rules, affected verification | unrelated DEFINE/history only on conflict or material discovery |
+| SHIP | implemented diff/tree, current BUILD evidence, explicit target | only affected/stale risk, integration, packaging, or release evidence |
+| ordinary continuation | current request and directly relevant files | formal artifacts only when formal work is resumed or changed |
+
+Re-read every written file once before using it as durable evidence. A relevant user correction, write, hook, content/config/dependency/toolchain/target change, or conflict invalidates only dependent evidence. Phase/time/file presence/`continue` never triggers blanket hydration.
+
+### Mode rules
+
+1. **IDEATE:** explore and compare; do not edit production code. A material formal outcome routes to DEFINE, while ordinary brainstorming remains chat/optional approved idea placement.
+2. **DEFINE:** resolve one change identity; follow current backend dependency order; write only applicable artifacts. `requirements-grilling` owns `interview.md`; `test-document-generator` owns `test-plan.md`. Use the smallest decision-changing question/evidence lookup. Final `test-plan.md` acceptance remains the sole lifecycle-level pre-BUILD user gate, separate from material, validation, permission, and exact operation gates.
+3. **BUILD:** require explicit implementation intent and current formal readiness. Derive a dependency-ordered queue from the accepted contract, implement complete scoped packages, and record lightweight savepoints without package approvals or automatic tests/reviews. `BUILD_MATERIAL_DISCOVERY` stops affected work before a change to scope, architecture, dependency, public contract, permission, acceptance, or verification strategy and returns it to DEFINE. Acceptance alone executes nothing.
+4. **SHIP:** require fresh explicit closeout intent plus current implementation evidence. Reuse still-covering BUILD evidence; refresh only affected rows. Direct inspection is default; review/repair/packaging/release capabilities run only for the exact closeout gap.
+
+### Verification owner
+
+The active ordinary-task/lifecycle owner chooses the smallest fresh check supporting the exact claim. Specialized skills may suggest risk-specific evidence but cannot impose per-slice full suites, automatic stress tests, review matrices, repeated rechecks, duplicate approvals, or additional completion authority. Broaden only when the affected integration, packaging, browser, permission, installer, security, or release claim requires it. BUILD permits at most one targeted repair/recheck and does not transition automatically to SHIP.
 
 ## Continuation and compound intent
 
-- `continue`, `继续`, `go ahead`, and `继续做` resume exactly one active authorized envelope with unambiguous target, phase, current gates, and remaining canonical budget. Preserve consumed counters, accounting state, overshoot, and stop state; never broaden authorization, change phase/target, refresh acceptance, or reset budget. Otherwise ask once and do no loop/write/mutation.
+- `continue`, `继续`, `go ahead`, and `继续做` resume exactly one active authorized envelope only when target, phase, current gates, and remaining budget are unambiguous. Preserve counters and stop state; never broaden authorization, change phase/target, refresh acceptance, or reset budget. Otherwise ask one decision-shaped question and perform no affected mutation.
 - A continuation carrying a material delta returns to DEFINE and never resumes execution. A no-write/chat-only clause overrides formal writeback, continue+delta, and acceptance+BUILD for that turn and yields only a blocked/`Unverified` preview with zero persistence/execution/mutation/acceptance/budget consumption.
-- Same-turn acceptance+BUILD persists/classifies acceptance in `interview.md`, updates the final test-plan gate/checklist, re-reads both, then validates every BUILD gate before any execution. No execution-ledger row precedes actual BUILD start.
+- Same-turn acceptance+BUILD persists/classifies acceptance in its owning artifact, rereads affected files once, then validates BUILD gates before execution.
 - Combined BUILD+SHIP intent authorizes only current-phase BUILD. Later SHIP requires fresh evidence and new explicit intent.
-- Package savepoints contain `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package`; they trigger no automatic test, commit, or package approval.
+- Package savepoints contain `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package`; they trigger no automatic test, review, commit, or package approval.
 - Commit, push, merge, and release each require exact action-specific approval. CI failure reports the failed target/commit/tree/check and returns control to the user without automatic repair, commit, push, merge, or release.
 
 ## Generated OpenSpec adapter boundary
@@ -81,7 +106,7 @@ AILI guarantees only its four routes. Current generated `.opencode` `/opsx-*`, a
 
 ## Verification
 
-- Confirm the selected mode and backend in the response.
+- Confirm the selected mode/ordinary loop and backend when applicable.
 - Name the artifact(s) created or updated.
 - For BUILD and SHIP, include traceability-backed fresh verification evidence or mark remaining items `Open Question` / `Unverified`.
 - For any blocked gate, return the missing approval, artifact, or evidence as the next action.

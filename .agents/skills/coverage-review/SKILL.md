@@ -5,22 +5,20 @@ description: Coverage review and verification sufficiency routing. Use when test
 
 # Coverage Review
 
-Use this skill to route a completed change to `test-coverage-reviewer` when ROSE needs read-only coverage adequacy evidence.
+Use this skill for one bounded read-only coverage-adequacy question. ROSE may assign that question to one fresh `test-coverage-reviewer` context when the delegation gate is satisfied; this skill does not dispatch or create another review/test loop.
 
 ## Trigger
 
 - Coverage report or changed behavior needs independent interpretation.
 - Review asks whether current tests prove the accepted scope.
-- A package changes logic, error handling, integration seams, or user-visible behavior and verification may be thin.
+- ROSE names a concrete uncovered path or verification-sufficiency gap that direct inspection cannot close.
 
 ## Near Misses
 
-- Writing or modifying tests: use `test-engineer`.
-- PR-wide test matrix or CI log analysis: use `pr-test-analysis`.
-- Browser screenshots/traces: use `browser-qa` or `e2e-artifact-handling`.
+- Writing/modifying tests, PR-wide matrices, CI logs, or browser artifacts are different primary intents; return the mismatch to ROSE rather than invoking another skill.
 
 ## Required Routing
 
-- Owner lane: `subagent:review`.
-- Agent: `test-coverage-reviewer`.
-- Default mode: read-only; findings recommend tests/commands but do not edit.
+- Canonical owner: ROSE/`aili-delivery-flow`; default evidence mode is read-only.
+- Optional agent: one fresh, terminal `test-coverage-reviewer` assignment after a new benefit decision.
+- Stop after the bounded finding set; return any test-writing, browser, CI, or material-decision need to ROSE. Findings recommend tests/commands but do not edit or own the final verdict.

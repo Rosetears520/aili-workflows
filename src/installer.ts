@@ -43,7 +43,16 @@ export interface InstallSummary {
   dryRun: boolean;
   ailiHome: string;
   opencodeHome: string;
-  componentInstall: { status: "planned" | "completed"; code: number | null };
+  componentInstall: {
+    status: "planned" | "completed";
+    code: number | null;
+    retiredSkillReconciliation: Array<{
+      name: string;
+      target: string;
+      action: "absent" | "planned-unlink" | "unlinked" | "preserved";
+      reason: string;
+    }>;
+  };
   config: Awaited<ReturnType<typeof mergeOpenCodeConfig>>;
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
@@ -328,21 +337,26 @@ function isPathOrDescendant(candidate: string, parent: string): boolean {
   return relative === "" || (relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
-async function runCompatibilityInstaller(options: InstallOptions): Promise<{ status: "planned" | "completed"; code: number | null }> {
+async function runCompatibilityInstaller(options: InstallOptions): Promise<InstallSummary["componentInstall"]> {
   const script = path.join(options.ailiHome, "scripts", "install_opencode.sh");
   await access(script, constants.F_OK);
   const mode = await isGitRepository(options.ailiHome) ? "selective" : "copy";
   const args = [script, "--mode", mode, "--aili-home", options.ailiHome, "--opencode-home", options.opencodeHome];
   if (options.dryRun) args.push("--dry-run");
-  const code = await spawnInstaller(args, options);
-  return { status: options.dryRun ? "planned" : "completed", code };
+  const result = await spawnInstaller(args, options);
+  return {
+    status: options.dryRun ? "planned" : "completed",
+    code: result.code,
+    retiredSkillReconciliation: parseRetiredSkillReconciliation(result.stdout)
+  };
 }
 
-function spawnInstaller(args: string[], options: InstallOptions): Promise<number> {
+function spawnInstaller(args: string[], options: InstallOptions): Promise<{ code: number; stdout: string }> {
   return new Promise((resolve, reject) => {
+    let stdout = "";
     let stderr = "";
     const child = spawn("/bin/bash", args, {
-      stdio: options.json ? ["ignore", "ignore", "pipe"] : "inherit",
+      stdio: ["ignore", "pipe", "pipe"],
       env: {
         HOME: process.env.HOME || os.homedir(),
         PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
@@ -352,20 +366,57 @@ function spawnInstaller(args: string[], options: InstallOptions): Promise<number
         AILI_INSTALLER_DRY_RUN: options.dryRun ? "1" : "0"
       }
     });
-    if (options.json && child.stderr) {
+    if (child.stdout) {
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk: string) => {
+        stdout += chunk;
+        if (!options.json) process.stdout.write(chunk);
+      });
+    }
+    if (child.stderr) {
       child.stderr.setEncoding("utf8");
       child.stderr.on("data", (chunk: string) => {
         stderr += chunk;
+        if (!options.json) process.stderr.write(chunk);
       });
     }
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code === 0) resolve(code);
+      if (code === 0) resolve({ code, stdout });
       else {
-        const detail = stderr.trim();
+        const detail = options.json ? stderr.trim() : "";
         reject(new Error(`Compatibility installer failed with exit code ${code ?? "unknown"}${detail ? `: ${detail}` : ""}`));
       }
     });
+  });
+}
+
+function parseRetiredSkillReconciliation(stdout: string): InstallSummary["componentInstall"]["retiredSkillReconciliation"] {
+  const summaryLine = stdout.trim().split(/\r?\n/).at(-1);
+  if (!summaryLine) throw new Error("Compatibility installer returned no summary.");
+  let raw: unknown;
+  try {
+    raw = JSON.parse(summaryLine);
+  } catch {
+    throw new Error("Compatibility installer returned an invalid summary.");
+  }
+  const entries = typeof raw === "object" && raw !== null
+    ? (raw as { retired_skill_reconciliation?: unknown }).retired_skill_reconciliation
+    : undefined;
+  if (!Array.isArray(entries)) throw new Error("Compatibility installer summary omitted retired-skill reconciliation.");
+  const actions = new Set(["absent", "planned-unlink", "unlinked", "preserved"] as const);
+  return entries.map((entry) => {
+    if (typeof entry !== "object" || entry === null) throw new Error("Compatibility installer returned an invalid retired-skill reconciliation entry.");
+    const candidate = entry as Record<string, unknown>;
+    if (typeof candidate.name !== "string" || typeof candidate.target !== "string" || typeof candidate.reason !== "string" || typeof candidate.action !== "string" || !actions.has(candidate.action as "absent" | "planned-unlink" | "unlinked" | "preserved")) {
+      throw new Error("Compatibility installer returned an invalid retired-skill reconciliation entry.");
+    }
+    return {
+      name: candidate.name,
+      target: candidate.target,
+      action: candidate.action as "absent" | "planned-unlink" | "unlinked" | "preserved",
+      reason: candidate.reason
+    };
   });
 }
 

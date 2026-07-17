@@ -20,8 +20,8 @@ Use for:
 
 Do not use for:
 
-- one paper only; use `academic-paper-review`
-- broad industry/prior-art project research; use `mature-project-pattern-research`
+- one paper only; return the narrower paper-review mismatch to ROSE
+- broad industry/prior-art project research; return the mature-project research mismatch to ROSE
 - medical, legal, policy, or safety-critical recommendations without domain review
 - generating fake citations or filling missing bibliography details from memory
 

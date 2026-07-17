@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Handle an explicit Git intent such as branch/worktree setup, commit organization, history archaeology, conflict resolution, PR preparation, or versioning; do not trigger as a process skill for every code or file change.
 ---
 
 # Git Workflow and Versioning
@@ -11,7 +11,11 @@ Git is your safety net. Treat commits as save points, branches as sandboxes, and
 
 ## When to Use
 
-Always. Every code change flows through git.
+Use when the user asks for a Git operation or artifact, or when a concrete branch/worktree/conflict/history decision is the current primary task. Ordinary implementation follows the canonical global Git safety rules directly without loading this workflow.
+
+Near misses: checking status/diff as routine evidence, editing several files, making a savepoint note, or finishing implementation does not select this skill by itself.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, safe-local execution, approvals, and verification. This skill owns one bounded Git loop and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It does not invoke planning, implementation, review, release, or another process skill. Exact commit/push/merge/rebase/history/worktree/A33 approvals and canonical claim-matched verification override generic advice below.
 
 ## Branch and Savepoint Policy
 
@@ -122,7 +126,7 @@ Rules:
 - Validate locally before recommending push.
 - Draft PR title and body only after inspecting the final diff.
 - Do not push, create PR, merge, delete branch, or clean up worktree without explicit user approval.
-- If `review-pipeline` exists, run it before saying the PR is ready.
+- Return any concrete unresolved review risk to ROSE; do not automatically invoke a review pipeline because a PR is being prepared.
 
 Decision matrix:
 

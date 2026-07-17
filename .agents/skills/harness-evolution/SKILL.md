@@ -7,7 +7,7 @@ description: Produce or apply an approved report-first proposal for workflow, RO
 
 Use this skill when the harness itself may need to change. The default output is a structured report or proposal, not file edits.
 
-If the user is only reporting that behavior is wrong and asking where the issue lives, use `harness-issue-triage` first.
+If the user only asks where incorrect behavior lives, return that diagnosis-only intent to ROSE so it can select `harness-issue-triage`; do not invoke another skill here.
 
 ## Triggers
 
@@ -21,7 +21,7 @@ If the user is only reporting that behavior is wrong and asking where the issue 
 
 ## Workflow
 
-1. Start from a `harness-issue-triage` report when available; otherwise classify the signal with `references/component-taxonomy.md`.
+1. Start from an existing `harness-issue-triage` report when available; otherwise classify the signal directly with `references/component-taxonomy.md`.
 2. Decide required gates from `references/activation-matrix.md`.
 3. Produce a report using `references/change-report-template.md`.
 4. Ask for explicit approval before applying any core harness edit.

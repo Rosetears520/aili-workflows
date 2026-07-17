@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: Records decisions and documentation. Use when making architectural decisions, changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.
+description: Create or update source-grounded documentation when the user explicitly asks for docs/ADR/onboarding material, a public contract change requires docs, or an accepted hard-to-reverse decision meets the ADR gate; do not trigger for every feature, architecture discussion, implementation, review, or SHIP request.
 ---
 
 # Documentation and ADRs
@@ -13,14 +13,13 @@ When documenting code or architecture, synthesize the system behavior from sourc
 
 ## When to Use
 
-- Making a significant architectural decision
-- Choosing between competing approaches
-- Adding or changing a public API
-- Shipping a feature that changes user-facing behavior
-- Onboarding new team members (or agents) to the project
-- When you find yourself explaining the same thing repeatedly
+- The user explicitly requests documentation, an ADR, architecture notes, API docs, or onboarding material.
+- An accepted public API/config/workflow change requires its existing documentation to stay accurate.
+- A settled decision is hard to reverse, surprising without context, and has a real trade-off.
 
-**When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.
+**When NOT to use:** Ordinary implementation, an unresolved architecture choice, SHIP alone, obvious code, comments that restate code, or throwaway prototypes.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, material decisions, artifact placement, approvals, and verification. This skill performs one bounded documentation/ADR loop and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It does not invoke requirements, planning, source research, review, release, or another process skill. Canonical exact-operation and claim-matched verification rules win.
 
 ## Source-Grounded Documentation Reports
 
@@ -323,11 +322,9 @@ Special consideration for AI agent context:
 
 ## Verification
 
-After documenting:
+For the selected documentation artifact:
 
-- [ ] ADRs exist for all significant architectural decisions
-- [ ] README covers quick start, commands, and architecture overview
-- [ ] API functions have parameter and return type documentation
-- [ ] Known gotchas are documented inline where they matter
-- [ ] No commented-out code remains
-- [ ] Rules files (CLAUDE.md etc.) are current and accurate
+- [ ] Claims are anchored to current source/contract evidence
+- [ ] The requested audience, decision, and affected behavior are covered
+- [ ] Conflicts and stale or `Unverified` content remain explicit
+- [ ] The canonical owner selects the smallest freshness/structure check for this artifact

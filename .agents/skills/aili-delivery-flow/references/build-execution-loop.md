@@ -4,7 +4,7 @@ This is the active authority for neutral BUILD package execution. It defines no 
 
 ## Activation and readiness
 
-`/build` or equivalent explicit natural-language implementation intent may start only when exactly one target, current final-test-plan acceptance, a dependency-ready package, verifiable exit criteria, required operation permission, and a valid canonical `CONT-005` envelope are established. Acceptance or vague continuation alone performs zero execution.
+`/build` and equivalent natural-language implementation intent enter this same loop. Formal BUILD starts only when exactly one target, current final-test-plan acceptance, a dependency-ready package, verifiable exit criteria, required operation permission, and a valid canonical `CONT-005` envelope are established. Acceptance or vague continuation alone performs zero execution.
 
 When no package is supplied, synthesize the queue from the active accepted contract: current `tasks.md`, specs, design, `test-plan.md`, dependencies, and repository evidence. Generic execution must not assume Package 1–12 or a fixed task count. For `complete-aili-workflow-orchestration` only, the preserved queue is 1→2→5→3→pairwise-disjoint 6/7/8→join→9→10→11→12, with Package 4 complete/history and overlap serialized.
 
@@ -12,32 +12,32 @@ The current A33 host is the Git repository where the user started OpenCode; a no
 
 ## Queue contract and lightweight savepoints
 
-Packages preserve identity, dependency order, non-overlapping edit ownership, complete accepted behavior, forbidden scope, pre-action safety gates, traceability, and stop conditions. Before multiple work units, record shared source-of-truth work, safe parallel lanes, serial dependencies, ownership boundaries, join points, expected evidence, blockers, and the reason for serialization.
+Packages preserve identity, dependency order, complete accepted behavior, forbidden scope, pre-action safety gates, traceability, and stop conditions. Direct serial execution needs no lane report. Record ownership/join details only when actual concurrent work has a clear benefit.
 
 For each implementation package defined by the active contract before its completion package:
 
-1. Hydrate the accepted contract, context, progress, bounded drift, and fresh repository evidence.
+1. Read the current package/task rows, owning contract sections, target/Git/rules, and affected evidence. Read progress/drift only for resume, deviation, or conflict; do not blanket-hydrate unrelated artifacts.
 2. Implement its complete accepted behavior; scoped work is not a partial patch.
 3. Run a focused test/check only when the changed behavior, risk, package need, or bounded failure diagnosis triggers it; a package boundary alone triggers none.
 4. Record a progress-ledger savepoint with exactly the package identity plus `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package`.
 5. Continue only when dependencies are ready and no material/safety/budget stop applies.
 
-The savepoint is not a test, commit, package approval, closure verdict, or readiness evidence and triggers none of them automatically. Optional feedback is not a mandatory local code-review/test/security gate. Implementation-only objectives have no package-quality review-repair budget. For this umbrella, these rules apply to Packages 1–11 and known relevant findings remain visible to the Package-12 completion inspection.
+The savepoint is not a test, review, commit, package approval, closure verdict, or readiness evidence and triggers none automatically. Optional feedback is not a mandatory local code-review/test/security gate. Package 1–12 terminology is history specific to `complete-aili-workflow-orchestration`.
 
-After all active-contract implementation packages/savepoints, ROSE directly inspects the changed-scope diff, affected requirement/task links, and the smallest targeted evidence needed for the exact completion claim. A full task matrix, convergence review, or review/test/security lane is optional only for a concrete checklist/evidence gap; at most two read-only specialists may be used for such a gap. One targeted repair/recheck is allowed. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD; any remaining blocker is reported without an automatic swarm, broad integration/release matrix, fixed multi-cycle loop, commit, push, PR, or SHIP transition. Package 12 is this umbrella's name for that completion package, not a generic package identity.
+After all active-contract packages/savepoints, ROSE directly inspects the changed-scope diff, affected requirement/task links, and selects the smallest fresh evidence needed for the exact completion claim. A full matrix or review/test/security capability is optional only for one concrete gap; one auxiliary capability may use at most two independent read-only contexts. One targeted repair/recheck is allowed. Success records `IMPLEMENTED_TARGETED_VERIFIED` and stops BUILD; any remaining blocker is reported without an automatic swarm, broad matrix, fixed multi-cycle loop, commit, push, PR, or SHIP transition. Package 12 is only this umbrella's historical name for that inspection.
 
 ## Loop taxonomy
 
-Exactly six inner loops exist:
+The following names are bounded loop vocabulary, not an automatic sequence. One current intent selects one primary loop; a loop returns any unmet need to ROSE and never invokes another loop itself.
 
 | Inner loop | Trigger | Terminal boundary |
 |---|---|---|
-| question | material ambiguity or explicit grilling | answered, waived, named `Unverified`, user stop |
+| question | material ambiguity or explicit grilling | answered, named `Unverified`, or user stop |
 | delta | correction or material feedback | covered, or DEFINE writeback/revalidation |
-| evidence/plan | formal, unfamiliar, risky, or version-sensitive planning | sufficient stressed plan or blocked/`Unverified` |
+| evidence/plan | explicit planning/source request or one material evidence gap | sufficient bounded evidence/plan or blocked/`Unverified` |
 | neutral BUILD | accepted plan plus runnable package | complete package/savepoint or material/safety/budget/cancel stop |
-| review/repair | Direct inspection or focused specialist finding | one targeted repair/recheck, then resolved or blocked/material delta |
-| convergence | active-contract completion or affected SHIP claim | required links complete or the applicable claim blocked/`Unverified` |
+| review/repair | explicit review or one concrete blocking finding | one targeted repair/recheck, then resolved or blocked/material delta |
+| convergence | a concrete missing traceability link for a completion/SHIP claim | required affected links complete or that claim blocked/`Unverified` |
 
 Exactly four outer profiles select initiation and boundary:
 
@@ -69,12 +69,12 @@ For each non-null counter, `remaining = max(limit - consumed, 0)`. Zero, negativ
 - Midrun accounting loss is valid only after active accounting. Preserve the non-null counter, last actual counters/overshoot, set `accounting_status: lost`, and block before another action.
 - A turn uses iteration `{limit: 1, consumed: 0, remaining: 1}` and `review_repair: null`.
 - Implementation-only package objectives use `review_repair: null`.
-- The direct completion inspection uses `review_repair: null` unless one targeted repair/recheck is needed; that bounded recheck uses exactly `review_repair.limit: 1`. For this umbrella that inspection is Package 12.
+- The direct completion inspection uses `review_repair: null` unless one targeted repair/recheck is needed; that bounded recheck uses exactly `review_repair.limit: 1`. This umbrella historically names the inspection Package 12.
 - LP templates consume zero. Each external/manual run instantiates all four entries with concrete zeroed counters before execution.
 
 Iteration and non-null review actions preflight one remaining unit, consume exactly one, and never exceed limit. For these discrete counters, `consumed > limit` is corrupted state: block before any action or repair, preserve the observed values for diagnosis, and do not classify the excess as an allowed overshoot. Time/token actions preflight current remaining and any reliable known bound. Only an indivisible observed time/token overshoot preserves actual consumed, sets remaining zero, records exact `overshoot`, stops, and permits no subsequent action. Resume preserves every counter, status, overshoot, and stop condition without reset or evasion.
 
-Terminal outcomes are `complete`, `need-user`, `material-delta`, `blocked`, `Unverified`, `cancelled`, or `budget-exhausted`; terminal handling writes applicable formal/sidecar/progress evidence.
+Terminal outcomes are `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, `Unverified`, `cancelled`, or `budget-exhausted`; terminal handling writes applicable formal/sidecar/progress evidence.
 
 ## Exact continuation
 

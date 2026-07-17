@@ -887,8 +887,8 @@ def validate_command_contracts() -> list[str]:
         "commands/ship.md": {
             "required": [
                 "Invoke `aili-delivery-flow` in SHIP mode.",
-                "Reconcile final diff, release-blocker audit, review, repair, verification, and closeout before handoff, merge, release, or archive.",
-                "Do not review, repair, or claim readiness without fresh explicit SHIP intent, current implementation evidence, and fresh claim-relevant evidence; exact high-risk/Git/release operations retain separate approval.",
+                "Reconcile the implemented target directly and select only the evidence, review, repair, packaging, or release check required by the exact closeout claim.",
+                "Do not start a review swarm, broad matrix, or repair cycle merely because SHIP was requested. Fresh SHIP intent and current implementation evidence are required; exact high-risk/Git/release operations retain separate approval.",
                 "Mode/target, closeout path when applicable, verdict, blocking or `Unverified` evidence, approvals needed, and next action.",
             ],
             "forbidden": ["git status --short --branch", "classify dirty paths", "propose cleanup for residue", "Savepoint commits"],
@@ -923,10 +923,10 @@ def validate_local_review_gate_contracts() -> list[str]:
             "NEEDS_REVIEW",
             "PASS_WITH_UNVERIFIED",
             "REREVIEW_REQUIRED",
-            "Review lanes remain read-only",
-            "separate edit/repair agent or edit/test lane",
+            "Any delegated review context remains read-only and terminal",
+            "ROSE may repair directly or use one independently justified fresh edit assignment",
             "convergence-reviewer",
-            "phase checkpoint",
+            "A local-review report neither triggers nor satisfies lifecycle completion",
             "skipped reason with risk",
             "remote state",
             "exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
@@ -1003,10 +1003,6 @@ def validate_local_review_gate_contracts() -> list[str]:
             "review/fix parity",
             "exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
         ],
-        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "`/local-review` remains a standalone non-delivery audit",
-            "supplies no lifecycle acceptance or SHIP-readiness authority",
-        ],
         "agents/convergence-reviewer.md": [
             "external_directory: deny",
             "task: deny",
@@ -1016,7 +1012,8 @@ def validate_local_review_gate_contracts() -> list[str]:
         ],
         ".agents/skills/review-pipeline/SKILL.md": [
             "Direct ROSE diff inspection",
-            "at most two relevant specialists",
+            "Choose at most one auxiliary specialist capability",
+            "at most two independent contexts only when both units have a clear benefit",
             "one targeted recheck",
             "Never creates an automatic review swarm",
         ],
@@ -1115,16 +1112,16 @@ def validate_define_artifact_contracts() -> list[str]:
             "BUILD Readiness",
         ],
         ".agents/skills/aili-delivery-flow/references/questionnaire-policy.md": [
-            "Artifact Freshness Gate",
-            "Conversation context is stale",
-            "disk wins",
+            "Artifact Freshness",
+            "Disk wins",
+            "freshness is event-directed",
             "interview.md",
             "requirements-grilling",
         ],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": [
-            "Artifact Freshness Gate",
-            "Conversation context is stale",
-            "disk wins",
+            "Artifact Freshness",
+            "Disk wins",
+            "freshness is event-directed",
             "test-plan.md",
             "test-document-generator",
         ],
@@ -1132,12 +1129,12 @@ def validate_define_artifact_contracts() -> list[str]:
             "change-interviewer",
             "interview packet",
             "interview.md",
-            "unresolved readiness follow-up defaults to chat-first interaction with AI write-back",
-            "ask unresolved blocking follow-up questions in chat by default",
+            "focused unresolved-answer follow-up defaults to chat-first interaction with AI write-back",
+            "ask one decision-changing blocking question in chat",
             "write the user's accepted answer, accepted default, explicit waiver, or named `UNVERIFIED` state into `interview.md`",
-            "re-read answers from disk before classification, readiness, or write-back",
+            "re-read once before classification, readiness, or write-back",
             "Do not call the packet `READY` from chat-only content",
-            "Round 2+",
+            "Default to one focused follow-up",
             "Re-read the filled packet from disk",
             "ambiguous",
             "BLOCKED",
@@ -1154,8 +1151,8 @@ def validate_define_artifact_contracts() -> list[str]:
         ".agents/skills/requirements-grilling/references/INTERVIEW-PACKET-FORMAT.md": [
             "# 需求拷问包：<change-name>",
             "资料来源与证据",
-            "覆盖矩阵与状态",
-            "术语 / 领域模型挑战",
+            "材料性决策与状态",
+            "术语或领域边界问题",
             "答案吸收记录",
         ],
         ".agents/skills/requirements-grilling/references/CONTEXT-FORMAT.md": [
@@ -1182,7 +1179,7 @@ def validate_define_artifact_contracts() -> list[str]:
             "test-document-generator",
             "interview.md",
             "test-plan.md",
-            "UNVERIFIED",
+            "Unverified",
         ],
         "docs/harness/command-lifecycle.md": [
             "requirements-grilling",
@@ -1214,14 +1211,14 @@ def validate_neutral_build_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
         "commands/build.md": ["neutral", "accepted scoped queue", "progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
-        ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "resolved ready target", "derive the queue from the active contract", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize the ordered queue from the active accepted contract", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "current acceptance, target, package, permission, and claim-verification path", "Derive a dependency-ordered queue from the accepted contract", "smallest fresh check supporting the exact claim"],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize the ordered queue from the accepted contract", "IMPLEMENTED_TARGETED_VERIFIED"],
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["synthesize a queue from the active accepted contract", "user selects the A33 host", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "compact packet contract", "missing manual package text is not a stop condition", "Package 12"],
-        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "active accepted contract", "Exactly six inner loops", "Exactly four outer profiles", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "A33 admission and operation gates", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "one minimal direct changed-scope", "selected only for a concrete checklist/evidence gap", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "compact packet contract", "missing manual package text is not a stop condition", "Package 1–12 naming is historical"],
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "active accepted contract", "bounded loop vocabulary, not an automatic sequence", "One current intent selects one primary loop", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "A33 admission and operation gates", "IMPLEMENTED_TARGETED_VERIFIED"],
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope/affected links", "selected only for a concrete gap or affected SHIP claim", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "IMPLEMENTED_TARGETED_VERIFIED", "fresh explicit intent", "exact commit/push/merge/release approvals"],
-        "docs/harness/command-lifecycle.md": ["progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "exactly six inner loops"],
+        "docs/harness/command-lifecycle.md": ["progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "bounded loop vocabulary, not an automatic sequence"],
         "docs/harness/aili-harness-contract.md": ["Neutral BUILD execution", "IMPLEMENTED_TARGETED_VERIFIED", "Active-contract completion package"],
     }
     for relative, markers in required_markers.items():
@@ -1398,17 +1395,17 @@ def validate_traceability_contracts() -> list[str]:
             "Unverified",
         ],
         ".agents/skills/test-document-generator/SKILL.md": [
-            "requirements/decisions/risks traceability matrix is mandatory",
+            "formal changes include a traceability matrix from requirement/decision/risk",
             "task/package",
             "file/artifact",
-            "verification/evidence",
+            "verification command or inspection, evidence",
             "Open Question",
             "Unverified",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "map each package from source requirement/decision/risk to task/package",
+            "active-contract package queue",
             "changed files/artifacts mapped to requirements/decisions/risks",
-            "changed-scope diff and affected requirement/task links",
+            "final changed scope and affected links",
             "only for a concrete gap",
             "Open Question",
             "Unverified",
@@ -1418,11 +1415,6 @@ def validate_traceability_contracts() -> list[str]:
             "requirements/tasks/test-plan items",
             "implementation, verification, review, and security evidence",
             "Open Question",
-            "Unverified",
-        ],
-        ".agents/skills/verification-before-completion/SKILL.md": [
-            "smallest fresh check",
-            "Do not automatically dispatch a verifier",
             "Unverified",
         ],
     }
@@ -1445,11 +1437,11 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "agents/rose.md": [
             "Deliver the complete accepted scope",
             "Prefer direct work",
-            "run the smallest claim-matched check",
+            "run the smallest fresh check that supports the exact claim",
         ],
         "templates/opencode-global-AGENTS.md": [
             "Implement the complete, appropriately scoped change that satisfies the accepted task.",
-            "Run the most relevant focused verification first, then broaden only as needed.",
+            "Run the selected focused verification first, then broaden only when the claim still lacks evidence.",
             "the diff is task-scoped and non-speculative",
         ],
         "commands/build.md": [
@@ -1458,9 +1450,9 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "one minimal changed-scope completion check",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
-            "require complete implementation for accepted scope",
-            "not artificially tiny patches",
-            "run the most relevant focused verification first",
+            "implement complete scoped packages in dependency order",
+            "selects the smallest completion check",
+            "one permitted targeted repair/recheck",
         ],
         ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": [
             "Implement its complete accepted behavior",
@@ -1535,13 +1527,10 @@ def validate_complete_scoped_work_contracts() -> list[str]:
     errors.extend(require_text_markers(".agents/skills/git-workflow-and-versioning/SKILL.md", git_workflow_markers, "commit allowance"))
 
     external_lookup_markers = [
-        "external lookup only when authorized",
-        "never send secrets or sensitive context",
         "External public-project lookup is allowed only when the current user request, task packet, or project contract allows source lookup",
         "Never send secrets, private data, proprietary code, or sensitive repository context to external search",
     ]
-    errors.extend(require_text_markers(".agents/skills/aili-delivery-flow/references/lifecycle.md", external_lookup_markers[:2], "research-first external lookup gate"))
-    errors.extend(require_text_markers(".agents/skills/mature-project-pattern-research/SKILL.md", external_lookup_markers[2:], "mature-project external lookup gate"))
+    errors.extend(require_text_markers(".agents/skills/mature-project-pattern-research/SKILL.md", external_lookup_markers, "mature-project external lookup gate"))
     if (ROOT / ".agents/skills/git-workflow-and-versioning/SKILL.md").exists():
         git_workflow_text = read_repo_text(".agents/skills/git-workflow-and-versioning/SKILL.md")
         commit_matrix = section_between(git_workflow_text, "Decision matrix:", "## Core Principles")

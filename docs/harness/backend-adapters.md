@@ -11,10 +11,10 @@ Backend adapters store and organize work; they do not weaken lifecycle gates.
 ## Rules
 
 - IDEATE stays non-implementation even if a backend has tasks.
-- DEFINE stops before build until questions/test plan/scope are accepted, explicitly waived, or explicitly accepted as `UNVERIFIED`.
+- Formal DEFINE stops before BUILD until applicable material questions are resolved, required artifacts are coherent/validated, and the final `test-plan.md` is explicitly accepted. `Unverified` does not substitute for a material decision.
 - OpenSpec DEFINE uses deterministic placement under `openspec/changes/<change-id>/`; non-OpenSpec DEFINE asks once where to place interview and test-plan artifacts and records that decision in the active change context.
 - BUILD follows approved packages and forbidden scope.
-- SHIP runs review/repair/final evidence regardless of backend.
+- SHIP uses the same direct-first, affected-claim verification owner regardless of backend; review/repair is selected only for a concrete gap.
 
 ## OpenSpec Direct-Adapter Boundary
 

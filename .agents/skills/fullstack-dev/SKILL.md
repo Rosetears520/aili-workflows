@@ -1,18 +1,20 @@
 ---
 name: fullstack-dev
 description: |
-  Build full-stack apps, backend services, API clients, auth flows, file uploads, and realtime integrations.
+  Build a backend service or an end-to-end frontend/backend integration when service/API/data boundaries are the primary deliverable; do not trigger for pure UI, contract design only, security review, test workflow, or every feature touching both folders.
 ---
 
 # Full-Stack Development Practices
 
-## MANDATORY WORKFLOW — Follow These Steps In Order
+## Bounded Domain Workflow
 
-**When this skill is triggered, you MUST follow this workflow before writing any code.**
+ROSE/`aili-delivery-flow` selects exactly one primary domain owner; do not also load `frontend-dev` or `frontend-ui-engineering` as process owners. This skill does not invoke API design, security, TDD, frontend, CI, review, or another process skill; return one concrete need to ROSE and stop `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Canonical lifecycle approvals and claim-matched verification override generic checklists below.
+
+Near misses: interface shape only, pure UI/component work, marketing/media pages, isolated database design, review/hardening only, or browser/test evidence only.
 
 ### Step 0: Gather Requirements
 
-Before scaffolding anything, ask the user to clarify (or infer from context):
+Before scaffolding, resolve only material choices not already established by the request, repository, or accepted contract:
 
 1. **Stack**: Language/framework for backend and frontend (e.g., Express + React, Django + Vue, Go + HTMX)
 2. **Service type**: API-only, full-stack monolith, or microservice?
@@ -21,7 +23,7 @@ Before scaffolding anything, ask the user to clarify (or infer from context):
 5. **Real-time**: Needed? If yes — SSE, WebSocket, or polling?
 6. **Auth**: Needed? If yes — JWT, session, OAuth, or third-party (Clerk, Auth.js)?
 
-If the user has already specified these in their request, skip asking and proceed.
+Ask one decision-shaped question only when an unresolved choice changes the implementation. Do not issue the full questionnaire by default.
 
 ### Step 1: Architectural Decisions
 
@@ -41,7 +43,7 @@ Briefly explain each choice (1 sentence per decision).
 
 ### Step 2: Scaffold with Checklist
 
-Use the appropriate checklist below. Ensure ALL checked items are implemented — do not skip any.
+Use only checklist rows applicable to the accepted scope; they are domain prompts, not an automatic expansion of the product or verification contract.
 
 ### Step 3: Implement Following Patterns
 
@@ -49,7 +51,7 @@ Write code following the patterns in this document. Reference specific sections 
 
 ### Step 4: Test & Verify
 
-After implementation, run these checks before claiming completion:
+After implementation, return candidate evidence to the canonical verification owner. It selects the smallest check supporting the exact claim; the examples below are not an automatic suite:
 
 1. **Build check**: Ensure both backend and frontend compile without errors
    ```bash
@@ -64,16 +66,16 @@ After implementation, run these checks before claiming completion:
    curl http://localhost:3000/health
    curl http://localhost:3000/api/<resource>
    ```
-3. **Integration check**: Verify frontend can connect to backend (CORS, API base URL, auth flow)
-4. **Real-time check** (if applicable): Open two browser tabs, verify changes sync
+3. **Integration check when affected**: Verify the exact changed frontend/backend boundary.
+4. **Real-time check when affected**: Verify only the accepted synchronization claim.
 
-If any check fails, fix the issue before proceeding.
+If the selected check fails, make at most one in-scope targeted repair/recheck, then report the blocker.
 
 | Failure | First response | If still failing |
 |---|---|---|
 | Build/typecheck fails | Fix the changed package or shared type causing the error | Do not rewrite the stack; report blocker if dependency/schema changes are needed |
-| Auth/CORS/upload smoke test fails | Keep restrictive defaults and inspect middleware/order/config | Ask before relaxing origins, token storage, file limits, or permissions |
-| Database migration/schema mismatch | Stop and inspect existing migration pattern | Do not edit production schema manually; request approval for schema/API contract change |
+| Auth/CORS/upload smoke test fails | Keep restrictive defaults and inspect middleware/order/config | Return the exact security-sensitive relaxation decision to ROSE |
+| Database migration/schema mismatch | Stop and inspect existing migration pattern | Return the exact schema/API contract change to ROSE; do not edit production schema manually |
 | Frontend cannot reach backend | Verify base URL, env loading, proxy, and health endpoint | Report environment gap rather than hardcoding URLs |
 
 ### Step 5: Handoff Summary
@@ -95,8 +97,7 @@ Provide a brief summary to the user:
 - Designing service layers and module boundaries
 - Implementing database access, caching, or background jobs
 - Writing error handling, logging, or configuration management
-- Reviewing backend code for architectural issues
-- Hardening for production
+- Explicitly implementing the accepted backend/service behavior or cross-boundary integration
 - Setting up API clients, auth flows, file uploads, or real-time features
 
 **NOT for:**
@@ -113,7 +114,7 @@ Provide a brief summary to the user:
 | Marketing page, cinematic animation, AI media, persuasive copy | `frontend-dev` | Rich visual frontend experience, not app architecture |
 | Threat modeling, auth hardening, untrusted input risk | `security-and-hardening` | Security review or hardening focus |
 | CI, deployment pipeline, automated gates | `ci-cd-and-automation` | Automation infrastructure focus |
-| Writing tests or proving behavior | `test-driven-development` | Test workflow, often paired with this skill |
+| Explicit TDD or accepted reproduction-first proof | return need to ROSE | Never auto-pair a test workflow with this skill |
 
 ### Trigger Validation
 
@@ -121,12 +122,12 @@ Provide a brief summary to the user:
 |---|---:|---|
 | "Build an Express + React CRUD app with auth" | Yes | Backend + frontend + auth integration |
 | "Create a REST API and connect the frontend" | Yes | Full-stack boundary crossing |
-| "Design the API response schema only" | No | Use `api-and-interface-design` |
-| "Polish this button component" | No | Use `frontend-ui-engineering` |
+| "Design the API response schema only" | No | Return to ROSE; contract design is the narrower candidate owner |
+| "Polish this button component" | No | Return to ROSE; app UI is the narrower candidate owner |
 
 ---
 
-## Quick Start — New Backend Service Checklist
+## Quick Start — New Backend Service Reference Checklist
 
 - [ ] Project scaffolded with **feature-first** structure
 - [ ] Configuration **centralized**, env vars **validated at startup** (fail fast)
@@ -142,7 +143,7 @@ Provide a brief summary to the user:
 - [ ] **Security headers** (helmet or equivalent)
 - [ ] `.env.example` committed (no real secrets)
 
-## Quick Start — Frontend-Backend Integration Checklist
+## Quick Start — Frontend-Backend Integration Reference Checklist
 
 - [ ] **API client** configured (typed fetch wrapper, React Query, tRPC, or OpenAPI generated)
 - [ ] **Base URL** from environment variable (not hardcoded)

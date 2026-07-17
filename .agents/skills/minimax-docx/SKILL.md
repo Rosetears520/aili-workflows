@@ -161,7 +161,7 @@ Also diff to verify content preservation: `$CLI diff --before source.docx --afte
 ## Validation pipeline
 
 Run after every write operation. For Scenario C the full pipeline is **mandatory**; for A/B it is **recommended** (skip only if the operation was trivially simple).
-Use `verification-before-completion` before claiming the document is complete, fixed, passing, or verified; include fresh validation/preview evidence in the response.
+Use the canonical lifecycle/ordinary-task verification owner before claiming the document complete, fixed, passing, or verified; include only the fresh validation/preview evidence needed for that claim.
 
 ```bash
 $CLI merge-runs --input doc.docx                                    # 1. consolidate runs

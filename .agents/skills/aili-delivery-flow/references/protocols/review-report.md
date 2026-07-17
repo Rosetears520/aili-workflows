@@ -1,6 +1,6 @@
 # Review Report Protocol
 
-Review, test, security, coverage, convergence, evaluator, and focused-recheck reports use the exact canonical result/finding envelope in `subagent-result.md`; this protocol does not restate or extend that schema. Workers provide evidence and propose dispositions. ROSE reconciles and owns final disposition; do not vote on lane results, average confidence, or treat a worker verdict as acceptance authority.
+Review, test, security, coverage, convergence, evaluator, and focused-recheck reports use the exact canonical result/finding envelope in `subagent-result.md`; this protocol does not restate or extend that schema. Each worker context is single-use and its report is terminal. Workers provide evidence and propose dispositions. ROSE reconciles and owns lifecycle, integration, and final disposition; do not vote on lane results, average confidence, treat a worker verdict as acceptance authority, resume an old `task_id`, or create an automatic fresh-session retry.
 
 For A33, reject a result unless it references one current WT-001 context, names one packet-declared repository/cwd, points to applicable target rules and the owning-repository artifact destination, records inspected scope/freshness/skips and soft-boundary limits, and performs no broad host scan. A result may reference but never duplicate or rebind identity, keys, approvals, Git state, rule bodies, verification command/cwd, or containment facts.
 

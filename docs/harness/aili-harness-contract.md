@@ -8,7 +8,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 
 - **ROSE runtime charter**: final responsibility, instruction precedence, safety, git, memory, subagent, and completion-claim gates.
 - **Commands**: thin user entrypoints for `/ideate`, `/define`, `/build`, and `/ship` delivery modes, plus `/local-review` as a standalone local audit command that does not replace SHIP or OpenCode's `/review`.
-- **Delivery flow skill**: lifecycle state machine and backend adapter routing.
+- **Delivery flow skill**: one semantic router/control plane for command and natural-language lifecycle/ordinary loops, approvals, directed hydration, and verification ownership.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
 - **Protocols**: reusable artifact and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/protocols/` in this repository.
@@ -20,10 +20,10 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 
 | Mode | Purpose | Stop rule |
 |---|---|---|
-| IDEATE | Explore unclear ideas and options; surface parallelism/no-parallel reasoning and research-first evidence when they affect the方案 | No production implementation. |
-| DEFINE | Produce/align spec, questions, tests, proactive parallelism analysis, and evidence-backed方案 state; OpenSpec interview/test artifacts route through `requirements-grilling` and `test-document-generator` | Stop before BUILD until decision-shaping research/material blockers are resolved, artifacts are coherent/strictly valid, and the user accepts one final test plan; waiver or accepted-`Unverified` is not readiness. |
+| IDEATE | Explore unclear ideas and options directly; use at most one evidence capability for a concrete gap | No production implementation. |
+| DEFINE | Produce only dependency-ready spec/question/test artifacts; `requirements-grilling` and `test-document-generator` are bounded artifact adapters and do not auto-chain | Stop before BUILD until exact material/evidence blockers are resolved, required artifacts are coherent/valid, and the user accepts one final test plan. |
 | BUILD | Derive the accepted queue from the active contract, execute each implementation package with progress-ledger savepoints, then run one minimal changed-scope completion check | No automatic package test/commit/approval; success records `IMPLEMENTED_TARGETED_VERIFIED` and stops before SHIP. This umbrella alone names Packages 1–11 plus Package 12. |
-| SHIP | Reuse event-fresh BUILD evidence and select only stale/affected/risk/integration/packaging/release/merge-result/target checks before closeout | Fresh explicit SHIP intent is required; no broad matrix or lane fanout exists without a concrete gap, and CI failure returns to the user without automatic repair/Git action. |
+| SHIP | Reuse still-covering BUILD evidence and refresh only evidence required by the affected closeout claim | Fresh explicit SHIP intent is required; direct inspection is default, no broad matrix/lane fanout exists without a concrete gap, and CI failure returns without automatic repair/Git action. |
 | LOCAL_REVIEW | Resolve local changes, base branch, commit, PR, or OpenSpec change target and produce a categorized local review report before optional repair | Do not override OpenCode's `/review`, do not mutate remote state, do not repair before a categorized report and explicit approval, and do not claim release or archive readiness. |
 
 ## Artifact Authority
@@ -70,7 +70,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 | Packages | Required behavior | Quality meaning |
 |---|---|---|
 | Active-contract implementation packages | Implement complete assigned behavior in dependency order; preserve exact file ownership and a progress-ledger savepoint with `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package` | Tests/checkers are risk/need-triggered feedback, not automatic savepoint work, package approval, closure, or release readiness |
-| Active-contract completion package | ROSE directly inspects changed-scope diff and affected requirement/task links, runs the smallest sufficient check, optionally uses at most two specialists for a concrete gap, and permits one targeted repair/recheck | Record `IMPLEMENTED_TARGETED_VERIFIED` or a blocker and stop BUILD; Package 12 is this umbrella's name only |
+| Active-contract completion package | ROSE directly inspects changed-scope diff and affected requirement/task links, runs the smallest sufficient check, optionally uses one auxiliary capability for a concrete gap, and permits one targeted repair/recheck | Record `IMPLEMENTED_TARGETED_VERIFIED` or a blocker and stop BUILD; Package 12 is this umbrella's historical name only |
 
 Cross-root execution is fail-closed against exact OpenCode `1.17.18` behavior. Current ask/always/`--auto`, Task-root, role-overlay, symlink/TOCTOU, subprocess/bash, secret, and neighboring-root runtime evidence remains `Unverified`; root approval is not hard containment. Graphify is a separate explicitly approved operation, and missing controls mean no process start. The OpenCode `1.17.18` recursive installed-catalog result for inert upstream reference data remains `UV-005`; distribution/registration/enablement and release readiness must not be claimed while catalog or required `0644` mode evidence is unresolved.
 
@@ -78,13 +78,13 @@ Cross-root execution is fail-closed against exact OpenCode `1.17.18` behavior. C
 
 - Do not rename the OpenSpec change directory without separate approval.
 - Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, `/review`, release-blocker audit, or evolve; `/local-review` is the only AILI-owned public review command allowed by the local review gate contract.
-- Do not hide cross-entrypoint proactive parallel planning, research-first planning evidence, or requested packaging gates solely inside long protocol text when a thin command/ROSE surface needs to expose the stop condition.
+- Do not add proactive parallelism/research/review ceremony to thin command surfaces; expose only the current material decision or exact risky-operation stop condition.
 - Do not modify SQLite schema, lockfiles, dependency manifests, or memory DBs in this phase.
 - Do not apply core harness edits without approved scope and verification trigger.
 - Do not add `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, worktree-maintenance, or Graphify commands, or hidden/unrequested AILI cron/scheduler/watcher/webhook/listener/daemon/queue/dependency/hook/auto-retry runtime. This does not blanket-reject explicitly scoped product/repository automation that passes its formal/high-risk gates.
 
 ## Acceptance
 
-- Required docs, protocols, fixtures, index, and static runner exist.
-- `python scripts/harness_fixture_check.py` passes.
-- Any completed OpenSpec task is backed by file evidence and verification evidence.
+- Required current owners and artifacts are structurally coherent.
+- The active change selects its accepted smallest static/runtime checks; this architecture document imposes no fixture suite or full matrix.
+- Any completion claim is backed by affected-file links and fresh claim-matched evidence; model behavior remains `Unverified` when only static evidence exists.

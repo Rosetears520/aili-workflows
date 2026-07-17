@@ -7,11 +7,11 @@ description: Code-review quality gate and test-enhancement rubric. Use when ROSE
 
 ## Purpose
 
-Use this skill to strengthen existing review, test, and fixture lanes with a stricter quality-gate rubric.
+Use this skill as one bounded rubric auxiliary for an already selected review/test/fixture question.
 
-It does not create a new reviewer persona. It augments `code-reviewer`, `review-pipeline`, `test-engineer`, and fixture/golden-output checks with better evidence, prioritization, and reporting.
+It does not create a reviewer persona, select another skill, dispatch a lane, or become a final gate. ROSE may pass its compact rubric to an already justified reviewer/tester.
 
-ROSE or the owning review pipeline still decides the final acceptance status.
+ROSE still decides the final acceptance status.
 
 ## Trigger
 
@@ -23,19 +23,14 @@ ROSE or the owning review pipeline still decides the final acceptance status.
 
 ## Near Misses
 
-- General code review execution: use `code-review-and-quality` or the existing `code-reviewer` lane.
-- Review orchestration, fan-out, reconciliation, or final gate: use `review-pipeline`.
-- Coverage-only sufficiency: use `coverage-review`.
-- PR test-matrix or CI-log triage: use `pr-test-analysis`.
-- False-success review only, without broader review rubric needs: use `silent-failure-hunting`.
-- Security exploitability or secret-handling risk: use `security-and-hardening` or `security-auditor`.
+- General review execution, review routing, coverage-only analysis, PR/CI triage, false-success hunting, or security exploitability are different primary questions. Return the exact mismatch to ROSE; do not invoke another skill or agent here.
 
 ## Required Routing
 
-- Owner lane: normally `subagent:review`; test-enhancement recommendations may route to `subagent:test`.
-- Agent reuse: strengthen the existing `code-reviewer`, `test-engineer`, fixture reviewer, or review-pipeline lane; do not invent a new code-review agent.
+- Owner: ROSE/`aili-delivery-flow`; this rubric may accompany one already justified review or test assignment.
+- Agent use remains fresh, single-use, direct-first, and ROSE-owned; this skill does not select or resume the agent.
 - Read-only by default: recommendations may request fixes, tests, or fixture updates, but this skill does not edit implementation or fixture files.
-- Final authority: reviewers provide evidence and recommendations; ROSE or `review-pipeline` owns final PASS/blocked decisions.
+- Final authority: reviewers provide evidence and recommendations; ROSE owns final PASS/blocked decisions.
 
 ## Review Priority Model
 

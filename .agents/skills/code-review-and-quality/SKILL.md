@@ -1,27 +1,29 @@
 ---
 name: code-review-and-quality
-description: Conducts multi-axis code review. Use before merging any change. Use when reviewing code written by yourself, another agent, or a human. Use when you need to assess code quality across multiple dimensions before it enters the main branch.
+description: Conduct one bounded evidence-grounded code review when the user explicitly requests review or ROSE names a concrete unresolved correctness/quality risk; do not trigger automatically after implementation, before every merge, for every bug fix/refactor, or as a completion gate.
 ---
 
 # Code Review and Quality
 
 ## Overview
 
-Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
+Perform a risk-proportional review of the requested scope. Direct ROSE diff inspection remains the ordinary completion default; this skill is not mandatory merely because code changed or a merge may follow.
 
-**The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
+**Recommendation standard:** Report whether the reviewed evidence supports approval, conditional disposition, or changes. ROSE/user owns the final verdict; this skill creates no merge or completion authority.
 
 ## When to Use
 
-- Before merging any PR or change
-- After completing a feature implementation
-- When another agent or model produced code you need to evaluate
-- When refactoring existing code
-- After any bug fix (review both the fix and the regression test)
+- The user explicitly asks to review a diff, PR, commit, file set, or generated change.
+- ROSE identifies one concrete unresolved quality risk that direct inspection cannot cover adequately.
+- A formal SHIP claim explicitly selects a bounded review of affected scope.
+
+Near misses: implementation completion, a pending merge, multi-file work, a bug fix, or a refactor does not select this skill by itself.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, repair authorization, specialist selection, and final verification/verdict. This skill runs one bounded review pass and returns `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. It does not invoke stress-test, security, performance, testing, review-pipeline, or another process skill; return one named specialist gap to ROSE. Canonical approval and claim-matched verification rules win.
 
 ## The Five-Axis Review
 
-Every review evaluates code across these dimensions:
+Select only dimensions relevant to the requested scope and credible risk:
 
 ### 1. Correctness
 
@@ -30,7 +32,7 @@ Does the code do what it claims to do?
 - Does it match the spec or task requirements?
 - Are edge cases handled (null, empty, boundary values)?
 - Are error paths handled (not just the happy path)?
-- Does it pass all tests? Are the tests actually testing the right things?
+- Does fresh verification support the changed behavior, and do any inspected tests actually test the right things?
 - Are there off-by-one errors, race conditions, or state inconsistencies?
 
 ### 2. Readability & Simplicity
@@ -188,9 +190,9 @@ Check the author's verification story:
 - Is there a before/after comparison?
 ```
 
-### Step 6: Review Stress Test
+### Step 6: Direct Evidence Check
 
-Before final verdict on a non-trivial review, use `strategy-stress-test`.
+Before the bounded review result, inspect the evidence directly. Do not invoke a separate stress-test merely because review is ending.
 
 Check whether:
 
@@ -218,63 +220,36 @@ Do not approve if a remaining evidence gap could hide a Critical or Important is
 
 | Trigger | First action | If still unresolved |
 |---|---|---|
-| Diff is too large to review confidently | Request split or scoped summary with evidence anchors | Do not approve; escalate to maintainer/product owner for decomposition |
-| Required verification is missing or stale | Ask author to run targeted checks and provide output | Use Conditional only with explicit caller/supervisor acceptance; otherwise Request changes |
-| Security, privacy, migration, or rollout risk appears | Request specialist review or focused evidence | Do not approve until the specialist risk is resolved or formally accepted |
-| Reviewer and author disagree on a blocker | Re-anchor on facts, spec, tests, and project rules | Escalate with both positions and evidence; do not rubber-stamp |
+| Diff is too large to review confidently | Return the exact decomposition/evidence need to ROSE | Do not recommend approval from partial evidence |
+| Required verification is missing or stale | Return the exact targeted-check need to ROSE | Recommend Conditional only with explicit caller acceptance; otherwise Request changes |
+| Security, privacy, migration, or rollout risk appears | Return one named specialist/evidence gap to ROSE | Do not recommend approval until the risk is resolved or formally accepted |
+| Reviewer and author disagree on a blocker | Re-anchor on facts, spec, tests, and project rules | Return both positions and evidence to ROSE/user; do not rubber-stamp |
 
-## Multi-Model Review Pattern
+## Optional Independent Perspective
 
-Use different models for different review perspectives:
-
-```
-Model A writes the code
-    │
-    ▼
-Model B reviews for correctness and architecture
-    │
-    ▼
-Model A addresses the feedback
-    │
-    ▼
-Human makes the final call
-```
-
-This catches issues that a single model might miss — different models have different blind spots.
-
-**Example prompt for a review agent:**
-```
-Review this code change for correctness, security, and adherence to
-our project conventions. The spec says [X]. The change should [Y].
-Flag any issues as Critical, Important, or Suggestion.
-```
+Only ROSE may select an independent reviewer when a concrete capability/evidence gap passes the delegation gate. This skill does not dispatch or create a multi-model sequence.
 
 ## Dead Code Hygiene
 
-After any refactoring or implementation change, check for orphaned code:
+When dead-code risk is relevant to the requested review scope, check for orphaned code:
 
 1. Identify code that is now unreachable or unused
 2. List it explicitly
-3. **Ask before deleting:** "Should I remove these now-unused elements: [list]?"
+3. Return task-related removal candidates to ROSE; this review skill neither deletes them nor creates a separate deletion question
 
-Don't leave dead code lying around — it confuses future readers and agents. But don't silently delete things you're not sure about. When in doubt, ask.
+Do not expand the review into adjacent cleanup. ROSE decides whether a reported removal is already in scope or needs a material scope decision.
 
 ```
 DEAD CODE IDENTIFIED:
 - formatLegacyDate() in src/utils/date.ts — replaced by formatDate()
 - OldTaskCard component in src/components/ — replaced by TaskCard
 - LEGACY_API_URL constant in src/config.ts — no remaining references
-→ Safe to remove these?
+→ Removal disposition: return to ROSE
 ```
 
 ## Review Speed
 
-Slow reviews block entire teams. The cost of context-switching to review is less than the waiting cost imposed on others.
-
-- **Respond within one business day** — this is the maximum, not the target
-- **Ideal cadence:** Respond shortly after a review request arrives, unless deep in focused coding. A typical change should complete multiple review rounds in a single day
-- **Prioritize fast individual responses** over quick final approval. Quick feedback reduces frustration even if multiple rounds are needed
-- **Large changes:** Ask the author to split them rather than reviewing one massive changeset
+Return one bounded pass promptly. This skill does not manage review-service SLAs or require multiple rounds; any later review is a fresh ROSE/user decision based on changed evidence.
 
 ## Handling Disagreements
 
@@ -285,7 +260,7 @@ When resolving review disputes, apply this hierarchy:
 3. **Software design** must be evaluated on engineering principles, not personal preference
 4. **Codebase consistency** is acceptable if it doesn't degrade overall health
 
-**Don't accept "I'll clean it up later."** Experience shows deferred cleanup rarely happens. Require cleanup before submission unless it's a genuine emergency. If surrounding issues can't be addressed in this change, require filing a bug with self-assignment.
+Do not hide a current blocker behind “clean it up later.” Report out-of-scope findings and their risk without requiring a new tracker; ROSE/user owns disposition.
 
 ## Honesty in Review
 
@@ -305,7 +280,7 @@ Part of code review is dependency review:
 1. Does the existing stack solve this? (Often it does.)
 2. How large is the dependency? (Check bundle impact.)
 3. Is it actively maintained? (Check last commit, open issues.)
-4. Does it have known vulnerabilities? (`npm audit`)
+4. Does current approved evidence show known vulnerabilities? Do not run a network-capable audit automatically.
 5. What's the license? (Must be compatible with the project.)
 
 **Rule:** Prefer standard library and existing utilities over new dependencies. Every dependency is a liability.
@@ -357,29 +332,28 @@ Part of code review is dependency review:
 - [ ] Any needed specialist pass is named
 
 ### Verdict
-- [ ] **Approve** — Ready to merge
+- [ ] **Approve** — Reviewed evidence supports approval; ROSE/user decides merge
 - [ ] **Conditional** — Remaining evidence gaps are accepted or deferred with owner/date when available, or with explicit caller/supervisor acceptance in local workflow
 - [ ] **Request changes** — Issues must be addressed
 - [ ] Verdict matches the worst unresolved finding from the Verdict Gate
 ```
 ## See Also
 
-- For detailed security review guidance, use `security-and-hardening`
-- For detailed profiling and optimization checks, use `performance-optimization`
+- Return a concrete security or performance specialist need to ROSE rather than invoking another skill.
 
 ## Common Rationalizations
 
 | Rationalization | Reality |
 |---|---|
 | "It works, that's good enough" | Working code that's unreadable, insecure, or architecturally wrong creates debt that compounds. |
-| "I wrote it, so I know it's correct" | Authors are blind to their own assumptions. Every change benefits from another set of eyes. |
-| "We'll clean it up later" | Later never comes. The review is the quality gate — use it. Require cleanup before merge, not after. |
+| "I wrote it, so I know it's correct" | Authors can be blind to their own assumptions. When this review is selected, anchor it in independent evidence rather than confidence. |
+| "We'll clean it up later" | Do not hide a current blocker. This review is a bounded evidence pass, not the merge or completion gate. |
 | "AI-generated code is probably fine" | AI code needs more scrutiny, not less. It's confident and plausible, even when wrong. |
 | "The tests pass, so it's good" | Tests are necessary but not sufficient. They don't catch architecture problems, security issues, or readability concerns. |
 
 ## Red Flags
 
-- PRs merged without any review
+- Explicitly requested review omitted from the claimed evidence
 - Review that only checks if tests pass (ignoring other axes)
 - "LGTM" without evidence of actual review
 - Security-sensitive changes without security-focused review
@@ -392,10 +366,10 @@ Part of code review is dependency review:
 
 ## Verification
 
-After review is complete:
+After the bounded review is complete:
 
 - [ ] All Critical issues are resolved
 - [ ] All Important issues are resolved or explicitly deferred with justification
-- [ ] Tests pass
-- [ ] Build succeeds
-- [ ] The verification story is documented (what changed, how it was verified)
+- [ ] Fresh evidence supports only the reviewed claims
+- [ ] The canonical owner selects any required test/build check
+- [ ] Remaining scope and `Unverified` risks are documented

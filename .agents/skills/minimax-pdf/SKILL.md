@@ -215,4 +215,4 @@ bash scripts/make.sh demo    # build a sample PDF
 | Node.js 18+ | `render_cover.js` | system |
 | `playwright` + Chromium | `render_cover.js` | `npm install -g playwright && npx playwright install chromium` |
 
-Before claiming the PDF is complete, fixed, passing, or verified, use `verification-before-completion` and cite fresh build/form/visual verification evidence.
+Before claiming the PDF complete, fixed, passing, or verified, follow the canonical lifecycle/ordinary-task verification owner and cite the fresh build/form/visual evidence selected for that claim.

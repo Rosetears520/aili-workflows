@@ -6,7 +6,7 @@ description: |
 
 # Frontend Studio
 
-Build complete, production-ready frontend pages by orchestrating 5 specialized capabilities: design engineering, motion systems, AI-generated assets, persuasive copy, and generative art.
+Build rich marketing/media frontend pages as one primary domain loop. Use only the design, motion, asset, copy, or generative-art techniques required by the accepted deliverable; do not treat them as separate process workflows.
 
 ## Natural-Language Usage
 
@@ -14,17 +14,19 @@ Use this OpenCode skill when the user asks for a rich visual frontend experience
 
 ## Routing Boundary
 
-Use this skill for standalone or campaign-like frontend work where the deliverable depends on premium visual design, cinematic scroll/motion, persuasive copy, AI-generated media assets, or generative art. For production UI components inside an existing app, use `frontend-ui-engineering`. For backend + frontend integration, use `fullstack-dev`. For GLSL/procedural shader effects, use `shader-dev`.
+Use this skill for standalone or campaign-like frontend work where the deliverable depends on premium visual design, cinematic scroll/motion, persuasive copy, AI-generated media assets, or generative art. Production app UI, backend integration, and shader-only work are near misses returned to ROSE so it can select one narrower primary owner.
 
-Do not use this skill for ordinary CRUD screens, dashboard fixes, isolated component styling, backend/API work, native mobile apps, or shader-only work. If rich media assets are not required, keep the implementation inside the existing app workflow and route to the narrower skill.
+Do not use this skill for ordinary CRUD screens, dashboard fixes, isolated component styling, backend/API work, native mobile apps, or shader-only work. If rich media assets are not required, return the mismatch to ROSE so it can select the narrower primary owner; do not invoke that skill here.
+
+ROSE/`aili-delivery-flow` selects exactly one of `frontend-dev`, `frontend-ui-engineering`, or `fullstack-dev` as the primary domain owner for the current intent. This skill does not invoke another domain/process skill; it returns one concrete backend, browser, source, asset, or verification need to ROSE and stops `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Safe local work proceeds without micro-approval; external asset generation, credentials, dependency changes, and publication retain exact gates. Canonical lifecycle approval and claim-matched verification override generic phase/checklist breadth below.
 
 | Trigger | Use this skill? | Why |
 |---|---:|---|
 | "Build a cinematic product landing page with hero video" | Yes | Rich marketing/media frontend |
 | "Generate imagery and copy for a campaign page" | Yes | AI assets + persuasive copy |
-| "Fix this dashboard form state" | No | Route to `frontend-ui-engineering` |
-| "Add an API and database behind this UI" | No | Route to `fullstack-dev` |
-| "Write only a WebGL fragment shader" | No | Route to `shader-dev` |
+| "Fix this dashboard form state" | No | Return mismatch to ROSE; app UI is the narrower candidate |
+| "Add an API and database behind this UI" | No | Return mismatch to ROSE; full-stack integration is the narrower candidate |
+| "Write only a WebGL fragment shader" | No | Return mismatch to ROSE; shader work is the narrower candidate |
 
 ## Skill Structure
 
@@ -68,7 +70,7 @@ Keep sections/components in the framework's normal component directory (`src/com
 
 ## Compliance
 
-**All rules in this skill are mandatory. Violating any rule is a blocking error — fix before proceeding or delivering.**
+The specialized design/accessibility/safety constraints apply when their feature is selected. Generic quality lists do not create full-suite, review, package, or completion gates beyond the canonical owner.
 
 ---
 
@@ -86,10 +88,10 @@ Keep sections/components in the framework's normal component directory (`src/com
 Generate all image/video/audio assets using `scripts/`. NEVER use placeholder URLs (unsplash, picsum, placeholder.com, via.placeholder, placehold.co, etc.) or external URLs.
 
 1. Parse asset requirements (type, style, spec, usage)
-2. Craft optimized prompts, show to user, confirm before generating
+2. Craft optimized prompts; obtain only the exact external generation approval when policy requires it, without adding a separate prompt-approval gate
 3. Execute via scripts, save to project — do NOT proceed to Phase 5 until all assets are saved locally
 
-🔴 CHECKPOINT / 🛑 STOP: If the request only needs layout/components and does not require premium media, motion, copy, or generative art, stop and route to `frontend-ui-engineering` before generating assets.
+🔴 CHECKPOINT / 🛑 STOP: If the request only needs layout/components and does not require premium media, motion, copy, or generative art, return the mismatch to ROSE before generating assets; this skill does not invoke `frontend-ui-engineering`.
 
 ### Phase 4: Copywriting & Content
 Follow copywriting frameworks (AIDA, PAS, FAB) to craft all text content. Do NOT use "Lorem ipsum" — write real copy.
@@ -115,7 +117,7 @@ Run final checklist (see Quality Gates section).
 Adapt dynamically based on user requests.
 
 ## 1.2 Architecture Conventions
-- **DEPENDENCY VERIFICATION:** Check `package.json` before importing any library. Output install command if missing.
+- **DEPENDENCY VERIFICATION:** Check `package.json` before importing any library. If missing, return the exact dependency decision to ROSE; do not install or change a lockfile without approval.
 - **Framework:** React/Next.js. Default to Server Components. Interactive components must be isolated `"use client"` leaf components.
 - **Styling:** Tailwind CSS. Check version in `package.json` — NEVER mix v3/v4 syntax.
 - **ANTI-EMOJI POLICY:** NEVER use emojis anywhere. Use Phosphor or Radix icons only.
@@ -288,7 +290,7 @@ Env: `MINIMAX_API_KEY` (required).
 ## 3.2 Workflow
 1. **Parse:** type, quantity, style, spec, usage
 2. **Craft prompt:** Be specific (composition, lighting, style). **NEVER** include text in image prompts.
-3. **Execute:** Show prompt to user, **MUST confirm before generating**, then run script
+3. **Execute:** Return the exact external generation operation to ROSE for approval when required, then run it; do not add a second prompt-approval gate
 4. **Save:** `<project>/public/assets/{images,videos,audio}/` as `{type}-{descriptor}-{timestamp}.{ext}` — **MUST save locally**
 5. **Post-process:** Images → WebP, Videos → ffmpeg compress, Audio → normalize
 6. **Deliver:** File path + code snippet + CSS suggestion
@@ -297,12 +299,12 @@ Env: `MINIMAX_API_KEY` (required).
 
 | Trigger | First action | If still failing |
 |---|---|---|
-| `MINIMAX_API_KEY` missing or invalid | Read `references/env-setup.md`; ask the user to provide/configure the key | Use CSS/SVG/local hand-built visuals only with user approval; mark AI media generation unverified |
-| MiniMax script exits with an error | Re-run with the exact script, prompt, and flags from `references/minimax-cli-reference.md` | Report the command and stderr; do not replace with placeholder URLs |
-| Video async job times out or download fails | Poll once more and verify the returned asset URL/path | Fall back to image/animated CSS treatment only after user confirmation |
-| Generated asset is off-brand, text-filled, or unusable | Regenerate with a corrected prompt from `references/asset-prompt-guide.md` | Ask the user to approve a simpler local visual treatment |
+| `MINIMAX_API_KEY` missing or invalid | Return the credential need and local-fallback option to ROSE | Treat the fallback as a material output decision when it changes the accepted visual target; mark AI media generation unverified |
+| MiniMax script exits with an error | Report the exact command and stderr; do not retry an external operation implicitly | Return any changed-evidence retry need to ROSE; do not replace with placeholder URLs |
+| Video async job times out or download fails | Report the timeout and current returned asset URL/path evidence | Return retry versus local-treatment options to ROSE when they change the output or require another external operation |
+| Generated asset is off-brand, text-filled, or unusable | Prepare the corrected prompt without executing it | Return regeneration versus simpler local treatment to ROSE when a material choice or external approval is required |
 
-🔴 CHECKPOINT / 🛑 STOP: Never proceed to UI integration while required media files are missing; either recover, get user-approved fallback assets, or report `NEEDS_REVIEW`.
+🔴 CHECKPOINT / 🛑 STOP: Never proceed to UI integration while required media files are missing. Return a material fallback decision or exact external retry need to ROSE, or stop `blocked`/`Unverified`.
 
 ## 3.4 Preset Shortcuts
 

@@ -15,16 +15,14 @@ Use this skill before exposing a repository, package, template, or npm release t
 
 ## Near Misses
 
-- Deployment rollout, monitoring, rollback, or launch-window planning: use `shipping-and-launch`.
-- Secrets, vulnerability, auth, or permission review: use `security-auditor` / `security-and-hardening`.
-- Removing private data or sanitizing a repository for publication: use `opensource-sanitizer` if available, otherwise escalate for an approved sanitizer workflow.
+- Deployment rollout, security-only review, or repository sanitization are different primary intents. Return the exact mismatch or specialist evidence need to ROSE; do not invoke another skill or agent here.
 - Actual publishing, tagging, release creation, deletion, history rewrite, or destructive cleanup: require explicit human approval outside this skill.
 
 ## Required Routing
 
-- Owner lane: `subagent:review` or release-readiness review lane.
+- Owner: ROSE/`aili-delivery-flow`; an independently justified specialist assignment remains fresh, terminal, and ROSE-owned.
 - Default mode: non-destructive inspection and dry-run commands only.
-- If a blocker requires edits, route a scoped repair package to `implementer` after the release owner approves the change.
+- If a blocker requires edits, return a scoped repair need to ROSE after the release owner approves the change; do not dispatch or repair from this skill.
 
 ## Readiness Checklist
 

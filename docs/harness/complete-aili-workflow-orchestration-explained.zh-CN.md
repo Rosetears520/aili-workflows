@@ -10,6 +10,18 @@
 
 [已知] 本文只解释 Stage I。它不宣布 `/ship` 就绪，不替代正式 OpenSpec 合同，也不授权真实外部目录、网络、发布、Graphify 执行或高风险操作。
 
+## 2026-07-17 后续权威说明
+
+[已知] 后续已接受变更 `simplify-aili-workflow-harness` 对重叠的通用编排/效率规则具有较新权威：ROSE 每次只选择一个 primary loop，最多增加一个有具体缺口的 auxiliary capability；自然语言与四个命令进入同一有界 loop；skill 不得自动调用另一个 process skill。本文下方的 Package 1–12、A30、六 loop、74 行审计等内容仅用于解释原伞形变更历史，不能再要求默认委派、全量 hydration、多轮 review、完整任务矩阵或全套测试。
+
+[已知] 当前通用执行默认由 ROSE 直接完成。已授权范围内的安全本地读取、编辑、确定性诊断和 claim-matched 检查不做微审批；材料性决定和破坏性/外部/依赖/Schema/Auth/安全/Git/发布/A33 精确操作仍按原 gate 失败关闭。
+
+[已知] 当前 hydration 按 mode、dependency 和 event 选择：每个写入文件在作为 durable evidence 前重读一次，后续只让相关事件使其 dependents 失效；阶段、时间、文件存在或“继续”不会触发全套 artifact 重读。
+
+[已知] 当前 verification 只有一个 owner，由 ordinary/lifecycle owner 选择支持具体主张的最小新鲜检查。TDD、stress-test、review、安全、浏览器和 full suite 都不是 phase/package 自动步骤。[未验证] 这些精简规则的模型行为和成本效果等待真实应用反馈；静态文字本身不能证明效果。
+
+[已知] `WT-001` 当前模式是 A33 shared-trust-domain；本文 A30/A31 runtime 结果和 A32/item-41 readiness 均为历史证据，不授予当前操作权限。A33 的 exact ADD/REMOVE、target-rule、identity、风险和新鲜审批语义未被后续简化变更改写。
+
 ## 状态与主张标签
 
 | 标签 | 通俗含义 |
@@ -25,9 +37,9 @@
 
 ## 执行摘要
 
-[已知] 这项“伞形提案”把原来分散、互相冲突的工作流规则收拢成一条可解释的路径：普通问题保持普通；正式或实质性工作进入一个 OpenSpec 变更；用户只需接受最终测试计划这一道生命周期级 BUILD 前审批；BUILD 按 Package 1–11 实现，再由 Package 12 做一次完整收敛；DCP 和伪 Goal Mode 被移除；CodeGraph 只提供发现线索；Graphify 和跨工作树读取都必须失败关闭。 [工具结果] 当前多数合同和实现表面已经存在，15 个选定角色的局部静态 checker 返回 `0`，但该 checker 没有覆盖 ROSE 的合同冲突，因此不能称为 A30 整体静态 gate 通过。最后记录的 provider-backed Task runtime 结果是退出 `3`；[未验证] A30 后没有新鲜 exit-0 证据，因此当前状态仍为 `Unverified`。当前政策要求 ROSE 不得进行生产 A30 分派，但仓库未展示技术性 rollout 开关。完整独立复审没有在 A30 后重跑，因此不能宣布整体完成或 `/ship` 就绪。
+[已知] 这项“伞形提案”曾把分散规则收拢为四路生命周期、一个 OpenSpec change 和最终测试计划接受门，并以 Package 1–12、A30 和完整收敛矩阵描述当时的实现历史。后续简化变更已经替换这些重叠的重型默认；DCP、伪 Goal Mode、CodeGraph 非证明性和 Graphify fail-closed 等不冲突边界继续保留。[未验证] 原 A30 provider-backed Task runtime 最后记录为退出 `3`，但它现在是历史证据，既不证明也不阻塞当前 A33 操作语义。
 
-**一句话说明：** [推断] AILI 现在更像“有四个入口、一本正式档案、一张最终验收单、分阶段施工、最后统一验房”的工作流，而不是一个会在后台自行运行的自动驾驶系统。
+**一句话说明：** [推断] AILI 现在更像“同一位负责人根据当前意图选择一条有界路线，需要时只请一个专门帮手，并用最小证据验收”的工作流，而不是多套流程自动接力的系统。
 
 ## 以前出了什么问题
 
@@ -114,7 +126,7 @@
 
 [已知] 输入是可行但尚未达到实现条件的目标。输出是一个创建或复用的 OpenSpec 变更，以及 proposal、spec、design、tasks、interview、test-plan、context 等适用材料。
 
-[已知] DEFINE 会按依赖顺序写入、重新读取并严格验证材料。真正不明确的 change identity 只问一次；在身份未解决前不写文件。
+[已知] DEFINE 按依赖顺序只读取和写入当前所需材料；每个写入文件在使用前重读一次。真正不明确的 change identity 只问一次；在身份未解决前不写文件。
 
 [已知] DEFINE 的硬停止是不能实现代码；存在未解决的实质性产品问题、合同不一致、严格验证失败或最终测试计划未明确接受时，不能进入 BUILD。
 
@@ -128,7 +140,7 @@
 
 [已知] 输入必须包括明确实现意图、唯一目标、当前有效的最终测试计划接受、可运行 package、可验证退出条件、适用权限和有效 `CONT-005` envelope。
 
-[已知] 输出包括 package 队列、Package 1–11 的轻量 savepoint、阻塞项、预算状态，以及达到 Package 12 时的完整质量证据。
+[已知] 输出包括从当前 accepted contract 推导出的 package 队列、轻量 savepoint、阻塞项和预算状态；队列完成后由 ROSE 直接检查 changed scope，并选择支持完成主张的最小检查。Package 1–12 只保留为该伞形变更的历史命名。
 
 [已知] BUILD 的硬停止包括目标不明确、接受过期、权限不足、预算耗尽、实质性 delta、禁改文件或高风险操作未获单独批准。
 
@@ -156,7 +168,7 @@
 
 [已知] 正式 DEFINE 默认自动写回，不反复问“要不要保存 proposal”“要不要保存 test plan”。写回后必须重新读取磁盘内容。
 
-[已知] 一个问题一次只问一个会改变决定的问题。每个问题说明为什么重要、影响哪个 artifact/test/risk、有哪些选项，以及如何自定义回答。
+[已知] 默认只问一个会改变决定的问题；若多个已知独立 blocker 合并成一个有界 packet 能减少用户负担，才使用一次 packet。每个问题说明 decision/operation、target、why-now、risk/trade-off、options/recommendation 和 denial effect。
 
 [已知] 每个纠正、新要求、发现或实现反馈都归入 `covered`、`material-question`、`material-delta`、`ordinary-steering` 或 `Unverified` 之一。
 
@@ -192,7 +204,7 @@
 
 ### 连续性、checkpoint 与恢复
 
-[已知] 恢复工作前要重新读取活动 OpenSpec 合同、`interview.md`、已接受的 `test-plan.md`、`context.md`、`progress.txt`、有限范围的 `drift-log.md`、适当范围的 memory，以及新鲜 review/test/security 证据。
+[已知] 恢复工作只读取当前 mode/next dependency 所需证据：DEFINE 的 changed artifact 与直接 dependents；BUILD 的 accepted test-plan gate、current package/tasks、owning contract、target/rules 和 affected verification；SHIP 的 implemented tree、current BUILD evidence 与 affected closeout owners。`progress.txt`、`drift-log.md`、memory 或 review/test/security evidence 只在 resume reference、deviation、conflict 或 affected claim 需要时读取。
 
 [已知] checkpoint 是“记下现在在哪里”，不是“自动获得继续施工的许可证”。Package 1–11 的 savepoint 只记录 package、范围、改动文件、未解决项和下一个 package。
 
@@ -213,22 +225,24 @@
 | `interval` | [已知] 仅协议。 | [已知] 记录“每周由外部或人工触发一次要怎么做”，不注册定时器。 |
 | `event` | [已知] 仅协议。 | [已知] 记录“CI 失败等外部事件发生后人工触发一次要怎么做”，不安装监听器。 |
 
-#### 六个内层 loop
+#### 有界 loop 词汇（非自动流水线）
 
 | Loop | 何时启动 | 何时停止 |
 |---|---|---|
 | question | [已知] 有实质性歧义或明确 grilling。 | [已知] 回答、放弃、命名为未验证或用户停止。 |
 | delta | [已知] 有纠正、finding 或实现反馈。 | [已知] 确认为 covered，或返回 DEFINE。 |
-| evidence/plan | [已知] 正式、陌生、高风险或版本敏感规划。 | [已知] 证据足够且方案已压力测试，或阻塞。 |
+| evidence/plan | [已知] 显式 planning/source intent，或一个材料性证据缺口。 | [已知] 有界证据足够，或阻塞/未验证。 |
 | neutral BUILD | [已知] 测试计划已接受且 package 可运行。 | [已知] 完整实现并 savepoint，或遇到 delta、安全、预算、取消停止。 |
-| review/repair | [已知] Package 12 发现问题。 | [已知] 最多三轮后解决，或阻塞。 |
-| convergence | [已知] Package 1–11 后进入 Package 12。 | [已知] 全部链接收敛，或 `/ship` 被阻塞。 |
+| review/repair | [已知] 显式 review/repair intent，或一个具体 blocking finding。 | [已知] 一次 targeted repair/recheck 后解决或阻塞。 |
+| convergence | [已知] 具体 completion/SHIP 主张缺少一个 traceability link。 | [已知] 受影响链接齐全，或该主张阻塞/未验证。 |
+
+[已知] 上表只是可选 primary loop 的词汇，不表示一次请求必须依次运行六个 loop。一个 skill 只能返回 unmet need 给 ROSE，不能自行进入下一 loop。
 
 [已知] Stage I 没有 scheduler、listener、daemon、持久 queue、hook、无人值守后台循环，也没有公开 `/loop`、`/schedule`、`/objective` 或 `/proactive` 命令。
 
 [已知] 要求安装、注册、运行、修改、更新、重新配置、启用或复用自动化的请求会失败关闭，并且不写 LP。只有后来重新表述为“仅记录外部/人工协议”的请求，才可在 `design.md` 中创建或复用 LP。
 
-### Package 1–12、依赖与 savepoint
+### Package 1–12 历史与当前 package 规则
 
 [已知] Package 1 是共享 source inventory 和 scaffold。Package 2 负责 classifier、OpenSpec routing 和 grilling。Package 3 负责 continuity、memory 和 handoff。
 
@@ -236,21 +250,21 @@
 
 [已知] Package 7 负责 review arbitration 与 convergence。Package 8 负责固定上游引用和薄适配。Package 9 负责 CodeGraph 与 Graphify 证据工作流。
 
-[已知] Package 10 同步文档、manifest 和生成适配器政策。Package 11 汇总 fixture、测试和 checker。Package 12 是唯一强制的完整质量、安全和收敛 gate。
+[已知] Package 10 同步文档、manifest 和生成适配器政策。Package 11 汇总 fixture、测试和 checker。原设计把 Package 12 作为完整质量/安全/收敛 gate；该重型默认已被后续简化变更取代。
 
-[已知] Package 必须遵循依赖顺序和非重叠编辑所有权。可安全并行的只读 lane 可以并行；编辑路径冲突时必须串行。
+[已知] Package 必须遵循依赖顺序和非重叠编辑所有权。当前默认直接/串行执行；只有实际存在两个独立单元且有明确收益时，ROSE 才选择一个 auxiliary capability，并在编辑路径冲突时保持串行。
 
-[已知] Package 1–11 的聚焦命令可以提供反馈，但不是 package closure。savepoint 也不能掩盖部分实现。
+[已知] 当前 package 边界本身不触发 test、review、commit 或 approval。savepoint 只记录 scope、files、unresolved、evidence state 和 next package，不能掩盖部分实现。
 
-[已知] Package 12 由 ROSE 分派多个独立、只读、不嵌套的 review lane。ROSE 汇总证据并作最终决定。
+[已知] 当前 completion 默认由 ROSE 直接检查 changed scope 和 affected links；只有一个具体能力/证据缺口时，才选择最多一个 auxiliary capability。
 
 [已知] 多数票和平均置信度被禁止。一个可信的重要少数 finding 必须被修复、被反证、被明确接受为风险，或以适当阻塞保留为 `Unverified`。
 
-[已知] Package 12 最多允许三轮完整 review-repair-retest-re-review。每轮可修复所有范围内 finding，但必须重跑受影响 lane 和完整任务矩阵。第四轮不能自动开始。
+[已知] 当前 BUILD 最多允许一次 targeted repair/recheck；仍失败就报告 blocker，不会开始多轮 review-repair-retest-re-review 或重跑完整矩阵。
 
-### 74 行任务审计与防止“假完成”
+### 74 行任务审计（历史可选证据）与防止“假完成”
 
-[已知] 当前正式任务模型有 74 个 task ID。最终 convergence reviewer 应让每个 task 恰好出现一次。
+[已知] 原伞形变更有 74 个 task ID；只有具体 completion/SHIP 主张缺少 traceability 且 ROSE 选择该矩阵时，才使用这份历史审计形状。它不是所有 BUILD 的默认完成 gate。
 
 [已知] 每行必须有九个字段：`task_id`、接受的 requirement/decision/risk、预期行为、实现文件/artifact、新鲜测试/检查/review 证据、status、findings、disposition、freshness。
 
@@ -362,9 +376,9 @@
 |---|---|---|
 | 四路命令与自然语言合同 | [工具结果] `commands/{ideate,define,build,ship}.md` 和 lifecycle reference 已包含统一分类、输入、输出和停止条件。 | [已知] 这是 AILI 路由合同，不控制直接 OpenSpec adapter。 |
 | DCP 移除 | [工具结果] 当前 CLI、installer、docs、manifest 和测试表面包含 DCP 移除后的实现；历史 progress 也记录 Package 4 已实施。 | [未验证] A30 后没有重新做一次完整独立审计，旧日志不能证明当前版本通过。 |
-| 中性 BUILD 与循环 | [工具结果] 当前 `build-execution-loop.md` 定义 4 个外层 profile、6 个内层 loop、`CONT-005` budget 和 no-background 边界。 | [已知] 不拥有原生 `/goal`。 |
+| 中性 BUILD 与循环 | [工具结果] 当前 `build-execution-loop.md` 保留外层 profile、bounded loop 词汇、`CONT-005` budget 和 no-background 边界，并明确一次只选一个 primary loop。 | [已知] 不拥有原生 `/goal`，也不把 loop 词汇变成自动链。 |
 | 连续性、memory、handoff | [工具结果] 当前 artifact contract、memory skill 和 handoff skill 已包含相应职责边界；历史 progress 记录 Package 3 已实施。 | [未验证] A30 后未重跑完整验证；这些 artifacts 本身也不是完成或权限证据。 |
-| Package 12 收敛合同 | [工具结果] 当前 lifecycle、artifact contract 和 build reference 已写入 74 行矩阵、非嵌套 lane、无多数票和最多三轮。 | [未验证] A30 后完整独立执行没有重跑。 |
+| 完成检查合同 | [工具结果] 当前 lifecycle、artifact contract 和 build reference 要求 ROSE 直接检查 affected scope，并只在具体缺口时选择一个 auxiliary capability和一次 targeted recheck。 | [未验证] 模型层面的触发质量等待真实应用反馈。 |
 | A30 静态角色配置 | [工具结果] 15 个角色清单、frontmatter、checker、fixture、probe 和 tests 已存在；局部 checker 返回 `0`。 | [未验证] checker 漏掉 ROSE 的 `external_directory` 合同冲突，因此整体静态 gate 是 false pass；最后记录的 runtime 结果为退出 `3`，当前仍无新鲜 exit-0 证据。 |
 | CodeGraph policy | [工具结果] 当前合同已写入 exact-root、可选证据、fallback 和 no-proof 边界。 | [已知] 不证明正确或完成。 |
 | Graphify fail-closed launcher | [工具结果] launcher 与 fixture 已存在；历史 progress 记录 contract mode 曾通过。 | [未验证] 该旧记录不是当前通过证明；最后记录的 security result 未通过，本次未取得真实执行证据。 |
@@ -379,7 +393,7 @@
 | A30 外部只读正例 | [已知] 应通过 ROSE Task 对批准路径完成一次只读访问。 | [未验证] 当前没有 rollout-eligible provider-backed exit `0`。 |
 | Graphify 真实运行 | [已知] 需要单独操作许可、可信 executable、当前 security evidence、network deny、隔离环境和写入清单。 | [未验证] 最后记录的 security-evidence 结果为退出 `3`；当前没有可验证的真实运行证据。 |
 | 上游引用分发安全 | [已知] 安装 catalog 必须证明引用不会成为 runnable skill，archive mode 必须正确。 | [未验证] catalog 输出与 DrvFS mode 仍阻塞。 |
-| A30 后完整 Package 12 | [已知] 应重跑完整命令矩阵、74 行审计和独立 review lane。 | [未验证] 最新进度要求重跑，但尚无完成记录。 |
+| A30 后完整 Package 12 | [已知] 这是原伞形变更的历史要求，已被后续 direct-first、claim-matched 最小检查规则取代。 | [未验证] 历史矩阵未重跑不构成当前通用 completion gate。 |
 | `/ship` readiness | [已知] 需要所有阻塞 gate 和重要 finding 解决，并有新鲜证据。 | [未验证] 当前明确不满足。 |
 
 ### 明确没有实现或已推迟
@@ -465,11 +479,11 @@
 
 ### 旅程 6：审查外部 worktree
 
-用户：`让 code-reviewer 只读审查旁边的 worktree。`
+用户：`让 code-reviewer 只读审查已声明 attachment。`
 
-[已知] 合同路线是 ROSE 通过内置 Task 分派选定的 A30 只读角色，并对外部路径触发 `external_directory` ask。直接 `@code-reviewer` 不在保证内。
+[已知] 当前路线先独立通过 A33 attachment admission 与 exact operation/risk gate，再由 ROSE 判断是否存在 concrete review capability gap。默认直接工作；若确需 Task，只创建一次 fresh bounded context，target rules 只可收窄，artifact 留在 owning repository。
 
-[工具结果] 最后记录的 provider-backed runtime gate 结果是退出 `3`。 [未验证] A30 后没有新鲜 exit-0 证据；政策要求 ROSE 不执行生产 A30 分派，但当前仓库没有被证明具有技术性禁用开关。系统不能把静态 frontmatter 当成真实 no-mutation 证明。
+[已知] A30 provider-backed runtime 结果仅是历史证据，不能授权或阻塞 A33。系统也不能把静态 frontmatter 当成真实隔离/no-mutation 证明。
 
 ## 常见问题
 
@@ -479,7 +493,7 @@
 
 ### tasks.md 都打勾了，是否表示完成？
 
-[已知] 不是。checkbox 只是一条状态提示。最终需要每个 task 的实现文件、新鲜验证、review disposition 和 freshness。
+[已知] 不是。checkbox 只是一条状态提示。当前完成主张需要 affected task/requirement 与实现的链接，以及 canonical owner 选择的最小新鲜证据；只有具体缺口才增加 review 或完整矩阵。
 
 ### 为什么不让 reviewer 投票？
 

@@ -1,6 +1,6 @@
 ---
 name: code-simplification
-description: Simplifies code for clarity. Use when refactoring code for clarity without changing behavior. Use when code works but is harder to read, maintain, or extend than it should be. Use when reviewing code that has accumulated unnecessary complexity.
+description: Simplify a bounded code area when the user explicitly requests behavior-preserving refactoring or a named complexity/readability problem is the accepted task; do not trigger automatically after implementation, during every review, for adjacent cleanup, or when behavior may change.
 ---
 
 # Code Simplification
@@ -13,12 +13,12 @@ Simplify code by reducing complexity while preserving exact behavior. The goal i
 
 ## When to Use
 
-- After a feature is working and tests pass, but the implementation feels heavier than it needs to be
-- During code review when readability or complexity issues are flagged
+- The user explicitly requests a behavior-preserving simplification/refactor
+- A named review finding or accepted task identifies a concrete readability/complexity problem
 - When you encounter deeply nested logic, long functions, or unclear names
 - When refactoring code written under time pressure
 - When consolidating related logic scattered across files
-- After merging changes that introduced duplication or inconsistency
+- A bounded accepted cleanup identifies duplication or inconsistency
 
 **When NOT to use:**
 
@@ -27,6 +27,8 @@ Simplify code by reducing complexity while preserving exact behavior. The goal i
 - The code is performance-critical and the "simpler" version would be measurably slower
 - You're about to rewrite the module entirely — simplifying throwaway code wastes effort
 
+ROSE/`aili-delivery-flow` owns scope, material decisions, approvals, Git actions, and verification. This skill runs one bounded simplification loop and does not invoke review, Git, testing, or another process skill. Return `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`; canonical claim-matched verification wins.
+
 ## The Five Principles
 
 ### 1. Preserve Behavior Exactly
@@ -34,11 +36,11 @@ Simplify code by reducing complexity while preserving exact behavior. The goal i
 Don't change what the code does — only how it expresses it. All inputs, outputs, side effects, error behavior, and edge cases must remain identical. If you're not sure a simplification preserves behavior, don't make it.
 
 ```
-ASK BEFORE EVERY CHANGE:
+SELF-CHECK EACH CANDIDATE CHANGE:
 → Does this produce the same output for every input?
 → Does this maintain the same error behavior?
 → Does this preserve the same side effects and ordering?
-→ Do all existing tests still pass without modification?
+→ What focused evidence can prove behavior equivalence without changing tests?
 ```
 
 ### 2. Follow Project Conventions
@@ -147,7 +149,7 @@ If you can't answer these, you're not ready to simplify. Read more context first
 - performance-critical paths where the simpler version may change complexity or allocation patterns
 - code without tests or without enough context to prove equivalent behavior
 
-At this gate, either narrow the change to a behavior-neutral refactor with verification, or ask for explicit approval to proceed. Do not treat a behavior-changing cleanup as simplification.
+At this gate, either narrow the change to a behavior-neutral refactor with claim-matched verification or return the exact behavior/scope decision to ROSE. Do not treat a behavior-changing cleanup as simplification.
 
 ### Step 2: Identify Simplification Opportunities
 
@@ -183,28 +185,28 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 | Over-engineered patterns | Factory-for-a-factory, strategy-with-one-strategy | Replace with the simple direct approach |
 | Redundant type assertions | Casting to a type that's already inferred | Remove the assertion |
 
-### Step 3: Apply Changes Incrementally
+### Step 3: Apply a Bounded Simplification
 
-Make one simplification at a time. Run tests after each change. **Submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
+Apply the smallest coherent simplification set whose behavior-equivalence evidence can be isolated. Do not add tests, commits, PR splits, or approval checkpoints after each edit; the canonical owner selects one focused check for the resulting claim.
 
 ```
-FOR EACH SIMPLIFICATION:
-1. Make the change
-2. Run the test suite
-3. If tests pass → commit (or continue to next simplification)
-4. If tests fail → revert and reconsider
+FOR THE BOUNDED SET:
+1. Make only the accepted behavior-preserving edits
+2. Inspect the focused diff and selected equivalence evidence
+3. Run the canonical owner's smallest claim-matched check once
+4. If the check fails, apply at most one targeted repair/recheck or keep the original code and report the blocker
 ```
 
-Avoid batching multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+Avoid unrelated cleanup or a broad rewrite. Keep the resulting diff small enough to localize a failed equivalence claim without creating per-edit ceremony.
 
 ### Failure and Fallback Table
 
 | Trigger | First response | If still unresolved |
 |---|---|---|
 | Tests fail after a simplification | Revert that one simplification and inspect the failing behavior | Keep the original code and report the simplification as rejected |
-| Behavior equivalence cannot be proven | Stop before editing and gather tests, callers, or examples | Ask for approval or leave the code unchanged |
+| Behavior equivalence cannot be proven | Stop before editing and gather focused tests, callers, or examples | Return the exact scope/behavior decision to ROSE or leave the code unchanged |
 | Simplification requires changing tests | Treat it as a behavior change, not simplification | Split into a separate feature/bug-fix task |
-| Public interface or schema would change | Stop and request explicit scope approval | Do not make the change under this skill |
+| Public interface or schema would change | Stop and return the exact material decision to ROSE | Do not make the change under this skill |
 | The diff grows large or hard to review | Break into smaller independent simplifications | Abandon the broad pass and keep only verified local changes |
 
 **The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
@@ -357,14 +359,13 @@ function UserBadge({ user }: Props) {
 
 ## Verification
 
-After completing a simplification pass:
+After completing the bounded simplification:
 
-- [ ] All existing tests pass without modification
-- [ ] Build succeeds with no new warnings
-- [ ] Linter/formatter passes (no style regressions)
-- [ ] Each simplification is a reviewable, incremental change
+- [ ] The canonical owner's smallest behavior-equivalence check passes without modifying tests to excuse a change
+- [ ] Any broader build/lint/test evidence is run only when required by the exact claim
+- [ ] The simplification is a focused, reviewable change
 - [ ] The diff is clean — no unrelated changes mixed in
 - [ ] Simplified code follows project conventions (checked against CLAUDE.md or equivalent)
 - [ ] No error handling was removed or weakened
 - [ ] No dead code was left behind (unused imports, unreachable branches)
-- [ ] A teammate or review agent would approve the change as a net improvement
+- [ ] The evidence supports only the reported behavior-preserving claim; no automatic review gate was added

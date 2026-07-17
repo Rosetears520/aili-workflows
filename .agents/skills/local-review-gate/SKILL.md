@@ -1,6 +1,6 @@
 ---
 name: local-review-gate
-description: Use for `/local-review` or lifecycle-triggered local review gates over worktree diffs, refs, PRs, or OpenSpec changes; owns target resolution, evidence scope, categorized review reports, verdicts, explicit repair/re-review, and no-remote-mutation boundaries without overriding OpenCode `/review`.
+description: Run the explicit `/local-review` command or an equivalent user-requested standalone local audit over a diff, ref, PR, or OpenSpec change; do not trigger automatically from BUILD/SHIP, implementation completion, merge wording, or ordinary review-adjacent work.
 ---
 
 # Local Review Gate
@@ -19,7 +19,7 @@ This skill is the workflow authority for the AILI-owned local review gate. It is
 - Do not push, create PRs, comment on GitHub, approve/request changes, merge, tag, publish, delete, reset, clean, or mutate remote state.
 - PR mode may run only the exact GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`; do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`, or equivalent push, merge, comment, review, checkout, clone, or remote-mutating commands.
 - Do not perform repair until after a categorized report exists and `--repair` or an explicit user/current-contract approval authorizes repair.
-- Review lanes remain read-only. Approved repair must go to a separate edit/repair agent or edit/test lane, and affected findings require fresh re-review before being marked fixed.
+- Any delegated review context remains read-only and terminal. After an explicit `--repair`/current-contract authorization, ROSE may repair directly or use one independently justified fresh edit assignment; one affected recheck is sufficient and no old context is resumed.
 - Do not hide skipped checks, unavailable tools, stale evidence, partial context, or `Unverified` items.
 
 ## Upstream Provenance and Adaptation
@@ -28,7 +28,7 @@ Before copying or adapting upstream review material, read `references/upstream-p
 
 - `references/ecc-code-review-adaptation.md`: local/PR target selection, full-file review, validation, report artifact, verdict mapping, and read-only PR-mode boundaries.
 - `references/review-repair-lane-adaptation.md`: ECC-derived review/repair lane triggers, build-fix loop discipline, and separate repair ownership.
-- `references/orchestration-adaptation.md`: fail-closed fan-out/fan-in, blocking/advisory split, adversarial verification, phase checkpoints, and main-agent-only writer/orchestrator rules.
+- `references/orchestration-adaptation.md`: bounded capability selection, blocking/advisory split, evidence reconciliation, and main-agent-only integration/verdict rules; upstream fan-out language is non-authoritative where it conflicts with direct-first routing.
 - `references/addyosmani-code-review-rubric.md`: five-axis review rubric, `Critical`/`Important`/`Suggestion`, spec/task-first reading, concrete fixes, and uncertainty/proof gates.
 - `references/codex-github-compatibility.md`: behavior-only Codex/GitHub compatibility for AGENTS rules, PR focus instructions, high-priority findings, and local review/fix parity without cloud mutation.
 - `references/graphify-local-review.md`: explicit-operation-only Graphify adapter, pinned provenance/security concerns, sole guarded launcher, exact argv/network/environment/output controls, local-uncommitted output, and advisory-only findings. It adds no install, registration, hook/plugin, scheduler, lifecycle gate, or completion authority.
@@ -43,7 +43,7 @@ Before copying or adapting upstream review material, read `references/upstream-p
 
 ## Target Resolver
 
-Resolve and report the target before dispatching review lanes or accepting findings.
+Resolve and report the target before reviewing or accepting findings. Direct ROSE inspection is the default; no review lane is required merely because this command was invoked.
 
 | Input | Required resolution |
 |---|---|
@@ -116,9 +116,9 @@ Use only these local-review verdicts:
 
 For large or harness-sensitive `/local-review --change <id|path>` targets, `NEEDS_FIXES` and `BLOCKED` block BUILD continuation. `PASS_WITH_UNVERIFIED` may continue only after the user accepts each named `Unverified` item; otherwise return `NEEDS_REVIEW` or `BLOCKED` with the missing acceptance.
 
-## Lane Selection
+## Review Capability Selection
 
-Select relevant lanes; do not run every lane by default.
+Select one primary direct review question. Add at most one auxiliary capability only when a concrete evidence gap cannot be covered directly; that capability may use at most two fresh independent read-only contexts when concurrency has a clear benefit. Do not run a review/test/security/coverage/convergence set by default.
 
 - target/context lane: target identity, diff/base/PR/change scope, dirty paths, and report placement;
 - `code-reviewer`: correctness, maintainability, architecture, performance, and context adequacy;
@@ -131,26 +131,25 @@ Select relevant lanes; do not run every lane by default.
 - browser/E2E lanes only when the changed surface and artifact placement justify them;
 - open-source/provenance lanes only when public/package/provenance exposure is in scope.
 
-Each lane packet must include target identity, accepted scope, source artifacts, diff/files, evidence already run, artifact placement rules, forbidden remote mutation, skipped-lane constraints, and expected return status. Review lanes are read-only and must not repair their own findings.
+Any selected auxiliary packet must include target identity, accepted scope, source artifacts, diff/files, evidence already run, artifact placement rules, forbidden remote mutation, skipped-capability constraints, and expected terminal status. It is read-only, single-use, non-delegating, and must not repair its own findings or be resumed.
 
 For A33, each lane names exactly one packet-declared repository/cwd, references one current WT-001 context, re-reads applicable target rules that may narrow but never broaden, and writes any user-visible report to the owning repository. It records inspected scope, freshness, skipped checks, and the shared-trust soft-boundary limitation; it performs no broad host scan and never duplicates or rebinds identity, keys, approvals, Git state, rule bodies, verification command/cwd, or containment facts.
 
-Apply the adapted upstream lane gates:
+Apply the adapted upstream evidence gates only to the selected question:
 
-- run `code-reviewer` with five axes: correctness, readability, architecture, security, and performance;
-- require spec/task-first and tests-first review where those artifacts exist;
+- inspect the relevant accepted artifacts and current implementation/test evidence before a definite finding;
 - require `Critical`/`Important` findings to include exact evidence, concrete failure mode, why existing guards do not catch it, and a concrete fix;
 - accept zero findings only when inspected scope, skipped checks, and confidence are recorded;
-- fail closed when a required lane cannot run, returns empty/status-less output, or lacks evidence anchors;
+- treat an empty/status-less auxiliary result as missing evidence, not as permission to resume or dispatch an automatic retry;
 - split reconciled findings into blocking and advisory buckets, with unverifiable high-risk findings blocking until checked or explicitly accepted.
 
 ## Convergence and Phase Checkpoints
 
 For formal or multi-phase work, compare the accepted source artifacts, relevant savepoints, final diff/worktree state, and fresh claim-matched checks. If parallel work was actually used, reconcile its compact status, evidence, and blockers before continuing.
 
-Package 12 remains outside `/local-review`: its lifecycle owner performs a direct ROSE final inspection of applicable changed-scope task links and the final diff, followed by the smallest relevant check. It may use at most two read-only specialists only for a concrete capability or evidence gap and one targeted repair/recheck, then records `IMPLEMENTED_TARGETED_VERIFIED` or blocks and stops BUILD. A local-review report neither triggers nor satisfies that gate.
+The active lifecycle owner remains outside `/local-review`: BUILD completion uses direct changed-scope/task-link inspection and the smallest relevant check, with one auxiliary capability only for a concrete gap and at most one targeted repair/recheck. `Package 12` is historical terminology for `complete-aili-workflow-orchestration`, not a generic review stage. A local-review report neither triggers nor satisfies lifecycle completion.
 
-Packages 1–11 record lightweight savepoints containing complete behavior scope, files changed, unresolved items, and next package. Optional commands or diff feedback are not package closure or independent quality gates.
+In the historical `complete-aili-workflow-orchestration` queue, Packages 1–11 record lightweight savepoints containing complete behavior scope, files changed, unresolved items, and next package. Generic queues use the same lightweight savepoint fields without inheriting that numbering. Optional commands or diff feedback are not package closure or independent quality gates.
 
 ## Anti-Pseudo-Completion Checks
 
@@ -168,12 +167,10 @@ Reject pseudo-completion when:
 
 1. Resolve target and write/update the categorized report.
 2. Classify findings before repair.
-3. If repair is authorized, convert repairable findings into scoped BUILD-style packages.
-4. Assign fixes to a separate edit/repair agent or edit/test lane; review lanes remain read-only.
-5. For build/type failures, detect the build system, group errors by file/root cause, fix one error class at a time, rerun focused verification, and stop if the same error persists after three attempts, more errors are introduced than fixed, a dependency/lockfile change is needed, or the fix requires architecture changes.
-6. Run affected verification after repair.
-7. Re-run only the relevant review lanes with fresh target identity, diff, evidence, and prior-finding state.
-8. Keep verdict `REREVIEW_REQUIRED` until affected findings are rechecked.
+3. If repair is authorized, select one scoped repair package; ROSE works directly unless one fresh assignment independently passes the delegation gate.
+4. Apply at most one targeted repair and rerun the smallest affected check once.
+5. Reconcile the changed finding directly. Use a new read-only context only when changed evidence creates a separately justified capability gap; never resume the original context or launch an automatic review cycle.
+6. Keep verdict `REREVIEW_REQUIRED` until the affected finding has fresh direct or independently justified evidence; report any remaining blocker instead of starting another round.
 
 ## Output Contract
 

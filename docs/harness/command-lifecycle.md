@@ -4,10 +4,10 @@ Exactly four top-level delivery shortcuts are provided by this harness. Equivale
 
 | Command | Mode | Contract |
 |---|---|---|
-| `/ideate` | IDEATE | Explore, compare, and surface uncertainty. Expose parallelism or no-parallel reasoning for multi-unit ideas and use research evidence when it can change the方案. No production edits. |
-| `/define` | DEFINE | Produce aligned spec/questionnaire/test artifacts. For OpenSpec, route `interview.md` through `requirements-grilling` and `test-plan.md` through `test-document-generator`. Confirm evidence-backed方案 state before BUILD readiness. Stop before implementation. |
+| `/ideate` | IDEATE | Explore, compare, and surface uncertainty directly. Add one evidence capability only for a concrete gap. No production edits. |
+| `/define` | DEFINE | Produce only dependency-ready spec/questionnaire/test artifacts. For OpenSpec, `requirements-grilling` owns needed `interview.md` clarification and `test-document-generator` owns required `test-plan.md`; neither auto-chains. Stop before implementation. |
 | `/build` | BUILD | Derive the accepted queue from the active contract, record progress-ledger savepoints with no automatic tests/commits/approvals, run one minimal changed-scope completion check, record `IMPLEMENTED_TARGETED_VERIFIED`, and stop. This umbrella alone names Package 12 as that direct final inspection. |
-| `/ship` | SHIP | After fresh explicit intent, reuse event-fresh BUILD evidence and run only stale/affected/risk/integration/packaging/release/merge-result/target checks before approved closeout. |
+| `/ship` | SHIP | After fresh explicit intent, reuse still-covering BUILD evidence and refresh only checks required by the exact affected closeout claim. Direct inspection is default. |
 | `/local-review` | LOCAL_REVIEW | Run a report-first local audit over local changes, a base branch, a commit, a PR, or an OpenSpec change. It leaves OpenCode's `/review` untouched, reports skipped or `Unverified` lanes, and does not replace `/ship`. |
 
 ## Non-Commands
@@ -16,7 +16,7 @@ Research, questionnaire, test-plan, implementation, fix, debug, release-blocker 
 
 AILI does not provide `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, a worktree-maintenance command, or a Graphify command. It adds no hidden/unrequested AILI cron, scheduler, watcher, webhook, listener, daemon, persistent queue, hook, dependency, auto-retry, or other background runtime. Explicit product/repository automation remains eligible only through normal formal/high-risk gates; vocabulary-only comparison remains ordinary.
 
-BUILD uses exactly six inner loops—question, delta, evidence/plan, neutral BUILD, review/repair, and convergence—and four outer profiles. `turn` and `objective` are executable; `interval` and `event` are design-owned protocol/runbook definitions for external/manual triggers only. AILI adds no seventh loop, scheduler, listener, daemon, persistent queue, hook, dependency, auto-retry, or background runtime.
+Question, delta, evidence/plan, neutral BUILD, review/repair, and convergence are bounded loop vocabulary, not an automatic sequence. One current intent selects one primary loop and at most one concrete auxiliary capability. `turn` and `objective` are executable; `interval` and `event` are design-owned protocol/runbook definitions for external/manual triggers only. AILI adds no scheduler, listener, daemon, persistent queue, hook, dependency, auto-retry, or background runtime.
 
 Continuation resumes exactly one active authorized canonical envelope with current gates and remaining budgets. It preserves consumed counters and cannot reset/broaden authority, change phase/target, or refresh acceptance. Ordinary user/package/implementation goal wording and Goal-Driven Verification remain valid, but AILI does not own, imitate, bind, modify, or control native `/goal`; successful native behavior is Stage II / N/A.
 
@@ -42,7 +42,7 @@ Each public command remains a thin entrypoint but should name:
 - required behavior;
 - hard stops;
 - output contract.
-- any command-visible proactive planning, research-first, or packaging gate that would otherwise be hidden inside skill references.
+- only the exact material or risky-operation gate visible for the current intent.
 
 Detailed lifecycle authority remains in `.agents/skills/aili-delivery-flow` source references in this repository; installed runtimes receive those skills under `$HOME/.agents/skills/aili-delivery-flow`.
 

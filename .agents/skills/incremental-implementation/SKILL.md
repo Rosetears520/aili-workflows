@@ -1,34 +1,34 @@
 ---
 name: incremental-implementation
-description: Delivers changes incrementally. Use when implementing any feature or change that touches more than one file. Use when you're about to write a large amount of code at once, or when a task feels too big to land in one step.
+description: Implement an accepted change in bounded dependency-ordered increments when the user requests implementation and the scope benefits from multiple coherent slices; do not trigger merely because work touches multiple files, changes behavior, or is over an arbitrary line count.
 ---
 
 # Incremental Implementation
 
 ## Overview
 
-Build in thin vertical slices — implement one complete in-scope piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
+Implement a larger accepted scope in dependency-ordered coherent slices. A slice boundary is for scope and recovery, not an automatic test, review, approval, or commit. Use slice-specific feedback only when its behavior, risk, dependency, or diagnosis requires it; the canonical owner selects the final claim-matched check.
 
 ## When to Use
 
-- Implementing any multi-file change
-- Building a new feature from a task breakdown
-- Refactoring existing code
-- Any time you're tempted to write more than ~100 lines before testing
+- The user asks to implement an accepted plan/change whose dependencies form multiple coherent slices.
+- One bounded ordinary implementation is safer or more traceable as two or more complete increments.
+- BUILD has a current package queue and selects this as its primary implementation technique.
 
-**When NOT to use:** Single-file, single-function changes where the scope is already tightly bounded.
+**When NOT to use:** A bounded change that ROSE can complete directly in one pass, planning-only work, TDD without implementation authority, review, or a request that lacks accepted scope.
+
+## Canonical loop contract
+
+This skill is one bounded ordinary/BUILD implementation adapter. ROSE/`aili-delivery-flow` owns lifecycle state, package queue, approvals, progress, and verification. Implement the selected complete scope and stop with `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Do not invoke planning, TDD, Git, context, review, test, security, or another process skill; return one named need to ROSE. Safe local edits/checks proceed without micro-approval, exact risky operations retain their gates, and the canonical verification owner overrides all generic per-slice/full-suite language.
 
 ## The Increment Cycle
 
 ```
 ┌──────────────────────────────────────┐
 │                                      │
-│   Implement ──→ Test ──→ Verify ──┐  │
-│       ▲                           │  │
-│       └───── Commit ◄─────────────┘  │
-│              │                       │
-│              ▼                       │
-│          Next slice                  │
+│   Implement ──→ Savepoint ──→ Next  │
+│       ▲              │               │
+│       └── affected feedback only ────┘
 │                                      │
 └──────────────────────────────────────┘
 ```
@@ -36,12 +36,12 @@ Build in thin vertical slices — implement one complete in-scope piece, test it
 For each slice:
 
 1. **Implement** a focused complete piece of functionality
-2. **Test** — run the test suite (or write a test if none exists)
-3. **Verify** — confirm the slice works as expected (tests pass, build succeeds, manual check)
-4. **Commit / Savepoint** -- save progress with a commit when current task/project rules explicitly allow task-scoped verified commits, or a savepoint report otherwise (see `git-workflow-and-versioning` for atomic commit guidance)
+2. **Feedback when needed** — run a focused check only when this slice's behavior, risk, dependency, or diagnosis needs it
+3. **Verify at the owner boundary** — let the canonical owner select the smallest fresh check for the exact claim
+4. **Savepoint** — record progress; commit only when the exact Git action is separately authorized
 5. **Move to the next slice** — carry forward, don't restart
 
-🔴 CHECKPOINT / 🛑 STOP: Before starting a slice, write the slice gate in one sentence: observable behavior, files in scope, verification command, and savepoint policy. If the slice cannot produce visible behavior or a targeted verification result, split it again.
+Before a non-obvious slice, keep a compact internal boundary: behavior, scope, dependency, and stop condition. Do not turn it into an extra user approval or mandatory test command.
 
 ## Slicing Strategies
 
@@ -51,21 +51,21 @@ Build one complete path through the stack:
 
 ```
 Slice 1: Create a task (DB + API + basic UI)
-    → Tests pass, user can create a task via the UI
+    → dependency-ready creation path
 
 Slice 2: List tasks (query + API + UI)
-    → Tests pass, user can see their tasks
+    → dependency-ready listing path
 
 Slice 3: Edit a task (update + API + UI)
-    → Tests pass, user can modify tasks
+    → dependency-ready edit path
 
 Slice 4: Delete a task (delete + API + UI + confirmation)
-    → Tests pass, full CRUD complete
+    → accepted CRUD scope complete
 ```
 
 Each slice delivers working end-to-end functionality.
 
-Do not use horizontal slicing as the default. A slice should produce observable behavior, targeted verification, and, when task/project rules allow task-scoped verified commits, a savepoint commit on a non-main task branch before the next slice begins.
+Do not use horizontal slicing as the default. A slice should produce complete traceable behavior; verification and Git actions remain selected by their canonical owners.
 
 If commits are not explicitly allowed by the user/task contract or project rules, replace the commit with an explicit savepoint report: changed files, verification result, and rollback note. Do not violate a no-commit contract to satisfy this skill.
 
@@ -116,7 +116,7 @@ SIMPLICITY CHECK:
 ✓ Three form components
 ```
 
-Three similar lines of code is better than a premature abstraction. Implement the naive, obviously-correct version first. Optimize only after correctness is proven with tests.
+Three similar lines of code is better than a premature abstraction. Implement the naive, obviously-correct version first. Optimize only after the accepted claim has sufficient evidence.
 
 ### Rule 0.5: Scope Discipline
 
@@ -135,26 +135,26 @@ If you notice something worth improving outside your task scope, note it — don
 NOTICED BUT NOT TOUCHING:
 - src/utils/format.ts has an unused import (unrelated to this task)
 - The auth middleware could use better error messages (separate task)
-→ Want me to create tasks for these?
+→ Record only when useful; do not create tasks or questions unless the user asks or the item blocks current work.
 ```
 
 ### Rule 1: One Thing at a Time
 
 Each increment changes one logical thing. Don't mix concerns:
 
-**Bad:** One commit that adds a new component, refactors an existing one, and updates the build config.
+**Bad:** One increment that adds a new component, refactors an existing one, and updates unrelated build config.
 
-**Good:** Three separate commits — one for each change.
+**Good:** Separate logical increments/savepoints with explicit dependencies; commits remain separately authorized Git actions.
 
 Each increment should be small enough to explain as one reversible savepoint: what changed, how it was verified, and what remains out of scope.
 
 ### Rule 2: Keep It Compilable
 
-After each increment, the project must build and existing tests must pass. Don't leave the codebase in a broken state between slices.
+Do not knowingly leave a dependency boundary broken between slices. The canonical verification owner decides whether a focused test, build, typecheck, static inspection, or deferred final check proves that state.
 
-### Rule 3: Feature Flags for Incomplete Features
+### Rule 3: Accepted Feature Flags for Incomplete Features
 
-If a feature isn't ready for users but you need to merge increments:
+Use a feature flag only when the accepted design requires staged exposure; slice boundaries do not create a flag or merge requirement by themselves.
 
 ```typescript
 // Feature flag for work-in-progress
@@ -165,7 +165,7 @@ if (ENABLE_TASK_SHARING) {
 }
 ```
 
-This lets you merge small increments to the main branch without exposing incomplete work.
+This can protect staged exposure under the accepted design; it does not authorize merge or deployment.
 
 ### Rule 4: Safe Defaults
 
@@ -186,7 +186,7 @@ Each increment should be independently revertable:
 - Additive changes (new files, new functions) are easy to revert
 - Modifications to existing code should be focused and traceable
 - Database migrations should have corresponding rollback migrations
-- Avoid deleting something in one commit and replacing it in the same commit — separate them
+- Avoid mixing destructive removal and replacement when a safer focused transition is available; exact destructive/Git actions retain their gates
 
 ## Working with Agents
 
@@ -198,23 +198,20 @@ When directing an agent to implement incrementally:
 Start with just the database schema change and the API endpoint.
 Don't touch the UI yet — we'll do that in the next increment.
 
-After implementing, run `npm test` and `npm run build` to verify
-nothing is broken."
+After implementing, run only the focused check selected by the canonical
+verification owner for this increment's exact claim."
 ```
 
 Be explicit about what's in scope and what's NOT in scope for each increment.
 
 ## Increment Checklist
 
-After each increment, verify:
+After each increment, record only applicable evidence:
 
 - [ ] The change does one thing and does it completely
-- [ ] All existing tests still pass (`npm test`)
-- [ ] The build succeeds (`npm run build`)
-- [ ] Type checking passes (`npx tsc --noEmit`)
-- [ ] Linting passes (`npm run lint`)
-- [ ] The new functionality works as expected
-- [ ] The change is committed with a descriptive message only when current task/project rules explicitly allow task-scoped verified commits; otherwise a savepoint report exists
+- [ ] Any slice-specific feedback selected by the canonical owner is recorded
+- [ ] The accepted behavior is complete enough for the next dependency
+- [ ] A lightweight savepoint records changed files and unresolved dependencies; it does not imply verification or commit
 
 ## Fallbacks
 
@@ -223,36 +220,33 @@ After each increment, verify:
 | Tests fail after a slice | Stop next-slice work; identify whether failure is from this slice or pre-existing | Revert or narrow the slice; report unrelated failures instead of piling on fixes |
 | Working tree is dirty before a slice | Inspect status and separate task-related from unrelated changes | Ask whether to continue, branch/worktree, or pause; do not mix unrelated edits silently |
 | Slice grows past the planned behavior/files | Stop and cut scope to a focused independently verifiable complete behavior | Return the oversized remainder to the task queue; do not finish it in the same increment |
-| No automated test exists | Add the most relevant focused test when practical | Use a documented manual/static check and mark the gap `Unverified` |
+| No automated test exists | Decide whether the exact claim needs a focused test or other evidence | Use the lifecycle-selected manual/static check and mark any remaining gap `Unverified` |
 
 ## Common Rationalizations
 
 | Rationalization | Reality |
 |---|---|
-| "I'll test it all at the end" | Bugs compound. A bug in Slice 1 makes Slices 2-5 wrong. Test each slice. |
-| "It's faster to do it all at once" | It *feels* faster until something breaks and you can't find which of 500 changed lines caused it. |
-| "These changes are too small to commit separately" | Small commits are free. Large commits hide bugs and make rollbacks painful. |
-| "I'll add the feature flag later" | If the feature isn't complete, it shouldn't be user-visible. Add the flag now. |
+| "Every slice needs its own full check" | Slice boundaries alone trigger no test. Select feedback only where a dependency/risk needs it, then run the final claim-matched check. |
+| "It's faster to do it all at once" | Keep dependency boundaries visible so a failure can be localized without turning each boundary into ceremony. |
+| "Every slice needs a commit" | Savepoints preserve scope and recovery; commits remain exact user-authorized Git actions. |
+| "Every incomplete feature needs a flag" | Add a flag only when staged exposure is accepted; otherwise keep incomplete work unexposed by the project’s existing mechanism. |
 | "This refactor is small enough to include" | Refactors mixed with features make both harder to review and debug. Separate them. |
 
 ## Red Flags
 
-- More than 100 lines of code written without running tests
 - Multiple unrelated changes in a single increment
 - "Let me just quickly add this too" scope expansion
-- Skipping the test/verify step to move faster
-- Build or tests broken between increments
-- Large uncommitted changes accumulating
+- Ignoring feedback required by an affected dependency/risk, or inventing per-slice checks with no claim need
+- Knowingly leaving a dependency boundary broken without recording the blocker
+- Unbounded changes accumulating without a savepoint
 - Building abstractions before the third use case demands it
 - Touching files outside the task scope "while I'm here"
 - Creating new utility files for one-time operations
 
 ## Verification
 
-After completing all increments for a task:
+After completing all increments, return to the canonical owner:
 
-- [ ] Each increment was individually tested and committed when active rules allow task-scoped verified commits, or documented with a savepoint report otherwise
-- [ ] The full test suite passes
-- [ ] The build is clean
-- [ ] The feature works end-to-end as specified
-- [ ] No uncommitted changes remain, unless the active no-commit contract requires reviewed uncommitted changes
+- [ ] Complete accepted behavior and changed files are reported
+- [ ] Savepoints and unresolved items are recorded without implying verification or commit
+- [ ] The owner selects the smallest final claim-matched check and reports any `Unverified` residual

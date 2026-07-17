@@ -56,7 +56,6 @@ aili-workflows/
 │       ├── pptx-generator/
 │       ├── pr-test-analysis/
 │       ├── react-native-dev/
-│       ├── repo-evidence-first/
 │       ├── requirements-grilling/
 │       ├── rose-memory/             # ROSE project-local SQLite memory skill
 │       ├── review-pipeline/
@@ -71,9 +70,7 @@ aili-workflows/
 │       ├── strategy-stress-test/
 │       ├── systematic-literature-review/
 │       ├── test-document-generator/
-│       ├── test-driven-development/
-│       ├── using-agent-skills/
-│       └── verification-before-completion/
+│       └── test-driven-development/
 ├── agents/
 │   ├── rose.md                  # Rosetears 的 OpenCode primary agent
 │   ├── code-scout.md            # 只读代码侦察 subagent
@@ -130,7 +127,7 @@ aili-workflows/
 | `agents/code-reviewer.md` | 从 correctness、readability、architecture、security、performance 维度做代码审查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/code-reviewer.md`，遵循 MIT License |
 | `agents/convergence-reviewer.md` | 对当前 contract、实现、验证和遗留风险做只读收敛审查，不替代 ROSE 的最终判断 | Rosetears 个人工作流内容 |
 | `agents/security-auditor.md` | 做安全审计、威胁建模和漏洞检查 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/security-auditor.md`，遵循 MIT License |
-| `agents/test-engineer.md` | 做测试策略、测试补充和覆盖率分析 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/test-engineer.md`，遵循 MIT License |
+| `agents/test-engineer.md` | 做聚焦测试策略、测试补充、角色内安全本地检查执行和覆盖率分析 | 改编自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/test-engineer.md`，遵循 MIT License |
 | `agents/web-performance-auditor.md` | 做 Web 性能审计，聚焦 Core Web Vitals、加载、渲染和网络性能，并严格区分测量数据与静态分析潜在影响 | 复制并做 OpenCode 安全包装自 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) 的 `agents/web-performance-auditor.md`，遵循 MIT License |
 | `agents/test-coverage-reviewer.md` | 只读覆盖率充分性、未测路径和验证证据审查 | Rosetears 个人工作流内容 |
 | `agents/pr-test-analyzer.md` | 只读 PR / diff 测试影响、CI 日志和最小测试矩阵分析 | Rosetears 个人工作流内容 |
@@ -142,7 +139,7 @@ aili-workflows/
 | `agents/agent-evaluator.md` | 只读 agent / subagent 输出评估 subagent，检查任务匹配、证据质量、claim hygiene、约束遗漏、overclaiming 和 handoff 可用性 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 | `agents/opensource-sanitizer.md` | 只读 OSS / npm / public-release 暴露面审查 subagent，报告 secrets/private data/package/prompt/provenance 风险且必须脱敏 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 
-Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subagents。19 个 managed profiles 全部保持 `external_directory: deny`；只有 ROSE 保留逐 operation 的 external-directory ask。`web-researcher` 的角色不变：它仍只负责外部网页研究，web 能力不授予外部本地目录、mutation 或 delegation 权限。内置 `explore` / `general` 不计入这 19 个 managed profiles。
+Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subagents。每个具体 Task context 只接受一个有界 assignment，返回 terminal result/failure 后永久结束；旧 `task_id` 不得用于 follow-up、repair、recheck、clarification 或 continuation。同一 `subagent_type` 只有在新的 direct-first benefit decision 独立成立时才能通过全新 Task context 再次使用，不能自动重试。19 个 managed profiles 全部保持 non-delegating 和 `external_directory: deny`；只有 ROSE 保留逐 operation 的 external-directory ask，并继续拥有 lifecycle、integration 与最终 verdict。`web-researcher` 的角色不变：它仍只负责外部网页研究，web 能力不授予外部本地目录、mutation 或 delegation 权限。内置 `explore` / `general` 不计入这 19 个 managed profiles。
 
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
@@ -166,19 +163,18 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
-| `harness-optimization-audit` | 只读 report-first harness routing、context cost、subagent parallelism、review fan-out、false PASS 和 evidence-loss 审计；批准修改后转 `harness-evolution` |
-| `parallel-subagent-dispatch` | 仅在用户明确要求、需要 specialist、上下文明显嘈杂或至少两个独立单元有明确收益时使用；默认最多两个并发 lane |
-| `verification-before-completion` | 对变更或明确成功声明运行最小 claim-matched 检查；不自动启动 verifier、全量套件或 review loop |
-| `mature-project-pattern-research` | 在 IDEATE 或普通聊天中研究成熟公开项目的 prior art，输出来源、成熟度信号、可借鉴/不推荐模式、风险、不确定性和下一步决策 |
+| `harness-optimization-audit` | 只读 report-first harness routing、context cost、subagent parallelism、review fan-out、false PASS 和 evidence-loss 审计；只向 ROSE 返回批准修改或未定位缺口，不自动调用下一流程 |
+| `parallel-subagent-dispatch` | direct-first；仅在用户明确要求、需要 specialist、上下文明显嘈杂或至少两个独立单元有明确收益时使用；默认最多两个并发 lane，每个 Task context 单 assignment、terminal、不可 resume 或自动重试 |
+| `mature-project-pattern-research` | 仅在用户明确要求 prior art，或 ROSE 指出一个会改变决定的成熟项目证据缺口时，研究一个有界问题并返回来源、模式、风险和不确定性 |
 | `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
-| `review-pipeline` | 实现后编排 code-reviewer、test-engineer、security-auditor 等 reviewer，收敛 findings、执行 fix loop，并作为最终 PASS 前的 gate |
-| `requirements-grilling` | AILI DEFINE 的 canonical requirements grilling skill；保留 `interview.md` artifact，兼容旧 `change-interviewer`/interview packet 触发，并吸收用户答案后写回目标文件 |
+| `review-pipeline` | 仅在显式 specialist-review intent 或一个直接检查无法覆盖的具体 review 缺口下，路由最多一个 auxiliary capability；不自动 fan-out，也不是最终 PASS gate |
+| `requirements-grilling` | AILI DEFINE 的 bounded clarification adapter；默认只问一个改变决定的问题，多个已知独立 blocker 才生成一次紧凑 `interview.md` packet，且不自动调用其他 process skill |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `silent-failure-hunting` | 静默失败、误报成功、吞错、跳过 gate 或 stale evidence 风险的只读 review 路由 |
 | `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
-| `strategy-stress-test` | 非平凡方案、问卷、计划、reconciliation、review 或完成声明接受前的反方审稿 / 证据校准 workflow guardrail |
-| `test-document-generator` | 根据 spec、方案、issue、描述或 OpenSpec change 生成详细测试文档、测试矩阵、回归范围和验收清单，默认写入仓库内 Markdown 文件 |
+| `strategy-stress-test` | 仅在用户明确要求，或 ROSE 指出具体材料性漏洞时执行一次有界反方检查；不因 write-back、implementation、review 或 completion 自动触发 |
+| `test-document-generator` | 在显式 test-plan/QA/acceptance-matrix intent 或正式 DEFINE 的具体 testability gap 下生成紧凑测试文档；不为普通 implementation、TDD、review 或 completion 自动建流程 |
 
 `requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
@@ -207,7 +203,8 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `source-driven-development` | 基于官方文档的实现决策 |
 | `spec-driven-development` | 规格先行开发 |
 | `test-driven-development` | 测试驱动开发 |
-| `using-agent-skills` | skill 选择和调用的元说明 |
+
+`using-agent-skills`、`repo-evidence-first` 和 `verification-before-completion` 已退役，不再是 runnable 或 default-installed skill，也没有 compatibility alias。窄能力选择由 ROSE/AILI routing owner 负责；非平凡仓库改动的 source/owner/test/config 取证继续由全局 Evidence Before Edits 规则负责；完成声明继续由 lifecycle/ROSE 选择支持该 claim 的最小 fresh check。
 
 ### 来自 MiniMax-AI/skills
 
@@ -267,7 +264,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ### 思想来源
 
-- `agents/rose.md` 和 `.agents/skills/using-agent-skills/SKILL.md` 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
+- `agents/rose.md` 和全局 agent operating discipline 中的少量编码 guardrail 表述，概念上参考了 [Andrej Karpathy 关于 agent coding 行为的帖子](https://x.com/karpathy/status/2015883857489522876) 以及 [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) 的 `CLAUDE.md` 方向（如先思考、保持简单、手术式修改、目标驱动执行）。当前仓库未 vendored 该仓库文件；如后续复制上游文本或文件，请先确认并补充对应第三方声明。
 - `.agents/skills/explain-by-allegory/SKILL.md` 概念上参考了 Amanda Askell-style allegory / analogy prompting 的解释方式（见 [Amanda Askell](https://askell.io/) 个人页面作为人物来源线索），本仓库仅保留“先讲故事、再映射正式概念、再说明类比失效点”的工作流结构，未复制外部 prompt 文本。
 - `.agents/skills/evidence-scoped-retrospective/SKILL.md` 概念上参考了 Vaibhav / VB / Codex-style self-improvement prompting 的“回看近期工作并提出流程改进”方向，但改为 OpenCode 可证据化版本：只分析用户显式提供或批准的证据，不声称可见全局历史，且先报告再走既有变更门禁；未复制外部 prompt 文本。
 - `.agents/skills/evidence-scoped-retrospective/SKILL.md` 的 failure-pattern taxonomy 和 `templates/AGENTS.md` 的 selected guardrails 概念上参考了用户提供的 Mnilax / Karpathy / Forrest Chang-style coding-agent discipline summary。用户请求使用 [Mnilax X 链接](https://x.com/Mnilax/status/2053116311132155938) 作为 attribution；direct X content 在本次实现中未直接抓取，按 conceptual / user-provided source 标注，未复制原文。
@@ -279,6 +276,8 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 ## 使用说明
 
 这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；同时提供且只提供四个 delivery shortcut：`/ideate`、`/define`、`/build`、`/ship`，分别对应 `commands/{ideate,define,build,ship}.md`，由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供 `/local-review` 作为非 delivery-mode 的本地 report-first 审查入口，可审查 local changes、base branch、commit、PR 或 OpenSpec change，并在修复前先输出分类报告；它不覆盖 OpenCode 内置 `/review`，也不替代 `/ship`。DEFINE 必须先关闭 decision-shaping research / material blockers、保证 artifacts coherent 且 strict-valid，并取得最终 `test-plan.md` acceptance。BUILD 只执行 active contract 导出的 accepted queue 和 progress savepoints，再做一次最小 changed-scope completion check，记录 `IMPLEMENTED_TARGETED_VERIFIED` 后停在 SHIP 之前；不自动增加 package-local tests/reviews/security fanout、commit 或 approval。SHIP 需要新的显式 intent 和当前 implementation evidence，复用仍覆盖 exact content/target/config/toolchain 的 BUILD evidence，只选择 stale、affected、risk、integration、packaging、release、merge-result 或 target-specific checks。仓库不提供 `/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册隐藏或未请求的 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime；显式 product/repository automation 仍须通过正常 formal/high-risk gates。
+
+已请求且在范围内的安全本地读取、编辑、确定性诊断和 claim-matched 检查不需要逐步微审批；外部/破坏性、依赖/lockfile、schema/auth/security、Git/release 和 A33 ADD/REMOVE 仍使用各自的 exact gate。每个 subagent Task context 都是 single-use terminal session，subagent 不得委派、恢复旧 context 或取得 lifecycle/integration/verdict ownership。
 
 ### A33 attached-repository boundary
 
@@ -310,7 +309,7 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。`install` 和 `update` 不读取或修改第三方 DCP plugin 状态及用户的 `dcp.json`/`dcp.jsonc`。OpenSpec 仅在显式传 `--enable-openspec` 时检测/安装并运行项目 `init/update`；`--skip-openspec` 可显式保持禁用。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。显式 `install`/`update` 会检查三个退役 skill 的 exact destination：只有解析后精确指向当前 canonical repo retired-source path 的 symlink 才会被 `unlink`；copy、普通文件/目录、不同 target、修改或所有权不明的条目全部保留并报告，dry-run 只报告计划，不会删除 sibling、parent 或 user file。`doctor` 的 required skill 清单直接来自更新后的 manifest，不新增 stale-copy result field。`install` 和 `update` 不读取或修改第三方 DCP plugin 状态及用户的 `dcp.json`/`dcp.jsonc`。OpenSpec 仅在显式传 `--enable-openspec` 时检测/安装并运行项目 `init/update`；`--skip-openspec` 可显式保持禁用。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
 
 交互式 `rose-aili install` 会依次询问 default agent、缺失的 model override、Playwright MCP、CodeGraph 和 OpenSpec；交互式 `update` 只询问 CodeGraph。非交互模式只执行显式 flag 请求的 optional integration。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
 

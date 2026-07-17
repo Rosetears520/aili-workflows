@@ -15,17 +15,18 @@ Otherwise ROSE reads, edits, and verifies directly. A non-trivial or multi-file 
 
 ## Dispatch shape
 
-- Default concurrency is at most two.
+- One current intent has at most one auxiliary capability. That capability may use at most two fresh, independent Task contexts only when concurrency has clear benefit; otherwise use one context or work directly.
 - Parallel units must have independent inputs and non-overlapping writes.
 - If units overlap or depend on one another, run them sequentially or keep the work direct.
 - Do not automatically add review, test, security, coverage, or convergence lanes.
 - Subagents never delegate and never own the final verdict.
+- A skill or subagent returns its bounded result/need to ROSE and cannot invoke another process skill or continue through a prior context.
 
 Use the compact packet and result contracts in `protocols/subagent-task-packet.md` and `protocols/subagent-result.md`. A packet narrows scope but never expands effective permissions.
 
 ## Separate gates
 
-Direct-first routing does not waive lifecycle, branch/status, secrets, high-risk, destructive, dependency, schema, public API, auth, external-operation, or verification gates.
+Direct-first routing does not waive lifecycle, branch/status, secrets, high-risk, destructive, dependency, schema, public API, auth/security, external-operation, Git/release, A33, or verification gates. Safe in-scope local reads, edits, diagnostics, and focused checks are not approval events.
 
 ## Completion
 

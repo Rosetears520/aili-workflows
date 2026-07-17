@@ -82,9 +82,9 @@ Classify **every slide** as exactly one of the [5 page types](references/slide-t
 
 ### Step 5: Generate Slide JS Files
 
-Create one JS file per slide in `slides/` directory. Each file must export a synchronous `createSlide(pres, theme)` function. Follow the [Slide Output Format](#slide-output-format) and the type-specific guidance in [slide-types.md](references/slide-types.md). For independent slide groups, use `parallel-subagent-dispatch` rather than an ad hoc slide protocol.
+Create one JS file per slide in `slides/` directory. Each file must export a synchronous `createSlide(pres, theme)` function. Follow the [Slide Output Format](#slide-output-format) and the type-specific guidance in [slide-types.md](references/slide-types.md). Work directly by default; if independent slide groups have a concrete concurrency benefit, return that bounded ownership need to ROSE rather than invoking another skill or ad hoc protocol.
 
-**When using `parallel-subagent-dispatch`, include these work package constraints:**
+**If ROSE separately authorizes fresh independent slide assignments, include these work package constraints:**
 1. File naming: `slides/slide-01.js`, `slides/slide-02.js`, etc.
 2. Images go in: `slides/imgs/`
 3. Final PPTX goes in: `slides/output/`
@@ -126,7 +126,7 @@ Run with: `cd slides && node compile.js`
 ### Step 7: QA (Required)
 
 See [QA Process](references/pitfalls.md#qa-process).
-Use `verification-before-completion` before claiming the deck/slides are complete, fixed, passing, or verified; cite fresh compile and QA evidence.
+Before claiming the deck/slides complete, fixed, passing, or verified, follow the canonical lifecycle/ordinary-task verification owner and cite the selected fresh compile/QA evidence.
 
 ### Compile / QA Failure Recovery
 

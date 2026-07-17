@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior. Use when you need to prove that code works, when a bug report arrives, or when you're about to modify existing functionality.
+description: Run a bounded red-green-refactor feedback loop only when the user explicitly requests TDD, accepts reproduction-first proof for a bug, or an accepted high-risk behavior specifically requires red/green evidence; do not trigger for every logic, bug, behavior, or implementation change.
 ---
 
 # Test-Driven Development
@@ -11,15 +11,17 @@ Write a failing test before writing the code that makes it pass. For bug fixes, 
 
 ## When to Use
 
-- Implementing any new logic or behavior
-- Fixing any bug (the Prove-It Pattern)
-- Modifying existing functionality
-- Adding edge case handling
-- Any change that could break existing behavior
+- The user explicitly requests TDD/red-green-refactor.
+- The accepted bug-fix approach requires a reproduction test to prove the reported failure before the fix.
+- A named accepted high-risk behavior requires red/green evidence and the canonical owner selects TDD as the primary implementation feedback loop.
 
-**When NOT to use:** Pure configuration changes, documentation updates, or static content changes that have no behavioral impact.
+**When NOT to use:** An ordinary behavior change with an adequate focused verification path, a bug that can be reproduced more directly without test-first work, docs/config/static content, planning, review, or completion verification alone.
 
-**Related:** For browser-based changes, combine TDD with runtime verification using OpenCode browser tools or Playwright MCP. Chrome DevTools MCP is a compatibility fallback only.
+For browser behavior, ROSE selects either the direct browser path or a delegated QA path only when the claim needs it; TDD does not auto-add browser work.
+
+## Canonical loop contract
+
+This skill is one bounded implementation feedback adapter. ROSE/`aili-delivery-flow` owns lifecycle state, scope, approvals, progress, and final verification. Run one behavior-at-a-time RED→GREEN→optional REFACTOR within accepted scope, then return `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Do not invoke planning, browser, testing, review, Git, or another process skill. The lifecycle verification owner selects the final smallest check; TDD never requires an automatic full suite, review, commit, or second approval.
 
 ## The TDD Cycle
 
@@ -104,13 +106,13 @@ With tests green, improve the code without changing behavior:
 - Remove duplication
 - Optimize if necessary
 
-Run tests after every refactor step to confirm nothing broke.
+After the optional bounded refactor, rerun the focused GREEN command once. Broader checks remain with the canonical verification owner.
 
-🔴 CHECKPOINT before broad-suite claim: Do not say "all tests pass" until the targeted RED→GREEN command has passed and the relevant broader suite command has been run or explicitly marked unavailable.
+Do not make a broader test claim from the targeted RED→GREEN command. Broader evidence runs only when the canonical owner determines the exact claim requires it.
 
 ## The Prove-It Pattern (Bug Fixes)
 
-When a bug is reported, **do not start by trying to fix it.** Start by writing a test that reproduces it.
+When reproduction-first proof is the accepted approach, start with a focused test that demonstrates the bug.
 
 ```
 Bug report arrives
@@ -128,7 +130,7 @@ Bug report arrives
   Test PASSES (proving the fix works)
        │
        ▼
-  Run full test suite (no regressions)
+   Return focused evidence to the canonical verifier
 ```
 
 **Example:**
@@ -326,7 +328,7 @@ describe('TaskService', () => {
 
 ## Browser Runtime Testing
 
-For anything that runs in a browser, unit tests alone aren't enough — you need runtime verification. In OpenCode, use browser tools for screenshots, accessibility snapshots, console logs, network requests, interactions, and bounded JavaScript inspection. If Playwright MCP is installed, default to `npx -y @playwright/mcp@0.0.75 --caps=testing,storage`; add `--caps=devtools` for trace/debug work, or use `--caps=network,storage,testing,vision,pdf,devtools` only when full automation is explicitly needed. Chrome DevTools MCP is a compatibility fallback only.
+Browser evidence is separate from the TDD loop. When the exact claim needs runtime UI evidence, return that need to ROSE so it can choose the mutually exclusive direct or delegated browser path; do not add browser verification automatically.
 
 ### Browser Debugging Workflow
 
@@ -335,14 +337,14 @@ For anything that runs in a browser, unit tests alone aren't enough — you need
 2. INSPECT: Console errors? DOM structure? Computed styles? Network responses?
 3. DIAGNOSE: Compare actual vs expected — is it HTML, CSS, JS, or data?
 4. FIX: Implement the fix in source code
-5. VERIFY: Reload, screenshot, confirm console is clean, run tests
+5. VERIFY: Reload and collect only the browser/check evidence selected for the exact claim
 ```
 
 ### What to Check
 
 | Tool | When | What to Look For |
 |------|------|-----------------|
-| **Console** | Always | Zero errors and warnings in production-quality code |
+| **Console** | Console/runtime-error claim | Relevant unexpected errors and warnings |
 | **Network** | API issues | Status codes, payload shape, timing, CORS errors |
 | **DOM** | UI bugs | Element structure, attributes, accessibility tree |
 | **Styles** | Layout issues | Computed styles vs expected, specificity conflicts |
@@ -357,23 +359,13 @@ For detailed browser runtime setup instructions and workflows, see `browser-test
 
 ## When to Use Subagents for Testing
 
-For complex bug fixes, separate reproduction-test authorship from fix authorship when the active ROSE/orchestrator contract allows it. Do not directly spawn nested agents from this skill; route any delegated test work through ROSE / `parallel-subagent-dispatch`.
+This skill never dispatches. If a concrete independence/capability gap exists, return it to ROSE; direct reproduction and fix work remain the default.
 
-```
-ROSE/orchestrator: "Use `parallel-subagent-dispatch` to assign a test-focused worker:
-[bug description]. The reproduction test should fail with the current code."
-
-Test worker: Writes the reproduction test
-
-Implementing agent: Verifies the test fails, then implements the fix,
-then verifies the test passes.
-```
-
-If delegation is unavailable, disallowed, or would violate user-requested ownership, the current agent writes a focused reproduction test directly before implementing the fix. The goal is independence of evidence, not bypassing ROSE routing or runtime constraints.
+Direct ROSE work remains the default. Any auxiliary assignment is fresh, bounded, benefit-gated, terminal, and owned by ROSE rather than this skill.
 
 ## See Also
 
-Use the patterns above as the local source of truth for behavior-focused tests, DAMP test data, limited mocks, Arrange-Act-Assert structure, and reproduction-first bug fixes. For browser runtime verification, route to `browser-testing-with-devtools` when applicable.
+Use the patterns above for behavior-focused tests, DAMP test data, limited mocks, Arrange-Act-Assert structure, and accepted reproduction-first bug fixes. Return any browser-evidence need to ROSE rather than routing it here.
 
 ## Common Rationalizations
 
@@ -398,11 +390,10 @@ Use the patterns above as the local source of truth for behavior-focused tests, 
 
 ## Verification
 
-After completing any implementation:
+After completing the selected TDD loop:
 
-- [ ] Every new behavior has a corresponding test
-- [ ] All tests pass: `npm test`
-- [ ] Bug fixes include a reproduction test that failed before the fix
+- [ ] The selected RED command failed for the intended reason and the GREEN rerun passed
+- [ ] Any accepted reproduction-first bug has the focused regression test
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
-- [ ] Coverage hasn't decreased (if tracked)
+- [ ] Broader coverage/full-suite claims are left to the canonical verification owner

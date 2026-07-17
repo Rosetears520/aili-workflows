@@ -1,6 +1,6 @@
 ---
 name: strategy-stress-test
-description: Stress-tests a proposed strategy, interview packet, spec, plan, task breakdown, subagent reconciliation, review, or completion claim before acceptance; use after a first draft exists, before write-back, before implementation, during reconciliation, or before claiming complete/fixed/verified/ready.
+description: Run one bounded adversarial pass when the user explicitly requests a stress test or ROSE identifies a concrete material loophole in an existing strategy, spec, plan, review, or claim; do not trigger merely before write-back, implementation, reconciliation, or completion.
 license: MIT
 compatibility: opencode
 metadata:
@@ -23,34 +23,29 @@ Anything still unresolved must be marked as `Open Question` or `Unverified`.
 
 ## When to Use
 
-Use this skill after a first draft exists and before the draft is accepted, written back, implemented, dispatched, reviewed as final, or reported complete.
+Use this skill only when a concrete draft or claim exists and either the user explicitly asks to challenge/stress-test it or ROSE names one material loophole that direct inspection cannot safely close inline.
 
-Common trigger points:
+Positive triggers:
 
-- after generating an interview packet
-- between SPECIFY and PLAN
-- before freezing an implementation plan or task breakdown
-- after subagents return and before reconciliation is accepted
-- before saying `complete`, `fixed`, `passing`, `verified`, `ready`, or `accepted`
-- at the end of code-reviewer, security-auditor, or test-engineer reports
+- "Stress-test this design before I accept it."
+- "Challenge this plan for rollback gaps."
+- A named contradiction, missing failure path, or unsupported completion claim that can change a material decision.
 
-Do not use this skill for tiny obvious edits, pure brainstorming with no artifact, or cases where no concrete strategy, spec, plan, review, or claim exists yet.
+Near misses: an artifact merely exists; a file is about to be written; implementation/review is ending; confidence is requested without a named loophole; or ordinary verification is pending. In those cases the active owner works directly.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, approvals, writeback, and verification. This skill does not invoke research, requirements, test-plan, review, security, or another process skill. It returns one concrete need or material delta to ROSE and stops. Canonical approval and verification rules win any conflict.
 
 ## Loop Limit
 
-Default to 1 loop.
-
-Run a second or third loop only when the previous loop found material loopholes that could change scope, design, acceptance, verification, security, rollout, or user decisions.
-
-Hard limit: 3 loops.
+Run exactly one bounded challenge pass per trigger.
 
 Stop earlier when:
 
 - all material loopholes are resolved
 - remaining issues are explicitly marked `Open Question` or `Unverified`
-- additional loops would only produce wording tweaks, low-risk nitpicks, or speculative concerns
+- further work would only produce wording tweaks, low-risk nitpicks, or speculative concerns
 
-Never keep looping to manufacture certainty.
+If a material issue remains, return it to ROSE; do not start a second pass or another process skill automatically.
 
 ## Process
 
@@ -60,9 +55,9 @@ For each loop:
 2. Ask whether it is factually supported enough to proceed.
 3. If not, list only material loopholes that could change scope, design, task order, acceptance criteria, verification, security, privacy, reliability, rollout, or user decisions.
 4. Classify each loophole as one of: Missing evidence, Hidden assumption, Counterexample, Edge case, Contradiction, Dependency/order problem, Security/privacy/reliability risk, Verification gap, or User decision required.
-5. For each loophole, choose one repair action: edit the current artifact, inspect repository code/docs, fetch official or external docs, ask the user, defer as `Open Question`, or mark as `Unverified`.
+5. For each loophole, choose one repair action: edit the current artifact, inspect targeted repository evidence, return an exact source need to ROSE, ask through the canonical owner, defer as `Open Question`, or mark as `Unverified`.
 6. Apply fixes only when they are within scope, allowed by the current mode, and supported by evidence.
-7. Re-run the loop only if material loopholes remain.
+7. Return remaining material loopholes to ROSE and stop.
 
 ## Adversarial Lenses
 
@@ -166,9 +161,10 @@ Reason:
 
 ## Integration Rules
 
-When called by another skill or agent:
+When ROSE selects this as the one bounded auxiliary pass for a primary artifact owner:
 
 - Do not replace the caller skill.
+- Do not invoke another skill or continue into another lifecycle loop.
 - Do not write files unless the caller skill and current mode allow edits.
 - Keep the output compact enough to paste into a final report or artifact appendix.
 - Prefer editing the artifact to adding a long critique when the fix is obvious and allowed.

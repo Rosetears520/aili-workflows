@@ -26,9 +26,7 @@ REQUIRED_FILES = [
     "agents/implementer.md",
     "agents/code-scout.md",
     ".agents/skills/parallel-subagent-dispatch/SKILL.md",
-    ".agents/skills/verification-before-completion/SKILL.md",
     ".agents/skills/review-pipeline/SKILL.md",
-    ".agents/skills/repo-evidence-first/SKILL.md",
     ".agents/skills/session-handoff/SKILL.md",
     ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
     ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
@@ -82,15 +80,14 @@ ROSE_TASK_RULES = [
 
 CONTENT_CHECKS = {
     "agents/rose.md": ["# ROSE", "Prefer direct work", "Default concurrency is at most two", "smallest claim-matched check", "aili-delivery-flow"],
-    "agents/implementer.md": ["## Role", "## Goal", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
+    "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
-    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "## Compact packet", "Goal:", "STATUS:"],
-    ".agents/skills/verification-before-completion/SKILL.md": ["smallest fresh check", "Do not automatically dispatch a verifier", "Unverified"],
-    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Direct ROSE work is the default", "Default concurrency is at most two", "Do not automatically add review"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Allowed actions:", "Expected result:", "Stop when:"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["STATUS: completed | partial | blocked | unverified", "EVIDENCE:", "BLOCKERS:"],
-    ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most two relevant specialists", "one targeted recheck"],
-    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "one minimal direct changed-scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "Never resume an old `task_id`", "Do not automatically retry", "new direct-first benefit decision", "## Compact packet", "Goal:", "STATUS:"],
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Direct ROSE work is the default", "One current intent has at most one auxiliary capability", "at most two fresh, independent Task contexts", "Do not automatically add review"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Never pass or resume an old `task_id`", "not automatically retried", "new direct-first benefit decision", "Allowed actions:", "Expected result:", "Stop when:"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "status: completed | partial | blocked | unverified", "Never resume the result's old `task_id`", "does not authorize an automatic fresh-session retry", "new direct-first benefit decision"],
+    ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most one auxiliary specialist capability", "at most two independent contexts", "one targeted recheck"],
+    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
     ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["active accepted contract", "A33 admission and operation gates", "Hidden or unrequested AILI self-automation", "explicitly scoped product/repository CI", "IMPLEMENTED_TARGETED_VERIFIED"],
     ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "fresh explicit intent", "exact commit/push/merge/release approvals"],
 }
@@ -1819,7 +1816,7 @@ def static_source_failures(project: Path) -> list[str]:
         ".agents/skills/aili-delivery-flow/references/protocols/implementation-package.md": ["required-satisfied | not-triggered | blocked", "BUILD_MATERIAL_DISCOVERY", "never creates automatic review"],
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Default to at most two", "Do not automatically add review", "one compact `WT-001` reference"],
         ".agents/skills/git-workflow-and-versioning/SKILL.md": ["A33 session-root attached repositories", "reflog_policy:enabled|disabled", "no sandbox, DLP, network isolation"],
-        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["PREPARE has zero add/remove effect", "default concurrency is at most two"],
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["PREPARE has zero add/remove effect", "default Task concurrency remains at most two"],
         "tests/opencode-permission-probe.test.mjs": ["A33 agent installs preserve whole-file equality in copy and selective modes", "a33-runtime-key-mismatch-zero-effect", "delete_each"],
     }
     for relative_path, markers in required.items():
@@ -2256,10 +2253,10 @@ def main() -> int:
 
     p5_required_markers = {
         "commands/build.md": ["IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
-        ".agents/skills/aili-delivery-flow/SKILL.md": ["derive the queue from the active contract", "fresh exact key/class-bound approval", "CI failure reports"],
+        ".agents/skills/aili-delivery-flow/SKILL.md": ["Derive a dependency-ordered queue from the accepted contract", "fresh exact key/class-bound approval", "CI failure reports"],
         ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["A33 admission and operation gates", "through root `/.worktrees/`", "explicitly scoped product/repository CI", "progress-ledger savepoint"],
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["synthesize a queue from the active accepted contract", "PREPARE has zero add/remove effect", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "one minimal direct changed-scope", "optional matrix evidence is not a broad BUILD or release gate"],
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope/affected links", "optional matrix evidence is not a broad BUILD or release gate"],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["An attachment is admitted only", "Admission is not operation authority", "build-readiness status: `READY` or `BLOCKED`"],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "fresh explicit intent", "CI failure returns to the user"],
         "docs/harness/aili-harness-contract.md": ["A33 Static Admission and Approval Gates", "Active-contract completion package", "explicit product/repository CI"],

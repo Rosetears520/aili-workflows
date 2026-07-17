@@ -1,6 +1,6 @@
 ---
 name: frontend-ui-engineering
-description: Builds production-quality UIs. Use when building or modifying user-facing interfaces. Use when creating components, implementing layouts, managing state, or when the output needs to look and feel production-quality rather than AI-generated.
+description: Build or modify production UI components, layouts, client state, responsive behavior, accessibility, or UX inside an app when that frontend surface is the primary deliverable; do not trigger for rich campaign/media pages, backend integration, every user-facing text change, delegated browser QA, or review alone.
 ---
 
 # Frontend UI Engineering
@@ -17,14 +17,18 @@ Build production-quality user interfaces that are accessible, performant, and vi
 - Adding interactivity or state management
 - Fixing visual or UX issues
 
+Near misses: a backend+frontend contract/integration request, cinematic marketing page, copy-only edit, browser verification only, or backend-only change does not select this skill.
+
+ROSE/`aili-delivery-flow` selects exactly one of `frontend-ui-engineering`, `frontend-dev`, or `fullstack-dev` as the current primary domain owner. This skill does not invoke another domain/process skill; it returns one concrete backend, browser, security, design-decision, or verification need to ROSE and stops `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Canonical lifecycle approvals and claim-matched verification override generic checklist breadth.
+
 ## Ordered UI Workflow
 
 1. **Inspect existing patterns:** find the nearest component, design tokens, state pattern, tests, and accessibility conventions before editing.
 2. **Define UI states:** list loading, empty, error, disabled, focused, active, and success states that the component must render.
 3. **Implement the complete focused slice:** build the component/page using project primitives and the existing design system before adding custom styling.
-4. **Run accessibility gates:** verify semantic HTML, labels, focus order, keyboard interaction, contrast, and screen-reader structure.
-5. **Run responsive gates:** check mobile-first behavior at project-defined breakpoints; if none exist, use 320px, 768px, 1024px, and 1440px.
-6. **Verify evidence:** use the closest automated test, story, browser check, or manual runbook and report any unverified states.
+4. **Apply affected accessibility constraints:** cover semantics, labels, focus, keyboard, contrast, or screen-reader behavior relevant to the changed interaction.
+5. **Apply affected responsive constraints:** use project breakpoints and only the viewports needed by the accepted claim.
+6. **Return evidence need:** the canonical owner selects the closest focused test, story, browser check, or manual runbook and reports unverified states.
 
 🔴 CHECKPOINT / 🛑 STOP: Before introducing new UI primitives, global state, animation systems, raw color palettes, or responsive breakpoints, confirm no existing project pattern already owns the decision.
 
@@ -352,12 +356,12 @@ Accessibility gate: use semantic elements first; every control needs an accessib
 
 ## Verification
 
-After building UI:
+For the selected UI claim, apply only relevant checks chosen by the canonical verification owner:
 
 - [ ] Component renders without console errors
 - [ ] All interactive elements are keyboard accessible (Tab through the page)
 - [ ] Screen reader can convey the page's content and structure
-- [ ] Responsive: works at project-defined breakpoints, or 320px, 768px, 1024px, and 1440px when none are defined
+- [ ] Responsive behavior is checked at affected project-defined viewports
 - [ ] Loading, error, and empty states all handled
 - [ ] Follows the project's design system (spacing, colors, typography)
-- [ ] No accessibility warnings in dev tools or axe-core
+- [ ] Accessibility tooling runs only when the affected claim requires it; otherwise static/manual evidence is reported

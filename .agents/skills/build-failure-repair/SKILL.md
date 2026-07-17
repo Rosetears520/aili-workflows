@@ -1,6 +1,6 @@
 ---
 name: build-failure-repair
-description: Repair build, typecheck, lint, or test failures with a root-cause-first minimal workflow; route read-only investigation before approved implementation, do not change dependencies or lockfiles without approval, and never bypass or skip failing gates to claim success.
+description: Repair one concrete reproducible build, typecheck, lint, test, packaging, or CI failure with a bounded root-cause-first loop; do not trigger for runtime bugs without a failing gate, broad test strategy, dependency/toolchain migration, or generic implementation.
 ---
 
 # Build Failure Repair
@@ -16,13 +16,15 @@ Use this skill when an executable quality gate fails and the task is to get the 
 ## Near Misses
 
 - Runtime bug with no failing gate yet: establish the smallest reproducible loop before changing code.
-- Broad test strategy, coverage adequacy, or PR test matrix: use `pr-test-analysis` or `coverage-review`.
+- Broad test strategy, coverage adequacy, or PR test matrix: return the mismatch to ROSE, which may select the narrow test-analysis owner.
 - Dependency upgrades, lockfile regeneration, toolchain migration, or CI redesign: stop for explicit approval before repair.
 - Product behavior changes discovered during repair: return to the owner for scope clarification.
 
 ## Execution
 
-ROSE or the assigned implementer reproduces and localizes the failure directly. Use a specialist only when a required capability or materially noisy evidence justifies it. Keep the repair minimal, task-scoped, reversible, and backed by a failing loop that becomes passing.
+ROSE reproduces and localizes the failure directly. Requested in-scope local diagnosis, repair, and focused rerun proceed without another approval. Return one concrete specialist/noisy-context need to ROSE rather than dispatching here. Keep the repair task-scoped and backed by the exact failing loop.
+
+ROSE/`aili-delivery-flow` owns lifecycle state, material/risky approvals, and verification. This skill is one bounded failure-repair adapter; it does not invoke TDD, review, coverage, dependency, CI redesign, or another process skill. Stop `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`. Canonical approval and claim-matched verification rules win.
 
 ## Repair Workflow
 
@@ -31,14 +33,14 @@ ROSE or the assigned implementer reproduces and localizes the failure directly. 
 3. Localize the failure boundary: source, test, fixture, generated artifact, config, dependency/tooling, or environment.
 4. State the top root-cause hypothesis and the proof expected after repair.
 5. Apply the smallest code/test/config change inside the approved scope.
-6. Re-run the failing command, then broaden only to adjacent gates needed to prove no regression.
+6. Re-run the exact failing command once. The canonical verification owner broadens only when the requested claim still lacks evidence.
 
 ## Boundaries
 
 - Do not skip tests, loosen assertions, suppress type errors, ignore exit codes, lower quality gates, or mark failures as passing.
 - Do not change dependencies, package managers, lockfiles, engine versions, generated-source policy, CI config, or public APIs without explicit approval.
 - Do not hide unrelated failures; report them as pre-existing or out of scope with command evidence.
-- Stop after three non-converging repair attempts and return `BLOCKED_VERIFICATION` with the evidence table.
+- After one targeted repair/recheck, return any remaining failure as `BLOCKED_VERIFICATION`; do not create a retry, review, or fresh-session chain.
 
 ## Verification
 
