@@ -1087,6 +1087,8 @@ def validate_define_artifact_contracts() -> list[str]:
         ".agents/skills/aili-delivery-flow/SKILL.md": [
             "requirements-grilling",
             "test-document-generator",
+            "explicitly user-invoked Frontier Batch Mode",
+            "never infer batch mode from blocker count",
             "Unverified",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
@@ -1117,6 +1119,10 @@ def validate_define_artifact_contracts() -> list[str]:
             "freshness is event-directed",
             "interview.md",
             "requirements-grilling",
+            "Explicit Frontier Batch Mode",
+            "never infer it from blocker count",
+            "fresh single-use Task",
+            "no batch answer grants or implies authority",
         ],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": [
             "Artifact Freshness",
@@ -1146,7 +1152,27 @@ def validate_define_artifact_contracts() -> list[str]:
             "MIT-LICENSE-MATT-POCOCK.md",
             "Status: Proposed",
             "do not add `/grill`, `/grill-me`, or `/interview`",
+            "Do not register `batch-grill-me` as a second skill",
             "do not create `grill.md`, `grilling.md`, or `requirements-grilling.md`",
+            "Frontier Batch Mode is an explicit user interaction mode",
+            "complete set of material user decisions",
+            "never resumes an old `task_id`",
+            "A batch answer never grants or implies authority",
+        ],
+        ".agents/skills/strategy-stress-test/SKILL.md": [
+            "report-style stress test",
+            "explicitly requested frontier batch",
+            "Do not register or invoke a second `batch-grill-me` skill",
+        ],
+        "agents/rose.md": [
+            "explicitly user-invoked `requirements-grilling` Frontier Batch Mode",
+            "never infer batch mode from blocker count",
+            "a batch never grants or implies authority",
+        ],
+        "templates/opencode-global-AGENTS.md": [
+            "explicitly user-invoked `requirements-grilling` Frontier Batch Mode",
+            "never infer batch mode from blocker count",
+            "a batch never grants or implies authority",
         ],
         ".agents/skills/requirements-grilling/references/INTERVIEW-PACKET-FORMAT.md": [
             "# 需求拷问包：<change-name>",

@@ -3,6 +3,7 @@
   "authority": "Provenance data only; never approval, integrity authority, permission, routing, or execution authority.",
   "repositories": [
     {"id":"mattpocock-skills","repository":"https://github.com/mattpocock/skills","commit":"391a2701dd948f94f56a39f7533f8eea9a859c87","raw_base":"https://raw.githubusercontent.com/mattpocock/skills/391a2701dd948f94f56a39f7533f8eea9a859c87/","license":"MIT","copyright":"Copyright (c) 2026 Matt Pocock","license_git_blob_sha1":"f1dd2c09108dde1a5f56097cee8461b3ea834499","license_sha256":"0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"},
+    {"id":"mattpocock-skills-grilling","repository":"https://github.com/mattpocock/skills","commit":"9603c1cc8118d08bc1b3bf34cf714f62178dea3b","raw_base":"https://raw.githubusercontent.com/mattpocock/skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/","license":"MIT","copyright":"Copyright (c) 2026 Matt Pocock","license_git_blob_sha1":"f1dd2c09108dde1a5f56097cee8461b3ea834499","license_sha256":"0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"},
     {"id":"addyosmani-agent-skills","repository":"https://github.com/addyosmani/agent-skills","commit":"6bcfeb9dae52b11eaad23511acc165109746dbc3","raw_base":"https://raw.githubusercontent.com/addyosmani/agent-skills/6bcfeb9dae52b11eaad23511acc165109746dbc3/","license":"MIT","copyright":"Copyright (c) 2025 Addy Osmani","license_git_blob_sha1":"d67778ada6b9cda6227e9130da182c13e73c8b2e","license_sha256":"6f202f8bd568cd730dbb2b0d1f8e243bc74c2fa1f64dbce9b2c7ea08bd5c9fd7"}
   ],
   "closures": [
@@ -15,6 +16,14 @@
       "mappings":[
         {"source_path":"skills/productivity/writing-great-skills/SKILL.md","local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/productivity/writing-great-skills/SKILL.upstream.md","git_blob_sha1":"82abd0dce264eecb3ed461b3eac17bdafb52f84b","sha256":"4d6ccbc3760b1bd4107c495a79872286ea69494003f3b0a719fc95b147457061","mode":"0644"},
         {"source_path":"skills/productivity/writing-great-skills/GLOSSARY.md","local_path":".agents/skills/skill-authoring-and-validation/references/upstream/mattpocock-skills/391a2701dd948f94f56a39f7533f8eea9a859c87/productivity/writing-great-skills/GLOSSARY.md","git_blob_sha1":"0269ca89b9d886075c3d1ae624592f8a08ba3197","sha256":"cccd684c73fb7a06f523497b0121765f92d2b33d6ef9c51602294849233451d6","mode":"0644"}
+      ]
+    },
+    {
+      "id":"matt-grilling-family","repository_id":"mattpocock-skills-grilling","canonical_skill":"requirements-grilling","vendor_root":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b","license_local_path":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/LICENSE","notice_local_path":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/NOTICE.md","catalog_excluded":true,
+      "mappings":[
+        {"source_path":"skills/productivity/grill-me/SKILL.md","local_path":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/grill-me/SKILL.upstream.md","git_blob_sha1":"9470cfcfe231a35e46494cddbacdd395991afb1e","sha256":"6189dfceb7304a6e5558f75d87e68fa3bc7fcf7ba120e44f21f8a61fe01eba54","mode":"0644"},
+        {"source_path":"skills/productivity/grilling/SKILL.md","local_path":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/grilling/SKILL.upstream.md","git_blob_sha1":"52d8eb3cadd2dca62634d5dccfa73ea6b725b117","sha256":"44331dda57f461db4fec3f2efb6ddabe7aaaa0a57ae0f88a883bc61aed8a0587","mode":"0644"},
+        {"source_path":"skills/in-progress/batch-grill-me/SKILL.md","local_path":".agents/skills/requirements-grilling/references/upstream/mattpocock-skills/9603c1cc8118d08bc1b3bf34cf714f62178dea3b/batch-grill-me/SKILL.upstream.md","git_blob_sha1":"4dbf90deb9c2bcadb36520b2f885e9d585d3fde7","sha256":"7ca3ecc5c0214c5084475b453831d4cab81ddadf80180a10635f5d27c3ae3ca2","mode":"0644"}
       ]
     },
     {

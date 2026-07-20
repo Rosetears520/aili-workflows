@@ -79,7 +79,7 @@ ROSE_TASK_RULES = [
 ]
 
 CONTENT_CHECKS = {
-    "agents/rose.md": ["# ROSE", "Prefer direct work", "Default concurrency is at most two", "smallest claim-matched check", "aili-delivery-flow"],
+    "agents/rose.md": ["# ROSE", "Prefer direct work", "Default concurrency is at most two", "Every Task context is fresh, single-use, and terminal", "Never pass or resume an old `task_id`", "new requirements, or scope changes", "omits every prior `task_id`", "smallest claim-matched", "aili-delivery-flow"],
     "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
     ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "Never resume an old `task_id`", "Do not automatically retry", "new direct-first benefit decision", "## Compact packet", "Goal:", "STATUS:"],

@@ -1,6 +1,6 @@
 # Questionnaire Policy
 
-`requirements-grilling` is the sole requirements-refinement authority. `interview.md` is its one OpenSpec artifact. The phrase `change-interviewer` is compatibility routing only and owns no skill, prompt, artifact, state, manifest entry, or readiness authority.
+`requirements-grilling` is the sole requirements-refinement authority. `interview.md` is its one OpenSpec artifact. The phrases `change-interviewer`, `grill-me`, and `batch-grill-me` are compatibility routing only and own no second skill, prompt, command, artifact, state, manifest entry, or readiness authority.
 
 ## When Required
 
@@ -17,13 +17,24 @@
 
 ## Gate
 
-DEFINE writes `openspec/changes/<change-id>/interview.md` through `requirements-grilling` when a material clarification exists. Ask the smallest decision-changing question by default. Use one bounded dependency-ordered packet only when several independent blockers are already known and presenting them together reduces user effort. Every question names the subject/decision, target, why now, risk/trade-off, options, evidence-backed recommendation or uncertainty, denial effect, and writeback target. Do not ask for facts current code/spec/test/config or the one applicable approved source lookup already establishes.
+DEFINE writes `openspec/changes/<change-id>/interview.md` through `requirements-grilling` when a material clarification exists. Ask the smallest decision-changing question by default. Use one bounded static Packet Mode artifact only when several independent blockers are already known and presenting them together reduces user effort. Use Frontier Batch Mode only when the user explicitly asks for batch grilling or to receive all currently dependency-ready questions together; never infer it from blocker count. Every question names the subject/decision, target, why now, risk/trade-off, options, evidence-backed recommendation or uncertainty, denial effect, and writeback target. Do not ask for facts current code/spec/test/config or the one applicable approved source lookup already establishes.
 
 Write accepted chat/UI/custom answers to `interview.md`, then re-read disk before classification or readiness. Ambiguous, contradictory, incomplete, untestable, out-of-scope, or evidence-conflicting answers remain `Open Question`/`Unverified` and trigger a focused follow-up rather than guessed writeback. A custom answer is evaluated against the same evidence and materiality rules as a listed option; it is never forced into the nearest option.
 
 Classify every confirmed correction, new requirement, artifact/design/task/test change, accepted finding, or implementation feedback as `covered`, `material-question`, `material-delta`, `ordinary-steering`, or `Unverified`. A `material-delta` writes/re-reads only affected artifacts and direct dependents, reruns required validation, and stales final-test-plan acceptance only when its acceptance or required verification changes. Never ask whether to save an in-scope delta, guess identity, expand permission, bypass high-risk approval, or start BUILD.
 
 BUILD readiness requires coherent required artifacts, no unresolved material decision or decision-shaping source gap, required validation, and explicit final `test-plan.md` acceptance. Select only the source class needed for the exact gap; do not require local, official, prior-art, security, and alternatives lanes as a bundle. Named non-material runtime residuals may remain `Unverified` under their fail-closed gates. Test-plan acceptance is the sole lifecycle-level pre-BUILD user gate; material/coherence/validation/permission/destructive/high-risk gates remain separate.
+
+## Explicit Frontier Batch Mode
+
+Frontier Batch Mode is user-invoked only. Explicit phrases such as “batch grill me”, “批量拷问”, or “ask every currently answerable decision together” select it. A request that merely contains several blockers does not.
+
+- Resolve change identity and non-OpenSpec placement before the first batch. Keep permission, approval, destructive, external-access, dependency, schema/auth/security, commit/push/merge/release, and exact-operation questions separate and single; no batch answer grants or implies authority.
+- Model the selected material scope as a decision tree. The current frontier is the complete set of material user decisions whose prerequisite decisions and required evidence are settled. Ask that frontier in one numbered packet, with no generic coverage questions. If only one material decision is ready, ask it as one question.
+- A question that depends on another question still open in the current round belongs to a later round. Do not guess the prerequisite answer merely to enlarge the frontier.
+- Finding facts remains the agent's job. ROSE inspects directly by default. `requirements-grilling` may return `need-evidence` with the affected dependency but must not dispatch; only questions downstream of missing evidence wait. If ROSE independently justifies delegation under the existing direct-first Task gate, it uses a fresh single-use Task and no old `task_id`; unrelated frontier questions remain eligible.
+- Accept partial answers. Persist confirmed answers and dispositions to the one `interview.md` or agreed target, re-read disk, keep unanswered or invalid answers unresolved, and recompute the frontier from current evidence before the next round.
+- The session ends only when the frontier is empty and the user explicitly confirms shared understanding. That confirmation is not requirements readiness by itself and never substitutes for validation, final `test-plan.md` acceptance, permission, or exact-operation approval.
 
 ## Default Interaction
 

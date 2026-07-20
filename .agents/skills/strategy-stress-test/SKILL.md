@@ -1,6 +1,6 @@
 ---
 name: strategy-stress-test
-description: Run one bounded adversarial pass when the user explicitly requests a stress test or ROSE identifies a concrete material loophole in an existing strategy, spec, plan, review, or claim; do not trigger merely before write-back, implementation, reconciliation, or completion.
+description: Run one bounded adversarial pass when the user explicitly requests a report-style stress test or ROSE identifies a concrete material loophole in an existing strategy, spec, plan, review, or claim; do not trigger for an interactive grill/frontier interview or merely before write-back, implementation, reconciliation, or completion.
 license: MIT
 compatibility: opencode
 metadata:
@@ -25,13 +25,15 @@ Anything still unresolved must be marked as `Open Question` or `Unverified`.
 
 Use this skill only when a concrete draft or claim exists and either the user explicitly asks to challenge/stress-test it or ROSE names one material loophole that direct inspection cannot safely close inline.
 
+Routing boundary: a request to inspect an artifact and report loopholes without interviewing the user belongs here. A request to grill/interview the user's decisions, including an explicitly requested frontier batch, belongs to the single canonical `requirements-grilling` capability. Do not register or invoke a second `batch-grill-me` skill.
+
 Positive triggers:
 
 - "Stress-test this design before I accept it."
 - "Challenge this plan for rollback gaps."
 - A named contradiction, missing failure path, or unsupported completion claim that can change a material decision.
 
-Near misses: an artifact merely exists; a file is about to be written; implementation/review is ending; confidence is requested without a named loophole; or ordinary verification is pending. In those cases the active owner works directly.
+Near misses: an interactive “grill me”, “interview me”, “batch grill me”, or equivalent decision-elicitation request; an artifact merely exists; a file is about to be written; implementation/review is ending; confidence is requested without a named loophole; or ordinary verification is pending. Interactive decision elicitation routes to `requirements-grilling`; in the other cases the active owner works directly.
 
 ROSE/`aili-delivery-flow` owns lifecycle state, approvals, writeback, and verification. This skill does not invoke research, requirements, test-plan, review, security, or another process skill. It returns one concrete need or material delta to ROSE and stops. Canonical approval and verification rules win any conflict.
 
