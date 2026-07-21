@@ -512,7 +512,7 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     ["dcp-removal-fixtures.yaml", (data) => { data.owner_package = "P5"; }],
     ["review-convergence-fixtures.yaml", (data) => { data.task_ids = data.task_ids.slice(1); }],
     ["upstream-reference-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => !(row.mapping === "matt-handoff" && row.kind === "negative")); }],
-    ["graphify-local-review-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => row.category !== "network"); }],
+    ["graphify-local-review-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => row.category !== "architecture-routing"); }],
     ["generated-openspec-adapter-fixtures.yaml", (data) => { data.package_2_cases = data.package_2_cases.filter((row) => row.id !== "automation-modify-reject"); }],
   ];
   for (const [name, mutate] of fixtureMutations) {

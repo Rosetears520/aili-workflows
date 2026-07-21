@@ -200,7 +200,7 @@
 | `drift-log.md` | [已知] 规格偏差、自我纠正、临时决定、取舍、开放问题和待回写项。 | [已知] 不是聊天记录、进度账或最终 review。 |
 | `review-arbitration.md` | [已知] 有争议、阻塞、跨会话或实质不一致 finding 的证据与处置。 | [已知] 不是投票表，也不是预先创建的例行报告。 |
 | `rose-memory` | [已知] 项目本地、legacy/pre-runtime 的连续性事实或候选。 | [已知] 不是正式合同、原生全局状态或完成证据。 |
-| `handoff.md` | [已知] 脱敏的导航、引用、阻塞和下一步。 | [已知] 不替代权限、Git 真相、合同或验证。 |
+| task-scoped `handoffs/` + legacy `handoff.md` | [已知] 不可变版本历史、脱敏导航、引用、阻塞和下一步；legacy 仅显式只读。 | [已知] 不替代权限、Git 真相、合同或验证，也不自动 cleanup。 |
 
 ### 连续性、checkpoint 与恢复
 
@@ -320,17 +320,17 @@
 
 ### Graphify 的受控、人工角色
 
-[已知] Graphify 基线被固定为 `Graphify-Labs/graphify` v0.9.12、commit `35665a76ba26da0e1bfcab074fede19c94fc5c89`、PyPI 包 `graphifyy`、可执行名 `graphify`、Python `>=3.10`、MIT。
+[已知] 当前只采用官方两阶段流程：CLI 使用 `uv tool install graphifyy`，全局 agents skill 使用 `graphify install --platform agents`；AILI 不再固定或维护自建 Graphify runtime/profile。
 
-[已知] `graphify install --platform opencode` 和 `graphify opencode install` 被排除，因为它们会修改 OpenCode/plugin 或可能修改 `AGENTS.md`。
+[已知] `uv` 必须预先存在；AILI 不 bootstrap uv/Python/system packages，也不回退到 pip/pipx/APT/Homebrew/source build。全局 skill 目标是上游拥有的 `~/.agents/skills/graphify/`，不是当前项目 `.opencode` plugin/config。
 
-[已知] Graphify 只能在用户明确请求并单独批准具体操作后，通过唯一受控 launcher 以 argv 数组和 `shell=False` 运行。输出应留在本地、未提交的新私有目录中，finding 只作建议。
+[已知] CLI install、global skill registration 和任何 project graph operation 都是不同操作，需要不同 fresh exact approval；`--yes`、CodeGraph consent、lifecycle acceptance 或前一阶段批准不授权后一阶段。
 
-[工具结果] 当前 `scripts/graphify_baseline_check.py` 已存在，并包含 contract、security evidence 和执行控制代码。
+[工具结果] 旧 `scripts/graphify_baseline_check.py` 已退休；当前 Graphify 安装/状态逻辑位于 `src/graphify.ts`，doctor 分开报告 CLI/global skill，local review 只消费已有官方结果。
 
-[工具结果] `progress.txt` 记录 Graphify contract mode 曾通过、security-evidence 曾退出 `3`，并且没有记录 Graphify execute mode 或真实 Graphify process 启动。 [未验证] 本次没有通过新鲜运行或独立进程证据证明 Graphify 从未启动。
+[工具结果] 当前实现验证 observed version、全局 skill regular files/version stamp/references、唯一 catalog route 和当前项目 `.opencode` 无变化；installer/doctor 不运行 `/graphify` 或 build/update/query graph。
 
-[未验证] 网络静默、query/cache 副作用、依赖 advisory、当前安全支持、完整输出保证和真实执行安全仍未证明。因此 Graphify 真实执行操作保持阻塞，不能作为 lifecycle 或 completion authority。Graphify 未执行本身只阻塞这项可选操作；若要把 Graphify 缺陷列为 `/ship` blocker，必须另有尚未解决的 High/Important review finding，不能只以“没有运行 Graphify”为理由。
+[未验证] 本次两个真实全局操作尚未获得各自批准/通过，因此 install-success criterion 未满足；上游 support/security/sandbox/index integrity 与任何项目 graph 执行仍不在 AILI 验证范围内。Graphify output 只作 architecture navigation，不是 lifecycle/completion authority。
 
 ### 固定的 Matt Pocock / Addy Osmani 引用与薄适配
 
@@ -362,9 +362,9 @@
 
 [已知] 模型推导的事实只能作为有证据的候选或 `Unverified` 项，不能升级成正式合同。
 
-[已知] handoff 只有在用户明确要求时生成。它必须脱敏、以引用为主，不包含 secret、raw log、完整 transcript 或整份文件。
+[已知] handoff 只有在用户明确要求 CREATE/LIST/RESUME 或 accepted lifecycle 命名 handoff point 时持久化；OpenSpec 使用 change-local `handoffs/`，finalized snapshots 不可变，`LATEST.md` 原子指向最新有效快照。
 
-[已知] handoff 不授权恢复操作。恢复时仍要重新验证 root、Git、合同、权限和验证新鲜度。
+[已知] handoff 不授权恢复操作。exact snapshot 优先于 `LATEST.md`；legacy `handoff.md` 只读；恢复时仍要重新验证 root、Git、合同、权限和验证新鲜度。
 
 [已知] 破坏性操作、外部 root、依赖/lockfile、secret、Graphify 执行、网络、发布、push、merge、archive、工作树删除或历史改写，都需要各自的当前明确批准。测试计划接受不代替这些批准。
 
@@ -377,11 +377,11 @@
 | 四路命令与自然语言合同 | [工具结果] `commands/{ideate,define,build,ship}.md` 和 lifecycle reference 已包含统一分类、输入、输出和停止条件。 | [已知] 这是 AILI 路由合同，不控制直接 OpenSpec adapter。 |
 | DCP 移除 | [工具结果] 当前 CLI、installer、docs、manifest 和测试表面包含 DCP 移除后的实现；历史 progress 也记录 Package 4 已实施。 | [未验证] A30 后没有重新做一次完整独立审计，旧日志不能证明当前版本通过。 |
 | 中性 BUILD 与循环 | [工具结果] 当前 `build-execution-loop.md` 保留外层 profile、bounded loop 词汇、`CONT-005` budget 和 no-background 边界，并明确一次只选一个 primary loop。 | [已知] 不拥有原生 `/goal`，也不把 loop 词汇变成自动链。 |
-| 连续性、memory、handoff | [工具结果] 当前 artifact contract、memory skill 和 handoff skill 已包含相应职责边界；历史 progress 记录 Package 3 已实施。 | [未验证] A30 后未重跑完整验证；这些 artifacts 本身也不是完成或权限证据。 |
+| 连续性、memory、handoff | [工具结果] 当前 artifact contract、全英 handoff skill、stdlib helper、fixture 与 16 个 focused tests 已覆盖 CREATE/LIST/RESUME、pointer、legacy、redaction 和 no-prune。 | [已知] 这些 artifacts 和检查仍不是合同接受、权限或完成证据。 |
 | 完成检查合同 | [工具结果] 当前 lifecycle、artifact contract 和 build reference 要求 ROSE 直接检查 affected scope，并只在具体缺口时选择一个 auxiliary capability和一次 targeted recheck。 | [未验证] 模型层面的触发质量等待真实应用反馈。 |
 | A30 静态角色配置 | [工具结果] 15 个角色清单、frontmatter、checker、fixture、probe 和 tests 已存在；局部 checker 返回 `0`。 | [未验证] checker 漏掉 ROSE 的 `external_directory` 合同冲突，因此整体静态 gate 是 false pass；最后记录的 runtime 结果为退出 `3`，当前仍无新鲜 exit-0 证据。 |
 | CodeGraph policy | [工具结果] 当前合同已写入 exact-root、可选证据、fallback 和 no-proof 边界。 | [已知] 不证明正确或完成。 |
-| Graphify fail-closed launcher | [工具结果] launcher 与 fixture 已存在；历史 progress 记录 contract mode 曾通过。 | [未验证] 该旧记录不是当前通过证明；最后记录的 security result 未通过，本次未取得真实执行证据。 |
+| Graphify official install/routing | [工具结果] `src/graphify.ts`、installer/doctor、routing fixture 与 tests 已采用官方 CLI/global-skill ownership，旧 launcher 已退休。 | [未验证] 两个真实全局操作仍需各自批准和成功证据。 |
 | 固定上游引用 | [工具结果] provenance manifest、引用路径和 thin adapter 文件已存在。 | [未验证] 当前 catalog 与文件 mode 的分发安全仍未证明。 |
 
 ### 已规定但尚未证明或启用
@@ -391,7 +391,7 @@
 | A30 provider-backed runtime | [已知] 真实 Task 子会话应暴露最终合并权限与 provenance，并完成 forced negative/positive matrix。 | [工具结果] 最后记录结果为退出 `3`；[未验证] 没有 A30 后的新鲜 exit-0 证据，政策要求不进行生产分派，但缺少技术性 rollout 开关。 |
 | A30 no-mutation runtime claim | [已知] 只有最终 child mutation/delegation tools 都被证明 deny 时才能成立。 | [未验证] stock runtime 不暴露足够 provenance，不能作该主张。 |
 | A30 外部只读正例 | [已知] 应通过 ROSE Task 对批准路径完成一次只读访问。 | [未验证] 当前没有 rollout-eligible provider-backed exit `0`。 |
-| Graphify 真实运行 | [已知] 需要单独操作许可、可信 executable、当前 security evidence、network deny、隔离环境和写入清单。 | [未验证] 最后记录的 security-evidence 结果为退出 `3`；当前没有可验证的真实运行证据。 |
+| Graphify 官方真实安装 | [已知] `uv tool install graphifyy` 与 `graphify install --platform agents` 需要两个不同 fresh exact approvals，并分别验证 CLI 与全局 skill/catalog/`.opencode` delta。 | [未验证] 当前没有两个操作的成功证据。 |
 | 上游引用分发安全 | [已知] 安装 catalog 必须证明引用不会成为 runnable skill，archive mode 必须正确。 | [未验证] catalog 输出与 DrvFS mode 仍阻塞。 |
 | A30 后完整 Package 12 | [已知] 这是原伞形变更的历史要求，已被后续 direct-first、claim-matched 最小检查规则取代。 | [未验证] 历史矩阵未重跑不构成当前通用 completion gate。 |
 | `/ship` readiness | [已知] 需要所有阻塞 gate 和重要 finding 解决，并有新鲜证据。 | [未验证] 当前明确不满足。 |
@@ -410,7 +410,7 @@
 | OS/filesystem/process hard sandbox | [已知] 当前不作保证。 |
 | 自动 Git commit/merge/apply/integration | [已知] 明确不实现。 |
 | 生成 OpenSpec adapter 的包裹、屏蔽或控制 | [已知] 推迟到 Phase II。 |
-| Graphify 安装、注册、hook、定时或自动执行 | [已知] 明确不实现。 |
+| AILI 自建 Graphify runtime/profile/launcher、project plugin、hook、定时或自动执行 | [已知] 明确不实现；只有官方 CLI/global-skill guided flow。 |
 
 ## 当前已知失败与阻塞
 
@@ -419,7 +419,7 @@
 | A30 runtime 没有 exit-0 证据 | [工具结果] 最后记录的结果是退出 `3`。 | [未验证] A30 后没有新鲜重跑或 exit-0 证据；最终 child 权限/provenance 和 override 缺失无法证明，政策要求停止生产分派，但技术性禁用未被证明。 |
 | A30 后完整独立 review 未重跑 | [工具结果] `progress.txt` 的下一步仍要求重跑静态/runtime gate 和独立 code/security/AI review。 | [未验证] 不能用旧 Package 12 join 宣布 A30 完成。 |
 | ROSE `external_directory` 合同冲突 | [工具结果] 正式 A30 文本要求 ROSE deny；当前 `agents/rose.md` 为 ask；静态 checker 排除 ROSE。 | [开放问题] 需要在后续获批修复中统一合同、实现和 checker。 |
-| Graphify security | [工具结果] `progress.txt` 记录 security-evidence 曾退出 `3`，且没有记录真实 execute。 | [未验证] 本次未独立证明从未启动；Graphify 可选真实执行仍无通过证据，该事实本身不自动等于 `/ship` blocker。 |
+| Graphify real operations | [工具结果] mocked installer/routing tests 已通过，旧 launcher 已删除。 | [未验证] CLI install 与 global skill registration 尚未在各自批准下真实执行，不能声称 install-success。 |
 | 上游 packaging/catalog | [工具结果] 最新进度记录 C-UPSTREAM 退出 `5`，包括 DrvFS 的 0755/0644 mode 与 catalog 不完整问题。 | [未验证] 分发、注册和启用保持阻塞。 |
 | residual / Node / npm | [工具结果] 历史最终矩阵记录 C-RESIDUAL=`5`、C-NODE=`1`、C-NPM=`1`，原因指向一个 stale exact occurrence。 | [未验证] A30 后没有新鲜重跑结果；这些是“仍需重跑确认”的历史失败，不应冒充当前已复现失败。 |
 | release workflow gate | [工具结果] `progress.txt` 记录 `.github/workflows/release.yml` 不在当时接受的编辑范围内，自动发布 gate 未获批准修改。 | [未验证] 它对最终 `/ship` 的准确影响仍需结合接受范围和发布要求重新裁定；不能在本文中自动升级为已证实 blocker。 |
@@ -513,7 +513,7 @@
 
 ### CodeGraph 和 Graphify 谁是权威？
 
-[已知] 都不是完成权威。CodeGraph 帮助发现代码；Graphify 提供建议性图分析。最终结论仍依赖当前文件、测试、review 和安全证据。
+[已知] 都不是完成权威。CodeGraph/当前文件负责 exact locality；已有官方 Graphify graph 只提供一次 bounded architecture orientation。最终结论仍依赖当前文件、测试、review 和安全证据。
 
 ### 用户能直接运行 `/opsx-*` 吗？
 
@@ -542,7 +542,7 @@
 | Fail-closed | [已知] 证据不足或控制不可见时停止并禁用，而不是猜测安全。 |
 | Worktree | [已知] 同一 Git 仓库的另一个工作目录。 |
 | CodeGraph | [已知] 可选的代码索引与发现工具。 |
-| Graphify | [已知] 可选的本地代码图分析工具；当前真实运行受阻。 |
+| Graphify | [已知] 可选的上游 architecture-navigation skill；CLI/global-skill 真实安装尚未验证，项目操作另行批准。 |
 | Generated adapter | [已知] 由外部工具生成或安装的 OpenSpec 直接入口，不由 AILI 生命周期保证。 |
 
 ## 证据与来源地图
@@ -569,7 +569,7 @@
 | [`delegation_protocols_check.py`](../../scripts/delegation_protocols_check.py) | “A30 静态配置”“合同冲突” | [工具结果] 15 角色检查、工具清单与 ROSE 例外。 |
 | [`opencode_permission_probe.mjs`](../../scripts/opencode_permission_probe.mjs) | “A30 runtime” | [工具结果] 当前 fail-closed provider-backed probe，默认无法取得最终 child provenance。 |
 | [`agents/rose.md`](../../agents/rose.md) 与 [`agents/code-scout.md`](../../agents/code-scout.md) | “A30 静态配置”“ROSE 冲突” | [工具结果] 当前主代理与代表性只读角色 frontmatter。 |
-| [`graphify_baseline_check.py`](../../scripts/graphify_baseline_check.py) | “Graphify 的受控角色” | [工具结果] 当前 guarded launcher 实现。 |
+| [`graphify.ts`](../../src/graphify.ts) | “Graphify 的官方安装与状态边界” | [工具结果] 当前官方命令、全局 skill inventory 与非权威路由实现。 |
 | [`upstream-references.json`](../../manifests/upstream-references.json) | “固定上游引用” | [工具结果] 固定 commit、路径、hash、license、mode 和 catalog exclusion 数据。 |
 
 ### 已显式保留的冲突
@@ -586,8 +586,8 @@
 
 [已知] 当前价值很明确：AILI 的四路入口、正式/普通分类、OpenSpec 默认写回、单一测试计划接受门、连续性边界、中性 BUILD、两层循环、Package 12 收敛、DCP/伪 Goal 移除、CodeGraph/Graphify 边界和 A30 只读意图，都已经被组织成一套比旧草案更清楚、更失败关闭的合同。
 
-[工具结果] 当前仓库也已经有大量对应实现，包括四个命令、lifecycle/build/artifact references、A30 的 15 个角色 frontmatter、静态 checker、runtime probe、Graphify launcher 和上游 provenance manifest。
+[工具结果] 当前仓库也已经有大量对应实现，包括四个命令、lifecycle/build/artifact references、A30 的 15 个角色 frontmatter、静态 checker、runtime probe、Graphify official installer/status/routing 和 versioned handoff helper。
 
-[未验证] 但“写好了静态规则”不等于“真实 Task runtime 已安全工作”。15 角色局部 checker 的 exit `0` 因漏检 ROSE 冲突而构成 false pass；最后记录的 A30 provider-backed gate 结果是退出 `3`，且没有 A30 后的新鲜 exit-0 证据。当前禁用主要依赖编排政策而非技术开关，A30 后完整独立复审未重跑，上游分发仍阻塞，旧 residual/Node/npm 失败也尚未得到新鲜复核。Graphify 可选执行仍缺少通过证据，但不能仅凭未执行就把它列为 `/ship` blocker。
+[未验证] 但“写好了静态规则”不等于“真实 Task runtime 已安全工作”。15 角色局部 checker 的 exit `0` 因漏检 ROSE 冲突而构成 false pass；最后记录的 A30 provider-backed gate 结果是退出 `3`，且没有 A30 后的新鲜 exit-0 证据。当前禁用主要依赖编排政策而非技术开关，A30 后完整独立复审未重跑，上游分发仍有独立限制；Graphify 两个真实全局操作也尚未验证，不能据 mocked checks 声称安装成功。
 
 [推断] 因此当前正确结论是：这套工作流已经提供有用的结构和大量静态实现，但跨工作树 runtime、完整收敛和发布准备尚未就绪；不得据此宣称 `/ship` ready。

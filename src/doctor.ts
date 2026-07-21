@@ -1,8 +1,10 @@
+import { spawn } from "node:child_process";
 import { constants } from "node:fs";
 import { access, readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { readOpenCodeConfig } from "./config.js";
+import { inspectGraphifySkillInventory, inspectGraphifyVersion } from "./graphify.js";
 import { RepoComponent, checkRepoManifestDrift, loadManifest, repoInstallTargets } from "./manifest.js";
 
 export interface DoctorOptions {
@@ -41,6 +43,22 @@ export interface DoctorSummary {
       nextStep?: string;
     };
   };
+  graphifyCli: {
+    status: "installed" | "missing";
+    observedVersion?: string;
+    reason?: string;
+    ownership: "upstream";
+  };
+  graphifyGlobalSkill: {
+    status: "registered" | "missing" | "invalid";
+    path: string;
+    versionStampPath: string;
+    referencesPath: string;
+    version?: string;
+    referencesPresent: boolean;
+    issues: string[];
+    ownership: "upstream";
+  };
   plugins: Array<{ name: string; status: "missing-optional" | "unverified" }>;
 }
 
@@ -58,6 +76,33 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> 
   const roseModel = typeof config.value?.agent?.rose?.model === "string" ? config.value.agent.rose.model : null;
   const playwright = config.value?.mcp?.playwright ? "configured" : "missing-optional";
   const codegraph = await codegraphStatus(config.value?.mcp?.codegraph);
+  const graphifyCli = await inspectGraphifyVersion(runReadOnlyCommand);
+  const graphifyHome = process.env.HOME || os.homedir();
+  const graphifyPath = path.join(graphifyHome, ".agents", "skills", "graphify");
+  let graphifyGlobalSkill: DoctorSummary["graphifyGlobalSkill"];
+  try {
+    const graphifySkillInventory = await inspectGraphifySkillInventory(graphifyHome);
+    graphifyGlobalSkill = {
+      status: !graphifySkillInventory.target.present ? "missing" : graphifySkillInventory.target.valid ? "registered" : "invalid",
+      path: graphifySkillInventory.target.root,
+      versionStampPath: graphifySkillInventory.target.versionStampPath,
+      referencesPath: graphifySkillInventory.target.referencesPath,
+      version: graphifySkillInventory.target.version,
+      referencesPresent: graphifySkillInventory.target.referencesPresent,
+      issues: graphifySkillInventory.target.issues,
+      ownership: "upstream"
+    };
+  } catch (error: unknown) {
+    graphifyGlobalSkill = {
+      status: "invalid",
+      path: graphifyPath,
+      versionStampPath: path.join(graphifyPath, ".graphify_version"),
+      referencesPath: path.join(graphifyPath, "references"),
+      referencesPresent: false,
+      issues: [error instanceof Error ? error.message : String(error)],
+      ownership: "upstream"
+    };
+  }
   const installOk = required.every((entry) => entry.installed);
   const source = await sourceReadiness(options.ailiHome, manifest);
   return {
@@ -69,8 +114,48 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> 
     roseModel,
     playwright,
     codegraph,
+    graphifyCli,
+    graphifyGlobalSkill,
     plugins: manifest.components.plugins.map((entry) => ({ name: entry.name, status: "missing-optional" }))
   };
+}
+
+function runReadOnlyCommand(command: string, args: string[], cwd?: string): Promise<{ code: number | null; detail: string; stdout: string }> {
+  return new Promise((resolve) => {
+    let stdout = "";
+    let stderr = "";
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        HOME: process.env.HOME || os.homedir(),
+        PATH: sanitizedReadOnlyPath(process.env.PATH ?? "/usr/bin:/bin:/usr/sbin:/sbin")
+      }
+    });
+    child.stdout?.setEncoding("utf8");
+    child.stdout?.on("data", (chunk: string) => { stdout += chunk; });
+    child.stderr?.setEncoding("utf8");
+    child.stderr?.on("data", (chunk: string) => { stderr += chunk; });
+    child.on("error", (error: NodeJS.ErrnoException) => {
+      resolve({ code: null, detail: error.code === "ENOENT" ? `${command} command not found` : error.message, stdout: stdout.trim() });
+    });
+    child.on("close", (code) => resolve({ code, detail: stderr.trim(), stdout: stdout.trim() }));
+  });
+}
+
+function sanitizedReadOnlyPath(rawPath: string): string {
+  const cwd = path.resolve(process.cwd());
+  const tempDir = path.resolve(os.tmpdir());
+  return rawPath.split(path.delimiter).filter((entry) => {
+    if (!entry || !path.isAbsolute(entry)) return false;
+    const resolved = path.resolve(entry);
+    return !isPathOrDescendant(resolved, cwd) && !isPathOrDescendant(resolved, tempDir);
+  }).join(path.delimiter);
+}
+
+function isPathOrDescendant(candidate: string, parent: string): boolean {
+  const relative = path.relative(parent, candidate);
+  return relative === "" || (relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
 async function sourceReadiness(ailiHome: string, manifest: Awaited<ReturnType<typeof loadManifest>>): Promise<DoctorSummary["source"]> {

@@ -31,7 +31,7 @@ Before copying or adapting upstream review material, read `references/upstream-p
 - `references/orchestration-adaptation.md`: bounded capability selection, blocking/advisory split, evidence reconciliation, and main-agent-only integration/verdict rules; upstream fan-out language is non-authoritative where it conflicts with direct-first routing.
 - `references/addyosmani-code-review-rubric.md`: five-axis review rubric, `Critical`/`Important`/`Suggestion`, spec/task-first reading, concrete fixes, and uncertainty/proof gates.
 - `references/codex-github-compatibility.md`: behavior-only Codex/GitHub compatibility for AGENTS rules, PR focus instructions, high-priority findings, and local review/fix parity without cloud mutation.
-- `references/graphify-local-review.md`: explicit-operation-only Graphify adapter, pinned provenance/security concerns, sole guarded launcher, exact argv/network/environment/output controls, local-uncommitted output, and advisory-only findings. It adds no install, registration, hook/plugin, scheduler, lifecycle gate, or completion authority.
+- `references/graphify-local-review.md`: existing-output-only adapter for optional architecture context from the official global Graphify skill. This gate neither owns nor launches Graphify and adds no install, registration, project execution, hook/plugin, scheduler, lifecycle gate, or completion authority.
 
 - Active derivative-reference sources: primary ECC `affaan-m/ECC` and `addyosmani/agent-skills`.
 - Behavior-only guidance: official Codex review docs; do not copy Codex documentation text.

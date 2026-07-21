@@ -34,7 +34,7 @@ For each current user intent, ROSE selects:
 
 Explicit user intent wins, followed by the narrowest artifact/domain owner, then the lifecycle loop. A skill match is a route into this state, not a second workflow. Skills must not invoke another process skill, recurse, change phase, create another ledger/approval system, or automatically add planning, research, TDD, review, test, security, coverage, or convergence work.
 
-Near misses stay direct: lifecycle words used for explanation/status, code that merely has tests, multi-file work without a planning need, and completion wording without a concrete review or evidence gap do not activate extra skills.
+Near misses stay direct: lifecycle words used for explanation/status, code that merely has tests, multi-file work without a planning need, and completion wording without a concrete review or evidence gap do not activate extra skills. An existing official Graphify graph may supply one scoped architecture-orientation result; exact-current symbols, source, call paths, tests, and impact stay with CodeGraph or current files, and no lifecycle phase installs, registers, or runs Graphify automatically.
 
 ### Mode decision table
 

@@ -49,8 +49,8 @@
       "id": "handoff-trigger",
       "kind": "positive",
       "input": "User explicitly requests a handoff for the active OpenSpec change.",
-      "expected": ["write repository-local handoff.md", "model-oriented reference-first content", "report path and exact next action"],
-      "forbidden": ["automatic memory promotion", "copied full artifacts", "authority claim"]
+      "expected": ["create and finalize one immutable snapshot under openspec/changes/<change-id>/handoffs/", "atomically validate LATEST.md", "model-oriented conditional reference-first content", "end with exactly one fenced text prompt naming the exact snapshot path"],
+      "forbidden": ["mutable handoff.md default", "automatic memory promotion", "copied full artifacts", "authority claim"]
     },
     {
       "id": "handoff-no-threshold-trigger",
@@ -58,6 +58,34 @@
       "input": "Context pressure rises, a command completes, or a phase closes without explicit handoff intent.",
       "expected": ["no handoff file", "ordinary progress/checkpoint may refresh"],
       "forbidden": ["threshold-triggered handoff", "DCP-triggered handoff", "background hook"]
+    },
+    {
+      "id": "handoff-list-bounded-history",
+      "kind": "positive-negative",
+      "input": "User asks to list handoff history for one already confirmed task root.",
+      "expected": ["read snapshot filenames and bounded frontmatter only", "sort newest-first", "report malformed or symlink entries invalid/Unverified", "zero body return"],
+      "forbidden": ["read every snapshot body", "repository-global history scan", "pointer repair", "automatic cleanup"]
+    },
+    {
+      "id": "handoff-exact-resume",
+      "kind": "positive-negative",
+      "input": "User supplies an exact finalized snapshot while LATEST.md names a newer snapshot.",
+      "expected": ["resolve the exact snapshot", "treat it as navigation only", "revalidate current target/contract/permission/evidence", "stop affected work on conflict"],
+      "forbidden": ["replace exact selection with LATEST.md", "fuzzy title selection", "handoff authority"]
+    },
+    {
+      "id": "handoff-invalid-latest",
+      "kind": "negative-recovery",
+      "input": "LATEST.md is malformed, symlinked, stale, escaping, draft-targeted, or digest-mismatched.",
+      "expected": ["fail closed", "report bounded recoverable candidates", "require an exact user selection before resume"],
+      "forbidden": ["guess newest snapshot", "cross-task fallback", "rewrite pointer during RESUME"]
+    },
+    {
+      "id": "handoff-legacy-read-only",
+      "kind": "negative-recovery",
+      "input": "User explicitly selects an existing task-root handoff.md while versioned history also exists.",
+      "expected": ["read legacy handoff.md as non-authoritative navigation", "preserve legacy bytes", "apply current-state revalidation"],
+      "forbidden": ["automatic import", "move", "rewrite", "delete", "make legacy latest"]
     },
     {
       "id": "resume-hydration",
@@ -69,9 +97,9 @@
     {
       "id": "handoff-resume",
       "kind": "negative-recovery",
-      "input": "A repository-local handoff points to a prior root/worktree and old verification state.",
-      "expected": ["treat handoff as navigation only", "obtain current-session approval for any external root", "revalidate root/worktree/Git identity and permissions", "re-read contract/progress/bounded drift", "rerun stale or scope-affected verification"],
-      "forbidden": ["path text as runtime binding", "handoff as permission", "handoff as completion proof"]
+      "input": "A resolved exact or validated-latest repository-local snapshot points to a prior root/worktree and old verification state.",
+      "expected": ["treat snapshot and pointer as navigation only", "obtain current-session approval for any external root", "revalidate root/worktree/Git identity and permissions", "hydrate only active contract/progress/bounded drift and affected evidence", "rerun stale or scope-affected verification"],
+      "forbidden": ["path text as runtime binding", "LATEST.md as authority", "handoff as permission", "handoff as completion proof", "blanket artifact hydration"]
     },
     {
       "id": "memory-stage1-boundary",

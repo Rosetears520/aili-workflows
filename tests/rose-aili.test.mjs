@@ -170,7 +170,7 @@ test("install configures or skips Playwright MCP by explicit flag", async () => 
 
 test("interactive install prompt decisions name the exact OpenSpec root without removed plugin prompts", async () => {
   const options = { dryRun: false, opencodeHome: "/tmp/opencode", ailiHome: repoRoot, projectRoot: repoRoot, plugins: [] };
-  const answers = ["y", "", "y", "n", "y"];
+  const answers = ["y", "", "y", "n", "n", "y"];
   const prompts = [];
 
   await applyPromptDecisions(options, {}, async (prompt) => {
@@ -183,6 +183,7 @@ test("interactive install prompt decisions name the exact OpenSpec root without 
     "Model for agent.rose.model (provider/model, blank to skip): ",
     "Enable optional Playwright MCP? [y/N] ",
     "Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] ",
+    "Install optional Graphify CLI via `uv tool install graphifyy`? This downloads dependencies and writes uv user-global tool paths; global skill registration remains a separate later approval. [y/N] ",
     `Install/configure OpenSpec in exact project root ${repoRoot} via \`npm install -g @fission-ai/openspec@latest\` and \`openspec init/update\`? Requires Node.js 20.19+. [y/N] `
   ]);
   assert.equal(options.setDefaultRose, true);
@@ -191,11 +192,13 @@ test("interactive install prompt decisions name the exact OpenSpec root without 
   assert.equal(options.skipPlaywright, false);
   assert.equal(options.enableCodegraph, false);
   assert.equal(options.skipCodegraph, true);
+  assert.equal(options.enableGraphify, false);
+  assert.equal(options.skipGraphify, true);
   assert.equal(options.enableOpenspec, true);
   assert.equal(options.skipOpenspec, false);
 });
 
-test("update prompt decisions ask CodeGraph without core config or OpenSpec prompts", async () => {
+test("update prompt decisions ask CodeGraph and Graphify without core config or OpenSpec prompts", async () => {
   const options = { dryRun: false, opencodeHome: "/tmp/opencode", ailiHome: repoRoot, plugins: [] };
   const answers = ["y"];
   const prompts = [];
@@ -206,7 +209,8 @@ test("update prompt decisions ask CodeGraph without core config or OpenSpec prom
   }, { includeCoreConfig: false, includePlaywright: false, includeCodegraph: true, includeOpenspec: false });
 
   assert.deepEqual(prompts, [
-    "Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] "
+    "Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] ",
+    "Install optional Graphify CLI via `uv tool install graphifyy`? This downloads dependencies and writes uv user-global tool paths; global skill registration remains a separate later approval. [y/N] "
   ]);
   assert.equal(options.setDefaultRose, undefined);
   assert.equal(options.model, undefined);
@@ -214,6 +218,8 @@ test("update prompt decisions ask CodeGraph without core config or OpenSpec prom
   assert.equal(options.skipPlaywright, undefined);
   assert.equal(options.enableCodegraph, true);
   assert.equal(options.skipCodegraph, false);
+  assert.equal(options.enableGraphify, false);
+  assert.equal(options.skipGraphify, true);
   assert.equal(options.enableOpenspec, undefined);
   assert.equal(options.skipOpenspec, undefined);
 });
@@ -395,10 +401,13 @@ test("non-interactive install reports skipped optional decisions with next steps
 
   assert.equal(summary.componentInstall.status, "completed");
   assert.equal(summary.codegraph.status, "skipped");
+  assert.equal(summary.graphify.cli.status, "skipped");
+  assert.equal(summary.graphify.globalSkill.status, "skipped");
   assert.equal(summary.openspec.status, "skipped");
   assertDecision(summary, "rose model override", "rose-aili install --model <provider/model>");
   assertDecision(summary, "Playwright MCP", "rose-aili install --enable-playwright");
   assertDecision(summary, "CodeGraph", "rose-aili install --enable-codegraph");
+  assertDecision(summary, "Graphify", "rose-aili install --enable-graphify");
   assertDecision(summary, "OpenSpec", "rose-aili install --enable-openspec --project-root <absolute-canonical-path>");
   await fixture.cleanup();
 });
@@ -541,6 +550,275 @@ test("CodeGraph failure is reported separately while core install succeeds", asy
   assert.equal(summary.codegraph.status, "failed");
   assert.match(summary.codegraph.reason, /codegraph failed/);
   assert.match(summary.codegraph.recovery, /codegraph install --target=opencode --yes/);
+  await fixture.cleanup();
+});
+
+test("Graphify is not installed without its flag and --yes grants no Graphify stage", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.graphify.cli.status, "skipped");
+  assert.equal(summary.graphify.globalSkill.status, "skipped");
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("Graphify dry-run reports both official commands and separate approvals without spawning", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const commandCwd = await safeCommandCwd(fixture);
+  const existingClaudeSkill = path.join(fixture.root, ".claude", "skills", "graphify");
+  await mkdir(existingClaudeSkill, { recursive: true });
+  await writeFile(path.join(existingClaudeSkill, "SKILL.md"), "# Graphify\n", "utf8");
+  await writeFile(path.join(existingClaudeSkill, ".graphify_version"), "0.9.20", "utf8");
+
+  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: commandCwd,
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.graphify.cli.status, "planned");
+  assert.equal(summary.graphify.cli.command, "uv tool install graphifyy");
+  assert.equal(summary.graphify.globalSkill.status, "planned");
+  assert.equal(summary.graphify.globalSkill.command, "graphify install --platform agents");
+  assert.equal(summary.graphify.operations.cliInstall.approval, "fresh-exact-separate");
+  assert.equal(summary.graphify.operations.globalSkillRegistration.approval, "fresh-exact-separate");
+  assert.equal(summary.graphify.inventory.targetPath, path.join(fixture.root, ".agents", "skills", "graphify"));
+  assert.ok(summary.graphify.inventory.existingVersionStampPaths.includes(path.join(existingClaudeSkill, ".graphify_version")));
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+  await assert.rejects(stat(stubs.targetPath));
+  await assert.rejects(stat(path.join(commandCwd, ".opencode")));
+  await fixture.cleanup();
+});
+
+test("Graphify CLI stage reports missing uv without fallback or core-install failure", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const binDir = safeBinDir(fixture, "empty-graphify-bin");
+  await mkdir(binDir, { recursive: true });
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: { ...process.env, PATH: isolatedStubPath(binDir) }
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.graphify.cli.status, "failed");
+  assert.match(summary.graphify.cli.reason, /uv is required/);
+  assert.equal(summary.graphify.globalSkill.status, "pending");
+  await fixture.cleanup();
+});
+
+test("Graphify CLI command failure is contained and never advances to skill registration", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture, { uvInstallExitCode: 9 });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+  assert.equal(result.code, 0);
+  assert.equal(summary.graphify.cli.status, "failed");
+  assert.match(summary.graphify.cli.reason, /uv install failed/);
+  assert.equal(summary.graphify.globalSkill.status, "pending");
+  assert.deepEqual(logged.filter((entry) => entry.name === "uv" && entry.args.join(" ") === "tool install graphifyy"), [
+    { name: "uv", args: ["tool", "install", "graphifyy"] }
+  ]);
+  assert.equal(logged.some((entry) => entry.name === "graphify" && entry.args[0] === "install"), false);
+  await fixture.cleanup();
+});
+
+test("Graphify CLI stage delegates exact uv argv, verifies ownership/version, and leaves registration pending", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const commandCwd = await safeCommandCwd(fixture);
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: commandCwd,
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+  assert.equal(summary.graphify.cli.status, "installed");
+  assert.equal(summary.graphify.cli.exitCode, 0);
+  assert.equal(summary.graphify.cli.observedVersion, "0.9.20");
+  assert.equal(summary.graphify.globalSkill.status, "pending");
+  assert.equal(summary.graphify.globalSkill.nextStep, "rose-aili install --register-graphify-skill");
+  assert.deepEqual(logged.filter((entry) => entry.name === "uv" && entry.args[0] === "tool" && entry.args[1] === "install"), [
+    { name: "uv", args: ["tool", "install", "graphifyy"] }
+  ]);
+  assert.equal(logged.some((entry) => entry.name === "graphify" && entry.args[0] === "install"), false);
+  await assert.rejects(stat(path.join(commandCwd, ".opencode")));
+  await fixture.cleanup();
+});
+
+test("Graphify CLI preflight preserves an existing uv-managed install and rejects ownership mismatch", async () => {
+  for (const mismatch of [false, true]) {
+    const fixture = await fixtureAiliHome();
+    const stubs = await writeGraphifyStubs(fixture, { initialGraphify: true, initialUvRecord: !mismatch });
+    const opencodeHome = path.join(fixture.root, "opencode");
+
+    const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", ...SKIP_DEFAULT_ADDONS, "--json"], {
+      cwd: await safeCommandCwd(fixture),
+      env: stubs.env
+    });
+    const summary = JSON.parse(result.stdout);
+    const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+    assert.equal(summary.graphify.cli.status, mismatch ? "conflict" : "installed");
+    assert.equal(logged.some((entry) => entry.name === "uv" && entry.args.join(" ") === "tool install graphifyy"), false);
+    if (mismatch) assert.match(summary.graphify.cli.reason, /uv tool list does not record graphifyy/);
+    else assert.match(summary.graphify.cli.reason, /no reinstall or upgrade ran/);
+    await fixture.cleanup();
+  }
+});
+
+test("Graphify CLI install and global skill registration flags cannot share one approval", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-graphify", "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env,
+    reject: false
+  });
+
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /separate invocations and approvals/);
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("Graphify global skill stage uses only agents platform and verifies files, catalog, and no project .opencode delta", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture, { initialGraphify: true, initialUvRecord: true });
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const commandCwd = await safeCommandCwd(fixture);
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: commandCwd,
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+  assert.equal(summary.graphify.cli.status, "installed");
+  assert.equal(summary.graphify.globalSkill.status, "registered");
+  assert.equal(summary.graphify.globalSkill.exitCode, 0);
+  assert.deepEqual(logged.filter((entry) => entry.name === "graphify" && entry.args[0] === "install"), [
+    { name: "graphify", args: ["install", "--platform", "agents"] }
+  ]);
+  assert.deepEqual(summary.graphify.globalSkill.route, { name: "graphify", location: path.join(stubs.targetPath, "SKILL.md") });
+  assert.equal((await lstat(path.join(stubs.targetPath, "SKILL.md"))).isFile(), true);
+  assert.equal((await lstat(path.join(stubs.targetPath, ".graphify_version"))).isFile(), true);
+  assert.equal((await lstat(path.join(stubs.targetPath, "references", "usage.md"))).isFile(), true);
+  await assert.rejects(stat(path.join(commandCwd, ".opencode")));
+  await fixture.cleanup();
+});
+
+test("Graphify inventory reports an existing stamp even when its skill path is invalid", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const stampOnlyRoot = path.join(fixture.root, ".codex", "skills", "graphify");
+  const stampPath = path.join(stampOnlyRoot, ".graphify_version");
+  await mkdir(stampOnlyRoot, { recursive: true });
+  await writeFile(stampPath, "0.9.20\n", "utf8");
+
+  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.graphify.globalSkill.status, "conflict");
+  assert.ok(summary.graphify.inventory.existingVersionStampPaths.includes(stampPath));
+  assert.ok(summary.graphify.inventory.ambiguousPaths.includes(stampOnlyRoot));
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("Graphify registration does not pass when OpenCode resolves duplicate global routes", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture, { initialGraphify: true, initialUvRecord: true, catalogRouteCount: 2 });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.graphify.cli.status, "installed");
+  assert.equal(summary.graphify.globalSkill.status, "failed");
+  assert.match(summary.graphify.globalSkill.reason, /2 graphify routes instead of exactly one/);
+  await fixture.cleanup();
+});
+
+test("Graphify registration failure or unexpected project .opencode write stays separate from CLI success", async () => {
+  for (const mutateProject of [false, true]) {
+    const fixture = await fixtureAiliHome();
+    const stubs = await writeGraphifyStubs(fixture, {
+      initialGraphify: true,
+      initialUvRecord: true,
+      graphifyInstallExitCode: mutateProject ? 0 : 9,
+      mutateProject
+    });
+    const opencodeHome = path.join(fixture.root, "opencode");
+    const commandCwd = await safeCommandCwd(fixture);
+
+    const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+      cwd: commandCwd,
+      env: stubs.env
+    });
+    const summary = JSON.parse(result.stdout);
+
+    assert.equal(result.code, 0);
+    assert.equal(summary.graphify.cli.status, "installed");
+    assert.equal(summary.graphify.globalSkill.status, "failed");
+    assert.match(summary.graphify.globalSkill.reason, mutateProject ? /Unexpected current-project \.opencode change/ : /graphify install failed/);
+    await fixture.cleanup();
+  }
+});
+
+test("Graphify registration blocks before execution on an ambiguous global skill path", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture, { initialGraphify: true, initialUvRecord: true });
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const externalSkill = path.join(fixture.root, "external-SKILL.md");
+  await mkdir(stubs.targetPath, { recursive: true });
+  await writeFile(externalSkill, "# external\n", "utf8");
+  await symlink(externalSkill, path.join(stubs.targetPath, "SKILL.md"));
+  await writeFile(path.join(stubs.targetPath, ".graphify_version"), "0.9.20", "utf8");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--register-graphify-skill", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+  assert.equal(summary.graphify.globalSkill.status, "conflict");
+  assert.ok(summary.graphify.inventory.ambiguousPaths.includes(stubs.targetPath));
+  assert.equal(logged.some((entry) => entry.name === "graphify" && entry.args[0] === "install"), false);
   await fixture.cleanup();
 });
 
@@ -863,6 +1141,36 @@ test("doctor reports required components and optional project CodeGraph separate
   await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
   await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory", "SKILL.md")));
   await assert.rejects(readFile(logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("doctor reports upstream Graphify CLI and global agents skill separately without uv or project Graphify commands", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture, { initialGraphify: true, initialUvRecord: true });
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"], {
+    env: stubs.env
+  });
+  await mkdir(path.join(stubs.targetPath, "references"), { recursive: true });
+  await writeFile(path.join(stubs.targetPath, "SKILL.md"), "# Graphify\n", "utf8");
+  await writeFile(path.join(stubs.targetPath, ".graphify_version"), "0.9.20", "utf8");
+  await writeFile(path.join(stubs.targetPath, "references", "usage.md"), "# Usage\n", "utf8");
+
+  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env
+  });
+  const summary = JSON.parse(result.stdout);
+  const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+  assert.equal(summary.graphifyCli.status, "installed");
+  assert.equal(summary.graphifyCli.observedVersion, "0.9.20");
+  assert.equal(summary.graphifyCli.ownership, "upstream");
+  assert.equal(summary.graphifyGlobalSkill.status, "registered");
+  assert.equal(summary.graphifyGlobalSkill.path, stubs.targetPath);
+  assert.equal(summary.graphifyGlobalSkill.version, "0.9.20");
+  assert.equal(summary.graphifyGlobalSkill.referencesPresent, true);
+  assert.deepEqual(logged, [{ name: "graphify", args: ["--version"] }]);
   await fixture.cleanup();
 });
 
@@ -1512,6 +1820,8 @@ test("help documents supported options and omits removed plugin flags", async ()
     const result = await runCli(argv);
     assert.match(result.stdout, /--skip-opencode-config/);
     assert.match(result.stdout, /--enable-openspec \| --skip-openspec/);
+    assert.match(result.stdout, /--enable-graphify \| --skip-graphify/);
+    assert.match(result.stdout, /--register-graphify-skill/);
     assert.match(result.stdout, /--project-root <absolute-canonical-path>/);
     assert.doesNotMatch(result.stdout, /--(?:enable|skip)-dcp/);
   }
@@ -1586,6 +1896,138 @@ function installerEnv(home, baseEnv = process.env) {
     HOME: home ?? baseEnv.HOME,
     OPENCODE_ALLOW_CUSTOM_HOME: "yes",
     AILI_ALLOW_PACKAGE_HOME: "yes"
+  };
+}
+
+function isolatedStubPath(binDir) {
+  return [...new Set([binDir, path.dirname(process.execPath), "/usr/bin", "/bin"])].join(path.delimiter);
+}
+
+async function writeGraphifyStubs(fixture, options = {}) {
+  const binDir = safeBinDir(fixture, options.binName ?? "graphify-bin");
+  const logPath = path.join(fixture.safeRoot, `${options.binName ?? "graphify"}-commands.log`);
+  const statePath = path.join(fixture.safeRoot, `${options.binName ?? "graphify"}-state.json`);
+  const targetPath = path.join(fixture.root, ".agents", "skills", "graphify");
+  const toolDirectory = path.join(fixture.root, ".local", "share", "uv", "tools");
+  const uvBinDirectory = path.join(fixture.root, ".local", "bin");
+  await mkdir(binDir, { recursive: true });
+  await writeFile(statePath, JSON.stringify({
+    graphify: options.initialGraphify ?? false,
+    uvRecord: options.initialUvRecord ?? false
+  }), "utf8");
+
+  if (!options.uvMissing) {
+    const uvPath = path.join(binDir, "uv");
+    await writeFile(uvPath, `#!${process.execPath}
+import { readFileSync, writeFileSync } from "node:fs";
+const logPath = ${JSON.stringify(logPath)};
+const statePath = ${JSON.stringify(statePath)};
+const args = process.argv.slice(2);
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: "uv", args });
+writeFileSync(logPath, JSON.stringify(entries));
+let state = JSON.parse(readFileSync(statePath, "utf8"));
+if (args.length === 1 && args[0] === "--version") {
+  process.stdout.write("uv 0.8.0\\n");
+  process.exit(0);
+}
+if (args.join(" ") === "tool dir") {
+  process.stdout.write(${JSON.stringify(`${toolDirectory}\n`)});
+  process.exit(0);
+}
+if (args.join(" ") === "tool dir --bin") {
+  process.stdout.write(${JSON.stringify(`${uvBinDirectory}\n`)});
+  process.exit(0);
+}
+if (args.join(" ") === "tool list") {
+  if (state.uvRecord) process.stdout.write("graphifyy v0.9.20\\n- graphify\\n");
+  process.exit(0);
+}
+if (args.join(" ") === "tool install graphifyy") {
+  if (${Number(options.uvInstallExitCode ?? 0)} !== 0) {
+    process.stderr.write("uv install failed\\n");
+    process.exit(${Number(options.uvInstallExitCode ?? 0)});
+  }
+  state = { graphify: true, uvRecord: true };
+  writeFileSync(statePath, JSON.stringify(state));
+  process.exit(0);
+}
+process.stderr.write("unexpected uv args: " + args.join(" "));
+process.exit(64);
+`, "utf8");
+    await chmod(uvPath, 0o755);
+  }
+
+  const graphifyPath = path.join(binDir, "graphify");
+  await writeFile(graphifyPath, `#!${process.execPath}
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+const logPath = ${JSON.stringify(logPath)};
+const statePath = ${JSON.stringify(statePath)};
+const targetPath = ${JSON.stringify(targetPath)};
+const args = process.argv.slice(2);
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: "graphify", args });
+writeFileSync(logPath, JSON.stringify(entries));
+const state = JSON.parse(readFileSync(statePath, "utf8"));
+if (args.length === 1 && args[0] === "--version") {
+  if (!state.graphify) {
+    process.stderr.write("graphify command not installed\\n");
+    process.exit(127);
+  }
+  process.stdout.write("graphify 0.9.20\\n");
+  process.exit(0);
+}
+if (args.join(" ") === "install --platform agents") {
+  if (${Number(options.graphifyInstallExitCode ?? 0)} !== 0) {
+    process.stderr.write("graphify install failed\\n");
+    process.exit(${Number(options.graphifyInstallExitCode ?? 0)});
+  }
+  mkdirSync(path.join(targetPath, "references"), { recursive: true });
+  writeFileSync(path.join(targetPath, "SKILL.md"), "# Graphify\\n");
+  writeFileSync(path.join(targetPath, ".graphify_version"), "0.9.20");
+  writeFileSync(path.join(targetPath, "references", "usage.md"), "# Usage\\n");
+  if (${Boolean(options.mutateProject)}) {
+    mkdirSync(path.join(process.cwd(), ".opencode"), { recursive: true });
+    writeFileSync(path.join(process.cwd(), ".opencode", "opencode.json"), "{}\\n");
+  }
+  process.stdout.write("references -> " + path.join(targetPath, "references") + "\\n");
+  process.exit(0);
+}
+process.stderr.write("unexpected graphify args: " + args.join(" "));
+process.exit(64);
+`, "utf8");
+  await chmod(graphifyPath, 0o755);
+
+  const opencodePath = path.join(binDir, "opencode");
+  const catalogRouteCount = Number(options.catalogRouteCount ?? 1);
+  await writeFile(opencodePath, `#!${process.execPath}
+import { readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+const logPath = ${JSON.stringify(logPath)};
+const args = process.argv.slice(2);
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: "opencode", args });
+writeFileSync(logPath, JSON.stringify(entries));
+if (${Number(options.opencodeExitCode ?? 0)} !== 0) {
+  process.stderr.write("opencode catalog failed\\n");
+  process.exit(${Number(options.opencodeExitCode ?? 0)});
+}
+const location = path.join(process.env.HOME, ".agents", "skills", "graphify", "SKILL.md");
+const routes = Array.from({ length: ${catalogRouteCount} }, () => ({ name: "graphify", location }));
+process.stdout.write(JSON.stringify(routes));
+`, "utf8");
+  await chmod(opencodePath, 0o755);
+
+  return {
+    binDir,
+    logPath,
+    statePath,
+    targetPath,
+    env: { ...process.env, PATH: isolatedStubPath(binDir) }
   };
 }
 

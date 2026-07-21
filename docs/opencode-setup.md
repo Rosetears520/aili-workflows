@@ -172,9 +172,9 @@ npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-OpenCode config sync is enabled by default for both `install` and `update`; use `--skip-opencode-config` to disable it. The default sync sets or keeps `default_agent: "rose"` when the value is absent or already `rose`, preserves a conflicting non-rose default unless `--force-default-agent` is passed, writes `agent.rose.model` only when `--model <provider/model>` is provided, and writes Playwright MCP only when `--enable-playwright` is provided. Existing `agent.rose.model` values are preserved unless `--force-model` is passed. Playwright, CodeGraph, and OpenSpec are explicit opt-ins; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
+OpenCode config sync is enabled by default for both `install` and `update`; use `--skip-opencode-config` to disable it. The default sync sets or keeps `default_agent: "rose"` when the value is absent or already `rose`, preserves a conflicting non-rose default unless `--force-default-agent` is passed, writes `agent.rose.model` only when `--model <provider/model>` is provided, and writes Playwright MCP only when `--enable-playwright` is provided. Existing `agent.rose.model` values are preserved unless `--force-model` is passed. Playwright, CodeGraph, Graphify, and OpenSpec are independent explicit opt-ins; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
 
-Interactive `rose-aili install` asks, in order, about the default agent, a missing model override, Playwright MCP, CodeGraph OpenCode integration, and OpenSpec. Interactive `rose-aili update` asks only the CodeGraph integration question. Non-interactive setup performs optional integration work only for explicit enable flags. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
+Interactive `rose-aili install` asks, in order, about the default agent, a missing model override, Playwright MCP, CodeGraph OpenCode integration, Graphify CLI installation, and OpenSpec. Interactive `rose-aili update` asks about CodeGraph and Graphify CLI. Non-interactive setup performs optional integration work only for explicit enable flags. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
 
 AILI has no active DCP integration. `install`, `update`, and `doctor` do not install, detect, configure, report, migrate, or remove a third-party DCP plugin and do not read or mutate user `dcp.json`/`dcp.jsonc`. Former DCP flags are ordinary unknown options. Historical DCP evidence may remain in archived ideas, accepted-change history, or negative fixtures, but it is not setup/runtime authority.
 
@@ -604,7 +604,7 @@ python "$AILI_HOME/scripts/agents_md.py" check --project .
 
 ## Recommended OpenCode Runtime Add-ons
 
-Recommended opt-in runtime add-ons are Playwright MCP, OpenSpec, CodeGraph, and Context7 integration. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
+Recommended opt-in runtime add-ons are Playwright MCP, OpenSpec, CodeGraph, the official global Graphify skill, and Context7 integration. Fully restart OpenCode after installing plugins, MCP servers, Context7, or changing OpenCode runtime configuration.
 
 ### OpenSpec
 
@@ -684,13 +684,40 @@ AILI provides no cron, scheduler, watcher, webhook, listener, daemon, persistent
 - Root `AGENTS.md`, `dist/`, installed OpenCode files, and installed shared skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
 - Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned outputs. They remain unchanged and directly callable outside AILI guarantees. AILI does not route to, recommend, wrap, suppress, prevent, control, or count their output as AILI acceptance/readiness/verification/completion evidence.
 - Pinned upstream files under canonical skill `references/upstream/` are inert licensed data, not another installed skill or runtime. They use `SKILL.upstream.md`; upstream scripts must remain non-executable data and must never become commands, hooks, or routing targets.
-- `package.json#files` ships canonical agents, `.agents/` (including protocols and inert references), commands, manifests, both AGENTS templates, `agents_md.py`, the Graphify guarded launcher and its contract fixture, the installer script, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; packaged helpers/data are not registered as commands or runnable skills. Root `.worktrees/`, visible `worktrees/`, and historical `.tmp/worktrees/` are excluded.
+- `package.json#files` ships canonical agents, `.agents/` (including protocols, inert references, and skill-local deterministic helpers), commands, manifests, both AGENTS templates, `agents_md.py`, the installer script, two explicitly listed Graphify/upstream contract fixtures, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; the packaged session-handoff helper belongs to that skill and is not registered as a command or independent runnable skill. Root `.worktrees/`, visible `worktrees/`, and historical `.tmp/worktrees/` are excluded.
 
 The upstream distribution path is currently fail-closed. OpenCode `1.17.18` installed-catalog recursion remains `UV-005`, and filesystem mode evidence may not prove required upstream `0644` modes; until both are resolved, do not claim distribution/registration/enablement or release readiness. `npm pack --dry-run` is content evidence only and does not publish or resolve runtime catalog/mode behavior.
 
 Cross-root delegation also fails closed against exact OpenCode `1.17.18` behavior. Root approval is not process containment: if ask/always/`--auto`, Task-root inheritance, symlink/TOCTOU, subprocess, bash-effect, secret, or neighboring-root behavior cannot be safely expressed and freshly proven, do not dispatch or mutate across roots; retain the runtime result as `Unverified`.
 
-Graphify remains a separate operation. A real or synthetic process starts only after explicit approval for that exact operation and successful provenance, advisory, network-denial, isolated-environment, argv, output-root, and write-inventory controls. Missing control means blocked/`Unverified` before process start; Graphify is never installation, command routing, scheduled behavior, or completion evidence.
+Graphify CLI installation, global agents-skill registration, and every project-level Graphify operation remain separate. Each real operation requires its own fresh exact approval; installer or lifecycle acceptance never authorizes a later stage. Graphify output is optional architecture-navigation evidence, never contract, current-code, completion, or release authority.
+
+### Official Graphify CLI and Global Skill
+
+Use only the official two-stage flow. `uv` must already exist; AILI does not bootstrap uv, Python, a system package manager, pip/pipx, or a source build.
+
+```bash
+rose-aili install --enable-graphify
+# delegated official command: uv tool install graphifyy
+
+# Run later in a different invocation after a different exact approval:
+rose-aili install --register-graphify-skill
+# delegated official command: graphify install --platform agents
+```
+
+`--enable-graphify` and `--register-graphify-skill` are mutually exclusive. `--skip-graphify` explicitly declines both, and `--yes`, CodeGraph consent, lifecycle acceptance, or first-stage approval does not imply either Graphify stage. Use `--dry-run` with one stage flag to inspect the exact command, effects, refusal result, candidate global-skill targets, and current-project `.opencode` target without running uv or Graphify. A real stage first performs read-only `uv --version`, uv tool-directory/list, `graphify --version`, and global-skill inventory checks; an unavailable prerequisite or ownership conflict blocks without fallback.
+
+The registration target is the upstream-owned `$HOME/.agents/skills/graphify/`. Verification checks regular `SKILL.md` and `.graphify_version`, packaged references when the upstream command reports them, exactly one OpenCode catalog route, and an unchanged current-project `.opencode` tree. It does not install a project `.opencode` plugin/config, invoke `/graphify`, or build/update/query a repository graph. `rose-aili doctor` reports `graphifyCli` and `graphifyGlobalSkill` separately with observed upstream version/path state.
+
+Use an already installed official Graphify skill only for one scoped architecture-orientation result when a usable upstream graph exists. Use CodeGraph or current files for exact symbols, source, call paths, tests, and current impact. Treat upgrade, reinstall, unregistration, removal, and every project graph operation as new exact operations.
+
+### Versioned Session Handoffs
+
+The `session-handoff` skill supports explicit CREATE, LIST, and RESUME. OpenSpec changes use `openspec/changes/<change-id>/handoffs/`; ordinary tasks use one confirmed repository-local `<task-root>/handoffs/`. Legacy `<task-root>/handoff.md` remains an explicitly selected read-only input.
+
+The skill-local `scripts/session_handoff.py` is a deterministic filesystem helper, not another workflow or public command. It enforces exclusive UTC snapshot names, containment and symlink rejection, validated draft/finalize transitions, SHA-256 checks, atomic regular-file `LATEST.md`, bounded-frontmatter LIST, exact-first RESOLVE, legacy preservation, and localized exact-path resume output. Finalized snapshots are not automatically edited, migrated, archived, or pruned; a correction creates a new `continues_from` snapshot.
+
+Do not create a handoff because of context pressure, compression, phase completion, a timer, or a hook. Do not promote it into memory. On RESUME, revalidate the current root, worktree, branch/HEAD, dirty state, permissions, contracts, attachments, and affected evidence before continuing.
 
 Typical intent mapping selects one primary loop rather than a default skill chain:
 

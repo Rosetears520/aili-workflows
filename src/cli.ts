@@ -56,6 +56,7 @@ interface PromptDecisionOptions {
   includeCoreConfig?: boolean;
   includePlaywright?: boolean;
   includeCodegraph?: boolean;
+  includeGraphify?: boolean;
   includeOpenspec?: boolean;
 }
 
@@ -74,6 +75,7 @@ async function applyPromptDecisions(options: CliOptions, config: Record<string, 
   const includeCoreConfig = promptOptions.includeCoreConfig ?? false;
   const includePlaywright = promptOptions.includePlaywright ?? true;
   const includeCodegraph = promptOptions.includeCodegraph ?? true;
+  const includeGraphify = promptOptions.includeGraphify ?? true;
   const includeOpenspec = promptOptions.includeOpenspec ?? false;
   if (includeCoreConfig && !options.setDefaultRose) {
     const currentDefault = config?.default_agent;
@@ -97,6 +99,11 @@ async function applyPromptDecisions(options: CliOptions, config: Record<string, 
     const answer = (await ask("Install optional CodeGraph for OpenCode via `npm install -g @colbymchenry/codegraph@latest` and `codegraph install --target=opencode --yes`? Requires restarting OpenCode. [y/N] ")).trim().toLowerCase();
     options.enableCodegraph = answer === "y" || answer === "yes";
     options.skipCodegraph = !options.enableCodegraph;
+  }
+  if (includeGraphify && !options.enableGraphify && !options.skipGraphify && !options.registerGraphifySkill) {
+    const answer = (await ask("Install optional Graphify CLI via `uv tool install graphifyy`? This downloads dependencies and writes uv user-global tool paths; global skill registration remains a separate later approval. [y/N] ")).trim().toLowerCase();
+    options.enableGraphify = answer === "y" || answer === "yes";
+    options.skipGraphify = !options.enableGraphify;
   }
   if (includeOpenspec && !options.enableOpenspec && !options.skipOpenspec && options.projectRoot) {
     const answer = (await ask(`Install/configure OpenSpec in exact project root ${options.projectRoot} via \`npm install -g @fission-ai/openspec@latest\` and \`openspec init/update\`? Requires Node.js 20.19+. [y/N] `)).trim().toLowerCase();
@@ -154,6 +161,15 @@ function parseOptions(argv: string[]): CliOptions {
       case "--skip-codegraph":
         options.skipCodegraph = true;
         break;
+      case "--enable-graphify":
+        options.enableGraphify = true;
+        break;
+      case "--skip-graphify":
+        options.skipGraphify = true;
+        break;
+      case "--register-graphify-skill":
+        options.registerGraphifySkill = true;
+        break;
       case "--enable-openspec":
         options.enableOpenspec = true;
         break;
@@ -209,6 +225,8 @@ Options:
   --skip-opencode-config
   --enable-playwright | --skip-playwright
   --enable-codegraph | --skip-codegraph
+  --enable-graphify | --skip-graphify (CLI install only; existing uv required)
+  --register-graphify-skill (separate global ~/.agents/skills/graphify registration)
   --enable-openspec | --skip-openspec (OpenSpec installs only when explicitly enabled)
   --project-root <absolute-canonical-path> (required with --enable-openspec)
   --plugin <name>

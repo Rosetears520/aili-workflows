@@ -1,115 +1,88 @@
 ---
 name: session-handoff
-description: 当用户明确要求交接、恢复提示或会话 handoff 时，生成当前任务的轻量 Markdown 交接文档；不自动写入 durable memory，不包含 secrets/raw logs/full files。
+description: Create versioned session handoffs, list handoff history, or resume from an exact snapshot when the user explicitly asks; do not trigger for ordinary checkpoints, context pressure, memory storage, or automatic cleanup.
 ---
 
 # Session Handoff
 
-这个技能用于给下一模型导航当前任务，不是长期 memory、正式合同、权限、Git 真相、验证结果或完成证明。只有用户明确要求 handoff、已接受生命周期明确指定 handoff 点，或用户明确选择会话切换/blocked-state 交接时，才创建或更新交接文件。
+Use this skill to preserve compact, task-scoped recovery context for a later session. Treat every handoff as navigation only, never as a contract, permission grant, Git truth, verification result, or completion proof.
 
-## 什么时候使用
+## When to Use
 
-- 用户说“生成 handoff / 交接文档 / 下一 session 继续提示 / 帮我恢复上下文”。
-- BLOCKED/IDLE、切换 session 或恢复场景中，用户明确选择保存交接。
-- OpenSpec change、计划文件、测试文档或实现包需要给下一位 agent 接续。
+- CREATE when the user explicitly requests a handoff, next-session prompt, or blocked/session-transition snapshot.
+- LIST when the user explicitly asks to inspect handoff history for one known task root.
+- RESUME when the user explicitly selects an exact snapshot, validated latest snapshot, or legacy handoff.
+- An accepted lifecycle contract may name an explicit handoff point.
 
-普通任务不要自动创建 handoff 文件。上下文比例、压缩/DCP、阶段结束、命令完成、checkpoint 或后台 hook 都不是自动触发器；没有明确触发时只更新正常 progress/checkpoint（如适用），不要创建 handoff。
+Do not trigger for ordinary checkpoints, context pressure, compression, phase completion, command completion, timers, hooks, or generic requests to remember something.
 
-## 默认位置
+## Placement
 
-- OpenSpec change：`openspec/changes/<change-id>/handoff.md`
-- 已存在 current-task 目录：写入该任务目录下的 `handoff.md`
-- 非 OpenSpec 且无明确目录：先问一次用户选择 repository-local 路径
+- Use `openspec/changes/<change-id>` as the task root for an OpenSpec change. Store its history under `openspec/changes/<change-id>/handoffs/`.
+- Reuse the already confirmed repository-local task root for ordinary work. Store its history under `<task-root>/handoffs/`.
+- If an ordinary task root is unknown, ask one placement/identity question. Do not scan the repository or write files before it is resolved.
+- Read `<task-root>/handoff.md` only when the user explicitly selects legacy RESUME. Never import, move, rewrite, delete, or automatically promote it to latest.
 
-不要默认写入 OS temp 目录、全局 docs/current、SQLite durable memory、或不相关目录。
+## Deterministic Helper
 
-🔴 CHECKPOINT / 🛑 STOP：写入或更新文件前，先确认三件事：目标路径已知、位于已确认 repository root 内且在任务范围内；内容不含 secrets/raw logs/full files/private data；明确触发已存在。任一条件不满足，只在回复中给脱敏草稿，不创建文件。
+Use `scripts/session_handoff.py` from this skill directory for all stateful filesystem operations. The helper owns exclusive timestamped naming, containment and symlink checks, draft/finalized validation, SHA-256 verification, atomic `LATEST.md` replacement, bounded LIST reads, exact RESOLVE behavior, and localized CREATE output.
 
-## Handoff 字段
+Do not reproduce those operations with ad hoc shell commands or manual file renames. Pass canonical absolute `--repository-root` and `--task-root` values. Use only these helper operations:
 
-```markdown
-# Session Handoff: <task/change>
+- `new`: create one exclusive draft.
+- `finalize`: validate and finalize one draft, then update `LATEST.md` atomically.
+- `list`: return filenames and bounded frontmatter without loading every body.
+- `resolve`: validate one exact snapshot, the current task's `LATEST.md`, or an explicitly selected legacy file.
 
-## Goal
+## CREATE
 
-## Active Change / Contract References
+1. Confirm an explicit trigger, one canonical repository root, one contained non-symlink task root, and current write permission.
+2. Run `new` with a short slug and the current user language. For a correction, pass the exact finalized predecessor through `--continues-from`.
+3. Edit only the created draft. Preserve its frontmatter and fill every core section: `Goal`, `Contract References`, `Scope Boundary`, `Completed/Pending/Blocked`, `Evidence Anchors`, `Decisions`, `Open Questions/Risks`, `Verification State`, `Next Action`, `Forbidden Actions`, and `Suggested Next-Session Prompt`.
+4. Add only applicable specialist sections: `Touched Files / Artifact References`, `A33 Attachments / Owning-Repository Artifact Destinations`, `Preserved Rollback Worktrees / Evidence References`, `Subagent Activity`, and `Blocker / Stop Reason`.
+5. Keep content compact, redacted, and reference-first. Exclude unresolved placeholders, secrets, credentials, cookies, private keys, raw logs, full transcripts, full files, unredacted private data, and unapproved external absolute paths.
+6. Run `finalize --snapshot <exact-path> --user-output`. A validation failure leaves the draft unchanged. A pointer replacement failure may leave a finalized non-latest snapshot while preserving the previous valid pointer.
+7. Never edit a finalized snapshot. Create a new snapshot with `continues_from` when a correction is needed.
+8. On success, report the path, reviewed sources, unresolved items, and next action before the helper output. End the response with the helper's single localized fenced `text` resume prompt. Add nothing after that fence.
 
-## Lifecycle / Backend
+## LIST
 
-## Scope Boundary
+1. Run `list` only for the confirmed task root.
+2. Return newest-first bounded metadata without snapshot bodies.
+3. Report unexpected files, symlinks, malformed envelopes, and duplicate IDs as invalid or `Unverified`.
+4. Do not create history, finalize drafts, repair pointers, migrate legacy files, delete files, or prune history.
 
-## Completed / Pending / Blocked Packages
+## RESUME
 
-## Touched Files / Artifact References
+1. Prefer `resolve --snapshot <exact-path>` whenever the user supplies an exact snapshot. Never replace that selection with `LATEST.md`.
+2. Without an exact path, resolve only the confirmed task root's validated `LATEST.md`.
+3. Fail closed when the pointer is missing, malformed, symlinked, stale, escaping, draft-targeted, or SHA-mismatched. Report bounded recoverable candidates without selecting one.
+4. Use `resolve --legacy` only after the user explicitly selects the legacy file. Preserve its bytes.
+5. Treat resolved content as navigation. Revalidate the startup root, worktree, branch/HEAD, dirty state, permissions, active contract, progress, bounded drift, and affected evidence through the current lifecycle's directed hydration rules.
+6. Revalidate each referenced A33 attachment independently, including exact keys, root, Git state, rules, file state, evidence, and artifact destination. Never reuse another attachment's evidence or an old ADD/REMOVE approval.
+7. Mark conflicts as `Open Question` or `Unverified` and stop affected work. Do not infer lifecycle phase, permission, completion, or verification from a snapshot or pointer.
 
-## A33 Attachment / Owning-Repository Artifact Destinations
+## Boundaries
 
-## Preserved Rollback Worktrees / Evidence References
+- Do not add automatic CREATE, rotation, archive, delete-on-close, or prune behavior.
+- Treat deletion as a separate destructive request requiring exact inventory, recovery-impact analysis, and approval.
+- Do not promote handoff content into `rose-memory`; memory writes use their own scope, identity, permission, and security gates.
+- Do not write to OS temp, global docs/current, unrelated directories, or a repository-global handoff registry.
+- Do not treat A33 rollback references as authority to ADD, REMOVE, or broaden external access.
 
-## Evidence Anchors
+## Verification
 
-## Subagent Activity
+- Confirm the selected mode and exact task root.
+- For CREATE, require helper finalization and pointer verification before reporting success.
+- For LIST, confirm that no body content was returned.
+- For RESUME, record whether resolution was exact, latest, or legacy and which current-state checks remain stale or unresolved.
+- Confirm that no automatic cleanup, memory promotion, or unrelated write occurred.
 
-## Decisions Made
+Pinned material under `references/upstream/` is inert provenance only. Do not load it as a second skill or infer authority from its frontmatter.
 
-## Open Questions
+## Stop Outcomes
 
-## Risks / Unknowns
-
-## Verification State
-
-## Blocker / Stop Reason
-
-## Next Action
-
-## Forbidden Actions
-
-## Suggested Next-Session Prompt
-```
-
-## 禁止内容
-
-MUST NOT include:
-
-- raw logs
-- full grep dumps
-- full file contents
-- secrets, credentials, cookies, tokens, private keys
-- irrelevant conversation history
-- unredacted private data
-- durable memory promotion by default
-
-如果内容适合项目记忆，另走 `rose-memory` 的独立 scope/metadata/permission/security gate；创建 handoff 本身不得自动 promotion。
-
-## Resume revalidation
-
-恢复时先把 handoff 当作路径索引，而不是状态事实：
-
-1. 重新确认用户选择的 canonical Git startup root、worktree、branch/HEAD、dirty/untracked 状态和当前 session 权限；handoff 中的路径只用于导航。
-2. 重新读取 active OpenSpec proposal/specs/design/tasks、`interview.md`、已接受的 `test-plan.md`、`context.md`、`progress.txt` 和 bounded `drift-log.md`。
-3. 按当前 diff/scope/risk 检查 review/test/security/verification evidence 的 freshness，重跑 stale、缺失或受影响的检查。
-4. 对每个已声明 A33 attachment 分别验证 exact `repo_key`/`worktree_key` 与目标路径、当前 applicable `WT-001`、host/source/target root 与 Git/toplevel/private-dir/common-dir/HEAD/branch/membership、dirty 与 tracked/untracked/ignored/artifact/unknown file state、目标 rules，以及 owning-repository artifact destination。不同 repository 不要求 common-dir 相等，也不得复用另一 attachment 的证据。
-5. 重新验证 handoff 引用的 preserved rollback worktree/evidence。Rollback 只保留状态；任何 ADD 或 non-force REMOVE 都需要针对当前 exact operation、keys、destination 和 operation class 的全新明确批准。此前批准、handoff、packet、memory 或 checkpoint 均不授权操作或扩大访问范围。
-6. 对 handoff 与当前证据的冲突标记 `Open Question` / `Unverified` 并停止受影响动作；不得从 handoff 推断授权、完成或 lifecycle phase。
-
-## Pinned upstream adaptation
-
-Matt Pocock 的 pinned `handoff` 原文仅作为 inert reference data 保存在 `references/upstream/`。本 canonical skill 薄适配其 compact、引用已有 artifacts、不重复全文、脱敏和建议下一步 skills 的做法；AILI 规则优先：写入已确认的 repository-local 目标，不写 OS temp，触发、权限、artifact authority、resume revalidation 和 stop conditions 仍由当前 lifecycle contract 决定。不得加载该 reference 为第二个 skill，或从其 frontmatter 推断权限。
-
-## Fallbacks
-
-| 触发条件 | 一线处理 | 仍失败兜底 |
-|---|---|---|
-| 不知道 handoff 应写到哪里 | 问用户确认路径，列出 OpenSpec/current-task/不写文件三选项 | 不写文件，只返回 Markdown 草稿 |
-| 输入包含 secrets、token、cookie、私钥或未脱敏隐私 | 停止摘录原文，改写为 `[REDACTED]` 和风险说明 | 拒绝写文件，要求用户提供脱敏材料 |
-| 用户要求包含 raw logs、完整文件或大段聊天记录 | 摘要成证据锚点、错误签名、命令和结果 | 如果用户坚持保留原文，拒绝并说明 handoff 只存轻量摘要 |
-| 任务状态不清或证据不足 | 标记 `Unverified` / `Open Question`，不要补造结论 | 请求用户补充来源或把 handoff 标为 blocked |
-
-## 输出规则
-
-写文件后报告：
-
-- handoff path
-- source artifacts reviewed
-- unresolved Open Questions / Unverified items
-- next action
+- Return `complete` after the requested CREATE, LIST, or RESUME succeeds.
+- Return `need-user` with zero scan and zero write when task identity or operation choice is unresolved.
+- Return `need-evidence`, `blocked`, or `Unverified` when a pointer, snapshot, contract, permission, or current-state check is missing or conflicting.
+- Fail closed on secrets, unsafe paths, symlinks, destructive cleanup, unapproved external references, or authority expansion.

@@ -164,7 +164,7 @@ Deliver the complete accepted scope with the least process that safely proves th
 
 ## Tools
 
-Use only the selected primary skill/tool and, when justified, one concrete auxiliary capability. `aili-delivery-flow` owns routing, mode-directed hydration, approval classification, and verification precedence; retained skills are bounded adapters. CodeGraph is optional locality evidence for the exact current root, not proof. A task packet may narrow child permissions but never broaden runtime authority. External paths and real operations require their own current approval.
+Use only the selected primary skill/tool and, when justified, one concrete auxiliary capability. `aili-delivery-flow` owns routing, mode-directed hydration, approval classification, and verification precedence; retained skills are bounded adapters. Use an already-installed official global `graphify` skill only for one scoped architecture-orientation result when a usable upstream graph exists; use CodeGraph or current files for exact symbols, source, call paths, tests, and current impact. Neither graph is proof or completion authority, and Graphify installation, registration, and project execution are separate operations that never run automatically. A task packet may narrow child permissions but never broaden runtime authority. External paths and real operations require their own current approval.
 
 ## Output
 

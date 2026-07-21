@@ -96,7 +96,7 @@ REQUIRED = {
         "min_cases": 2,
     },
     "continuity-memory-handoff-fixtures.yaml": {
-        "markers": ["memory-explicit-facts", "memory-candidate", "handoff-trigger", "handoff-no-threshold-trigger", "resume-hydration", "artifact-integrity-documentation-only"],
+        "markers": ["memory-explicit-facts", "memory-candidate", "handoff-trigger", "handoff-no-threshold-trigger", "handoff-list-bounded-history", "handoff-exact-resume", "handoff-invalid-latest", "handoff-legacy-read-only", "LATEST.md", "exactly one fenced text prompt", "resume-hydration", "artifact-integrity-documentation-only"],
         "case_key": "cases",
         "min_cases": 12,
         "package": "P3",
@@ -125,9 +125,9 @@ REQUIRED = {
         "package": "P8",
     },
     "graphify-local-review-fixtures.yaml": {
-        "markers": ["strict-local", "no-install", "network-denial-required", "false-run-claim", "argv-newline"],
+        "markers": ["official-upstream-navigation", "architecture-existing-graph", "exact-current-symbol", "local-review-existing-output-only", "no-auto-run", "non-authoritative"],
         "case_key": "cases",
-        "min_cases": 27,
+        "min_cases": 12,
         "package": "P9",
     },
     "generated-openspec-adapter-fixtures.yaml": {
@@ -333,7 +333,9 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         "continuity-memory-handoff-fixtures.yaml": {
             "memory-explicit-facts", "memory-candidate", "memory-ambiguous-scope",
             "handoff-content-security", "ideate-define-writeback", "define-ambiguous-change-identity",
-            "handoff-trigger", "handoff-no-threshold-trigger", "resume-hydration", "handoff-resume",
+            "handoff-trigger", "handoff-no-threshold-trigger", "handoff-list-bounded-history",
+            "handoff-exact-resume", "handoff-invalid-latest", "handoff-legacy-read-only",
+            "resume-hydration", "handoff-resume",
             "memory-stage1-boundary", "artifact-authority-boundaries", "artifact-integrity-documentation-only",
         },
         "review-convergence-fixtures.yaml": {
@@ -532,6 +534,39 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         categories = {case.get("category") for case in cases if isinstance(case, dict)}
         if categories != set(data.get("required_categories", [])):
             errors.append(f"{name}: cases must cover every required category exactly as declared")
+        contract = data.get("contract", {})
+        expected_contract = {
+            "cli_install": "uv tool install graphifyy",
+            "global_skill_registration": "graphify install --platform agents",
+            "global_skill_path": "~/.agents/skills/graphify/SKILL.md",
+            "local_review_launches_graphify": False,
+            "project_execution_requires_separate_approval": True,
+        }
+        if contract != expected_contract:
+            errors.append(f"{name}: official upstream Graphify contract differs")
+        by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+        expected_cases = {
+            "architecture-existing-graph": "one-scoped-official-graphify-result",
+            "exact-current-symbol": "codegraph-or-current-files",
+            "no-auto-install": "no-uv-or-graphify-command",
+            "no-auto-register": "registration-remains-separately-approved",
+            "no-auto-run": "no-project-graph-command",
+            "project-operation-separate": "fresh-exact-target-effect-approval",
+            "official-command-packets": "literal-uv-install-and-agents-registration-packets",
+            "combined-stage-approval": "reject-combined-approval",
+            "separate-stage-invocations": "registration-pending-separate-invocation",
+            "no-fallback-core-independent": "no-fallback-core-install-remains-independent",
+            "non-authoritative": "reconcile-current-source-tests-contract",
+            "current-conflict": "current-files-win-graphify-unverified",
+            "no-duplicate-discovery": "no-graphify-codegraph-broad-grep-duplication",
+            "upstream-owned-status": "observed-version-path-upstream-owned-only",
+            "ownership-conflict": "conflict-no-reinstall-or-registration",
+            "local-review-existing-output-only": "consume-bounded-result-with-current-evidence",
+            "local-review-no-output": "continue-without-launching-graphify",
+        }
+        for case_id, expected in expected_cases.items():
+            if by_id.get(case_id, {}).get("expected") != expected:
+                errors.append(f"{name}: {case_id} expected must be {expected!r}")
     return errors
 
 

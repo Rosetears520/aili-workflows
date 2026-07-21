@@ -5,6 +5,18 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { configPathFor, mergeOpenCodeConfig } from "./config.js";
+import {
+  fingerprintPath,
+  GRAPHIFY_CLI_INSTALL_COMMAND,
+  GraphifyCliPreflight,
+  graphifyGlobalSkillRoots,
+  GRAPHIFY_SKILL_INSTALL_COMMAND,
+  GRAPHIFY_SKILL_RELATIVE_PATH,
+  inspectGraphifyCliPreflight,
+  inspectGraphifySkillInventory,
+  treeContainsSymlink,
+  verifyGraphifyCatalog
+} from "./graphify.js";
 import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestAllowlist } from "./manifest.js";
 
 export interface InstallOptions {
@@ -21,6 +33,9 @@ export interface InstallOptions {
   skipPlaywright?: boolean;
   enableCodegraph?: boolean;
   skipCodegraph?: boolean;
+  enableGraphify?: boolean;
+  skipGraphify?: boolean;
+  registerGraphifySkill?: boolean;
   enableOpenspec?: boolean;
   skipOpenspec?: boolean;
   projectRoot?: string;
@@ -36,6 +51,47 @@ interface OptionalSummary {
   reason?: string;
   recovery?: string;
   nextStep?: string;
+}
+
+type GraphifyStageStatus = "installed" | "registered" | "planned" | "skipped" | "pending" | "failed" | "conflict";
+
+interface GraphifyStageSummary {
+  status: GraphifyStageStatus;
+  command: string;
+  exitCode?: number | null;
+  reason?: string;
+  observedVersion?: string;
+  path?: string;
+  nextStep?: string;
+  route?: { name: string; location: string };
+}
+
+interface GraphifyOperationPacket {
+  command: string;
+  effects: string[];
+  refusalResult: string;
+  approval: "fresh-exact-separate";
+}
+
+interface GraphifySummary {
+  ownership: "upstream";
+  cli: GraphifyStageSummary;
+  globalSkill: GraphifyStageSummary;
+  operations: {
+    cliInstall: GraphifyOperationPacket;
+    globalSkillRegistration: GraphifyOperationPacket;
+  };
+  inventory: {
+    targetPath: string;
+    versionStampPath: string;
+    referencesPath: string;
+    candidateVersionStampPaths: string[];
+    existingVersionStampPaths: string[];
+    ambiguousPaths: string[];
+    currentProjectOpenCodePath: string;
+    uvToolDirectory?: string;
+    uvBinDirectory?: string;
+  };
 }
 
 export interface InstallSummary {
@@ -57,6 +113,7 @@ export interface InstallSummary {
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
   codegraph: OptionalSummary;
+  graphify: GraphifySummary;
   openspec: OptionalSummary;
   plugins: Array<{ name: string; status: "skipped" | "unverified"; reason: string; source?: string }>;
 }
@@ -64,6 +121,7 @@ export interface InstallSummary {
 const CODEGRAPH_INSTALL_COMMAND = ["npm", "install", "-g", "@colbymchenry/codegraph@latest"];
 const CODEGRAPH_OPENCODE_COMMAND = ["codegraph", "install", "--target=opencode", "--yes"];
 const CODEGRAPH_RESTART_STEP = "Restart OpenCode so it loads the CodeGraph OpenCode integration.";
+const GRAPHIFY_REGISTER_STEP = "rose-aili install --register-graphify-skill";
 const OPENSPEC_INSTALL_COMMAND = ["npm", "install", "-g", "@fission-ai/openspec@latest"];
 const OPENSPEC_DETECT_COMMAND = ["openspec", "--version"];
 const MIN_OPENSPEC_NODE = [20, 19, 0] as const;
@@ -75,6 +133,12 @@ export function defaultAiliHome(): string {
 
 export async function runInstall(command: "install" | "update", rawOptions: InstallOptions): Promise<InstallSummary> {
   const options = { ...rawOptions, opencodeHome: validateOpenCodeHome(rawOptions.opencodeHome) };
+  if (options.skipGraphify && (options.enableGraphify || options.registerGraphifySkill)) {
+    throw new Error("--skip-graphify cannot be combined with a Graphify install or registration flag.");
+  }
+  if (options.enableGraphify && options.registerGraphifySkill) {
+    throw new Error("Graphify CLI installation and global skill registration require separate invocations and approvals.");
+  }
   if (options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
   if (options.enableOpenspec && !options.skipOpenspec && !options.projectRoot) {
     throw new Error("--enable-openspec requires --project-root <path>.");
@@ -110,6 +174,7 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
   const componentInstall = await runCompatibilityInstaller(options);
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
   const codegraph = await runCodeGraphInstall(options);
+  const graphify = await runGraphifyInstall(options);
   const openspec = await runOpenSpecInstall(options);
 
   return {
@@ -122,6 +187,7 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
     optionalDecisions: buildOptionalDecisions(command, options, shouldConfigurePlaywright, shouldSyncOpenCodeConfig),
     codegraph,
+    graphify,
     openspec,
     plugins: pluginStatuses
   };
@@ -170,6 +236,21 @@ function buildOptionalDecisions(command: "install" | "update", options: InstallO
       nextStep: "rose-aili install --enable-codegraph"
     });
   }
+  if (!options.enableGraphify && !options.registerGraphifySkill) {
+    decisions.push({
+      name: "Graphify",
+      status: "skipped",
+      reason: options.skipGraphify ? "explicitly skipped" : "not installed or registered in this invocation",
+      nextStep: "rose-aili install --enable-graphify"
+    });
+  } else if (options.enableGraphify && !options.registerGraphifySkill) {
+    decisions.push({
+      name: "Graphify global skill",
+      status: "skipped",
+      reason: "global agents-skill registration requires a different fresh exact approval",
+      nextStep: GRAPHIFY_REGISTER_STEP
+    });
+  }
   if (!options.enableOpenspec || options.skipOpenspec) {
     decisions.push({
       name: "OpenSpec",
@@ -179,6 +260,255 @@ function buildOptionalDecisions(command: "install" | "update", options: InstallO
     });
   }
   return decisions;
+}
+
+async function runGraphifyInstall(options: InstallOptions): Promise<GraphifySummary> {
+  const home = process.env.HOME || os.homedir();
+  const targetPath = path.join(home, GRAPHIFY_SKILL_RELATIVE_PATH);
+  const versionStampPath = path.join(targetPath, ".graphify_version");
+  const referencesPath = path.join(targetPath, "references");
+  const currentProjectOpenCodePath = path.join(process.cwd(), ".opencode");
+  const cliCommand = GRAPHIFY_CLI_INSTALL_COMMAND.join(" ");
+  const skillCommand = GRAPHIFY_SKILL_INSTALL_COMMAND.join(" ");
+  const operations: GraphifySummary["operations"] = {
+    cliInstall: {
+      command: cliCommand,
+      effects: ["network dependency resolution", "uv user-global tool installation", "Graphify CLI executable installation"],
+      refusalResult: "Graphify remains absent or unchanged; core AILI installation continues.",
+      approval: "fresh-exact-separate"
+    },
+    globalSkillRegistration: {
+      command: skillCommand,
+      effects: [`write upstream skill files under ${targetPath}`, "refresh version stamps at other existing upstream Graphify skill destinations"],
+      refusalResult: "The Graphify CLI state is preserved and global skill registration remains pending.",
+      approval: "fresh-exact-separate"
+    }
+  };
+  const baseInventory: GraphifySummary["inventory"] = {
+    targetPath,
+    versionStampPath,
+    referencesPath,
+    candidateVersionStampPaths: graphifyGlobalSkillRoots(home).map((root) => path.join(root, ".graphify_version")),
+    existingVersionStampPaths: [],
+    ambiguousPaths: [],
+    currentProjectOpenCodePath
+  };
+
+  if (options.skipGraphify || (!options.enableGraphify && !options.registerGraphifySkill)) {
+    return {
+      ownership: "upstream",
+      cli: { status: "skipped", command: cliCommand, reason: options.skipGraphify ? "Graphify explicitly skipped." : "Graphify requires an explicit enable flag." },
+      globalSkill: { status: "skipped", command: skillCommand, path: targetPath, reason: "Graphify global skill registration was not approved." },
+      operations,
+      inventory: baseInventory
+    };
+  }
+
+  try {
+    const skillInventory = await inspectGraphifySkillInventory(home);
+    const inventory: GraphifySummary["inventory"] = {
+      ...baseInventory,
+      existingVersionStampPaths: skillInventory.existingVersionStampPaths,
+      ambiguousPaths: skillInventory.ambiguousPaths
+    };
+    if (options.dryRun) {
+      return {
+        ownership: "upstream",
+        cli: { status: "planned", command: cliCommand, reason: "Requires its own dependency/network/user-global-write approval." },
+        globalSkill: skillInventory.ambiguousPaths.length > 0
+          ? { status: "conflict", command: skillCommand, path: targetPath, reason: `Ambiguous existing Graphify skill paths: ${skillInventory.ambiguousPaths.join(", ")}` }
+          : { status: "planned", command: skillCommand, path: targetPath, reason: "Requires a different global-skill-write approval after CLI installation." },
+        operations,
+        inventory
+      };
+    }
+
+    const run = (command: string, args: string[], cwd?: string) => spawnOptionalCapture(command, args, options, cwd);
+    const preflight = await inspectGraphifyCliPreflight(run);
+    inventory.uvToolDirectory = preflight.uvToolDirectory;
+    inventory.uvBinDirectory = preflight.uvBinDirectory;
+    if (options.enableGraphify) return installGraphifyCli(preflight, inventory, operations, run);
+    return registerGraphifySkill(preflight, skillInventory, inventory, operations, run);
+  } catch (error: unknown) {
+    const reason = `Graphify preflight or verification failed without fallback: ${error instanceof Error ? error.message : String(error)}`;
+    return {
+      ownership: "upstream",
+      cli: { status: "conflict", command: cliCommand, reason },
+      globalSkill: { status: "conflict", command: skillCommand, path: targetPath, reason },
+      operations,
+      inventory: baseInventory
+    };
+  }
+}
+
+async function installGraphifyCli(
+  preflight: GraphifyCliPreflight,
+  inventory: GraphifySummary["inventory"],
+  operations: GraphifySummary["operations"],
+  run: (command: string, args: string[], cwd?: string) => Promise<{ code: number | null; detail: string; stdout: string }>
+): Promise<GraphifySummary> {
+  const cliCommand = GRAPHIFY_CLI_INSTALL_COMMAND.join(" ");
+  const skillCommand = GRAPHIFY_SKILL_INSTALL_COMMAND.join(" ");
+  const pendingSkill: GraphifyStageSummary = {
+    status: "pending",
+    command: skillCommand,
+    path: inventory.targetPath,
+    reason: "Global agents-skill registration requires a different fresh exact approval.",
+    nextStep: GRAPHIFY_REGISTER_STEP
+  };
+  if (preflight.status === "prerequisite-missing" || preflight.status === "conflict") {
+    return {
+      ownership: "upstream",
+      cli: { status: preflight.status === "conflict" ? "conflict" : "failed", command: cliCommand, reason: preflight.reason, observedVersion: preflight.observedVersion },
+      globalSkill: pendingSkill,
+      operations,
+      inventory
+    };
+  }
+  if (preflight.status === "installed") {
+    return {
+      ownership: "upstream",
+      cli: { status: "installed", command: cliCommand, reason: "Existing uv-managed graphifyy installation preserved; no reinstall or upgrade ran.", observedVersion: preflight.observedVersion },
+      globalSkill: pendingSkill,
+      operations,
+      inventory
+    };
+  }
+
+  const installed = await run(GRAPHIFY_CLI_INSTALL_COMMAND[0], [...GRAPHIFY_CLI_INSTALL_COMMAND.slice(1)]);
+  if (installed.code !== 0) {
+    return {
+      ownership: "upstream",
+      cli: { status: "failed", command: cliCommand, exitCode: installed.code, reason: installed.detail || `command exited with ${installed.code ?? "unknown status"}` },
+      globalSkill: pendingSkill,
+      operations,
+      inventory
+    };
+  }
+  const verified = await inspectGraphifyCliPreflight(run);
+  inventory.uvToolDirectory = verified.uvToolDirectory;
+  inventory.uvBinDirectory = verified.uvBinDirectory;
+  if (verified.status !== "installed") {
+    return {
+      ownership: "upstream",
+      cli: { status: "failed", command: cliCommand, exitCode: installed.code, reason: verified.reason || "uv install exited successfully but Graphify ownership/version verification failed", observedVersion: verified.observedVersion },
+      globalSkill: pendingSkill,
+      operations,
+      inventory
+    };
+  }
+  return {
+    ownership: "upstream",
+    cli: { status: "installed", command: cliCommand, exitCode: installed.code, observedVersion: verified.observedVersion },
+    globalSkill: pendingSkill,
+    operations,
+    inventory
+  };
+}
+
+async function registerGraphifySkill(
+  preflight: GraphifyCliPreflight,
+  skillInventory: Awaited<ReturnType<typeof inspectGraphifySkillInventory>>,
+  inventory: GraphifySummary["inventory"],
+  operations: GraphifySummary["operations"],
+  run: (command: string, args: string[], cwd?: string) => Promise<{ code: number | null; detail: string; stdout: string }>
+): Promise<GraphifySummary> {
+  const cliCommand = GRAPHIFY_CLI_INSTALL_COMMAND.join(" ");
+  const skillCommand = GRAPHIFY_SKILL_INSTALL_COMMAND.join(" ");
+  const cli: GraphifyStageSummary = preflight.status === "installed"
+    ? { status: "installed", command: cliCommand, observedVersion: preflight.observedVersion }
+    : { status: preflight.status === "conflict" ? "conflict" : "failed", command: cliCommand, reason: preflight.reason, observedVersion: preflight.observedVersion };
+  if (preflight.status !== "installed") {
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "failed", command: skillCommand, path: inventory.targetPath, reason: "A verified uv-managed Graphify CLI is required before global skill registration." },
+      operations,
+      inventory
+    };
+  }
+  if (skillInventory.ambiguousPaths.length > 0) {
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "conflict", command: skillCommand, path: inventory.targetPath, reason: `Ambiguous existing Graphify skill paths: ${skillInventory.ambiguousPaths.join(", ")}` },
+      operations,
+      inventory
+    };
+  }
+
+  if (skillInventory.target.valid) {
+    const catalog = await verifyGraphifyCatalog(run, skillInventory.target.skillPath);
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: catalog.ok
+        ? { status: "registered", command: skillCommand, path: inventory.targetPath, reason: "Existing valid upstream global skill preserved; registration command did not run.", route: catalog.route }
+        : { status: "failed", command: skillCommand, path: inventory.targetPath, reason: catalog.reason },
+      operations,
+      inventory
+    };
+  }
+
+  const beforeOpenCode = await fingerprintPath(inventory.currentProjectOpenCodePath);
+  if (await treeContainsSymlink(inventory.currentProjectOpenCodePath)) {
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "conflict", command: skillCommand, path: inventory.targetPath, reason: `Cannot prove an unchanged current-project .opencode tree containing symlinks: ${inventory.currentProjectOpenCodePath}` },
+      operations,
+      inventory
+    };
+  }
+  const installed = await run(GRAPHIFY_SKILL_INSTALL_COMMAND[0], [...GRAPHIFY_SKILL_INSTALL_COMMAND.slice(1)]);
+  const afterOpenCode = await fingerprintPath(inventory.currentProjectOpenCodePath);
+  if (beforeOpenCode !== afterOpenCode) {
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "failed", command: skillCommand, exitCode: installed.code, path: inventory.targetPath, reason: `Unexpected current-project .opencode change detected at ${inventory.currentProjectOpenCodePath}` },
+      operations,
+      inventory
+    };
+  }
+  if (installed.code !== 0) {
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "failed", command: skillCommand, exitCode: installed.code, path: inventory.targetPath, reason: installed.detail || `command exited with ${installed.code ?? "unknown status"}` },
+      operations,
+      inventory
+    };
+  }
+
+  const verifiedInventory = await inspectGraphifySkillInventory(process.env.HOME || os.homedir());
+  inventory.existingVersionStampPaths = verifiedInventory.existingVersionStampPaths;
+  inventory.ambiguousPaths = verifiedInventory.ambiguousPaths;
+  const referencesReported = /(?:^|\s)references(?:\s|$)/imu.test(installed.stdout);
+  if (!verifiedInventory.target.valid || verifiedInventory.ambiguousPaths.length > 0 || (referencesReported && !verifiedInventory.target.referencesPresent)) {
+    const reasons = [
+      ...verifiedInventory.target.issues,
+      ...verifiedInventory.ambiguousPaths.filter((item) => item !== verifiedInventory.target.root).map((item) => `ambiguous refreshed path: ${item}`),
+      ...(referencesReported && !verifiedInventory.target.referencesPresent ? ["installer reported references but no regular references sidecar was found"] : [])
+    ];
+    return {
+      ownership: "upstream",
+      cli,
+      globalSkill: { status: "failed", command: skillCommand, exitCode: installed.code, path: inventory.targetPath, reason: reasons.join("; ") || "upstream skill files did not validate" },
+      operations,
+      inventory
+    };
+  }
+  const catalog = await verifyGraphifyCatalog(run, verifiedInventory.target.skillPath);
+  return {
+    ownership: "upstream",
+    cli,
+    globalSkill: catalog.ok
+      ? { status: "registered", command: skillCommand, exitCode: installed.code, path: inventory.targetPath, route: catalog.route }
+      : { status: "failed", command: skillCommand, exitCode: installed.code, path: inventory.targetPath, reason: catalog.reason },
+    operations,
+    inventory
+  };
 }
 
 async function runCodeGraphInstall(options: InstallOptions): Promise<OptionalSummary> {

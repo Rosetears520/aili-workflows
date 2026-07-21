@@ -290,7 +290,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
 安装会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`；项目级事实、命令、测试位置、产物落点和本地例外仍通过各项目自己的瘦 `AGENTS.md` 管理。
 
-安装/更新默认会写入 OpenCode 全局配置目录和共享 `$HOME/.agents/skills`。Playwright MCP、CodeGraph 和 OpenSpec 都是显式 opt-in；AILI 不安装、检测、配置、迁移或删除 DCP。
+安装/更新默认会写入 OpenCode 全局配置目录和共享 `$HOME/.agents/skills`。Playwright MCP、CodeGraph、Graphify 和 OpenSpec 都是独立显式 opt-in；AILI 不安装、检测、配置、迁移或删除 DCP。
 
 ```bash
 npx -y rose-aili install
@@ -311,7 +311,7 @@ npx -y rose-aili doctor
 
 `rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。显式 `install`/`update` 会检查三个退役 skill 的 exact destination：只有解析后精确指向当前 canonical repo retired-source path 的 symlink 才会被 `unlink`；copy、普通文件/目录、不同 target、修改或所有权不明的条目全部保留并报告，dry-run 只报告计划，不会删除 sibling、parent 或 user file。`doctor` 的 required skill 清单直接来自更新后的 manifest，不新增 stale-copy result field。`install` 和 `update` 不读取或修改第三方 DCP plugin 状态及用户的 `dcp.json`/`dcp.jsonc`。OpenSpec 仅在显式传 `--enable-openspec` 时检测/安装并运行项目 `init/update`；`--skip-openspec` 可显式保持禁用。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
 
-交互式 `rose-aili install` 会依次询问 default agent、缺失的 model override、Playwright MCP、CodeGraph 和 OpenSpec；交互式 `update` 只询问 CodeGraph。非交互模式只执行显式 flag 请求的 optional integration。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+交互式 `rose-aili install` 会依次询问 default agent、缺失的 model override、Playwright MCP、CodeGraph、Graphify CLI 和 OpenSpec；交互式 `update` 询问 CodeGraph 与 Graphify CLI。非交互模式只执行显式 flag 请求的 optional integration。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
 
 ```jsonc
 {
@@ -333,14 +333,21 @@ npx -y rose-aili install --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --skip-opencode-config
 npx -y rose-aili install --enable-playwright
 npx -y rose-aili install --enable-codegraph
+npx -y rose-aili install --enable-graphify
+npx -y rose-aili install --skip-graphify
+npx -y rose-aili install --register-graphify-skill
 npx -y rose-aili install --enable-openspec
 npx -y rose-aili install --skip-openspec
 npx -y rose-aili update --skip-openspec
 ```
 
-非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 Playwright、CodeGraph、OpenSpec 或模型 override。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
+非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 Playwright、CodeGraph、Graphify、OpenSpec 或模型 override。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
 
 CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
+
+Graphify 也是独立 opt-in，并分成两个不能合并授权的 invocation。`--enable-graphify` 只在已存在 `uv` 时执行官方 `uv tool install graphifyy`；它不安装 uv、Python 或系统包，也不回退到 pip/pipx/APT/Homebrew/source build。CLI 安装完成后，必须在另一次 fresh exact approval 下运行 `--register-graphify-skill`，该阶段只委托官方 `graphify install --platform agents`，目标是上游拥有的 `~/.agents/skills/graphify/`。两个 flag 同时出现会被拒绝；`--yes`、CodeGraph consent、BUILD acceptance 或第一个操作的批准都不授权第二个操作。`--dry-run` 只报告两个 operation packet 和目标 inventory，不执行 uv/Graphify 或写入 home/project。
+
+Graphify 注册验证要求常规 `SKILL.md`、`.graphify_version`、可选 packaged references 与唯一 OpenCode catalog route，并确认当前仓库 `.opencode` 没有变化；该流程不安装项目 plugin/config，不运行 `/graphify`，也不 build/update/query 项目 graph。`doctor` 分开报告 `graphifyCli` 和 `graphifyGlobalSkill` 的 observed upstream-owned 状态。已有可用 graph 时，官方全局 `graphify` skill 只提供一次有界 architecture orientation；exact symbols、source、call paths、tests 和 current impact 仍由 CodeGraph 或当前文件确认。任何项目级 Graphify 运行、升级、重装、注销或删除都是新的独立 operation。
 
 项目内 CodeGraph 初始化不属于全局安装。AI agent 只能在确认当前仓库根目录后，对该仓库运行 `codegraph init -i` 和 `codegraph status`；A33 host 和每个 declared attachment 都必须逐 target 单独确认 root、状态和 approval，不能复用另一个 target 的 CodeGraph 结果。不得因为 CodeGraph 初始化顺手运行 `openspec init`，也不得未经明确授权批量初始化多个仓库。
 
@@ -350,13 +357,19 @@ OpenSpec 是显式 opt-in：只有 `--enable-openspec` 才会先用 `openspec --
 
 ### 分发与来源边界
 
-`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、四个 delivery commands 与独立 `local-review`、`.agents/` 下的 canonical skills/protocols、`manifests/`、两个 AGENTS 模板、`agents_md.py`、Graphify guarded launcher 及其 contract fixture、兼容安装脚本以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime；任何已打包 helper/fixture 都不注册为 command 或 runnable skill。root `.worktrees/`、visible `worktrees/` 和 historical `.tmp/worktrees/` 都不在 package allowlist 中。
+`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、四个 delivery commands 与独立 `local-review`、`.agents/` 下的 canonical skills/protocols/helpers、`manifests/`、两个 AGENTS 模板、`agents_md.py`、兼容安装脚本、两个明确列出的 Graphify/upstream contract fixtures 以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime；已打包的 `session-handoff` helper 只是该 skill 的确定性实现，不注册为 command 或独立 runnable skill。root `.worktrees/`、visible `worktrees/` 和 historical `.tmp/worktrees/` 都不在 package allowlist 中。
 
 固定上游材料位于现有 canonical skills 的 `references/upstream/` 中，并由 `manifests/upstream-references.json` 记录精确 pin、blob/hash、license/notice、`0644` mode 和 source→local mapping。上游 `SKILL.md` 以 `SKILL.upstream.md` 保存，脚本必须作为 non-executable data；这些文件随 `.agents/` 作为 inert reference data 打包，但不出现在 component manifest 的 skills 列表中，不获得 routing、approval、permission 或 execution authority。canonical AILI adapters 仍是各 skill 顶层唯一的 `SKILL.md`。
 
 当前分发保持 fail-closed：OpenCode `1.17.18` 临时 installed-catalog 对递归 reference data 的排除仍是 `UV-005`，且当前文件系统不能证明所有 upstream script mode 满足 `0644` 时，不得据此声称 distribution/registration/enablement 或 release readiness。`npm pack --dry-run` 只检查计划包内容，不发布，也不解决这些 runtime/mode 缺口。
 
-Graphify 仅允许在另行明确批准具体 operation、且 guarded launcher 的 provenance/network/environment/output controls 全部满足时启动；否则记录 blocked/`Unverified`，不启动 process。它不属于安装、command、hook、周期任务或 release gate。
+Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不授权；每个真实操作都需要自己的 fresh exact approval。AILI 的 installer/doctor 只验证 observed upstream version/path/files/catalog 与当前仓库 `.opencode` 无变化，不承诺上游 support/security/sandbox/index integrity，也不把 Graphify 当作 lifecycle、completion 或 release authority。
+
+### 版本化 session handoff
+
+`session-handoff` 只在用户明确要求 CREATE/LIST/RESUME 或 accepted lifecycle 明确命名 handoff point 时触发。OpenSpec change 使用 `openspec/changes/<change-id>/handoffs/`，普通任务使用已确认 `<task-root>/handoffs/`；旧 `<task-root>/handoff.md` 只作显式选择的只读兼容输入。每个 finalized snapshot 都保留为 timestamped immutable Markdown，`LATEST.md` 是带 exact relative path、snapshot ID、SHA-256 和 finalized time 的 atomic regular-file pointer。
+
+该 skill 内的 `scripts/session_handoff.py` 不是另一个 workflow 或公共命令，而是低自由度的确定性 helper：它统一处理 exclusive collision suffix、containment/symlink validation、draft/finalize、pointer replacement、bounded-frontmatter LIST、exact-first RESOLVE、legacy read-only 和 localized exact-path resume output。没有显式触发时不创建 handoff；没有自动 memory promotion、rotation、archive 或 prune；恢复仍要重新验证当前 root/worktree/Git/contracts/permissions/evidence。
 
 安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装全局 `AGENTS.md`、agents、skills 和 commands。
 
