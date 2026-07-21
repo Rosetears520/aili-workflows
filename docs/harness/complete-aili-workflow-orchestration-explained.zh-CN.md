@@ -342,7 +342,7 @@
 
 [已知] 薄适配只把上游做法映射到 AILI 的 trigger、artifact、permission 和 stop condition，不复制一套新的生命周期权威。
 
-[工具结果] 当前 `manifests/upstream-references.json` 已记录五组 canonical destination：`session-handoff`、`skill-authoring-and-validation`、`requirements-grilling`、`idea-refine`、`spec-driven-development`。
+[工具结果] 当前 `manifests/upstream-references.json` 已记录五组 canonical destination：`session-handoff`、`write-skills`、`requirements-grilling`、`idea-refine`、`spec-driven-development`；`write-skills` 使用本地 `SKILL.md + GLOSSARY.md`，固定上游全文仍只作 inert provenance。
 
 [未验证] 当前安装 catalog 的递归发现与 DrvFS 打包 mode 问题仍阻塞分发/启用证明。
 

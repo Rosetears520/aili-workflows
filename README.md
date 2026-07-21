@@ -64,7 +64,7 @@ aili-workflows/
 │       ├── shader-dev/
 │       ├── shipping-and-launch/
 │       ├── silent-failure-hunting/
-│       ├── skill-authoring-and-validation/
+│       ├── write-skills/
 │       ├── source-driven-development/
 │       ├── spec-driven-development/
 │       ├── strategy-stress-test/
@@ -172,7 +172,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `requirements-grilling` | AILI DEFINE 的 bounded clarification adapter；默认一次问一个改变决定的问题，多个已知独立 blocker 可生成静态 `interview.md` packet，用户显式要求 batch grilling 时按 dependency-ready decision frontier 分轮提问，且不自动调用其他 process skill 或派发 subagent |
 | `rose-memory` | ROSE project-local SQLite memory 工作流 |
 | `silent-failure-hunting` | 静默失败、误报成功、吞错、跳过 gate 或 stale evidence 风险的只读 review 路由 |
-| `skill-authoring-and-validation` | 创建、修改和验证本仓库 Agent Skills 的工作流 |
+| `write-skills` | 以 Predictability、Create / Revise / Evaluate 分支和 `SKILL.md + GLOSSARY.md` 信息层级创建、修改或评估本仓库 Agent Skills |
 | `strategy-stress-test` | 仅在用户明确要求，或 ROSE 指出具体材料性漏洞时执行一次有界反方检查；不因 write-back、implementation、review 或 completion 自动触发 |
 | `test-document-generator` | 在显式 test-plan/QA/acceptance-matrix intent 或正式 DEFINE 的具体 testability gap 下生成紧凑测试文档；不为普通 implementation、TDD、review 或 completion 自动建流程 |
 
@@ -239,7 +239,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `consulting-analysis` | 咨询式问题拆解、假设/选项/风险/建议输出，禁止无来源商业断言 |
 | `data-analysis` | 数据分析前置真实性检查、质量剖析、清洗说明、限制和发现输出 |
 | `chart-visualization` | 图表选择、误导性图表审查、可访问性和数据映射规范 |
-| `skill-authoring-and-validation` 增量 | 强化 progressive disclosure、trigger eval、外部 skill provenance 和 runtime-assumption 清理 |
+| `write-skills` 增量 | 强化 progressive disclosure、trigger eval、外部 skill provenance、runtime-assumption 清理和 claim-matched completion criteria |
 | `mature-project-pattern-research` / `github-evidence-triage` / `documentation-and-adrs` 增量 | 强化 synthesis-over-listing、证据分组、来源锚定文档和 `Unverified` 标记 |
 | `frontend-ui-engineering` / `browser-testing-with-devtools` 增量 | 强化 anti-generic UI、runtime UI audit、事实性 proof-point 检查和 browser evidence 记录 |
 
@@ -268,7 +268,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 - `.agents/skills/explain-by-allegory/SKILL.md` 概念上参考了 Amanda Askell-style allegory / analogy prompting 的解释方式（见 [Amanda Askell](https://askell.io/) 个人页面作为人物来源线索），本仓库仅保留“先讲故事、再映射正式概念、再说明类比失效点”的工作流结构，未复制外部 prompt 文本。
 - `.agents/skills/evidence-scoped-retrospective/SKILL.md` 概念上参考了 Vaibhav / VB / Codex-style self-improvement prompting 的“回看近期工作并提出流程改进”方向，但改为 OpenCode 可证据化版本：只分析用户显式提供或批准的证据，不声称可见全局历史，且先报告再走既有变更门禁；未复制外部 prompt 文本。
 - `.agents/skills/evidence-scoped-retrospective/SKILL.md` 的 failure-pattern taxonomy 和 `templates/AGENTS.md` 的 selected guardrails 概念上参考了用户提供的 Mnilax / Karpathy / Forrest Chang-style coding-agent discipline summary。用户请求使用 [Mnilax X 链接](https://x.com/Mnilax/status/2053116311132155938) 作为 attribution；direct X content 在本次实现中未直接抓取，按 conceptual / user-provided source 标注，未复制原文。
-- `.agents/skills/skill-authoring-and-validation/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；当前仓库未 vendored 上游文件。
+- `.agents/skills/write-skills/SKILL.md` 的结构原则概念上参考了 OpenAI Codex Agent Skills 的 skill authoring 思路，验证流程概念上参考了 Anthropic skill creator 的访谈、测试和迭代方法；这些来源未 vendored 上游文件。
 - `.agents/skills/strategy-stress-test/SKILL.md` 概念上参考了用户提供的 [X 链接](https://x.com/cjzafir/status/2052110266566107321) 中关于 confidence calibration / loophole loop 的提示思想，并工程化为“事实可证高置信、默认 1 轮且最多 3 轮、Open Question / Unverified 标记”的 workflow guardrail。当前仓库未 vendored 上游文本。
 - `agents/doc-researcher.md`、`agents/web-researcher.md`、`agents/plan-auditor.md`、`.agents/skills/review-pipeline/SKILL.md`、`.agents/skills/github-evidence-triage/SKILL.md` 以及 `implementer` / `git-workflow-and-versioning` / `strategy-stress-test` 的部分边界设计，概念上吸收了用户提供的 oh-my-opencode / oh-my-openagent 角色拆分建议（上游现名 `oh-my-openagent`，曾用名 `oh-my-opencode`；如 Librarian、Metis、Momus、Hephaestus、git-master、review-work、github-triage、hyperplan 的能力边界），但未复制上游文件文本。
 - `requirements-grilling` 直接复制/改编 [Matt Pocock 的 skills](https://github.com/mattpocock/skills) 中 `grill-me`、`grilling`、in-progress `batch-grill-me` 与 `domain-modeling` 的核心行为和 `ADR-FORMAT.md` / `CONTEXT-FORMAT.md` 参考格式，按上游 MIT License 保留精确 inert pin 与来源说明，并加上 AILI/OpenSpec 的单一 canonical skill、Interactive / static Packet / explicit Frontier Batch 三模式、ROSE-owned evidence routing、`interview.md`、`context.md`、`adr.md`、readiness gate 与无新增 `/grill`、`/grill-me`、`/batch-grill-me` 命令约束。其他 workflow 纪律仍仅概念上参考 zoom-out、prototype、to-issues、diagnose、tdd、write-a-skill、improve-codebase-architecture 等方向，未复制上游文本。
@@ -410,7 +410,7 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 | sanyuan0704 | [sanyuan-skills](https://github.com/sanyuan0704/sanyuan-skills/tree/main/skills/code-review-expert) | 未验证；pattern-only reference；no copied text | Review-quality rubric patterns only; no upstream skill正文 vendored |
 | Alireza Rezvani | [claude-skills](https://alirezarezvani.github.io/claude-skills/skills/engineering-team/code-reviewer/) | 未验证；pattern-only reference；no copied text | Review-quality and fixture/golden-output patterns only; no upstream skill正文 vendored |
 | laolaoshiren | [claude-code-skills-zh](https://github.com/laolaoshiren/claude-code-skills-zh/tree/main/skills/zh-code-reviewer) | 未验证；pattern-only reference；no copied text | Chinese review-output profile patterns only; no upstream skill正文 vendored |
-| Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT License | `requirements-grilling` 复制/改编 `grill-me`、`grilling`、in-progress `batch-grill-me`、`domain-modeling` 核心行为和 `ADR-FORMAT.md` / `CONTEXT-FORMAT.md` 参考格式；固定上游文件只作 inert provenance，Copyright (c) 2026 Matt Pocock |
+| Matt Pocock | [mattpocock/skills](https://github.com/mattpocock/skills) | MIT License | `write-skills` 以 AILI 重写 `SKILL.md`，本地 `GLOSSARY.md` 选择性接近改编 `writing-great-skills` 定义；`requirements-grilling` 复制/改编 grilling family 核心行为和参考格式；固定上游文件只作 inert provenance，Copyright (c) 2026 Matt Pocock |
 | Amanda Askell | [askell.io](https://askell.io/) | 概念性参考；未纳入上游文本 | allegory / analogy prompting 方向参考 |
 | Vaibhav / VB / Codex-style prompting | 用户提供的概念方向 | 概念性参考；未纳入上游文本 | evidence-scoped self-improvement prompting 方向参考；本仓库不声称可见全局历史 |
 | Andrej Karpathy | [X post](https://x.com/karpathy/status/2015883857489522876) | 思想来源 | agent coding guardrail 方向参考 |

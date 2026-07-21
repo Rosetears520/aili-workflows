@@ -7,7 +7,7 @@ description: Create or materially revise a durable specification when the user e
 
 ## Overview
 
-Write a structured specification before writing any code. The spec is the shared source of truth between you and the human engineer — it defines what we're building, why, and how we'll know it's done. Code without a spec is guessing.
+When explicit specification intent or a material ambiguity selects this loop, create the smallest durable contract that defines scope, behavior, boundaries, and acceptance. Ordinary bounded work remains outside this skill and does not require a new formal specification.
 
 ## When to Use
 
@@ -38,7 +38,7 @@ The pinned Addy file under `references/upstream/` is inert reference data. This 
 
 ### Phase 1: Specify
 
-Start with a high-level vision. Ask the human clarifying questions until requirements are concrete.
+Within the selected specification loop, start with the current objective and ask only decision-shaped questions needed to make material requirements concrete.
 
 **Surface assumptions immediately.** Before writing any spec content, list what you're assuming:
 
@@ -48,7 +48,7 @@ ASSUMPTIONS I'M MAKING:
 2. Authentication uses session-based cookies (not JWT)
 3. The database is PostgreSQL (based on existing Prisma schema)
 4. We're targeting modern browsers only (no IE11)
-→ Correct me now or I'll proceed with these.
+→ Material assumptions require an explicit decision; otherwise they remain Open Question and block affected work.
 ```
 
 Don't silently fill in ambiguous requirements. The spec's entire purpose is to surface misunderstandings *before* code gets written — assumptions are the most dangerous form of misunderstanding.
@@ -176,13 +176,13 @@ The plan should be reviewable: the human should be able to read it and say "yes,
 
 Break the plan into discrete, implementable tasks:
 
-- Each task should be completable in a single focused session
+- Each task should cover one coherent behavior or dependency boundary
 - Each task has explicit acceptance criteria
-- Each task includes a verification step (test, build, manual check)
+- Each task names the smallest evidence needed for its affected claim, when any package-local evidence is needed
 - Tasks are ordered by dependency, not by perceived importance
-- No task should require changing more than ~5 files
+- Task boundaries follow behavior, dependencies, ownership, risk, and reversibility rather than a fixed file count
 
-🛑 **STOP before IMPLEMENT:** do not start coding until tasks have acceptance criteria plus verification, canonical artifacts are coherent/validated, and final `test-plan.md` has explicit user acceptance under the AILI lifecycle.
+🛑 **STOP before IMPLEMENT:** do not start coding until tasks have acceptance criteria and any claim-matched evidence targets they need, canonical artifacts are coherent/validated, and final `test-plan.md` has explicit user acceptance under the AILI lifecycle.
 
 **Task template:**
 ```markdown
@@ -209,19 +209,19 @@ The spec is a living document, not a one-time artifact:
 
 | Rationalization | Reality |
 |---|---|
-| "This is simple, I don't need a spec" | Simple tasks don't need *long* specs, but they still need acceptance criteria. A two-line spec is fine. |
+| "This is simple, I don't need a spec" | Ordinary bounded work may remain ordinary; use this skill only when explicit spec intent or a material ambiguity selects it. |
 | "I'll write the spec after I code it" | That's documentation, not specification. The spec's value is in forcing clarity *before* code. |
-| "The spec will slow us down" | A 15-minute spec prevents hours of rework. Waterfall in 15 minutes beats debugging in 15 hours. |
+| "The spec will slow us down" | Once formal specification is selected, keep it dependency-ready and no larger than the decisions it must preserve. |
 | "Requirements will change anyway" | That's why the spec is a living document. An outdated spec is still better than no spec. |
-| "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
+| "The user knows what they want" | Surface only assumptions that can materially change the selected formal contract; do not manufacture questions for settled ordinary work. |
 
 ## Red Flags
 
-- Starting to write code without any written requirements
-- Asking "should I just start building?" before clarifying what "done" means
-- Implementing features not mentioned in any spec or task list
-- Making architectural decisions without documenting them
-- Skipping the spec because "it's obvious what to build"
+- Treating every implementation as formal specification work
+- Proceeding inside a selected formal change while material acceptance remains unresolved
+- Inferring acceptance from silence or an uncorrected assumption
+- Implementing behavior outside the accepted formal scope
+- Making a material architecture/public-contract decision without returning it to the lifecycle owner
 
 ## Verification
 

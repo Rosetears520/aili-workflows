@@ -1294,6 +1294,73 @@ test("selective Bash install links shared skills from .agents/skills and preserv
   await fixture.cleanup();
 });
 
+test("write-skills rename retires a proven managed old symlink and installs the new canonical target", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const sharedRoot = sharedSkillsHome(fixture);
+  const oldName = "skill-authoring-and-validation";
+  const oldTarget = path.join(sharedRoot, oldName);
+  const oldSource = path.join(fixture.ailiHome, ".agents", "skills", oldName);
+  const newTarget = path.join(sharedRoot, "write-skills");
+  const newSource = path.join(fixture.ailiHome, ".agents", "skills", "write-skills");
+  await mkdir(sharedRoot, { recursive: true });
+  await symlink(oldSource, oldTarget);
+
+  const dryRun = await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--dry-run",
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  const drySummary = JSON.parse(dryRun.stdout.trim().split(/\r?\n/).at(-1));
+  const dryOld = drySummary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
+  assert.equal(dryOld.action, "planned-unlink");
+  assert.equal((await lstat(oldTarget)).isSymbolicLink(), true);
+
+  const installed = await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
+  const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
+  assert.equal(retired.action, "unlinked");
+  await assert.rejects(lstat(oldTarget));
+  assert.equal((await lstat(newTarget)).isSymbolicLink(), true);
+  assert.equal(await readlink(newTarget), newSource);
+  await fixture.cleanup();
+});
+
+test("write-skills rename preserves ambiguous old installed content", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const sharedRoot = sharedSkillsHome(fixture);
+  const oldName = "skill-authoring-and-validation";
+  const oldTarget = path.join(sharedRoot, oldName);
+  const marker = path.join(oldTarget, "user-note.txt");
+  await mkdir(oldTarget, { recursive: true });
+  await writeFile(marker, "preserve user-owned content\n", "utf8");
+
+  const installed = await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
+  const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
+  assert.equal(retired.action, "preserved");
+  assert.match(retired.reason, /copied, modified, or user-owned content is preserved/);
+  assert.equal(await readFile(marker, "utf8"), "preserve user-owned content\n");
+  assert.equal((await lstat(path.join(sharedRoot, "write-skills"))).isSymbolicLink(), true);
+  await fixture.cleanup();
+});
+
 test("selective Bash dry-run reports .agents skill source without mutating OpenCode home", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "dry-run-opencode");

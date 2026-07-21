@@ -82,7 +82,7 @@ CONTENT_CHECKS = {
     "agents/rose.md": ["# ROSE", "Prefer direct work", "Default concurrency is at most two", "Every Task context is fresh, single-use, and terminal", "Never pass or resume an old `task_id`", "new requirements, or scope changes", "omits every prior `task_id`", "smallest claim-matched", "aili-delivery-flow"],
     "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
-    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "Never resume an old `task_id`", "Do not automatically retry", "new direct-first benefit decision", "## Compact packet", "Goal:", "STATUS:"],
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "Never resume an old `task_id`", "Do not automatically retry", "new direct-first benefit decision", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
     ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Direct ROSE work is the default", "One current intent has at most one auxiliary capability", "at most two fresh, independent Task contexts", "Do not automatically add review"],
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Never pass or resume an old `task_id`", "not automatically retried", "new direct-first benefit decision", "Allowed actions:", "Expected result:", "Stop when:"],
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "status: completed | partial | blocked | unverified", "Never resume the result's old `task_id`", "does not authorize an automatic fresh-session retry", "new direct-first benefit decision"],
@@ -101,6 +101,11 @@ FORBIDDEN_CODE_SCOUT_BASH = [
 ]
 
 CANONICAL_PROTOCOL_PATH = ".agents/skills/aili-delivery-flow/references/protocols/"
+DISPATCH_FORBIDDEN_LOCAL_SCHEMA = [
+    "## Compact packet", "## Compact result", "\nGoal:\n", "\nScope:\n",
+    "\nAllowed actions:\n", "\nExpected result:\n", "\nStop when:\n",
+    "\nSTATUS:", "\nEVIDENCE:", "\nBLOCKERS:",
+]
 A33_SCHEMA = "aili.a33-worktree-evidence.v1"
 A33_FIXTURE_SCHEMA = "aili.cross-worktree-permission-fixtures.v3"
 A33_CASE_FIELDS = ["id", "subset", "status", "exit_code", "operation_id", "approval_ref", "host_identity", "source_identity", "target_identity", "expected_delta", "observed_delta", "evidence_refs", "unverified", "cleanup_state"]
@@ -2225,6 +2230,11 @@ def main() -> int:
         for needle in CONTENT_CHECKS.get(relative_path, []):
             if needle not in text:
                 failures.append(f"MISSING CONTENT: {relative_path} :: {needle}")
+
+        if relative_path == ".agents/skills/parallel-subagent-dispatch/SKILL.md":
+            for marker in DISPATCH_FORBIDDEN_LOCAL_SCHEMA:
+                if marker in text:
+                    failures.append(f"DUPLICATED DISPATCH SCHEMA: {relative_path} :: {marker!r}")
 
     active_neutral_build_files = [
         "commands/build.md",

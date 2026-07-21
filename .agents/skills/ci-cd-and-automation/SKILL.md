@@ -1,61 +1,44 @@
 ---
 name: ci-cd-and-automation
-description: Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to automate quality gates, configure test runners in CI, or establish deployment strategies.
+description: Configure or modify concrete CI/CD pipelines, jobs, quality gates, test runners, or deployment automation; do not trigger merely because an existing CI gate failed or ordinary source code needs repair.
 ---
 
 # CI/CD and Automation
 
 ## Overview
 
-Automate quality gates so that no change reaches production without passing tests, lint, type checking, and build. CI/CD is the enforcement mechanism for every other skill — it catches what humans and agents miss, and it does so consistently on every single change.
+Use this skill only when pipeline configuration or deployment automation is the selected task. Derive triggers, jobs, commands, environments, and gates from the repository and accepted request rather than installing a universal pipeline.
 
-**Shift Left:** Catch problems as early in the pipeline as possible. A bug caught in linting costs minutes; the same bug caught in production costs hours. Move checks upstream — static analysis before tests, tests before staging, staging before production.
-
-**Faster is Safer:** Smaller batches and more frequent releases reduce risk, not increase it. A deployment with 3 changes is easier to debug than one with 30. Frequent releases build confidence in the release process itself.
+This skill does not own ordinary source repair, the active task's verification strategy, Git operations, or deployment approval. Return those needs to ROSE unless they are already part of the accepted pipeline configuration scope.
 
 ## When to Use
 
 - Setting up a new project's CI pipeline
 - Adding or modifying automated checks
 - Configuring deployment pipelines
-- When a change should trigger automated verification
-- Debugging CI failures
+- Changing concrete pipeline triggers, matrices, artifacts, caching, or environment policy
 
-## The Quality Gate Pipeline
+**When NOT to use:** Repairing one existing lint/type/test/build failure, ordinary source implementation, running a local check, or preparing a release without a pipeline-configuration request.
 
-Every change goes through these gates before merge:
+## Pipeline-Specific Quality Gates
 
-```
-Pull Request Opened
-    │
-    ▼
-┌─────────────────┐
-│   LINT CHECK     │  eslint, prettier
-│   ↓ pass         │
-│   TYPE CHECK     │  tsc --noEmit
-│   ↓ pass         │
-│   UNIT TESTS     │  jest/vitest
-│   ↓ pass         │
-│   BUILD          │  npm run build
-│   ↓ pass         │
-│   INTEGRATION    │  API/DB tests
-│   ↓ pass         │
-│   E2E (optional) │  Playwright/Cypress
-│   ↓ pass         │
-│   SECURITY AUDIT │  npm audit
-│   ↓ pass         │
-│   BUNDLE SIZE    │  bundlesize check
-└─────────────────┘
-    │
-    ▼
-  Ready for review
+Configure only the checks required by the repository's documented commands, branch policy, affected risk, and accepted pipeline contract. Lint, typecheck, unit, integration, E2E, security, build, or bundle checks are candidates, not a mandatory universal chain.
+
+```text
+Concrete pipeline request
+    → inspect existing workflow and repository commands
+    → select only contract-relevant triggers, jobs, and environments
+    → preserve existing required checks and exact safety gates
+    → validate the changed configuration and report remaining gaps
 ```
 
-**No gate can be skipped.** If lint fails, fix lint — don't disable the rule. If a test fails, fix the code — don't skip the test.
+Do not weaken an existing required gate to make a run green. A request to diagnose or repair the failing source belongs to ROSE's narrow direct or failure-repair owner rather than becoming CI/CD configuration work.
 
 🔴 **CHECKPOINT · Gate Integrity:** Stop before disabling checks, relaxing branch protection, or marking a failing required status as optional. Continue only when the owner explicitly accepts the risk and records the temporary exception, owner, expiry date, and restoration plan.
 
 ## GitHub Actions Configuration
+
+The following snippets are optional starting points. Do not copy jobs, versions, commands, triggers, dependencies, secrets, or environments that the repository and accepted request do not require.
 
 ### Basic CI Pipeline
 
@@ -163,60 +146,24 @@ jobs:
           path: playwright-report/
 ```
 
-## Feeding CI Failures Back to Agents
+## CI Failure Handoff
 
-The power of CI with AI agents is the feedback loop. When CI fails:
-
-```
-CI fails
-    │
-    ▼
-Copy the failure output
-    │
-    ▼
-Feed it to the agent:
-"The CI pipeline failed with this error:
-[paste specific error]
-Fix the issue and verify locally before pushing again."
-    │
-    ▼
-Agent fixes → pushes → CI runs again
-```
-
-**Key patterns:**
-
-```
-Lint failure → Agent runs `npm run lint --fix` and commits
-Type error  → Agent reads the error location and fixes the type
-Test failure → Agent reproduces the failing gate and applies the smallest root-cause repair
-Build error → Agent checks config and dependencies
-```
+When an existing CI run fails, capture the exact job/check, target ref or tree, relevant bounded output, and whether the failure is reproducible. Return that evidence to ROSE for the narrow repair owner. Do not automatically edit source, commit, push, rerun external CI, weaken the gate, or deploy under this skill.
 
 **CI failure fallback:**
 
 | Trigger | First action | If still failing |
 |---|---|---|
-| Failure log is missing or truncated | Re-run the failed job once with full logs/artifacts enabled | Mark the cause `Unverified`; do not weaken the gate to merge |
-| Failure is flaky | Quarantine only with an owner, issue, and replacement coverage | Keep the required gate red until the flake fix or approved temporary exception lands |
-| Failure comes from secrets or environment config | Verify the secret exists in the CI secret store and is scoped to the right environment | Escalate to the CI/platform owner; never paste or hardcode the secret |
-| Failure blocks an urgent release | Use the rollback/hotfix path with explicit approval | Do not disable branch protection or required checks without the Gate Integrity checkpoint |
+| Failure log is missing or truncated | Return the missing-log need and exact failing job to ROSE | Mark the cause `Unverified`; do not rerun external CI or weaken the gate under this skill |
+| Failure is flaky | Return the flake evidence and any quarantine option to ROSE | Keep the required gate red unless the correct owner approves a temporary exception with replacement coverage |
+| Failure comes from secrets or environment config | Return the missing secret/environment metadata to the CI/platform owner without reading the value | Keep the job blocked; never paste or hardcode the secret |
+| Failure blocks an urgent release | Return the exact rollback/hotfix and approval need to ROSE | Do not disable branch protection or required checks without the Gate Integrity checkpoint |
 
 ## Deployment Strategies
 
 ### Preview Deployments
 
-Every PR gets a preview deployment for manual testing:
-
-```yaml
-# Deploy preview on PR (Vercel/Netlify/etc.)
-deploy-preview:
-  runs-on: ubuntu-latest
-  if: github.event_name == 'pull_request'
-  steps:
-    - uses: actions/checkout@v4
-    - name: Deploy preview
-      run: npx vercel --token=${{ secrets.VERCEL_TOKEN }}
-```
+Configure preview deployments only when the repository already uses them or the accepted request explicitly adds them. Define the exact event, environment, secret scope, provider command, teardown/retention behavior, and approval boundary. A generic PR does not imply deployment authority, and examples must not introduce an undeclared dependency or external operation.
 
 ### Feature Flags
 
@@ -314,16 +261,16 @@ Designate someone responsible for keeping CI green. When the build breaks, the B
 
 ### PR Checks
 
-- **Required reviews:** At least 1 approval before merge
-- **Required status checks:** CI must pass before merge
-- **Branch protection:** No force-pushes to main
-- **Auto-merge:** If all checks pass and approved, merge automatically
+- **Required reviews:** Preserve the repository's configured review policy.
+- **Required status checks:** Bind only the checks selected by the accepted pipeline contract.
+- **Branch protection:** Preserve existing protected-branch behavior unless an exact approved policy change says otherwise.
+- **Auto-merge:** Configure only on explicit request with the repository's merge and approval rules; never merge automatically from this skill.
 
 Do not remove branch protection, required reviews, or required status checks to unblock a merge. Use a documented temporary exception only after the Gate Integrity checkpoint.
 
 ## CI Optimization
 
-When the pipeline exceeds 10 minutes, apply these strategies in order of impact:
+When a measured pipeline target is missed, select optimizations supported by current timing evidence and repository constraints:
 
 ```
 Slow CI pipeline?
@@ -376,32 +323,31 @@ jobs:
 
 | Rationalization | Reality |
 |---|---|
-| "CI is too slow" | Optimize the pipeline (see CI Optimization below), don't skip it. A 5-minute pipeline prevents hours of debugging. |
-| "This change is trivial, skip CI" | Trivial changes break builds. CI is fast for trivial changes anyway. |
-| "The test is flaky, just re-run" | Flaky tests mask real bugs and waste everyone's time. Fix the flakiness. |
-| "We'll add CI later" | Projects without CI accumulate broken states. Set it up on day one. |
-| "Manual testing is enough" | Manual testing doesn't scale and isn't repeatable. Automate what you can. |
+| "CI is too slow" | Measure the affected jobs, then optimize the accepted critical path rather than deleting required coverage. |
+| "This change is trivial, so add or remove every gate" | Pipeline scope comes from repository policy and the accepted request, not a generic task-size rule. |
+| "The test is flaky, just re-run" | Record the flake and return source repair or quarantine decisions to the appropriate owner; do not silently weaken the gate. |
+| "We'll add every possible check now" | Add only repository-supported checks with a named purpose and expected evidence. |
+| "Manual testing is enough" | Decide automation from the pipeline contract and affected claim; this skill does not impose one universal mix. |
 
 ## Red Flags
 
-- No CI pipeline in the project
-- CI failures ignored or silenced
+- An accepted pipeline task lacks the requested trigger or job
+- Required CI failures are ignored or silenced
 - Tests disabled in CI to make the pipeline pass
 - Required status checks or branch protection disabled to merge a change
 - Production deploys without staging verification
 - CI jobs using production secrets outside a protected deployment environment
 - No rollback mechanism
 - Secrets stored in code or CI config files (not secrets manager)
-- Long CI times with no optimization effort
+- A measured pipeline target is missed without evidence-guided diagnosis
 
 ## Verification
 
 After setting up or modifying CI:
 
-- [ ] All quality gates are present (lint, types, tests, build, audit)
-- [ ] Pipeline runs on every PR and push to main
-- [ ] Failures block merge (branch protection configured)
-- [ ] CI results feed back into the development loop
-- [ ] Secrets are stored in the secrets manager, not in code
-- [ ] Deployment has a rollback mechanism
-- [ ] Pipeline runs in under 10 minutes for the test suite
+- [ ] The configured triggers, jobs, commands, and environments match the accepted pipeline request
+- [ ] Repository-required status checks and branch protections remain intact
+- [ ] Any secret, external service, protected environment, or deployment effect has its exact approval and scoped configuration
+- [ ] Failure output identifies the job/check and returns source-repair needs to ROSE
+- [ ] Deployment automation, when in scope, has the required rollback path
+- [ ] The smallest repository-supported syntax/configuration or dry-run check for the changed pipeline passes, or the exact limitation is reported

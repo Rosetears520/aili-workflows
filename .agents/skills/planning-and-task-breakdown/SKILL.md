@@ -7,7 +7,7 @@ description: Break a clear scope or accepted specification into ordered tasks/pa
 
 ## Overview
 
-Decompose work into small, verifiable tasks with explicit acceptance criteria. Good task breakdown is the difference between an agent that completes work reliably and one that produces a tangled mess. Every task should be small enough to implement, test, and verify in a single focused session.
+When explicit planning intent selects this skill, decompose the accepted scope into coherent, dependency-ordered tasks or packages with acceptance criteria and claim-matched evidence targets. Ordinary implementation with a clear next step remains direct.
 
 ## When to Use
 
@@ -92,9 +92,7 @@ Each task follows this structure:
 - [ ] [Specific, testable condition]
 
 **Verification:**
-- [ ] Tests pass: `npm test -- --grep "feature-name"`
-- [ ] Build succeeds: `npm run build`
-- [ ] Manual check: [description of what to verify]
+- [ ] Evidence: [smallest test, build, inspection, or manual observation required by the affected claim; omit or mark N/A when no package-local check is needed]
 
 **Dependencies:** [Task numbers this depends on, or "None"]
 
@@ -102,7 +100,7 @@ Each task follows this structure:
 - `src/path/to/file.ts`
 - `tests/path/to/test.ts`
 
-**Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
+**Scope boundary:** [coherent behavior/dependency, owner, risk, reversibility, and likely files]
 ```
 
 ### Prototype Before Committing to a Design
@@ -134,7 +132,7 @@ Each work package should include:
 - Type: `AFK` or `HITL`
 - What to build
 - Acceptance criteria
-- Verification
+- Verification evidence or explicit N/A
 - Blocked by
 - User stories or requirements covered
 - Likely files
@@ -168,7 +166,7 @@ Before finalizing, run this direct plan consistency checklist. Use a separate st
 Check whether:
 
 - any task is still too large
-- any task title hides multiple tasks behind `and`
+- any task combines independent outcomes that need separate ownership, ordering, or rollback
 - dependencies are missing or ordered incorrectly
 - shared mutable state requires sequential execution
 - parallel work packages would edit overlapping files
@@ -195,28 +193,16 @@ If any item is missing, stop and revise the plan; do not dispatch ambiguous or o
 
 | Trigger | First action | If still unresolved |
 |---|---|---|
-| Task is XL or touches independent subsystems | Split by vertical user-visible slice or dependency layer | Mark as `BLOCKED_OVERSIZED_TASK` and return any material scope decision to ROSE |
-| Acceptance criteria cannot fit in 3 focused bullets | Separate behavior, edge cases, and verification into smaller tasks | Mark unclear criteria as `Open Question` |
+| Task combines independent behaviors or subsystems | Split by vertical user-visible slice or dependency layer | Mark unresolved scope as `Open Question` and return material decisions to ROSE |
+| Acceptance criteria mix unrelated outcomes | Separate behavior, edge cases, and evidence by coherent ownership/dependency | Mark unclear criteria as `Open Question` |
 | Likely files overlap across parallel packages | Make the packages sequential or define a shared contract task first | Do not parallelize |
 | Task needs credentials, schema migration, release approval, or destructive action | Mark `HITL` and name the required approval/evidence | Block implementation until the human gate is cleared |
 
-## Task Sizing Guidelines
+## Task Boundary Guidelines
 
-| Size | Files | Scope | Example |
-|------|-------|-------|---------|
-| **XS** | 1 | Single function or config change | Add a validation rule |
-| **S** | 1-2 | One component or endpoint | Add a new API endpoint |
-| **M** | 3-5 | One feature slice | User registration flow |
-| **L** | 5-8 | Multi-component feature | Search with filtering and pagination |
-| **XL** | 8+ | **Too large — break it down further** | — |
+Keep a task intact when its files and actions are necessary for one coherent accepted behavior and can be verified through one clear evidence path. Split when independent outcomes, owners, risky approvals, rollback boundaries, or dependency order would otherwise be hidden.
 
-If a task is L or larger, it should be broken into smaller tasks. An agent performs best on S and M tasks.
-
-**When to break a task down further:**
-- It would take more than one focused session (roughly 2+ hours of agent work)
-- You cannot describe the acceptance criteria in 3 or fewer bullet points
-- It touches two or more independent subsystems (e.g., auth and billing)
-- You find yourself writing "and" in the task title (a sign it is two tasks)
+File count, estimated elapsed time, title wording, or bullet count may help describe a task but never acts as a gate by itself.
 
 ## Plan Document Template
 
@@ -276,17 +262,17 @@ Include this section only when the user requests parallel work or at least two i
 
 | Rationalization | Reality |
 |---|---|
-| "I'll figure it out as I go" | That's how you end up with a tangled mess and rework. 10 minutes of planning saves hours. |
+| "I'll figure it out as I go" | Once planning is explicitly selected, record the dependency and risk decisions needed for execution. |
 | "The tasks are obvious" | When planning was explicitly requested, record only the dependency/order details that improve execution; do not manufacture ceremony. |
-| "Planning is overhead" | Planning is the task. Implementation without a plan is just typing. |
+| "Planning is overhead" | Use planning only when requested or selected for a concrete coordination need; otherwise keep ordinary implementation direct. |
 | "I can hold it all in my head" | Context windows are finite. Written plans survive session boundaries and compaction. |
 
 ## Red Flags
 
-- Starting implementation without a written task list
+- Forcing a written task list onto clear ordinary implementation
 - Tasks that say "implement the feature" without acceptance criteria
-- No verification steps in the plan
-- All tasks are XL-sized
+- No claim-matched evidence target where a task's acceptance needs one
+- Independent outcomes hidden in one package without an ownership or dependency reason
 - No savepoint where a long/resumable plan needs one
 - Dependency order isn't considered
 - Parallel dispatch before overlap, ownership, and verification are explicit
@@ -297,7 +283,7 @@ Include this section only when the user requests parallel work or at least two i
 Before starting implementation, confirm:
 
 - [ ] Every task has acceptance criteria
-- [ ] Every task has a verification step
+- [ ] Each task names only the evidence required by its affected claim, or explicitly needs no package-local check
 - [ ] Task dependencies are identified and ordered correctly
 - [ ] Task boundaries follow dependencies and coherent behavior rather than an arbitrary file limit
 - [ ] Evidence points exist only where the affected claim needs them

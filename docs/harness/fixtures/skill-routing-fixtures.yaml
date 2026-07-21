@@ -1,6 +1,6 @@
 {
   "fixture": "skill-routing",
-  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
   "cases": [
     {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
     {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
@@ -18,6 +18,16 @@
     {"id": "source-driven-model-uncertainty", "skill": "source-driven-development", "input": "I am uncertain about this framework version behavior", "expected": "trigger"},
     {"id": "git-workflow-cleanup-gate", "skill": "git-workflow-and-versioning", "input": "before closeout inspect branch/status, classify dirty paths, prepare the cleanup package, and keep approval-gated cleanup", "expected": "trigger"},
     {"id": "mature-project-local-review", "skill": "mature-project-pattern-research", "input": "review this local code implementation", "expected": "non-trigger"},
-    {"id": "mature-project-github-issue-pr-triage", "skill": "mature-project-pattern-research", "input": "triage this GitHub issue and PR for evidence", "expected": "non-trigger"}
+    {"id": "mature-project-github-issue-pr-triage", "skill": "mature-project-pattern-research", "input": "triage this GitHub issue and PR for evidence", "expected": "non-trigger"},
+    {"id": "ci-cd-explicit-pipeline", "skill": "ci-cd-and-automation", "input": "add a concrete CI pipeline job using the repository-supported typecheck command; do not deploy", "expected": "trigger"},
+    {"id": "ci-cd-existing-failure", "skill": "ci-cd-and-automation", "input": "repair one existing failing CI typecheck gate in src/foo.ts; no pipeline configuration", "expected": "non-trigger"},
+    {"id": "parallel-dispatch-two-independent", "skill": "parallel-subagent-dispatch", "input": "use two fresh independent read-only subagents for frontend and backend routing evidence", "expected": "trigger"},
+    {"id": "parallel-dispatch-old-task-handoff", "skill": "parallel-subagent-dispatch", "input": "reuse the same old task_id after a partial result and continue the work", "expected": "trigger", "expected_handoff": "ROSE re-evaluates fresh Task benefit; never reuse old task_id"},
+    {"id": "spec-formal-contract", "skill": "spec-driven-development", "input": "write a durable specification for a new public authentication callback contract before implementation", "expected": "trigger"},
+    {"id": "spec-ordinary-bounded-edit", "skill": "spec-driven-development", "input": "apply one ordinary bounded typo fix with clear acceptance; do not create a formal spec", "expected": "non-trigger"},
+    {"id": "planning-explicit-packages", "skill": "planning-and-task-breakdown", "input": "split the accepted payments specification into dependency-ordered implementation packages", "expected": "trigger"},
+    {"id": "planning-clear-eight-file-edit", "skill": "planning-and-task-breakdown", "input": "the clear accepted edit touches eight files; implement directly without a new plan", "expected": "non-trigger"},
+    {"id": "browser-direct-evidence", "skill": "browser-testing-with-devtools", "input": "collect direct Playwright console and POST evidence for the exact local checkout route; do not edit source", "expected": "trigger"},
+    {"id": "browser-source-fix-handoff", "skill": "browser-testing-with-devtools", "input": "browser evidence identifies a source fix and a durable test-plan need", "expected": "trigger", "expected_handoff": "return source fix and durable test-plan needs to ROSE"}
   ]
 }

@@ -39,33 +39,19 @@ Every actual Task invocation must pass this benefit decision independently. A pr
 - The same `subagent_type` may be selected later only in a fresh Task invocation with no prior `task_id`, after a new direct-first benefit decision for an independently justified assignment or changed evidence.
 - Subagents never nest or delegate. ROSE retains lifecycle, approval, integration, reconciliation, and final-verdict ownership.
 
-## Compact packet
+## Canonical packet protocol
 
-Send only:
+Use `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md` as the single source for exact packet fields and rules. Do not restate or maintain a local field schema in this skill.
 
-```text
-Goal:
-Scope:
-Allowed actions:
-Expected result:
-Stop when:
-```
-
-A packet narrows scope; it never expands effective permissions. Every subagent remains non-delegating.
+Keep each packet bounded to the independently justified assignment. A packet narrows scope; it never expands effective permissions. Every subagent remains non-delegating.
 
 For A33, a packet/result carries one compact `WT-001` reference for one declared repository/cwd. It never duplicates or rebinds root, key, identity, Git, approval, operation, risk, delta, rule, command/cwd, or containment authority. Target rules are re-read at dispatch, can only narrow, and same-level conflicts block. Artifacts stay with the owning target repository.
 
-## Compact result
+## Canonical result protocol
 
-Require only:
+Use `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md` as the single source for exact terminal result and finding fields. Do not restate or maintain a local result schema in this skill.
 
-```text
-STATUS: completed | partial | blocked | unverified
-EVIDENCE: compact anchors, artifacts, or command result
-BLOCKERS: none or exact missing input/permission
-```
-
-ROSE checks the returned evidence, resolves conflicts, and owns the lifecycle, integration, and final decision. Missing or empty evidence is not completion and does not authorize resume or an automatic fresh-session retry.
+ROSE checks the canonical result evidence, resolves conflicts, and owns the lifecycle, integration, and final decision. Missing or empty evidence is not completion and does not authorize resume or an automatic fresh-session retry.
 
 ## Stop
 

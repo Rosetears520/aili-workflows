@@ -76,7 +76,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "skill-routing-fixtures.yaml": {
-        "markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
+        "markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
         "case_key": "cases",
         "min_cases": 6,
     },
@@ -572,6 +572,33 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
 
 def validate_skill_routing(cases: list, name: str) -> list[str]:
     errors: list[str] = []
+    expected_residual_cases = {
+        "ci-cd-explicit-pipeline": ("ci-cd-and-automation", "trigger", "concrete CI pipeline job", None),
+        "ci-cd-existing-failure": ("ci-cd-and-automation", "non-trigger", "existing failing CI typecheck gate", None),
+        "parallel-dispatch-two-independent": ("parallel-subagent-dispatch", "trigger", "two fresh independent read-only subagents", None),
+        "parallel-dispatch-old-task-handoff": ("parallel-subagent-dispatch", "trigger", "reuse the same old task_id", "ROSE re-evaluates fresh Task benefit; never reuse old task_id"),
+        "spec-formal-contract": ("spec-driven-development", "trigger", "durable specification", None),
+        "spec-ordinary-bounded-edit": ("spec-driven-development", "non-trigger", "ordinary bounded typo", None),
+        "planning-explicit-packages": ("planning-and-task-breakdown", "trigger", "dependency-ordered implementation packages", None),
+        "planning-clear-eight-file-edit": ("planning-and-task-breakdown", "non-trigger", "eight files", None),
+        "browser-direct-evidence": ("browser-testing-with-devtools", "trigger", "direct Playwright console and POST evidence", None),
+        "browser-source-fix-handoff": ("browser-testing-with-devtools", "trigger", "browser evidence identifies a source fix", "return source fix and durable test-plan needs to ROSE"),
+    }
+    for case_id, (skill, expected, input_marker, handoff) in expected_residual_cases.items():
+        matches = [case for case in cases if isinstance(case, dict) and case.get("id") == case_id]
+        if len(matches) != 1:
+            errors.append(f"{name}: expected exactly one {case_id} case")
+            continue
+        case = matches[0]
+        if case.get("skill") != skill:
+            errors.append(f"{name}: {case_id} skill must be {skill!r}")
+        if case.get("expected") != expected:
+            errors.append(f"{name}: {case_id} expected must be {expected!r}")
+        if input_marker not in str(case.get("input", "")):
+            errors.append(f"{name}: {case_id} input must contain {input_marker!r}")
+        if handoff is not None and case.get("expected_handoff") != handoff:
+            errors.append(f"{name}: {case_id} expected_handoff must be {handoff!r}")
+
     mature_cases = {
         case.get("id"): case
         for case in cases
@@ -1055,8 +1082,10 @@ def validate_local_review_gate_contracts() -> list[str]:
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
             "Direct ROSE work is the default",
             "Default to at most two concurrent subagents",
-            "## Compact packet",
-            "## Compact result",
+            "## Canonical packet protocol",
+            ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
+            "## Canonical result protocol",
+            ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
         ],
         ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": [
             "Goal:",
