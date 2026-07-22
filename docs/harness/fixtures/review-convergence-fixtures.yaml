@@ -171,7 +171,7 @@
     },
     {
       "id": "optional-specialist-join",
-      "input": {"selected_lanes": ["code", "test/coverage"], "specialist_limit": 2, "concrete_capability_gaps": ["implementation review", "coverage adequacy"], "read_only": true, "all_return_to": "ROSE", "compact_results_joined": true},
+      "input": {"selected_lanes": ["code", "test/coverage", "AI-regression"], "default_concurrency": 2, "hard_cap": null, "larger_fanout_requires": ["independent non-overlapping contexts", "concrete benefit", "suitable owners", "explicit join plan"], "concrete_capability_gaps": ["implementation review", "coverage adequacy", "prompt regression"], "read_only": true, "all_return_to": "ROSE", "compact_results_joined": true},
       "expected": "pass"
     },
     {
@@ -188,12 +188,12 @@
     {
       "id":"review-ai-vs-product-routing",
       "input":{"finding":"prompt routing regression changes product-visible lifecycle behavior","candidate_lanes":["AI-regression","code-review","product decision"]},
-      "expected":"ROSE inspects directly and may select at most two relevant specialists for a concrete gap; unresolved product semantics return to ROSE/user"
+      "expected":"ROSE runs the proactive delegation scan and dispatches trigger-eligible specialists with model-selected bounded fan-out; unresolved product semantics return to ROSE/user"
     },
     {
       "id":"review-ai-regression-vs-test-engineer-routing",
       "input":{"ai_surface":"prompt/agent/skill/model or tool routing/generated-output expectation","ordinary_test_surface":"product-code test design, writing, execution, or coverage"},
-      "expected":{"ai_surface":"ai-regression-scout when a specialist is needed","ordinary_test_surface":"test-engineer when a specialist is needed","overlap":"ROSE selects only the concrete missing capability, at most two specialists"}
+      "expected":{"ai_surface":"ai-regression-scout when a specialist is needed","ordinary_test_surface":"test-engineer when a specialist is needed","overlap":"ROSE selects only concrete missing capabilities; default concurrency two is not a hard cap and larger fan-out requires independent scopes, suitable owners, concrete benefit, and a join plan"}
     },
     {
       "id": "no-finding-with-scope",
@@ -210,7 +210,7 @@
       "id": "automatic-review-swarm-forbidden",
       "input": {"automatic_specialist_lanes": 7, "concrete_capability_gap": false},
       "expected": "block",
-      "reason": "Package 12 is direct-first and does not create an automatic review swarm"
+      "reason": "Package 12 is trigger-gated and does not create an automatic review swarm without eligible evidence"
     },
     {
       "id": "one-targeted-recheck-limit",

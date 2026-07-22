@@ -28,7 +28,7 @@ ROSE still decides the final acceptance status.
 ## Required Routing
 
 - Owner: ROSE/`aili-delivery-flow`; this rubric may accompany one already justified review or test assignment.
-- Agent use remains fresh, single-use, direct-first, and ROSE-owned; this skill does not select or resume the agent.
+- Agent use remains fresh, single-use, trigger-gated, and ROSE-owned; this skill does not select or resume the agent. ROSE dispatches when the current Task trigger is met and otherwise uses the direct fallback.
 - Read-only by default: recommendations may request fixes, tests, or fixture updates, but this skill does not edit implementation or fixture files.
 - Final authority: reviewers provide evidence and recommendations; ROSE owns final PASS/blocked decisions.
 

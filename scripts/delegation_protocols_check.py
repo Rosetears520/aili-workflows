@@ -25,6 +25,8 @@ REQUIRED_FILES = [
     "agents/rose.md",
     "agents/implementer.md",
     "agents/code-scout.md",
+    "templates/opencode-global-AGENTS.md",
+    ".agents/skills/aili-delivery-flow/SKILL.md",
     ".agents/skills/parallel-subagent-dispatch/SKILL.md",
     ".agents/skills/review-pipeline/SKILL.md",
     ".agents/skills/session-handoff/SKILL.md",
@@ -79,14 +81,16 @@ ROSE_TASK_RULES = [
 ]
 
 CONTENT_CHECKS = {
-    "agents/rose.md": ["# ROSE", "Prefer direct work", "Default concurrency is at most two", "Every Task context is fresh, single-use, and terminal", "Never pass or resume an old `task_id`", "new requirements, or scope changes", "omits every prior `task_id`", "smallest claim-matched", "aili-delivery-flow"],
+    "agents/rose.md": ["# ROSE", "proactive delegation scan", "Default concurrency is at most two", "not a hard cap", "suitable owners", "explicit join plan", "first-class lifecycle entries", "do not ask the user to restate", "Every Task context is fresh, single-use, and terminal", "Never pass or resume an old `task_id`", "new requirements, or scope changes", "omits every prior `task_id`", "smallest claim-matched", "aili-delivery-flow"],
     "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
-    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Direct ROSE work is the default", "Default to at most two concurrent subagents", "Never resume an old `task_id`", "Do not automatically retry", "new direct-first benefit decision", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
-    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Direct ROSE work is the default", "One current intent has at most one auxiliary capability", "at most two fresh, independent Task contexts", "Do not automatically add review"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Never pass or resume an old `task_id`", "not automatically retried", "new direct-first benefit decision", "Allowed actions:", "Expected result:", "Stop when:"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "status: completed | partial | blocked | unverified", "Never resume the result's old `task_id`", "does not authorize an automatic fresh-session retry", "new direct-first benefit decision"],
-    ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most one auxiliary specialist capability", "at most two independent contexts", "one targeted recheck"],
+    "templates/opencode-global-AGENTS.md": ["proactive delegation scan", "not a hard cap", "suitable owners", "first-class lifecycle entries", "do not ask the user to restate"],
+    ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "not a hard cap", "explicit join plan"],
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Run this proactive delegation scan", "dispatch before duplicating", "not a hard cap", "explicit join plan", "same Task message", "Never resume an old `task_id`", "Do not automatically retry", "fresh trigger-and-benefit decision", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Run a proactive delegation scan", "dispatch is the default action", "One current intent has at most one auxiliary capability", "not a hard cap", "same Task message", "Do not automatically add review"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Never pass or resume an old `task_id`", "not automatically retried", "fresh trigger-and-benefit decision", "Allowed actions:", "Expected result:", "Stop when:"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "status: completed | partial | blocked | unverified", "Never resume the result's old `task_id`", "does not authorize an automatic fresh-session retry", "fresh trigger-and-benefit decision"],
+    ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most one auxiliary specialist capability", "Default concurrency is at most two but is not a hard cap", "suitable owners", "explicit join plan", "one targeted recheck"],
     ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
     ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["active accepted contract", "A33 admission and operation gates", "Hidden or unrequested AILI self-automation", "explicitly scoped product/repository CI", "IMPLEMENTED_TARGETED_VERIFIED"],
     ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "fresh explicit intent", "exact commit/push/merge/release approvals"],
@@ -1821,7 +1825,7 @@ def static_source_failures(project: Path) -> list[str]:
         ".agents/skills/aili-delivery-flow/references/protocols/implementation-package.md": ["required-satisfied | not-triggered | blocked", "BUILD_MATERIAL_DISCOVERY", "never creates automatic review"],
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Default to at most two", "Do not automatically add review", "one compact `WT-001` reference"],
         ".agents/skills/git-workflow-and-versioning/SKILL.md": ["A33 session-root attached repositories", "reflog_policy:enabled|disabled", "no sandbox, DLP, network isolation"],
-        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["PREPARE has zero add/remove effect", "default Task concurrency remains at most two"],
+        ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["PREPARE has zero add/remove effect", "Default Task concurrency is at most two but is not a hard cap", "suitable owners", "explicit join plan"],
         "tests/opencode-permission-probe.test.mjs": ["A33 agent installs preserve whole-file equality in copy and selective modes", "a33-runtime-key-mismatch-zero-effect", "delete_each"],
     }
     for relative_path, markers in required.items():

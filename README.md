@@ -139,7 +139,7 @@ aili-workflows/
 | `agents/agent-evaluator.md` | 只读 agent / subagent 输出评估 subagent，检查任务匹配、证据质量、claim hygiene、约束遗漏、overclaiming 和 handoff 可用性 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 | `agents/opensource-sanitizer.md` | 只读 OSS / npm / public-release 暴露面审查 subagent，报告 secrets/private data/package/prompt/provenance 风险且必须脱敏 | Clean-room pattern absorption from [affaan-m/ECC](https://github.com/affaan-m/ECC) agent role |
 
-Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subagents。每个具体 Task context 只接受一个有界 assignment，返回 terminal result/failure 后永久结束；旧 `task_id` 不得用于 follow-up、repair、recheck、clarification 或 continuation。同一 `subagent_type` 只有在新的 direct-first benefit decision 独立成立时才能通过全新 Task context 再次使用，不能自动重试。19 个 managed profiles 全部保持 non-delegating 和 `external_directory: deny`；只有 ROSE 保留逐 operation 的 external-directory ask，并继续拥有 lifecycle、integration 与最终 verdict。`web-researcher` 的角色不变：它仍只负责外部网页研究，web 能力不授予外部本地目录、mutation 或 delegation 权限。内置 `explore` / `general` 不计入这 19 个 managed profiles。
+Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subagents。ROSE 会在每个非平凡意图开始及 evidence 改变工作拆分时主动扫描 Task trigger；命中现有 trigger 就 prompt dispatch，未命中或被 overlap/dependency/permission/negative-benefit 阻塞时才 direct fallback。默认并发从 2 开始但不是硬上限；更大 fan-out 必须由模型根据独立非重叠单元、具体收益、合适 owner 和显式 join plan 有界选择。每个具体 Task context 只接受一个有界 assignment，返回 terminal result/failure 后永久结束；旧 `task_id` 不得用于 follow-up、repair、recheck、clarification 或 continuation。同一 `subagent_type` 只有在新的 trigger-and-benefit decision 独立成立时才能通过全新 Task context 再次使用，不能自动重试。19 个 managed profiles 全部保持 non-delegating 和 `external_directory: deny`；只有 ROSE 保留逐 operation 的 external-directory ask，并继续拥有 lifecycle、integration 与最终 verdict。`web-researcher` 的角色不变：它仍只负责外部网页研究，web 能力不授予外部本地目录、mutation 或 delegation 权限。内置 `explore` / `general` 不计入这 19 个 managed profiles。
 
 本仓库已移除这些 agent 文本中对 slash command 的直接引用，保留为 OpenCode 主代理自然语言触发和 MainAgent 编排使用。
 
@@ -164,7 +164,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
 | `harness-optimization-audit` | 只读 report-first harness routing、context cost、subagent parallelism、review fan-out、false PASS 和 evidence-loss 审计；只向 ROSE 返回批准修改或未定位缺口，不自动调用下一流程 |
-| `parallel-subagent-dispatch` | direct-first；仅在用户明确要求、需要 specialist、上下文明显嘈杂或至少两个独立单元有明确收益时使用；默认最多两个并发 lane，每个 Task context 单 assignment、terminal、不可 resume 或自动重试 |
+| `parallel-subagent-dispatch` | proactive trigger scan；用户明确要求、需要 specialist、上下文明显嘈杂或独立单元有明确收益时 prompt dispatch；默认并发 2 但不是硬上限，更大 fan-out 需独立非重叠单元、具体收益、合适 owner 和 join plan；每个 Task context 单 assignment、terminal、不可 resume 或自动重试 |
 | `mature-project-pattern-research` | 仅在用户明确要求 prior art，或 ROSE 指出一个会改变决定的成熟项目证据缺口时，研究一个有界问题并返回来源、模式、风险和不确定性 |
 | `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |

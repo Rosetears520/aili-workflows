@@ -20,7 +20,7 @@ Stop when:
 - `Stop when` names missing permission, conflicting rules, scope expansion, or unavailable evidence.
 - The packet creates one fresh Task context for one bounded assignment. Never pass or resume an old `task_id` for follow-up, clarification, continuation, repair, recheck, or additional work.
 - A terminal, failed, empty, blocked, or partial session is not automatically retried. ROSE handles the bounded gap directly or reports the blocker.
-- The same `subagent_type` may receive a later fresh packet only after a new direct-first benefit decision independently justifies the assignment or changed evidence; the new Task omits every prior `task_id`.
+- The same `subagent_type` may receive a later fresh packet only after a fresh trigger-and-benefit decision independently justifies the assignment or changed evidence; the new Task omits every prior `task_id`.
 - A packet narrows runtime authority; it never grants a tool, path, edit, command, network call, or delegation permission.
 - Every non-ROSE subagent remains non-delegating.
 - ROSE retains lifecycle, approval, integration, reconciliation, and final-verdict ownership.

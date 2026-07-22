@@ -1,6 +1,10 @@
 # Direct vs Delegated Work
 
-Direct ROSE work is the default. Delegation is an optimization or capability boundary, not a mandatory ceremony.
+ROSE retains integration and final-verdict ownership. Delegation is the proactive execution path whenever an existing trigger is met; direct work is the fallback when no trigger applies or delegation is concretely blocked.
+
+## Proactive scan
+
+Run a proactive delegation scan at the start of every non-trivial intent and whenever changed evidence exposes a new work split. Evaluate the triggers before ROSE performs the same evidence gathering or implementation directly. A user request for frequent or aggressive subagent use remains a routing preference across the current intent, but every Task still needs one bounded eligible assignment and current permission.
 
 ## Use Task only when
 
@@ -11,11 +15,12 @@ At least one condition is true:
 - broad search or noisy output would materially pollute the main context;
 - at least two independent units can run concurrently with clear wall-clock or context benefit.
 
-Otherwise ROSE reads, edits, and verifies directly. A non-trivial or multi-file task does not by itself require delegation.
+When any condition is true, dispatch is the default action unless units overlap, have an unresolved dependency, lack permission or ownership, or cost more than their concrete wall-clock/context benefit. Record the reason internally when an eligible-looking task stays direct. Otherwise ROSE reads, edits, and verifies directly. A non-trivial or multi-file task does not by itself require delegation.
 
 ## Dispatch shape
 
-- One current intent has at most one auxiliary capability. That capability may use at most two fresh, independent Task contexts only when concurrency has clear benefit; otherwise use one context or work directly.
+- One current intent has at most one auxiliary capability. Default Task concurrency is at most two, but this is not a hard cap. ROSE may choose a larger bounded fan-out when it can name every independent non-overlapping unit, concrete benefit, specialist owner, and join plan.
+- When multiple independent units are ready, launch them in the same Task message rather than serializing avoidably.
 - Parallel units must have independent inputs and non-overlapping writes.
 - If units overlap or depend on one another, run them sequentially or keep the work direct.
 - Do not automatically add review, test, security, coverage, or convergence lanes.
@@ -26,7 +31,7 @@ Use the compact packet and result contracts in `protocols/subagent-task-packet.m
 
 ## Separate gates
 
-Direct-first routing does not waive lifecycle, branch/status, secrets, high-risk, destructive, dependency, schema, public API, auth/security, external-operation, Git/release, A33, or verification gates. Safe in-scope local reads, edits, diagnostics, and focused checks are not approval events.
+Delegation routing does not waive lifecycle, branch/status, secrets, high-risk, destructive, dependency, schema, public API, auth/security, external-operation, Git/release, A33, or verification gates. Safe in-scope local reads, edits, diagnostics, and focused checks are not approval events.
 
 ## Completion
 

@@ -23,6 +23,10 @@ REQUIRED = {
             "/build",
             "/ship",
             "/local-review",
+            "natural-language-first-class",
+            "slash-not-required",
+            "same-canonical-loop",
+            "ambiguous-mode-one-question",
             "code-scout",
             "implementer",
             "neutral-build",
@@ -81,7 +85,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-eligible", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
         "case_key": "packet_cases",
         "min_cases": 3,
     },
@@ -214,7 +218,7 @@ def validate_fixture(name: str, spec: dict) -> list[str]:
     if name == "verification-claim-fixtures.yaml" and isinstance(cases, list):
         errors.extend(validate_verification_claims(cases, name))
     if name == "subagent-dispatch-fixtures.yaml" and isinstance(cases, list):
-        errors.extend(validate_subagent_dispatch(cases, name))
+        errors.extend(validate_subagent_dispatch(cases, name, data))
     if name in {
         "continuity-memory-handoff-fixtures.yaml",
         "dcp-removal-fixtures.yaml",
@@ -500,7 +504,7 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         if reviewer_case.get("input", {}).get("candidate_lanes") != ["AI-regression", "code-review", "product decision"] or "ROSE/user" not in reviewer_case.get("expected", ""):
             errors.append(f"{name}: AI-vs-product reviewer routing collision differs from the exact contract")
         routing_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "review-ai-regression-vs-test-engineer-routing"), {})
-        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout when a specialist is needed", "ordinary_test_surface": "test-engineer when a specialist is needed", "overlap": "ROSE selects only the concrete missing capability, at most two specialists"}:
+        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout when a specialist is needed", "ordinary_test_surface": "test-engineer when a specialist is needed", "overlap": "ROSE selects only concrete missing capabilities; default concurrency two is not a hard cap and larger fan-out requires independent scopes, suitable owners, concrete benefit, and a join plan"}:
             errors.append(f"{name}: optional AI-regression-scout vs test-engineer routing differs from the lean contract")
         runtime_enforcement = data.get("runtime_enforcement", {})
         expected_policy = "an optional Package 12 or SHIP specialist uses a read-only edit-deny/task-deny overlay only when a concrete gap selects it"
@@ -705,6 +709,64 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         matching = [case for case in cases if isinstance(case, dict) and str(case.get("input", "")).startswith(internal_command)]
         if not matching or any(case.get("trigger") is not False for case in matching):
             errors.append(f"{name}: {internal_command} must remain a covered non-trigger")
+
+    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+    natural_routes = {
+        "natural-ideate-zh": ("IDEATE", "/ideate", "先帮我想几种方案，暂时不要实现"),
+        "natural-define-zh": ("DEFINE", "/define", "把这个需求定义成可实施方案和测试计划，先不要实现"),
+        "natural-build-zh": ("BUILD", "/build", "按已经接受的方案和测试计划开始实现"),
+        "natural-ship-zh": ("SHIP", "/ship", "把已实现的改动收尾并准备交付"),
+        "natural-ideate-en": ("IDEATE", "/ideate", "Explore a few options before we implement anything"),
+        "natural-define-en": ("DEFINE", "/define", "Turn this requirement into an implementation-ready contract and test plan without implementing it"),
+        "natural-build-en": ("BUILD", "/build", "Implement the accepted change and test plan"),
+        "natural-ship-en": ("SHIP", "/ship", "Close out the implemented change for delivery"),
+    }
+    for case_id, (mode, shortcut, exact_input) in natural_routes.items():
+        case = by_id.get(case_id, {})
+        if case.get("entrypoint") != "natural-language" or case.get("expected_mode") != mode or case.get("trigger") is not True:
+            errors.append(f"{name}: {case_id} must be a positive natural-language {mode} route")
+        if case.get("same_contract_as") != shortcut or case.get("slash_required") is not False:
+            errors.append(f"{name}: {case_id} must enter the same {shortcut} contract without slash syntax")
+        if case.get("input") != exact_input or exact_input.lstrip().startswith("/"):
+            errors.append(f"{name}: {case_id} must preserve its exact non-slash semantic input")
+    near_misses = {
+        "natural-explanation-near-miss": "解释 IDEATE 和 DEFINE 的区别",
+        "natural-status-near-miss": "现在 BUILD 到哪一步了",
+        "natural-translation-near-miss": "把 SHIP 翻译成中文",
+    }
+    for case_id, exact_input in near_misses.items():
+        near_miss = by_id.get(case_id, {})
+        if near_miss.get("input") != exact_input or near_miss.get("expected_mode") != "ordinary-chat" or near_miss.get("trigger") is not False or near_miss.get("expected") != "non-trigger":
+            errors.append(f"{name}: {case_id} must remain an exact ordinary natural-language near miss")
+    ambiguous = by_id.get("natural-ambiguous-lifecycle", {})
+    if ambiguous.get("input") != "继续这个改动" or ambiguous.get("expected") != "ambiguous-mode-one-question" or ambiguous.get("trigger") is not False or ambiguous.get("question_count") != 1 or ambiguous.get("mutation") is not False or ambiguous.get("persistence") is not False:
+        errors.append(f"{name}: ambiguous natural-language lifecycle intent must ask exactly one question with zero mutation/persistence")
+    baseline_no_trigger_ids = [
+        "cmd-ideate", "cmd-define", "cmd-build", "cmd-ship",
+        "natural-ideate-zh", "natural-define-zh", "natural-build-zh", "natural-ship-zh",
+        "natural-ideate-en", "natural-define-en", "natural-build-en", "natural-ship-en",
+    ]
+    for case_id in baseline_no_trigger_ids:
+        case = by_id.get(case_id, {})
+        if case.get("delegation_scan") != "required" or case.get("task_trigger_evidence") != [] or case.get("expected_delegation") != []:
+            errors.append(f"{name}: {case_id} must scan and remain direct when no Task trigger exists")
+    neutral_build = by_id.get("cmd-build-neutral-queue", {})
+    if neutral_build.get("delegation_scan") != "required" or not isinstance(neutral_build.get("task_trigger_evidence"), list):
+        errors.append(f"{name}: cmd-build-neutral-queue must run a delegation scan and record conditional lane evidence")
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        expected = case.get("expected_delegation")
+        evidence = case.get("task_trigger_evidence")
+        if isinstance(expected, list) and expected and (not isinstance(evidence, list) or not evidence):
+            errors.append(f"{name}: {case.get('id')} must not expect delegation without Task-trigger evidence")
+    if neutral_build.get("expected_delegation") != "eligible-lanes-only":
+        errors.append(f"{name}: neutral BUILD delegation must remain conditional on eligible lanes")
+    explicit = by_id.get("natural-build-explicit-subagents", {})
+    if explicit.get("input") != "Use subagents to implement two independent accepted packages" or explicit.get("expected_mode") != "BUILD" or explicit.get("same_contract_as") != "/build" or explicit.get("task_trigger_evidence") != ["explicit-user-request", "two-independent-units"] or explicit.get("expected_delegation") != ["implementer", "implementer"] or explicit.get("join_plan") != "required":
+        errors.append(f"{name}: explicit natural-language BUILD subagent request must dispatch two eligible implementer lanes with a join plan")
+    for relative in ["agents/rose.md", "templates/opencode-global-AGENTS.md", ".agents/skills/aili-delivery-flow/SKILL.md"]:
+        errors.extend(require_text_markers(relative, ["first-class lifecycle entr", "do not ask the user to restate"], "natural-language routing"))
     return errors
 
 
@@ -747,8 +809,14 @@ def validate_verification_claims(cases: list, name: str) -> list[str]:
     return errors
 
 
-def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
+def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
     errors: list[str] = []
+    case_ids = [case.get("id") for case in cases if isinstance(case, dict)]
+    trace_ids = [case.get("trace_id") for case in cases if isinstance(case, dict)]
+    if len(case_ids) != len(cases) or len(case_ids) != len(set(case_ids)):
+        errors.append(f"{name}: packet cases must be objects with unique ids")
+    if any(not isinstance(trace_id, str) or not trace_id for trace_id in trace_ids) or len(trace_ids) != len(set(trace_ids)):
+        errors.append(f"{name}: packet trace_ids must be present and unique")
     goal_packets = [case for case in cases if isinstance(case, dict) and case.get("id") == "packet-build-neutral-package"]
     if not goal_packets:
         return [f"{name}: missing packet-build-neutral-package case"]
@@ -808,6 +876,122 @@ def validate_subagent_dispatch(cases: list, name: str) -> list[str]:
         conflict = conflict_packets[0]
         errors.extend(require_checks(conflict, "parallelism_analysis", ["shared scaffold/source-of-truth work", "no-parallel reason", "shared mutable state", "later fan-out after join"], name, "packet-shared-edit-conflict"))
         errors.extend(require_checks(conflict, "forbidden_scope", ["parallel edits to same file"], name, "packet-shared-edit-conflict"))
+        if conflict.get("expected") != "reject-parallel-shared-edit":
+            errors.append(f"{name}: shared-edit conflict must reject parallel execution")
+
+    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+    proactive = by_id.get("packet-proactive-eligible", {})
+    if proactive.get("scan") != "proactive-delegation-scan" or proactive.get("expected") != "dispatch-when-eligible" or proactive.get("timing") != "before duplicate direct work":
+        errors.append(f"{name}: eligible work must dispatch from the proactive scan before duplicate direct work")
+    expected_trigger_cases = {
+        "packet-trigger-explicit-request": "explicit-user-request",
+        "packet-trigger-specialist": "required-specialist-capability",
+        "packet-trigger-noisy-context": "materially-noisy-context",
+    }
+    for case_id, trigger in expected_trigger_cases.items():
+        case = by_id.get(case_id, {})
+        if case.get("existing_trigger") != trigger or case.get("expected") != "dispatch-when-eligible":
+            errors.append(f"{name}: {case_id} must cover the exact {trigger} dispatch trigger")
+    fanout = by_id.get("packet-model-selected-fanout", {})
+    if fanout.get("default_policy") != "default-two-not-hard-cap" or fanout.get("hard_cap", "missing") is not None:
+        errors.append(f"{name}: concurrency must default to two without a hard cap")
+    allowed_owners = {path.stem for path in (ROOT / "agents").glob("*.md")} - {"rose"}
+    allowed_owners.update({"explore", "general"})
+
+    def scope_parts(value: object) -> tuple[str, ...] | None:
+        if not isinstance(value, str) or not value:
+            return None
+        path = Path(value)
+        if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+            return None
+        return path.parts
+
+    def scopes_overlap(values: list[str]) -> bool:
+        parts = [scope_parts(value) for value in values]
+        if any(value is None for value in parts):
+            return True
+        concrete = [value for value in parts if value is not None]
+        return any(
+            left == right[:len(left)] or right == left[:len(right)]
+            for index, left in enumerate(concrete)
+            for right in concrete[index + 1:]
+        )
+
+    units = fanout.get("eligible_units")
+    valid_units = isinstance(units, list) and len(units) > 2 and all(
+        isinstance(unit, dict)
+        and list(unit) == ["id", "scope", "owner"]
+        and all(isinstance(unit.get(field), str) and unit.get(field) for field in ("id", "scope", "owner"))
+        and unit.get("owner") in allowed_owners
+        and scope_parts(unit.get("scope")) is not None
+        for unit in units
+    )
+    unit_ids = [unit["id"] for unit in units] if valid_units else []
+    unit_scopes = [unit["scope"] for unit in units] if valid_units else []
+    if not valid_units or len(unit_ids) != len(set(unit_ids)) or len(unit_scopes) != len(set(unit_scopes)) or scopes_overlap(unit_scopes):
+        errors.append(f"{name}: larger fan-out units must have unique non-overlapping scopes and available owners")
+    if fanout.get("selected_concurrency") != len(unit_ids) or any(fanout.get(field) is not True for field in ("independent", "non_overlapping", "clear_benefit", "owners_available")):
+        errors.append(f"{name}: selected fan-out must equal eligible independent non-overlapping beneficial owned units")
+    join_plan = fanout.get("join_plan")
+    valid_join = isinstance(join_plan, dict) and list(join_plan) == ["id", "owner", "inputs", "expected"] and join_plan.get("id") == "join-plan" and join_plan.get("owner") == "ROSE" and join_plan.get("inputs") == unit_ids and join_plan.get("expected") == "integrated evidence"
+    if fanout.get("selection") != "model-selected-bounded-fan-out" or fanout.get("dispatch_shape") != "same-message-parallel" or not valid_join:
+        errors.append(f"{name}: larger fan-out must be model-selected, same-message, and join-planned")
+    overlap_case = by_id.get("packet-overlap-rejected", {})
+    overlap_units = overlap_case.get("eligible_units")
+    overlap_scopes = [unit.get("scope") for unit in overlap_units if isinstance(unit, dict)] if isinstance(overlap_units, list) else []
+    if overlap_case.get("expected") != "reject-overlapping-scopes" or not scopes_overlap(overlap_scopes):
+        errors.append(f"{name}: ancestor/descendant scope overlap must have an executable rejection case")
+    owner_case = by_id.get("packet-unavailable-owner-rejected", {})
+    owner_units = owner_case.get("eligible_units")
+    unavailable = [unit.get("owner") for unit in owner_units if isinstance(unit, dict) and unit.get("owner") not in allowed_owners] if isinstance(owner_units, list) else []
+    if owner_case.get("expected") != "reject-unavailable-owner" or not unavailable:
+        errors.append(f"{name}: unavailable owner must have an executable rejection case")
+    reevaluation = by_id.get("packet-stage-reevaluation", {})
+    if reevaluation.get("expected") != "rerun-proactive-delegation-scan" or reevaluation.get("old_task_id_reused") is not False:
+        errors.append(f"{name}: changed evidence must rerun the scan without task_id reuse")
+    preference = by_id.get("packet-user-aggressive-preference", {})
+    if preference.get("expected") != "re-evaluate-and-dispatch-each-eligible-stage" or preference.get("permission_gates_preserved") is not True:
+        errors.append(f"{name}: aggressive user preference must increase eligible dispatch without weakening permission gates")
+    direct = by_id.get("packet-ineligible-direct", {})
+    if direct.get("eligible_trigger") is not False or direct.get("reason_required") is not True or direct.get("reason") not in {"no-existing-task-trigger", "overlap", "unresolved-dependency", "permission-or-ownership-block", "negative-benefit"}:
+        errors.append(f"{name}: ineligible direct work must retain a concrete no-dispatch reason")
+    for relative in ["agents/rose.md", ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md", ".agents/skills/parallel-subagent-dispatch/SKILL.md"]:
+        errors.extend(require_text_markers(relative, ["proactive delegation scan", "not a hard cap", "join plan"], "proactive delegation"))
+
+    result_cases = data.get("result_cases")
+    if not isinstance(result_cases, list):
+        return [*errors, f"{name}: result_cases must be a list"]
+    result_ids = [case.get("id") for case in result_cases if isinstance(case, dict)]
+    required_result_ids = {
+        "result-pass", "final-review-subagent-non-nesting", "final-review-test-engineer-edit-denied",
+        "result-old-task-followup-rejected", "result-partial-no-auto-retry", "result-subagent-final-verdict-rejected",
+    }
+    if len(result_ids) != len(result_cases) or set(result_ids) != required_result_ids or len(result_ids) != len(set(result_ids)):
+        errors.append(f"{name}: result cases must equal the six required unique safety cases")
+    results = {case.get("id"): case for case in result_cases if isinstance(case, dict)}
+    statuses = {"completed", "partial", "blocked", "unverified"}
+    confidences = {"HIGH", "MED", "LOW", "VERY LOW", "UNKNOWN"}
+    for result_id, result in results.items():
+        if result.get("status") not in statuses or result.get("confidence") not in confidences:
+            errors.append(f"{name}: {result_id} must use canonical status and confidence enums")
+    valid_result = results.get("result-pass", {})
+    if valid_result.get("status") != "completed" or valid_result.get("confidence") != "HIGH" or not valid_result.get("evidence_anchors") or not valid_result.get("inspected_scope") or not valid_result.get("checks") or valid_result.get("freshness") != "fresh" or valid_result.get("skipped_checks") != [] or valid_result.get("blockers") != [] or valid_result.get("unverified") != [] or valid_result.get("findings") != [] or "final_verdict" not in valid_result or valid_result.get("final_verdict") is not None:
+        errors.append(f"{name}: valid result must use canonical completed/HIGH evidence fields without a final verdict")
+    non_nesting = results.get("final-review-subagent-non-nesting", {})
+    if non_nesting.get("subagent_calls") != 0 or non_nesting.get("returns_to") != "ROSE" or non_nesting.get("majority_vote") is not False or non_nesting.get("overlay") != {"edit": "deny", "task": "deny"}:
+        errors.append(f"{name}: final-review result must remain non-nesting and return to ROSE")
+    denied_edit = results.get("final-review-test-engineer-edit-denied", {})
+    if denied_edit.get("status") != "blocked" or denied_edit.get("overlay") != {"edit": "deny", "task": "deny"}:
+        errors.append(f"{name}: read-only test lane mutation must be denied")
+    old_task = results.get("result-old-task-followup-rejected", {})
+    if old_task.get("old_task_id_supplied") is not True or old_task.get("expected") != "reject-old-task-id":
+        errors.append(f"{name}: old task_id follow-up must be rejected")
+    partial = results.get("result-partial-no-auto-retry", {})
+    if partial.get("status") != "partial" or partial.get("automatic_fresh_retry") is not False or partial.get("expected") != "return-gap-to-ROSE":
+        errors.append(f"{name}: partial result must not trigger an automatic fresh retry")
+    final_verdict = results.get("result-subagent-final-verdict-rejected", {})
+    if final_verdict.get("status") != "blocked" or final_verdict.get("attempted_verdict") != "PASS" or final_verdict.get("expected") != "return-to-ROSE-no-final-verdict":
+        errors.append(f"{name}: subagent final verdict attempts must return to ROSE")
 
     return errors
 
@@ -1073,15 +1257,18 @@ def validate_local_review_gate_contracts() -> list[str]:
             "ROSE owns the verdict",
         ],
         ".agents/skills/review-pipeline/SKILL.md": [
-            "Direct ROSE diff inspection",
+            "proactive delegation scan",
             "Choose at most one auxiliary specialist capability",
-            "at most two independent contexts only when both units have a clear benefit",
+            "Default concurrency is at most two but is not a hard cap",
+            "suitable owners",
+            "explicit join plan",
             "one targeted recheck",
             "Never creates an automatic review swarm",
         ],
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
-            "Direct ROSE work is the default",
+            "proactive delegation scan",
             "Default to at most two concurrent subagents",
+            "not a hard cap",
             "## Canonical packet protocol",
             ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
             "## Canonical result protocol",
@@ -1096,8 +1283,9 @@ def validate_local_review_gate_contracts() -> list[str]:
         ],
         "agents/rose.md": [
             '"convergence-reviewer": allow',
-            "Prefer direct work",
+            "Run a proactive delegation scan",
             "Default concurrency is at most two",
+            "not a hard cap",
         ],
         ".agents/skills/aili-delivery-flow/SKILL.md": [
             "Only four top-level delivery commands are valid",
@@ -1354,8 +1542,9 @@ def validate_package5_loop_fixtures() -> list[str]:
     if package_gate_case.get("mandatory_quality_gate") is not False or package_gate_case.get("generic_template") is not False or package_gate_case.get("change") != "complete-aili-workflow-orchestration":
         errors.append("command-routing-fixtures.yaml: DEF-E2 compatibility must forbid per-package mandatory gates")
     final_case = by_id.get("def-e9-lean-final-inspection", {})
-    if final_case.get("change") != "complete-aili-workflow-orchestration" or final_case.get("generic_template") is not False or final_case.get("task_coverage") != "applicable-current-scope" or final_case.get("automatic_review_swarm") is not False or final_case.get("specialist_limit") != 2 or final_case.get("targeted_recheck_limit") != 1:
-        errors.append("command-routing-fixtures.yaml: DEF-E9 final inspection must be direct-first with at most two specialists and one targeted recheck")
+    expected_fanout_requirements = ["independent non-overlapping units", "concrete benefit", "suitable owners", "explicit join plan"]
+    if final_case.get("change") != "complete-aili-workflow-orchestration" or final_case.get("generic_template") is not False or final_case.get("task_coverage") != "applicable-current-scope" or final_case.get("automatic_review_swarm") is not False or final_case.get("default_concurrency") != 2 or final_case.get("hard_cap", "missing") is not None or final_case.get("larger_fanout_requires") != expected_fanout_requirements or "specialist_limit" in final_case or final_case.get("targeted_recheck_limit") != 1:
+        errors.append("command-routing-fixtures.yaml: DEF-E9 final inspection must use default-two uncapped eligible fan-out without an automatic swarm and retain one targeted recheck")
     over_limit = by_id.get("budget-consumed-over-limit-terminal", {})
     if over_limit.get("counter") != {"limit": 3, "consumed": 4, "remaining": 0} or over_limit.get("stop_reason") != "budget-exhausted" or over_limit.get("outcome") != "budget-exhausted" or over_limit.get("resume") != "blocked":
         errors.append("command-routing-fixtures.yaml: consumed>limit must preserve consumed, clamp remaining, and remain terminal")
@@ -1526,7 +1715,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         ],
         "agents/rose.md": [
             "Deliver the complete accepted scope",
-            "Prefer direct work",
+            "Run a proactive delegation scan",
             "run the smallest fresh check that supports the exact claim",
         ],
         "templates/opencode-global-AGENTS.md": [

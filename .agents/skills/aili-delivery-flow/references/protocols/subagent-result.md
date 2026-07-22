@@ -52,7 +52,7 @@ P6 compatibility markers remain aliases, not a second envelope: `STATUS: complet
 - Do not issue the final PASS, acceptance, release, or integration decision.
 - Never resume the result's old `task_id` for follow-up, clarification, continuation, repair, recheck, or additional work.
 - A failed, empty, blocked, or partial result does not authorize an automatic fresh-session retry. ROSE handles the bounded gap directly or reports the blocker.
-- A later use of the same `subagent_type` is allowed only through a fresh Task with no prior `task_id` after a new direct-first benefit decision independently justifies changed evidence or a new assignment.
+- A later use of the same `subagent_type` is allowed only through a fresh Task with no prior `task_id` after a fresh trigger-and-benefit decision independently justifies changed evidence or a new assignment.
 - No result grants permission for another operation, external access, Git integration, cleanup, lifecycle transition, approval, integration decision, or nested delegation; ROSE owns reconciliation and the final verdict.
 - An A33 result references the same one current WT-001 context as its task and names exactly one packet-declared repository/cwd, the applicable target-rules reference, and an owning-repository artifact destination. It records the shared-trust soft-boundary limitation and performs no broad host scan.
 - The repository/cwd fields repeat only the packet's ownership declaration; they do not create identity or command authority. The result never duplicates or rebinds roots, keys, identity, Git state, approvals, operation class/risk, deltas, rule bodies, verification command/cwd, or containment facts.

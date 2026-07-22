@@ -26,7 +26,7 @@ ROSE/`aili-delivery-flow` owns lifecycle state, approvals, repairs, verification
 
 1. Name the unresolved review question.
 2. Resolve one repository/cwd and applicable target rules. For A33, reference one current `WT-001` context, keep artifacts in the owning repository, disclose the shared-trust soft boundary, and do not scan the host broadly.
-3. Choose at most one auxiliary specialist capability; it may use at most two independent contexts only when both units have a clear benefit.
+3. Choose at most one auxiliary specialist capability after the proactive delegation scan. Dispatch when its Task trigger is met. Default concurrency is at most two but is not a hard cap; larger bounded fan-out requires independent non-overlapping contexts, concrete benefit, suitable owners, and an explicit join plan.
 4. Send the compact packet from `subagent-task-packet.md` and require the canonical result/finding envelope in `subagent-result.md`.
 5. Inspect their evidence and resolve only the named question without voting.
 6. If a blocking issue is fixed, run one targeted recheck. Stop after that and report any remaining blocker.

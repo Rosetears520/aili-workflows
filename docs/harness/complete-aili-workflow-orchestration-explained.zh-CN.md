@@ -393,7 +393,7 @@
 | A30 外部只读正例 | [已知] 应通过 ROSE Task 对批准路径完成一次只读访问。 | [未验证] 当前没有 rollout-eligible provider-backed exit `0`。 |
 | Graphify 官方真实安装 | [已知] `uv tool install graphifyy` 与 `graphify install --platform agents` 需要两个不同 fresh exact approvals，并分别验证 CLI 与全局 skill/catalog/`.opencode` delta。 | [未验证] 当前没有两个操作的成功证据。 |
 | 上游引用分发安全 | [已知] 安装 catalog 必须证明引用不会成为 runnable skill，archive mode 必须正确。 | [未验证] catalog 输出与 DrvFS mode 仍阻塞。 |
-| A30 后完整 Package 12 | [已知] 这是原伞形变更的历史要求，已被后续 direct-first、claim-matched 最小检查规则取代。 | [未验证] 历史矩阵未重跑不构成当前通用 completion gate。 |
+| A30 后完整 Package 12 | [已知] 这是原伞形变更的历史要求，已被后续 proactive trigger scan、claim-matched 最小检查规则取代；无 Task trigger 时才 direct fallback。 | [未验证] 历史矩阵未重跑不构成当前通用 completion gate。 |
 | `/ship` readiness | [已知] 需要所有阻塞 gate 和重要 finding 解决，并有新鲜证据。 | [未验证] 当前明确不满足。 |
 
 ### 明确没有实现或已推迟

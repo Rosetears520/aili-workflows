@@ -14,7 +14,7 @@ Backend adapters store and organize work; they do not weaken lifecycle gates.
 - Formal DEFINE stops before BUILD until applicable material questions are resolved, required artifacts are coherent/validated, and the final `test-plan.md` is explicitly accepted. `Unverified` does not substitute for a material decision.
 - OpenSpec DEFINE uses deterministic placement under `openspec/changes/<change-id>/`; non-OpenSpec DEFINE asks once where to place interview and test-plan artifacts and records that decision in the active change context.
 - BUILD follows approved packages and forbidden scope.
-- SHIP uses the same direct-first, affected-claim verification owner regardless of backend; review/repair is selected only for a concrete gap.
+- SHIP uses the same proactive trigger scan and affected-claim verification owner regardless of backend; an eligible review/repair gap dispatches promptly, and direct inspection is the no-trigger/blocked fallback.
 
 ## OpenSpec Direct-Adapter Boundary
 

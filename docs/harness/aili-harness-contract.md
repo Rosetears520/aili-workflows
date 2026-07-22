@@ -7,8 +7,8 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Roles
 
 - **ROSE runtime charter**: final responsibility, instruction precedence, safety, git, memory, subagent, and completion-claim gates.
-- **Commands**: thin user entrypoints for `/ideate`, `/define`, `/build`, and `/ship` delivery modes, plus `/local-review` as a standalone local audit command that does not replace SHIP or OpenCode's `/review`.
-- **Delivery flow skill**: one semantic router/control plane for command and natural-language lifecycle/ordinary loops, approvals, directed hydration, and verification ownership.
+- **Commands**: optional thin shortcut entrypoints for `/ideate`, `/define`, `/build`, and `/ship` delivery modes, plus `/local-review` as a standalone local audit command that does not replace SHIP or OpenCode's `/review`.
+- **Delivery flow skill**: one semantic router/control plane for first-class natural-language and shortcut lifecycle/ordinary loops, approvals, directed hydration, proactive delegation scans, and verification ownership.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
 - **Protocols**: reusable artifact and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/protocols/` in this repository.
@@ -16,14 +16,21 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 - **Source classes**: canonical AILI source is distinct from generated/installed adapters, inert upstream references, and upstream runtime behavior.
 - **Managed role inventory**: exactly primary ROSE plus 19 repository-managed subagents. All 19 managed profiles retain `external_directory: deny`; ROSE alone retains per-operation ask. `web-researcher` remains the web-only external-research role and gains no external local-directory, mutation, or delegation authority.
 
+## Natural-Language and Delegation Routing
+
+- Treat unambiguous natural-language IDEATE, DEFINE, BUILD, and SHIP requests as first-class entries to the same canonical loops. Never require slash syntax; ask one focused mode/target question only for genuine ambiguity.
+- Run a proactive delegation scan at the start of each non-trivial intent and whenever changed evidence exposes a new work split. When an existing Task trigger is met, dispatch before duplicating that assignment directly unless overlap, dependency, permission, ownership, or negative-benefit evidence blocks delegation.
+- Default concurrency is at most two but is not a hard cap. ROSE chooses any larger bounded fan-out from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; ready lanes launch together rather than being avoidably serialized.
+- Preserve fresh single-use Task contexts, no `task_id` reuse, no nested delegation, no automatic retry, no permission broadening, and no unconditional review/test/security swarm. ROSE remains the integration and final-verdict owner.
+
 ## Lifecycle Gates
 
 | Mode | Purpose | Stop rule |
 |---|---|---|
-| IDEATE | Explore unclear ideas and options directly; use at most one evidence capability for a concrete gap | No production implementation. |
+| IDEATE | Run the delegation scan, then explore unclear ideas and options; work directly only when no Task trigger is met or delegation is concretely blocked | No production implementation. |
 | DEFINE | Produce only dependency-ready spec/question/test artifacts; `requirements-grilling` and `test-document-generator` are bounded artifact adapters and do not auto-chain | Stop before BUILD until exact material/evidence blockers are resolved, required artifacts are coherent/valid, and the user accepts one final test plan. |
 | BUILD | Derive the accepted queue from the active contract, execute each implementation package with progress-ledger savepoints, then run one minimal changed-scope completion check | No automatic package test/commit/approval; success records `IMPLEMENTED_TARGETED_VERIFIED` and stops before SHIP. This umbrella alone names Packages 1–11 plus Package 12. |
-| SHIP | Reuse still-covering BUILD evidence and refresh only evidence required by the affected closeout claim | Fresh explicit SHIP intent is required; direct inspection is default, no broad matrix/lane fanout exists without a concrete gap, and CI failure returns without automatic repair/Git action. |
+| SHIP | Reuse still-covering BUILD evidence, run the delegation scan, and refresh only evidence required by the affected closeout claim | Fresh explicit SHIP intent is required; direct inspection is the no-trigger/blocked fallback, no broad matrix/lane fanout exists without a concrete gap, and CI failure returns without automatic repair/Git action. |
 | LOCAL_REVIEW | Resolve local changes, base branch, commit, PR, or OpenSpec change target and produce a categorized local review report before optional repair | Do not override OpenCode's `/review`, do not mutate remote state, do not repair before a categorized report and explicit approval, and do not claim release or archive readiness. |
 
 ## Artifact Authority

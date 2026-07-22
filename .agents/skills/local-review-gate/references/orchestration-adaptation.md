@@ -10,7 +10,7 @@
 | Source blobs | `5216c7df157a9099214c122bc096e9693730ac77`, `b50912b1f0900ed34935228d973dd92902b97342`, `167a9b559e54b2caa4ad0700635cf5c9b1a367d9`, `95cc95d831d65779d86203f446b043cbee0af66a`, `fc1c402d985f46baf31cacf465d1db2f6c0ce3da`, `5458945c22a20eaa43eb332f53db7a7da1d2a408` |
 | License | MIT License, Copyright 2026 Affaan Mustafa |
 | Copy/adapt scope | Adapted evidence reconciliation, fail-closed missing-evidence handling, dedupe, and adversarial finding checks; upstream fan-out and phase machinery are not active defaults. |
-| Rationale | Selected ECC evidence patterns strengthen direct-first ROSE review without creating automatic lane dispatch or a broader command surface. |
+| Rationale | Selected ECC evidence patterns strengthen proactive trigger-gated ROSE review without creating untriggered automatic lane dispatch or a broader command surface. |
 
 ## Secondary provenance
 

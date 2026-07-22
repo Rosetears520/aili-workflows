@@ -1,11 +1,11 @@
 ---
 name: aili-delivery-flow
-description: Run the AILI delivery lifecycle for /ideate, /define, /build, and /ship; use for idea shaping, spec/test definition, bounded BUILD package queues, review-repair closeout, or backend routing without exposing internal stage commands.
+description: Run the AILI delivery lifecycle from natural-language IDEATE, DEFINE, BUILD, and SHIP intent or the equivalent slash shortcuts; use for idea shaping, spec/test definition, bounded BUILD package queues, review-repair closeout, or backend routing without exposing internal stage commands.
 ---
 
 # AILI Delivery Flow
 
-This is the canonical lifecycle/router authority for IDEATE, DEFINE, BUILD, and SHIP. Equivalent natural-language intent and command shortcuts enter the same state, gates, progress, stop conditions, and verification owner.
+This is the canonical lifecycle/router authority for IDEATE, DEFINE, BUILD, and SHIP. Equivalent natural-language intent and command shortcuts enter the same state, gates, progress, stop conditions, and verification owner. Natural language is a first-class lifecycle entry, not a request to make the user type a slash command.
 
 ## References
 
@@ -26,13 +26,26 @@ This is the canonical lifecycle/router authority for IDEATE, DEFINE, BUILD, and 
 
 For each current user intent, ROSE selects:
 
-1. command intent when present, otherwise equivalent natural-language intent;
+1. lifecycle intent expressed by natural language or a slash shortcut, with neither form receiving extra authority;
 2. ordinary or formal/material handling;
 3. one primary process/domain/artifact loop;
 4. zero or one auxiliary capability only for a named gap the primary loop cannot cover directly;
 5. one terminal outcome: `complete`, `need-user`, `need-evidence`, `material-delta`, `blocked`, or `Unverified`.
 
 Explicit user intent wins, followed by the narrowest artifact/domain owner, then the lifecycle loop. A skill match is a route into this state, not a second workflow. Skills must not invoke another process skill, recurse, change phase, create another ledger/approval system, or automatically add planning, research, TDD, review, test, security, coverage, or convergence work.
+
+Treat unambiguous natural-language requests as first-class lifecycle entries; do not ask the user to restate a slash command. Classify by the requested outcome rather than one keyword. Examples include:
+
+- IDEATE: “先帮我想几种方案，暂时不要实现” or “explore options before we build”.
+- DEFINE: “把这个需求定义成可实施方案和测试计划，先不要实现” or “write the implementation-ready contract”.
+- BUILD: “按已经接受的方案和测试计划开始实现” or “implement the accepted change”.
+- SHIP: “把已实现的改动收尾并准备交付” or “close out the implemented change”.
+
+Explanation, comparison, translation, or status questions about these mode names remain ordinary near misses. When outcome, target, or current gate is genuinely ambiguous, ask one focused mode/target question rather than requiring command syntax.
+
+### Proactive delegation scan
+
+At the start of each non-trivial intent and whenever changed evidence creates a new work split, evaluate the Task triggers in `references/direct-vs-delegated-work.md`. If any trigger is met, dispatch before doing the same work directly. If multiple independent units are ready, launch them in the same Task message instead of serializing them. Default concurrency is at most two, but it is not a hard cap; ROSE chooses a larger bounded fan-out only from the number of independent non-overlapping units, concrete wall-clock/context benefit, available specialist roles, and an explicit join plan. Every Task remains fresh, single-use, non-nesting, permission-bounded, and subject to independent benefit evidence.
 
 Near misses stay direct: lifecycle words used for explanation/status, code that merely has tests, multi-file work without a planning need, and completion wording without a concrete review or evidence gap do not activate extra skills. An existing official Graphify graph may supply one scoped architecture-orientation result; exact-current symbols, source, call paths, tests, and impact stay with CodeGraph or current files, and no lifecycle phase installs, registers, or runs Graphify automatically.
 
@@ -70,10 +83,10 @@ Re-read every written file once before using it as durable evidence. A relevant 
 
 ### Mode rules
 
-1. **IDEATE:** explore and compare; do not edit production code. A material formal outcome routes to DEFINE, while ordinary brainstorming remains chat/optional approved idea placement.
+1. **IDEATE:** run the proactive delegation scan, then explore and compare; do not edit production code. Direct chat is the fallback only when no Task trigger is met or delegation is concretely blocked. A material formal outcome routes to DEFINE, while ordinary brainstorming remains chat/optional approved idea placement.
 2. **DEFINE:** resolve one change identity; follow current backend dependency order; write only applicable artifacts. `requirements-grilling` owns `interview.md`; `test-document-generator` owns `test-plan.md`. Use the smallest decision-changing question/evidence lookup by default. An explicitly user-invoked Frontier Batch Mode may submit one bounded packet containing the complete current dependency-ready frontier of material product/requirements decisions only after identity, placement, permission, approval, and exact-operation questions are resolved separately; never infer batch mode from blocker count. Final `test-plan.md` acceptance remains the sole lifecycle-level pre-BUILD user gate, separate from material, validation, permission, and exact operation gates.
 3. **BUILD:** require explicit implementation intent and current formal readiness. Derive a dependency-ordered queue from the accepted contract, implement complete scoped packages, and record lightweight savepoints without package approvals or automatic tests/reviews. `BUILD_MATERIAL_DISCOVERY` stops affected work before a change to scope, architecture, dependency, public contract, permission, acceptance, or verification strategy and returns it to DEFINE. Acceptance alone executes nothing.
-4. **SHIP:** require fresh explicit closeout intent plus current implementation evidence. Reuse still-covering BUILD evidence; refresh only affected rows. Direct inspection is default; review/repair/packaging/release capabilities run only for the exact closeout gap.
+4. **SHIP:** require fresh explicit closeout intent plus current implementation evidence. Reuse still-covering BUILD evidence; refresh only affected rows. Run the proactive delegation scan; direct inspection is the fallback when no Task trigger is met or delegation is concretely blocked. Review/repair/packaging/release capabilities run only for the exact closeout gap.
 
 ### Verification owner
 

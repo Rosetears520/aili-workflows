@@ -28,7 +28,7 @@ Before copying or adapting upstream review material, read `references/upstream-p
 
 - `references/ecc-code-review-adaptation.md`: local/PR target selection, full-file review, validation, report artifact, verdict mapping, and read-only PR-mode boundaries.
 - `references/review-repair-lane-adaptation.md`: ECC-derived review/repair lane triggers, build-fix loop discipline, and separate repair ownership.
-- `references/orchestration-adaptation.md`: bounded capability selection, blocking/advisory split, evidence reconciliation, and main-agent-only integration/verdict rules; upstream fan-out language is non-authoritative where it conflicts with direct-first routing.
+- `references/orchestration-adaptation.md`: bounded capability selection, blocking/advisory split, evidence reconciliation, and main-agent-only integration/verdict rules; upstream fan-out language is non-authoritative where it conflicts with trigger-gated routing.
 - `references/addyosmani-code-review-rubric.md`: five-axis review rubric, `Critical`/`Important`/`Suggestion`, spec/task-first reading, concrete fixes, and uncertainty/proof gates.
 - `references/codex-github-compatibility.md`: behavior-only Codex/GitHub compatibility for AGENTS rules, PR focus instructions, high-priority findings, and local review/fix parity without cloud mutation.
 - `references/graphify-local-review.md`: existing-output-only adapter for optional architecture context from the official global Graphify skill. This gate neither owns nor launches Graphify and adds no install, registration, project execution, hook/plugin, scheduler, lifecycle gate, or completion authority.
@@ -118,7 +118,7 @@ For large or harness-sensitive `/local-review --change <id|path>` targets, `NEED
 
 ## Review Capability Selection
 
-Select one primary direct review question. Add at most one auxiliary capability only when a concrete evidence gap cannot be covered directly; that capability may use at most two fresh independent read-only contexts when concurrency has a clear benefit. Do not run a review/test/security/coverage/convergence set by default.
+Select one primary review question and run the proactive delegation scan. Add at most one auxiliary capability when the user requests it or a concrete evidence gap triggers it; direct review is the no-trigger/blocked fallback. Default concurrency is at most two but is not a hard cap. Larger bounded read-only fan-out requires independent non-overlapping contexts, concrete benefit, suitable owners, and an explicit join plan. Do not run a review/test/security/coverage/convergence set without trigger evidence.
 
 - target/context lane: target identity, diff/base/PR/change scope, dirty paths, and report placement;
 - `code-reviewer`: correctness, maintainability, architecture, performance, and context adequacy;

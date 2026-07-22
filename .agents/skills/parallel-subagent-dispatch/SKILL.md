@@ -1,6 +1,6 @@
 ---
 name: parallel-subagent-dispatch
-description: Use when the user explicitly requests subagents, a specialist capability is required, repository exploration would materially pollute context, or at least two independent work units have a clear wall-clock or context benefit. Direct ROSE work is the default.
+description: Proactively dispatch fresh subagents when the user requests them, a specialist capability is required, repository exploration would materially pollute context, or independent work units have clear wall-clock or context benefit; use direct ROSE work only when no trigger applies or delegation is concretely blocked.
 license: MIT
 compatibility: opencode
 ---
@@ -9,7 +9,7 @@ compatibility: opencode
 
 ## Goal
 
-Work directly by default. When delegation has a concrete benefit, use the smallest fresh, single-use Task shape without turning ordinary work into orchestration overhead.
+Dispatch early when an existing trigger is met, using fresh single-use Task contexts without turning ordinary work into orchestration overhead. ROSE retains integration and final-verdict ownership.
 
 ## Trigger
 
@@ -20,13 +20,14 @@ Use Task only when at least one condition is true:
 - broad search or noisy output would materially pollute ROSE context;
 - at least two independent units can run concurrently with clear benefit.
 
-Otherwise work directly. Do not delegate a single straightforward task merely because a subagent exists.
+Run this proactive delegation scan at the start of each non-trivial intent and again when changed evidence creates a new work split. When any trigger is true, dispatch before duplicating the assignment directly unless overlap, dependency, permission, ownership, or negative-benefit evidence blocks it. Otherwise work directly. Do not delegate a single straightforward task merely because a subagent exists.
 
 Every actual Task invocation must pass this benefit decision independently. A prior failure, partial result, empty result, or desire to continue is not by itself a reason to dispatch another Task.
 
 ## Parallelism
 
-- Default to at most two concurrent subagents.
+- Default to at most two concurrent subagents; this is not a hard cap. ROSE may select a larger bounded fan-out when every lane is independent and non-overlapping, has concrete benefit and a suitable owner, and participates in an explicit join plan.
+- Launch ready independent lanes together in the same Task message instead of serializing them.
 - Parallel units must not edit the same files or depend on each other's output.
 - If work overlaps or has a dependency, run it sequentially or keep it direct.
 - Do not automatically add review, test, security, or coverage agents after implementation.
@@ -36,7 +37,7 @@ Every actual Task invocation must pass this benefit decision independently. A pr
 - Each Task context receives one bounded assignment and ends permanently with one terminal result or failure.
 - Never resume an old `task_id` for follow-up, clarification, continuation, repair, recheck, or additional work.
 - Do not automatically retry in a fresh session after a failed, empty, blocked, or partial result; ROSE handles the bounded gap directly or reports the blocker.
-- The same `subagent_type` may be selected later only in a fresh Task invocation with no prior `task_id`, after a new direct-first benefit decision for an independently justified assignment or changed evidence.
+- The same `subagent_type` may be selected later only in a fresh Task invocation with no prior `task_id`, after a fresh trigger-and-benefit decision for an independently justified assignment or changed evidence.
 - Subagents never nest or delegate. ROSE retains lifecycle, approval, integration, reconciliation, and final-verdict ownership.
 
 ## Canonical packet protocol

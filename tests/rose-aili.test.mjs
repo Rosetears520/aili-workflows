@@ -1599,7 +1599,8 @@ test("manifest registers specialized QA agents and skills", async () => {
   }
 
   assert.ok(reviewPipelineText.includes("Choose at most one auxiliary specialist capability"));
-  assert.ok(reviewPipelineText.includes("at most two independent contexts only when both units have a clear benefit"));
+  assert.ok(reviewPipelineText.includes("Default concurrency is at most two but is not a hard cap"));
+  assert.ok(reviewPipelineText.includes("larger bounded fan-out requires independent non-overlapping contexts, concrete benefit, suitable owners, and an explicit join plan"));
   assert.ok(reviewPipelineText.includes("Do not automatically fan out"));
 
   for (const { agent, skill: name, nearMiss } of SPECIALIZED_QA_LANES) {

@@ -36,9 +36,9 @@ Ordinary one-turn/report-only work that neither opens nor uses memory and has no
 
 ## Optional Capability Gates
 
-Direct ROSE work is the default across commands and natural-language routes. Do not create a parallelism report, ownership table, research chain, or stress-test merely because work has multiple steps, files, artifacts, or packages.
+Run the proactive delegation scan across commands and natural-language routes. When an existing Task trigger is met, dispatch before duplicating that assignment directly; direct work is the fallback when no trigger is met or delegation is concretely blocked. Do not create a parallelism report, ownership table, research chain, or stress-test merely because work has multiple steps, files, artifacts, or packages.
 
-- Consider concurrent tools or Task only when actual independent units have clear wall-clock/context benefit or a concrete capability gap. One auxiliary capability may use at most two independent contexts; otherwise work directly without user-facing ceremony.
+- Dispatch concurrent tools or Task when actual independent units have clear wall-clock/context benefit or a concrete capability gap. One auxiliary capability defaults to at most two contexts, but this is not a hard cap; ROSE chooses any larger bounded fan-out only for independent non-overlapping units with concrete benefit, suitable owners, and an explicit join plan. Otherwise work directly without user-facing ceremony.
 - Look up only the missing source class capable of changing a material decision: current repository evidence for local facts, official/current evidence for a version-sensitive question, or mature prior art on explicit request or a named design gap. Do not run all classes automatically. Incorporation creates no scheme/research/plan approval; unresolved material evidence still blocks final acceptance.
 - Run one bounded `strategy-stress-test` only on explicit intent or a named material loophole in a concrete artifact. Otherwise inspect and repair the owning artifact directly.
 - User-requested packaging: packaging is a delivery step after claim-matched checks, not a substitute for them. Confirm a materially ambiguous target/platform, run the selected focused verification, allow at most one in-scope targeted repair/recheck/repackage, and report the artifact path or blocker. Pause for signing/notarization credentials, dependency or lockfile changes, external publishing, destructive cleanup, secret handling, or unsupported platform assumptions unless explicitly approved.
@@ -48,7 +48,7 @@ Direct ROSE work is the default across commands and natural-language routes. Do 
 Use when the idea is unclear, broad, or competing options exist.
 
 - Inputs: user goal, constraints, existing context.
-- Actions: explore alternatives, identify assumptions, and collect evidence needs. Work directly by default; use Task only under `direct-vs-delegated-work.md` when explicit request or clear specialist, noisy-context, or independent-parallel benefit applies. When a candidate idea should be preserved without formalizing a change, write a lightweight idea capsule or update backend-neutral `ideas/workflow-inbox.md` if artifact placement is allowed.
+- Actions: run the proactive delegation scan, explore alternatives, identify assumptions, and collect evidence needs. Under `direct-vs-delegated-work.md`, explicit request or clear specialist, noisy-context, or independent-parallel benefit dispatches Task promptly; work directly only when no trigger applies or delegation is concretely blocked. When a candidate idea should be preserved without formalizing a change, write a lightweight idea capsule or update backend-neutral `ideas/workflow-inbox.md` if artifact placement is allowed.
 - Outputs: idea brief, option list, open questions, recommended next mode, and optional idea capsule or `ideas/workflow-inbox.md` update.
 - Hard stop: no production code or harness file edits.
 - Do not create a formal OpenSpec proposal by default during pure IDEATE; DEFINE promotes only selected ideas into backend-specific change artifacts.

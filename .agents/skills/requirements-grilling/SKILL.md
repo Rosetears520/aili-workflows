@@ -15,7 +15,7 @@ The input can be an OpenSpec change directory, a custom plan, a user-pasted para
 
 ## Provenance
 
-This skill is the AILI adaptation of upstream Matt Pocock skills `grill-me`, `grilling`, `batch-grill-me`, and `domain-modeling`, copied/adapted under the upstream MIT License. It combines their questioning, decision-frontier, and domain-modeling disciplines with AILI/OpenSpec artifact placement, `interview.md` compatibility, `context.md` Language handling, `adr.md` gating, answer ingestion, and readiness states. Upstream `batch-grill-me` is pinned as in-progress provenance; its user-invoked boundary is retained, while its direct subagent-dispatch instruction is replaced by ROSE-owned direct-first evidence routing.
+This skill is the AILI adaptation of upstream Matt Pocock skills `grill-me`, `grilling`, `batch-grill-me`, and `domain-modeling`, copied/adapted under the upstream MIT License. It combines their questioning, decision-frontier, and domain-modeling disciplines with AILI/OpenSpec artifact placement, `interview.md` compatibility, `context.md` Language handling, `adr.md` gating, answer ingestion, and readiness states. Upstream `batch-grill-me` is pinned as in-progress provenance; its user-invoked boundary is retained, while its direct subagent-dispatch instruction is replaced by ROSE-owned proactive trigger-gated evidence routing.
 
 Upstream-originated reference formats are preserved by name in this skill's `references/` directory:
 
