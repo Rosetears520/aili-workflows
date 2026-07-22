@@ -4,9 +4,9 @@ ROSE retains integration and final-verdict ownership. Delegation is the proactiv
 
 ## Proactive scan
 
-Run a proactive delegation scan at the start of every non-trivial intent and whenever changed evidence exposes a new work split. Evaluate the triggers before ROSE performs the same evidence gathering or implementation directly. A user request for frequent or aggressive subagent use remains a routing preference across the current intent, but every Task still needs one bounded eligible assignment and current permission.
+Run a proactive delegation scan at the start of every non-trivial intent and whenever changed evidence exposes a new work split. Evaluate the triggers before ROSE performs the same evidence gathering or implementation directly. A user request for frequent or aggressive subagent use remains a routing preference across the current intent, but every `subagent.dispatch` operation still needs one bounded eligible assignment and current permission.
 
-## Use Task only when
+## Use `subagent.dispatch` only when
 
 At least one condition is true:
 
@@ -19,8 +19,8 @@ When any condition is true, dispatch is the default action unless units overlap,
 
 ## Dispatch shape
 
-- One current intent has at most one auxiliary capability. Default Task concurrency is at most two, but this is not a hard cap. ROSE may choose a larger bounded fan-out when it can name every independent non-overlapping unit, concrete benefit, specialist owner, and join plan.
-- When multiple independent units are ready, launch them in the same Task message rather than serializing avoidably.
+- One current intent has at most one auxiliary capability. Default dispatch concurrency is at most two, but this is not a hard cap. ROSE may choose a larger bounded fan-out when it can name every independent non-overlapping unit, concrete benefit, specialist owner, and join plan.
+- When multiple independent units are ready, launch them together rather than serializing avoidably.
 - Parallel units must have independent inputs and non-overlapping writes.
 - If units overlap or depend on one another, run them sequentially or keep the work direct.
 - Do not automatically add review, test, security, coverage, or convergence lanes.

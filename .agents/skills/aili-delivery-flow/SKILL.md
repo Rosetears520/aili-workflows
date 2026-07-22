@@ -1,6 +1,6 @@
 ---
 name: aili-delivery-flow
-description: Run the AILI delivery lifecycle from natural-language IDEATE, DEFINE, BUILD, and SHIP intent or the equivalent slash shortcuts; use for idea shaping, spec/test definition, bounded BUILD package queues, review-repair closeout, or backend routing without exposing internal stage commands.
+description: Run the AILI delivery lifecycle from natural-language IDEATE, DEFINE, BUILD, and SHIP intent or the equivalent slash shortcuts; use for idea shaping, spec/test definition, bounded BUILD package queues, review-repair closeout, or adapter routing without exposing internal stage commands.
 ---
 
 # AILI Delivery Flow
@@ -45,7 +45,7 @@ Explanation, comparison, translation, or status questions about these mode names
 
 ### Proactive delegation scan
 
-At the start of each non-trivial intent and whenever changed evidence creates a new work split, evaluate the Task triggers in `references/direct-vs-delegated-work.md`. If any trigger is met, dispatch before doing the same work directly. If multiple independent units are ready, launch them in the same Task message instead of serializing them. Default concurrency is at most two, but it is not a hard cap; ROSE chooses a larger bounded fan-out only from the number of independent non-overlapping units, concrete wall-clock/context benefit, available specialist roles, and an explicit join plan. Every Task remains fresh, single-use, non-nesting, permission-bounded, and subject to independent benefit evidence.
+At the start of each non-trivial intent and whenever changed evidence creates a new work split, evaluate the `subagent.dispatch` capability triggers in `references/direct-vs-delegated-work.md`. If a current adapter supplies that capability and a trigger is met, dispatch before doing the same work directly. If multiple independent units are ready, launch them together rather than serializing them. Default concurrency is at most two, but it is not a hard cap; ROSE chooses a larger bounded fan-out only from the number of independent non-overlapping units, concrete wall-clock/context benefit, available specialist roles, and an explicit join plan. Every dispatch context remains fresh, single-use, non-nesting, permission-bounded, and subject to independent benefit evidence.
 
 Near misses stay direct: lifecycle words used for explanation/status, code that merely has tests, multi-file work without a planning need, and completion wording without a concrete review or evidence gap do not activate extra skills. An existing official Graphify graph may supply one scoped architecture-orientation result; exact-current symbols, source, call paths, tests, and impact stay with CodeGraph or current files, and no lifecycle phase installs, registers, or runs Graphify automatically.
 

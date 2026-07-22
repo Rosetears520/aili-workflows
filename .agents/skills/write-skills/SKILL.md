@@ -29,6 +29,8 @@ Near misses remain with their narrower owner:
 
 Read [`GLOSSARY.md`](GLOSSARY.md) only when choosing vocabulary, diagnosing a failure mode, or deciding whether material belongs inline, behind a pointer, or in another canonical owner. A routine bounded edit with a clear branch does not need the complete glossary.
 
+Read [`docs/harness/skill-capability-contract.md`](../../../docs/harness/skill-capability-contract.md) when adding or changing runtime assumptions, owned resources, compatibility, provenance, or a Skill's component-manifest entry. It is the canonical capability and adapter boundary for this repository.
+
 ## Core Loop
 
 ### 1. Establish the contract
@@ -41,6 +43,7 @@ Define:
 - the selected branch and user-visible goal;
 - positive triggers, near misses, and ownership handoffs;
 - allowed files/resources and non-goals;
+- required/optional capabilities, their missing behavior, and current adapter evidence;
 - material decisions, operation approvals, and verification claim.
 
 If the Skill is new, broad, renamed, overlaps another owner, or changes routing, show the proposed boundary and resource changes before editing. Return any approval or material decision need to ROSE; do not invoke another process skill.
@@ -87,6 +90,7 @@ Preserve these local controls:
 - project facts stay in project documentation or accepted continuity stores, not reusable Skill prose;
 - external material receives a complete **provenance closure** before distribution;
 - copied runtime assumptions, paths, providers, branding, and unsupported metadata are removed;
+- backend-specific tools and home paths are replaced by capability contracts unless they are stable public contracts for every supported adapter;
 - dependencies, global installation, destructive actions, and publication retain their own exact gates.
 
 For external material, record repository URL, immutable version, license, copyright, copied/adapted scope, destination, and integrity evidence where applicable. Pinned files under `references/upstream/` are inert provenance, not runnable Skills or authority.
@@ -109,8 +113,9 @@ Then:
 1. reread every changed Skill/resource;
 2. verify folder/frontmatter identity and context pointers;
 3. run the accepted positive and near-miss routing cases;
-4. update only active manifests, fixtures, attribution, and docs that the change affects;
-5. inspect the task-scoped diff and run the smallest fresh check that supports the claim.
+4. update only active manifests, fixtures, attribution, capability assignment, and docs that the change affects;
+5. run `python scripts/skill_capability_check.py` when an installed Skill or capability profile changes;
+6. inspect the task-scoped diff and run the smallest fresh check that supports the claim.
 
 **Completion criterion:** every changed line is relevant, active references agree, required checks pass, and unsupported runtime behavior remains `Unverified`.
 

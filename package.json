@@ -1,6 +1,6 @@
 {
   "name": "rose-aili",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "AILI OpenCode workflow installer CLI",
   "license": "MIT",
   "repository": {
@@ -20,10 +20,12 @@
     "templates/AGENTS.md",
     "templates/opencode-global-AGENTS.md",
     "scripts/agents_md.py",
+    "scripts/skill_capability_check.py",
     "scripts/upstream_reference_check.py",
     "scripts/install_opencode.sh",
     "docs/harness/fixtures/graphify-local-review-fixtures.yaml",
     "docs/harness/fixtures/upstream-reference-fixtures.yaml",
+    "docs/harness/skill-capability-contract.md",
     "README.md",
     "docs/opencode-setup.md"
   ],

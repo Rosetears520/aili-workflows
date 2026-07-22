@@ -2,7 +2,6 @@
 name: rose-memory
 description: Use the legacy/pre-runtime ROSE project-local SQLite continuity backend through memory_cli.py for scoped user facts, checkpoints, candidates, and focused retrieval; never treat it as native/global memory or formal authority.
 license: MIT
-compatibility: opencode
 metadata:
   tool: references/memory_cli.py
   state: project-local memory/memory.db
@@ -12,17 +11,17 @@ metadata:
 
 ## Purpose
 
-This skill provides the legacy/pre-runtime ROSE continuity protocol and bundled SQLite CLI. It is project-local compatibility infrastructure, not native OpenCode memory, global state, or formal lifecycle authority.
+This skill provides the legacy/pre-runtime ROSE continuity protocol and bundled SQLite CLI. It is project-local compatibility infrastructure, not native backend memory, global state, or formal lifecycle authority.
 
 The CLI implementation is distributed with this skill:
 
-`~/.agents/skills/rose-memory/references/memory_cli.py`
+`references/memory_cli.py` from the active Skill root resolved by the current adapter.
 
 The memory database is always the exact project-local path, resolved from the canonical project root:
 
 `memory/memory.db`
 
-Never store project memory inside the global OpenCode config directory.
+Never store project memory inside a global backend configuration directory.
 
 ## When to Use
 
@@ -40,8 +39,8 @@ Use this skill when:
 
 - Never edit `memory/memory.db` manually.
 - Never create `memory.md`, JSON sidecars, or alternate memory state files.
-- Never store project state under `~/.config/opencode/`.
-- Invoke only the existing `rose-memory` shim or bundled `memory_cli.py`, always with the literal project-relative argument `--db memory/memory.db` from the canonical project root. Reject an absolute, user-supplied, alternate, parent-relative, aliased, or manual database path. If `memory/memory.db` or a path component is presented as a symlink, stop without following it; do not substitute another path.
+- Never store project state under a backend configuration home.
+- Invoke only the existing `rose-memory` shim or the adapter-resolved bundled `references/memory_cli.py`, always with the literal project-relative argument `--db memory/memory.db` from the canonical project root. Reject an absolute, user-supplied, alternate, parent-relative, aliased, or manual database path. If `memory/memory.db` or a path component is presented as a symlink, stop without following it; do not substitute another path.
 - Memory is additive, scoped continuity context. It is never the active OpenSpec contract, test-plan acceptance, permission, Git truth, review verdict, or completion proof.
 - Default-write only explicit, reusable user requirements, preferences, corrections, decisions, and acceptance criteria when project/change/session identity, source reference/type, CLI timestamp, permission, and content safety are clear. Use only the existing `text`, `source`, `project`, session/task identity, timestamp, and receipt behavior. Do not ask a redundant per-fact write question in that safe case.
 - If identity, scope, required metadata, or permission is ambiguous, ask one focused scope/identity question or keep the item in the active change artifact; do not create an unscoped record.
@@ -92,19 +91,13 @@ If a short shim exists, use it:
 rose-memory --help
 ```
 
-If the shim is unavailable, call the bundled tool directly:
+If the shim is unavailable and the active adapter resolves the Skill root, call the bundled tool directly:
 
 ```bash
-python ~/.agents/skills/rose-memory/references/memory_cli.py --help
+python <skill-root>/references/memory_cli.py --help
 ```
 
-Windows PowerShell fallback:
-
-```powershell
-python "$env:USERPROFILE\.config\opencode\skills\rose-memory\references\memory_cli.py" --help
-```
-
-For every example below, replace `rose-memory` with `python ~/.agents/skills/rose-memory/references/memory_cli.py` when no shim exists.
+For every example below, replace `rose-memory` with `python <skill-root>/references/memory_cli.py` when no shim exists.
 
 ## Standard Operations
 

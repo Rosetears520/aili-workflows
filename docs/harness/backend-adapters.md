@@ -1,6 +1,10 @@
 # Backend Adapters
 
 Backend adapters store and organize work; they do not weaken lifecycle gates.
+Shared Skill capability ownership, status, and missing-capability behavior live
+in `manifests/skill-capabilities.json` and
+`docs/harness/skill-capability-contract.md`. This document does not itself
+grant a runtime capability or operation permission.
 
 | Adapter | Used for | Must preserve |
 |---|---|---|

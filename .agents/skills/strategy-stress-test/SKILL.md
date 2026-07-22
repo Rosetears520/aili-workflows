@@ -2,7 +2,6 @@
 name: strategy-stress-test
 description: Run one bounded adversarial pass when the user explicitly requests a report-style stress test or ROSE identifies a concrete material loophole in an existing strategy, spec, plan, review, or claim; do not trigger for an interactive grill/frontier interview or merely before write-back, implementation, reconciliation, or completion.
 license: MIT
-compatibility: opencode
 metadata:
   source: local-workflow-guardrail
 ---

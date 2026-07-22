@@ -48,6 +48,10 @@ Do not copy broad global operating rules into this file unless this project inte
 
 - Keep `/ideate`, `/define`, `/build`, and `/ship` as the only top-level delivery command entrypoints.
 - Root `AGENTS.md` is repo-specific and must keep the v2 template markers/section schema without copying global rules; validate compliance with `scripts/agents_md.py`.
+- Shared Skill source of truth is `.agents/skills/<skill-name>/`; `manifests/skill-capabilities.json` assigns every installed Skill one capability profile under `docs/harness/skill-capability-contract.md`.
+- A Skill addition, rename, split, merge, retirement, or material runtime change must update its component-manifest entry, capability assignment, owned `references/`/`scripts/`/`assets/`, provenance, and affected validation. Run `python scripts/skill_capability_check.py` before completion.
+- Shared Skill prose must describe required capabilities rather than a backend tool, home path, or provider unless that detail is a stable public contract. Missing capabilities return an explicit `SKIP`, `WARN`, `BLOCKED`, or handoff and never fabricate evidence or expand permission.
+- OpenCode is the only currently evidenced native adapter. Do not claim Pi or another backend compatibility without equivalent capability, failure, permission, and artifact evidence.
 
 ## Project-Specific Testing and Artifact Placement
 

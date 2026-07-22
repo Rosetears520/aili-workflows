@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "canonicalSkillRoot": ".agents/skills",
+  "contract": "docs/harness/skill-capability-contract.md",
+  "adapters": {
+    "opencode": {
+      "status": "native",
+      "owner": "docs/harness/backend-adapters.md",
+      "verification": "python scripts/skill_capability_check.py"
+    }
+  },
+  "profiles": {
+    "repo-workflow": {
+      "requiredCapabilities": ["repo.read"],
+      "optionalCapabilities": ["repo.write"],
+      "sideEffectClass": "local",
+      "missingBehavior": "BLOCKED when required repository evidence is unavailable"
+    },
+    "web-research": {
+      "requiredCapabilities": ["web.fetch"],
+      "optionalCapabilities": ["repo.read"],
+      "sideEffectClass": "external-read",
+      "missingBehavior": "need-evidence"
+    },
+    "browser-qa": {
+      "requiredCapabilities": ["browser.qa"],
+      "optionalCapabilities": ["artifact.store"],
+      "sideEffectClass": "browser-local",
+      "missingBehavior": "need-evidence or BLOCKED"
+    },
+    "subagent-dispatch": {
+      "requiredCapabilities": ["subagent.dispatch"],
+      "optionalCapabilities": ["repo.read"],
+      "sideEffectClass": "delegated-read-or-scoped-write",
+      "missingBehavior": "direct work or blocked, according to the owning router"
+    },
+    "memory": {
+      "requiredCapabilities": ["memory.project"],
+      "optionalCapabilities": ["repo.read"],
+      "sideEffectClass": "project-local-state",
+      "missingBehavior": "BLOCKED; do not create an alternate store"
+    },
+    "artifact-runtime": {
+      "requiredCapabilities": ["artifact.transform"],
+      "optionalCapabilities": ["artifact.store", "repo.read"],
+      "sideEffectClass": "local-artifact",
+      "missingBehavior": "need-evidence or BLOCKED"
+    }
+  },
+  "assignments": [
+    {
+      "profile": "web-research",
+      "skills": ["academic-paper-review", "github-evidence-triage", "mature-project-pattern-research", "newsletter-generation", "source-driven-development", "systematic-literature-review"]
+    },
+    {
+      "profile": "browser-qa",
+      "skills": ["browser-qa", "browser-testing-with-devtools"]
+    },
+    {
+      "profile": "subagent-dispatch",
+      "skills": ["aili-delivery-flow", "local-review-gate", "parallel-subagent-dispatch", "review-pipeline"]
+    },
+    {
+      "profile": "memory",
+      "skills": ["rose-memory"]
+    },
+    {
+      "profile": "artifact-runtime",
+      "skills": ["android-native-dev", "flutter-dev", "frontend-dev", "ios-application-dev", "minimax-docx", "minimax-pdf", "minimax-xlsx", "pptx-generator", "react-native-dev", "shader-dev"]
+    },
+    {
+      "profile": "repo-workflow",
+      "skills": ["agents-md-initialization", "ai-regression-scout", "api-and-interface-design", "build-failure-repair", "chart-visualization", "ci-cd-and-automation", "code-review-and-quality", "code-review-quality-gates", "code-simplification", "comment-accuracy-review", "consulting-analysis", "context-engineering", "coverage-review", "data-analysis", "deprecation-and-migration", "documentation-and-adrs", "e2e-artifact-handling", "evidence-scoped-retrospective", "explain-by-allegory", "frontend-ui-engineering", "fullstack-dev", "git-workflow-and-versioning", "harness-evolution", "harness-issue-triage", "harness-optimization-audit", "idea-refine", "incremental-implementation", "oss-release-readiness", "performance-optimization", "planning-and-task-breakdown", "pr-test-analysis", "requirements-grilling", "security-and-hardening", "session-handoff", "shipping-and-launch", "silent-failure-hunting", "spec-driven-development", "strategy-stress-test", "test-document-generator", "test-driven-development", "write-skills"]
+    }
+  ],
+  "unverified": [
+    "No non-OpenCode adapter has current equivalence evidence; Pi compatibility is not claimed."
+  ]
+}

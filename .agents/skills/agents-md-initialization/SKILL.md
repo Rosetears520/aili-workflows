@@ -14,10 +14,10 @@ Project `AGENTS.md` must be created from the bundled AILI AGENTS template.
 
 Do not write a project `AGENTS.md` from scratch.
 
-Use the bundled script:
+Use the bundled script through the active adapter's resolved Skill root:
 
 ```bash
-python ~/.agents/skills/agents-md-initialization/references/agents_md.py init --project .
+python <skill-root>/references/agents_md.py init --project .
 ```
 
 The script and template are distributed with this skill:
@@ -25,7 +25,7 @@ The script and template are distributed with this skill:
 - `references/agents_md.py`
 - `references/agents-template.md`
 
-If this skill is being run from a repository checkout rather than an installed OpenCode skill, use the repository-local path:
+If this skill is being run from a repository checkout rather than an installed adapter-managed Skill, use the repository-local path:
 
 ```bash
 python .agents/skills/agents-md-initialization/references/agents_md.py init --project .
@@ -36,22 +36,22 @@ python .agents/skills/agents-md-initialization/references/agents_md.py init --pr
 Initialize a project-local `AGENTS.md`:
 
 ```bash
-python ~/.agents/skills/agents-md-initialization/references/agents_md.py init --project .
+python <skill-root>/references/agents_md.py init --project .
 ```
 
 Update an existing generated project `AGENTS.md` against the current template-managed content:
 
 ```bash
-python ~/.agents/skills/agents-md-initialization/references/agents_md.py update --project .
+python <skill-root>/references/agents_md.py update --project .
 ```
 
 Check template compliance:
 
 ```bash
-python ~/.agents/skills/agents-md-initialization/references/agents_md.py check --project .
+python <skill-root>/references/agents_md.py check --project .
 ```
 
-If the global installed path is unavailable but the current repository contains this skill, replace the path prefix with `.agents/skills/agents-md-initialization/`.
+If the adapter-resolved Skill root is unavailable but the current repository contains this skill, replace the path prefix with `.agents/skills/agents-md-initialization/`.
 
 ## Workflow
 
@@ -93,21 +93,21 @@ If the global installed path is unavailable but the current repository contains 
 Target projects should add a lightweight check when practical:
 
 ```bash
-python ~/.agents/skills/agents-md-initialization/references/agents_md.py check --project .
+python <skill-root>/references/agents_md.py check --project .
 ```
 
 For `Makefile` projects:
 
 ```makefile
 check-agents:
-	python "$${HOME}/.agents/skills/agents-md-initialization/references/agents_md.py" check --project .
+	python "<skill-root>/references/agents_md.py" check --project .
 ```
 
 For pre-commit hooks:
 
 ```bash
 #!/usr/bin/env bash
-python "$HOME/.agents/skills/agents-md-initialization/references/agents_md.py" check --project .
+python "<skill-root>/references/agents_md.py" check --project .
 ```
 
 ## Verification
