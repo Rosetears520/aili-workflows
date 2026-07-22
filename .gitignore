@@ -10,3 +10,7 @@ openspec/
 data/
 node_modules/
 dist/
+# Local .NET build artifacts owned by the MiniMax DOCX skill.
+.agents/skills/minimax-docx/scripts/dotnet/**/obj/
+.agents/skills/minimax-docx/scripts/dotnet/**/bin/
+.agents/skills/minimax-docx/scripts/dotnet/**/*.user
