@@ -130,13 +130,20 @@ function validateManifestComponentDefinitions(manifest: ComponentManifest): Reco
   return {
     agents: manifest.components.agents.map((entry) => validateRepoEntry("agents", entry, `agents/${entry.name}.md`)),
     commands: manifest.components.commands.map((entry) => validateRepoEntry("commands", entry, `commands/${entry.name}.md`)),
-    skills: manifest.components.skills.map((entry) => validateRepoEntry("skills", entry, `.agents/skills/${entry.name}`, {
-      sourcePath: `.agents/skills/${entry.name}`,
-      installTargets: [
-        { kind: "shared", path: `.agents/skills/${entry.name}` }
-      ]
-    }))
+    skills: manifest.components.skills.map(validateSkillEntry)
   };
+}
+
+function validateSkillEntry(entry: RepoComponent): string {
+  const targets = repoInstallTargets(entry, entry.path);
+  if (targets.length !== 1) throw new Error(`Invalid manifest skills installTargets for ${entry.name}: expected exactly one platform owner.`);
+  const target = targets[0];
+  const expectedPath = target.kind === "shared" ? `.agents/skills/${entry.name}` : `.opencode/skills/${entry.name}`;
+  const expectedTargetPath = target.kind === "shared" ? expectedPath : `skills/${entry.name}`;
+  return validateRepoEntry("skills", entry, expectedPath, {
+    sourcePath: expectedPath,
+    installTargets: [{ kind: target.kind, path: expectedTargetPath }]
+  });
 }
 
 function validateRepoEntry(type: string, entry: RepoComponent, expectedPath: string, expected?: { sourcePath: string; installTargets: Array<{ kind: "shared" | "opencode"; path: string }> }): string {
@@ -173,13 +180,15 @@ async function repoManifestDrift(ailiHome: string, expected: Record<RepoManifest
   return {
     agents: completeAllowlist(expected.agents, await listAgentNames(ailiHome)),
     commands: completeAllowlist(expected.commands, await listCommandNames(ailiHome)),
-    skills: completeAllowlist(expected.skills, await listSkillNames(ailiHome))
+    skills: completeAllowlist(expected.skills, await listSkillNames(ailiHome, expected.skills))
   };
 }
 
 function completeAllowlist(manifestNames: string[], diskNames: string[]): RepoManifestDriftEntry {
   const manifestSet = new Set(manifestNames);
   if (manifestSet.size !== manifestNames.length) throw new Error("Duplicate manifest component entry.");
+  const diskSet = new Set(diskNames);
+  if (diskSet.size !== diskNames.length) throw new Error("Duplicate repository component entry.");
   return {
     unmanifested: diskNames.filter((name) => !manifestSet.has(name)),
     missing: manifestNames.filter((name) => !diskNames.includes(name))
@@ -207,24 +216,32 @@ async function listMarkdownComponentNames(root: string): Promise<string[]> {
     .sort();
 }
 
-async function listSkillNames(ailiHome: string): Promise<string[]> {
-  const names = new Set<string>();
+async function listSkillNames(ailiHome: string, manifestNames: string[]): Promise<string[]> {
+  const shared = await listSkillNamesAt(path.join(ailiHome, ".agents", "skills"));
+  const opencode = await listSkillNamesAt(path.join(ailiHome, ".opencode", "skills"));
+  const expected = new Set(manifestNames);
+  const names = [...shared, ...opencode.filter((name) => expected.has(name))];
+  return names.sort();
+}
+
+async function listSkillNamesAt(root: string): Promise<string[]> {
   let entries: Dirent[];
   try {
-    entries = await readdir(path.join(ailiHome, ".agents", "skills"), { withFileTypes: true });
+    entries = await readdir(root, { withFileTypes: true });
   } catch {
     return [];
   }
+  const names: string[] = [];
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     try {
-      await access(path.join(ailiHome, ".agents", "skills", entry.name, "SKILL.md"), constants.F_OK);
-      names.add(entry.name);
+      await access(path.join(root, entry.name, "SKILL.md"), constants.F_OK);
+      names.push(entry.name);
     } catch {
       // Non-skill directories match installer behavior.
     }
   }
-  return [...names].sort();
+  return names;
 }
 
 function uniquePaths(paths: Array<string | undefined>): string[] {

@@ -220,7 +220,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `minimax-docx` | DOCX 创建、编辑、填充和模板格式化 |
 | `minimax-pdf` | PDF 生成、表单填写和视觉重排 |
 | `minimax-xlsx` | Excel、CSV、公式、财务表格和格式保真编辑 |
-| `pptx-generator` | PowerPoint 生成、编辑和读取 |
+| `pptx-generator` | PowerPoint 生成、编辑和读取；[已知\|用户] 在 MiniMax skill 基础上融合用户指定的人工 PPT 学习笔记英文译注、图片自然语言描述，以及经脱敏提炼的逐页内容规划方法（来源：2026-07-29 用户批准的 harness 改造），不分发原课程 PPT、PDF、图片、会话原文或个人数据 |
 | `react-native-dev` | React Native、Expo、导航、状态、测试和发布 |
 | `shader-dev` | GLSL、ShaderToy、SDF、粒子和视觉特效 |
 
@@ -287,13 +287,14 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ### OpenCode 设置
 
-推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
-安装会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`；项目级事实、命令、测试位置、产物落点和本地例外仍通过各项目自己的瘦 `AGENTS.md` 管理。
+[KNOWN] 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
+[KNOWN] 默认安装只同步共享 `$HOME/.agents/skills`。只有显式添加 `--opencode`，才会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`，并安装 agents、commands、OpenCode 专属 skills 及同步 OpenCode config；项目级事实仍由各项目自己的瘦 `AGENTS.md` 管理。
 
-安装/更新默认会写入 OpenCode 全局配置目录和共享 `$HOME/.agents/skills`。Playwright MCP、CodeGraph、Graphify 和 OpenSpec 都是独立显式 opt-in；AILI 不安装、检测、配置、迁移或删除 DCP。
+[KNOWN] `install` / `update` 默认只写共享 `$HOME/.agents/skills`，不会读取或修改 OpenCode home。`--opencode` 才启用 OpenCode 安装范围；Playwright MCP、CodeGraph、Graphify 和 OpenSpec 仍是独立显式 opt-in，AILI 不安装、检测、配置、迁移或删除 DCP。
 
 ```bash
 npx -y rose-aili install
+npx -y rose-aili install --opencode
 ```
 
 在 npm 发布前，AI assistant 可从 GitHub package spec 运行同一个 binary（把 `<owner>/<repo>` 替换为用户提供的仓库）：
@@ -306,12 +307,13 @@ npx -y --package github:<owner>/<repo> rose-aili install
 
 ```bash
 npx -y rose-aili update
+npx -y rose-aili update --opencode
 npx -y rose-aili doctor
 ```
 
-`rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全安装语义，安装全局 `AGENTS.md`、agents、skills 和 commands；从普通 git clone 安装时使用 selective symlink，从 npm/npx 的 packaged 非 git 目录安装时使用 copy，避免把 OpenCode 链接到临时 package cache。显式 `install`/`update` 会检查三个退役 skill 的 exact destination：只有解析后精确指向当前 canonical repo retired-source path 的 symlink 才会被 `unlink`；copy、普通文件/目录、不同 target、修改或所有权不明的条目全部保留并报告，dry-run 只报告计划，不会删除 sibling、parent 或 user file。`doctor` 的 required skill 清单直接来自更新后的 manifest，不新增 stale-copy result field。`install` 和 `update` 不读取或修改第三方 DCP plugin 状态及用户的 `dcp.json`/`dcp.jsonc`。OpenSpec 仅在显式传 `--enable-openspec` 时检测/安装并运行项目 `init/update`；`--skip-openspec` 可显式保持禁用。打包后的 `dist/cli.js` 带 Node shebang 和 executable mode，供 npm/npx 直接执行。OpenCode config 同步默认只在缺失或已为 `rose` 时保持 `default_agent: "rose"`，冲突默认值除非传 `--force-default-agent` 否则保留；模型偏好只在显式传 `--model` 时写入 OpenCode 用户配置，而不是写入 `agents/rose.md`：
+[KNOWN] `rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全语义，只安装 manifest 中目标为 `shared` 的 `.agents/skills`。`--opencode` 在此基础上安装全局 `AGENTS.md`、agents、commands，以及源自 `.opencode/skills` 且 manifest 目标为 `opencode` 的专属 skills；从普通 git clone 安装时使用 selective symlink，从 npm/npx packaged 非 git 目录安装时使用 copy。显式 `install`/`update` 仍只清理能证明由当前 canonical source 管理的退役 skill symlink，其他内容全部保留并报告。OpenSpec 仅在 `--opencode --enable-openspec` 下运行。OpenCode config 同步也只在 `--opencode` 范围启用，并继续保留冲突默认值和既有 model：
 
-交互式 `rose-aili install` 会依次询问 default agent、缺失的 model override、Playwright MCP、CodeGraph、Graphify CLI 和 OpenSpec；交互式 `update` 询问 CodeGraph 与 Graphify CLI。非交互模式只执行显式 flag 请求的 optional integration。模型偏好始终写入 OpenCode JSON/JSONC 的 `agent.rose.model`，不会为了用户偏好修改 `agents/rose.md`。
+[KNOWN] 只有交互式 `rose-aili install --opencode` 才询问 default agent、model override、Playwright MCP、CodeGraph、Graphify CLI 和 OpenSpec；`update --opencode` 询问 CodeGraph 与 Graphify CLI。无 `--opencode` 的交互安装不读取 OpenCode config，也不提出 OpenCode 集成问题。
 
 ```jsonc
 {
@@ -328,22 +330,22 @@ npx -y rose-aili doctor
 
 ```bash
 npx -y rose-aili install --yes
-npx -y rose-aili install --set-default-rose
-npx -y rose-aili install --model anthropic/claude-sonnet-4-5
-npx -y rose-aili install --skip-opencode-config
-npx -y rose-aili install --enable-playwright
-npx -y rose-aili install --enable-codegraph
-npx -y rose-aili install --enable-graphify
-npx -y rose-aili install --skip-graphify
-npx -y rose-aili install --register-graphify-skill
-npx -y rose-aili install --enable-openspec
-npx -y rose-aili install --skip-openspec
-npx -y rose-aili update --skip-openspec
+npx -y rose-aili install --opencode --set-default-rose
+npx -y rose-aili install --opencode --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --opencode --skip-opencode-config
+npx -y rose-aili install --opencode --enable-playwright
+npx -y rose-aili install --opencode --enable-codegraph
+npx -y rose-aili install --opencode --enable-graphify
+npx -y rose-aili install --opencode --skip-graphify
+npx -y rose-aili install --opencode --register-graphify-skill
+npx -y rose-aili install --opencode --enable-openspec --project-root /absolute/project
+npx -y rose-aili install --opencode --skip-openspec
+npx -y rose-aili update --opencode --skip-openspec
 ```
 
-非交互或 `--yes` 模式不会假装已经询问用户问题；输出 summary 会列出跳过/待决定项和精确后续命令。OpenCode config 默认同步会设置/保持 `default_agent: "rose"`（不覆盖冲突的既有默认，除非加 `--force-default-agent`），但不会静默启用 Playwright、CodeGraph、Graphify、OpenSpec 或模型 override。只想默认进入 `rose` 且继续使用 OpenCode 默认模型时，不要传 `--model`。
+[KNOWN] 非交互或 `--yes` 模式不会假装已经询问用户问题；默认 summary 会报告 `componentInstall.scope: "skills"` 并给出 `--opencode` 后续命令。`--opencode` 范围内的 config 同步会设置/保持 `default_agent: "rose"`，但不会静默启用 Playwright、CodeGraph、Graphify、OpenSpec 或 model override。
 
-CodeGraph 是显式 opt-in：`--enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`，完成后需要重启 OpenCode 让 MCP 集成生效。任一命令失败只会在 summary 中标记 CodeGraph 可选项失败，并给出手动恢复命令，不会单独把核心全局 `AGENTS.md`/agents/skills/commands 安装判为失败。
+[KNOWN] CodeGraph 是 OpenCode 范围内的显式 opt-in：`--opencode --enable-codegraph` 会先运行 `npm install -g @colbymchenry/codegraph@latest`，再运行 `codegraph install --target=opencode --yes`；失败不会否定已完成的 manifest component 安装。
 
 Graphify 也是独立 opt-in，并分成两个不能合并授权的 invocation。`--enable-graphify` 只在已存在 `uv` 时执行官方 `uv tool install graphifyy`；它不安装 uv、Python 或系统包，也不回退到 pip/pipx/APT/Homebrew/source build。CLI 安装完成后，必须在另一次 fresh exact approval 下运行 `--register-graphify-skill`，该阶段只委托官方 `graphify install --platform agents`，目标是上游拥有的 `~/.agents/skills/graphify/`。两个 flag 同时出现会被拒绝；`--yes`、CodeGraph consent、BUILD acceptance 或第一个操作的批准都不授权第二个操作。`--dry-run` 只报告两个 operation packet 和目标 inventory，不执行 uv/Graphify 或写入 home/project。
 
@@ -353,7 +355,7 @@ Graphify 注册验证要求常规 `SKILL.md`、`.graphify_version`、可选 pack
 
 项目级 `AGENTS.md` 初始化 / 更新应联动检查 CodeGraph：生成或更新 `AGENTS.md` 后先运行/请求 `codegraph status`；如果该仓库尚未初始化，则询问用户是否在当前仓库运行 `codegraph init -i`，同意后再运行 `codegraph status`。CodeGraph 不可用、用户跳过或拒绝时，不阻塞 `AGENTS.md` 完成，但必须在结果中说明没有代码地图覆盖。
 
-OpenSpec 是显式 opt-in：只有 `--enable-openspec` 才会先用 `openspec --version` 检测 CLI，必要时运行 `npm install -g @fission-ai/openspec@latest`，再根据当前项目标记运行 `openspec update` 或 `openspec init`。OpenSpec 要求 Node.js `20.19.0+`；扩展 workflow 的 `openspec config profile` 仍是手动后续步骤。
+[KNOWN] OpenSpec 是 OpenCode 范围内的显式 opt-in：只有 `--opencode --enable-openspec --project-root <absolute-path>` 才会检测/安装 CLI 并运行项目 `update` 或 `init`。
 
 ### 分发与来源边界
 
@@ -371,9 +373,9 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 该 skill 内的 `scripts/session_handoff.py` 不是另一个 workflow 或公共命令，而是低自由度的确定性 helper：它统一处理 exclusive collision suffix、containment/symlink validation、draft/finalize、pointer replacement、bounded-frontmatter LIST、exact-first RESOLVE、legacy read-only 和 localized exact-path resume output。没有显式触发时不创建 handoff；没有自动 memory promotion、rotation、archive 或 prune；恢复仍要重新验证当前 root/worktree/Git/contracts/permissions/evidence。
 
-安装方式也可采用文档驱动：把 [`docs/opencode-setup.md`](docs/opencode-setup.md) 给 AI agent 看，让它先判断 OpenCode 运行在 WSL/Linux 还是 Windows native，再使用默认的条目级软链接安装。WSL/Linux 可直接调用 `scripts/install_opencode.sh --mode selective` 安装全局 `AGENTS.md`、agents、skills 和 commands。
+[KNOWN] Bash fallback 的 `scripts/install_opencode.sh --mode selective` 默认只安装共享 skills；要安装 OpenCode 全局 `AGENTS.md`、agents、commands 和 OpenCode-only skills，使用 `scripts/install_opencode.sh --mode selective --opencode`。
 
-默认目标是 OpenCode 全局配置目录和共享 skill 目录：agents/commands 安装到 Linux/macOS/WSL 的 `~/.config/opencode/` 或 Windows native 的 `%USERPROFILE%\.config\opencode\`，skills 安装到 `$HOME/.agents/skills/`。安装必须保留全局 `agents/` 和 `commands/` 目录，只在目录内部链接具体 agent 文件和 command 文件；skill 目录链接到共享 `.agents/skills` 位置。项目记忆数据库始终保存在具体项目的 `memory/memory.db`，不会写入全局配置目录。
+[KNOWN] 默认目标只有 `$HOME/.agents/skills/`。在 `--opencode` 范围内，agents/commands 安装到 OpenCode home，共享 skills 仍安装到 `$HOME/.agents/skills/`，OpenCode-only skills 从仓库 `.opencode/skills/<name>` 安装到 OpenCode home 的 `skills/<name>`。
 
 项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -381,13 +383,13 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
-2. 让 OpenCode 发现 `agents/` 中的自定义 agent。
-3. 让 OpenCode 通过安装脚本链接后的共享 `$HOME/.agents/skills/` 发现本仓库 `.agents/skills/` 中的 SKILL.md 工作流。
-4. 可选使用全局 `~/.config/opencode/commands/` 中的 `/ideate`、`/define`、`/build`、`/ship` 入口。
-5. 由 `rose.md` 作为 primary agent，按任务需要调用对应 skills 和 subagents。
+2. 默认运行 `rose-aili install`，仅更新共享 skills。
+3. 需要 ROSE agents、commands 或 OpenCode 专属 skills 时运行 `rose-aili install --opencode`。
+4. OpenCode 从共享 `$HOME/.agents/skills/` 发现 `.agents/skills/`，并从自己的 `skills/` 发现 manifest 声明的 `.opencode/skills/`。
+5. `--opencode` 安装后可使用 ROSE primary agent、subagents 和 delivery commands。
 ```
 
-新增、删除或重命名 skill 或 command 后，重新运行 `scripts/install_opencode.sh --mode selective`，然后重启 OpenCode 或开启新 session，确保 discovery 刷新。
+[KNOWN] 共享 skill 变化后运行默认安装；agent、command 或 OpenCode-only skill 变化后运行带 `--opencode` 的安装，再重启 OpenCode 或开启新 session。
 
 `docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在共享 `$HOME/.agents/skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 

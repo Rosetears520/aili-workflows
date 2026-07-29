@@ -7,6 +7,7 @@ AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 DRY_RUN="false"
 NO_UPDATE="false"
+INSTALL_OPENCODE="false"
 RETIRED_SKILL_NAMES=("using-agent-skills" "repo-evidence-first" "verification-before-completion" "skill-authoring-and-validation")
 RETIRED_RECONCILIATION_NAMES=()
 RETIRED_RECONCILIATION_TARGETS=()
@@ -15,18 +16,19 @@ RETIRED_RECONCILIATION_REASONS=()
 
 usage() {
   cat >&2 <<'EOF'
-Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update]
+Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--opencode] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update]
 
-Default mode is selective.
+Default scope installs only shared skills into $HOME/.agents/skills. Add --opencode to also install OpenCode integration files.
 
 Modes:
-  selective           Preserve OpenCode agents/ and commands/ directories; link skills into $HOME/.agents/skills.
+  selective           Link shared skills; with --opencode, preserve OpenCode directories and link their managed entries.
   symlink             Alias for selective.
   copy                Copy entries instead of symlinking. Does not auto-sync later.
   managed-directory  Replace whole OpenCode agents/ and commands/ directories. Requires CONFIRM_MANAGED_DIRECTORY=yes.
   repair             Restore agents/, legacy skills/, and commands/ if they were replaced by directory-level symlinks.
 
 Options:
+  --opencode          Also install global AGENTS.md, agents, commands, and OpenCode-only skills.
   --dry-run           Print planned actions without writing OpenCode files or mutating directories.
   --no-update         Skip git pull when AILI_HOME is an existing git repository.
 EOF
@@ -58,6 +60,10 @@ while [ "$#" -gt 0 ]; do
       OPENCODE_HOME="${2:-}"
       shift 2
       ;;
+    --opencode)
+      INSTALL_OPENCODE="true"
+      shift
+      ;;
     --dry-run)
       DRY_RUN="true"
       NO_UPDATE="true"
@@ -87,6 +93,11 @@ case "$MODE" in
     exit 2
     ;;
 esac
+
+if [ "$INSTALL_OPENCODE" != "true" ] && { [ "$MODE" = "managed-directory" ] || [ "$MODE" = "repair" ]; }; then
+  log "Mode $MODE requires --opencode because it mutates OpenCode-owned directories."
+  exit 2
+fi
 
 detect_runtime() {
   if [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null; then
@@ -245,14 +256,6 @@ install_global_agents() {
   "$action" "$source" "$target"
 }
 
-skill_source_root() {
-  if [ ! -d "$AILI_HOME/.agents/skills" ]; then
-    log "Missing canonical skills source: $AILI_HOME/.agents/skills"
-    exit 2
-  fi
-  printf '%s\n' "$AILI_HOME/.agents/skills"
-}
-
 shared_skill_install_root() {
   local home_root root
   if [ -z "${HOME:-}" ]; then
@@ -273,12 +276,14 @@ shared_skill_install_root() {
       exit 2
       ;;
   esac
-  case "$root" in
-    "$OPENCODE_HOME"|"$OPENCODE_HOME"/*)
-      log "Refusing shared skill install root under OPENCODE_HOME: $root"
-      exit 2
-      ;;
-  esac
+  if [ "$INSTALL_OPENCODE" = "true" ]; then
+    case "$root" in
+      "$OPENCODE_HOME"|"$OPENCODE_HOME"/*)
+        log "Refusing shared skill install root under OPENCODE_HOME: $root"
+        exit 2
+        ;;
+    esac
+  fi
   printf '%s\n' "$root"
 }
 
@@ -411,8 +416,18 @@ def manifest_names(kind):
             expected_path = f"commands/{name}.md"
             expected_targets = [("opencode", expected_path)]
         else:
-            expected_path = f".agents/skills/{name}"
-            expected_targets = [("shared", expected_path)]
+            targets = entry.get("installTargets") or []
+            if len(targets) != 1:
+                fail(f"Invalid manifest skills installTargets for {name}: expected exactly one platform owner.")
+            target_kind = targets[0].get("kind")
+            if target_kind == "shared":
+                expected_path = f".agents/skills/{name}"
+                expected_targets = [("shared", expected_path)]
+            elif target_kind == "opencode":
+                expected_path = f".opencode/skills/{name}"
+                expected_targets = [("opencode", f"skills/{name}")]
+            else:
+                fail(f"Invalid manifest skills install target kind for {name}: {target_kind}")
 
         path_value = entry.get("path")
         validate_relative(f"{kind} for {name}", path_value)
@@ -439,16 +454,23 @@ def disk_commands():
     root = home / "commands"
     return sorted(path.stem for path in root.glob("*.md") if path.is_file()) if root.is_dir() else []
 
-def disk_skills():
-    root = home / ".agents" / "skills"
-    if not root.is_dir():
-        return []
-    return sorted(path.name for path in root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file())
+def disk_skills(manifest_skill_names):
+    names = []
+    shared_root = home / ".agents" / "skills"
+    if shared_root.is_dir():
+        names.extend(path.name for path in shared_root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file())
+    opencode_root = home / ".opencode" / "skills"
+    if opencode_root.is_dir():
+        names.extend(path.name for path in opencode_root.iterdir() if path.name in manifest_skill_names and path.is_dir() and (path / "SKILL.md").is_file())
+    if len(names) != len(set(names)):
+        fail("Duplicate repository skill entry across .agents/skills and .opencode/skills.")
+    return sorted(names)
 
-disk_by_kind = {"agents": disk_agents(), "commands": disk_commands(), "skills": disk_skills()}
+expected_by_kind = {kind: manifest_names(kind) for kind in ("agents", "commands", "skills")}
+disk_by_kind = {"agents": disk_agents(), "commands": disk_commands(), "skills": disk_skills(set(expected_by_kind["skills"]))}
 errors = []
 for kind in ("agents", "commands", "skills"):
-    expected = manifest_names(kind)
+    expected = expected_by_kind[kind]
     actual = disk_by_kind[kind]
     extras = [name for name in actual if name not in expected]
     missing = [name for name in expected if name not in actual]
@@ -464,37 +486,62 @@ if errors:
 PY
 }
 
+manifest_skill_entries() {
+  local target_kind="$1"
+  python3 - "$AILI_HOME" "$target_kind" <<'PY'
+import json
+import pathlib
+import sys
+
+home = pathlib.Path(sys.argv[1])
+target_kind = sys.argv[2]
+manifest = json.loads((home / "manifests" / "rose-aili.components.json").read_text(encoding="utf-8"))
+for entry in manifest.get("components", {}).get("skills", []):
+    targets = entry.get("installTargets") or []
+    if len(targets) != 1 or targets[0].get("kind") != target_kind:
+        continue
+    print(f"{entry['path']}\t{targets[0]['path']}")
+PY
+}
+
 install_entries() {
   local action="$1"
-  local skills_source
-  skills_source="$(skill_source_root)"
   local skills_target_root
   skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
   if [ "$DRY_RUN" = "true" ]; then
-    log "DRY RUN: would ensure OpenCode directory exists: $OPENCODE_HOME"
     log "DRY RUN: would ensure shared skills directory exists: $skills_target_root"
   else
-    mkdir -p "$OPENCODE_HOME"
     mkdir -p "$skills_target_root"
-  fi
-
-  if [ -e "$OPENCODE_HOME" ] && { [ -L "$OPENCODE_HOME/agents" ] || [ -L "$OPENCODE_HOME/commands" ]; }; then
-    log "Refusing selective/copy mode because agents or commands is a directory-level symlink. Run --mode repair first."
-    exit 2
-  fi
-
-  if [ "$DRY_RUN" = "true" ]; then
-    log "DRY RUN: would ensure OpenCode subdirectories exist: agents, commands"
-  else
-    mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands"
   fi
 
   reconcile_retired_skill_entries "$skills_target_root"
 
+  local source_path target_path source target file name
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    source="$AILI_HOME/$source_path"
+    target="$HOME/$target_path"
+    "$action" "$source" "$target"
+  done < <(manifest_skill_entries shared)
+
+  if [ "$INSTALL_OPENCODE" != "true" ]; then
+    return
+  fi
+
+  if [ -e "$OPENCODE_HOME" ] && { [ -L "$OPENCODE_HOME/agents" ] || [ -L "$OPENCODE_HOME/commands" ]; }; then
+    log "Refusing selective/copy mode because agents or commands is a directory-level symlink. Run --mode repair --opencode first."
+    exit 2
+  fi
+
+  if [ "$DRY_RUN" = "true" ]; then
+    log "DRY RUN: would ensure OpenCode directory and subdirectories exist: $OPENCODE_HOME (agents, commands, skills)"
+  else
+    mkdir -p "$OPENCODE_HOME/agents" "$OPENCODE_HOME/commands" "$OPENCODE_HOME/skills"
+  fi
+
   install_global_agents "$action"
 
-  local file name target dir
   for file in "$AILI_HOME"/agents/*.md; do
     [ -f "$file" ] || continue
     name="$(basename "$file")"
@@ -502,16 +549,12 @@ install_entries() {
     "$action" "$file" "$target"
   done
 
-  for dir in "$skills_source"/*; do
-    [ -d "$dir" ] || continue
-    if [ ! -f "$dir/SKILL.md" ]; then
-      log "Skipping non-skill directory without SKILL.md: $dir"
-      continue
-    fi
-    name="$(basename "$dir")"
-    target="$skills_target_root/$name"
-    "$action" "$dir" "$target"
-  done
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    source="$AILI_HOME/$source_path"
+    target="$OPENCODE_HOME/$target_path"
+    "$action" "$source" "$target"
+  done < <(manifest_skill_entries opencode)
 
   for file in "$AILI_HOME"/commands/*.md; do
     [ -f "$file" ] || continue
@@ -522,8 +565,6 @@ install_entries() {
 }
 
 managed_directory() {
-  local skills_source
-  skills_source="$(skill_source_root)"
   local skills_target_root
   skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
@@ -541,14 +582,15 @@ managed_directory() {
     log "DRY RUN: would replace agents and commands with directory symlinks from $AILI_HOME"
     log "DRY RUN: would install shared skill entries into: $skills_target_root"
     install_global_agents link_entry
-    local dir name target
-    for dir in "$skills_source"/*; do
-      [ -d "$dir" ] || continue
-      [ -f "$dir/SKILL.md" ] || continue
-      name="$(basename "$dir")"
-      target="$skills_target_root/$name"
-      link_entry "$dir" "$target"
-    done
+    local source_path target_path source target
+    while IFS=$'\t' read -r source_path target_path; do
+      [ -n "$source_path" ] || continue
+      link_entry "$AILI_HOME/$source_path" "$HOME/$target_path"
+    done < <(manifest_skill_entries shared)
+    while IFS=$'\t' read -r source_path target_path; do
+      [ -n "$source_path" ] || continue
+      link_entry "$AILI_HOME/$source_path" "$OPENCODE_HOME/$target_path"
+    done < <(manifest_skill_entries opencode)
     return
   fi
 
@@ -566,17 +608,16 @@ managed_directory() {
   ln -s "$AILI_HOME/agents" "$OPENCODE_HOME/agents"
   ln -s "$AILI_HOME/commands" "$OPENCODE_HOME/commands"
 
-  local dir name target
-  for dir in "$skills_source"/*; do
-    [ -d "$dir" ] || continue
-    if [ ! -f "$dir/SKILL.md" ]; then
-      log "Skipping non-skill directory without SKILL.md: $dir"
-      continue
-    fi
-    name="$(basename "$dir")"
-    target="$skills_target_root/$name"
-    link_entry "$dir" "$target"
-  done
+  mkdir -p "$OPENCODE_HOME/skills"
+  local source_path target_path
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    link_entry "$AILI_HOME/$source_path" "$HOME/$target_path"
+  done < <(manifest_skill_entries shared)
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    link_entry "$AILI_HOME/$source_path" "$OPENCODE_HOME/$target_path"
+  done < <(manifest_skill_entries opencode)
 }
 
 repair_directory_symlinks() {
@@ -641,7 +682,9 @@ repair_directory_symlinks() {
   fi
 }
 
-guard_opencode_home
+if [ "$INSTALL_OPENCODE" = "true" ]; then
+  guard_opencode_home
+fi
 
 case "$MODE" in
   repair)
@@ -661,8 +704,9 @@ case "$MODE" in
     ;;
 esac
 
-printf '{"mode":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
+printf '{"mode":%s,"scope":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
   "$(json_escape "$MODE")" \
+  "$(json_escape "$([ "$INSTALL_OPENCODE" = "true" ] && printf opencode || printf skills)")" \
   "$(json_escape "$RUNTIME")" \
   "$(json_escape "$AILI_HOME")" \
   "$(json_escape "$OPENCODE_HOME")" \

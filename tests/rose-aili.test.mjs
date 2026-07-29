@@ -10,7 +10,7 @@ import { loadManifest, repoInstallTargets, repoSourcePaths } from "../dist/manif
 
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, "dist", "cli.js");
-const SKIP_DEFAULT_ADDONS = ["--skip-openspec"];
+const SKIP_DEFAULT_ADDONS = ["--opencode", "--skip-openspec"];
 const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? false : "OpenSpec install success paths require Node.js 20.19.0+";
 const SPECIALIZED_QA_LANES = [
   { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing/modifying tests, PR-wide matrices, CI logs, or browser artifacts are different primary intents" },
@@ -39,12 +39,43 @@ test("dry-run install reports operations without mutating OpenCode home", async 
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--model", "anthropic/claude-sonnet-4-5", "--json"]);
+  const result = await runCli(["install", "--dry-run", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--model", "anthropic/claude-sonnet-4-5", "--json"]);
   const summary = JSON.parse(result.stdout);
 
   assert.equal(summary.dryRun, true);
   assert.equal(summary.componentInstall.status, "planned");
+  assert.equal(summary.componentInstall.scope, "opencode");
   assert.equal(summary.config.changed, true);
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("install defaults to shared skills without reading or mutating OpenCode home", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"]);
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.componentInstall.scope, "skills");
+  assert.equal(summary.config.changed, false);
+  assert.deepEqual(summary.config.skipped, ["OpenCode integration not enabled; installed shared skills only"]);
+  assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
+  assert.equal(summary.optionalDecisions.some((entry) => entry.name === "Graphify"), false);
+  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("OpenCode-specific options require the --opencode suffix", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  for (const args of [["--model", "provider/model"], ["--enable-playwright"], ["--enable-codegraph"], ["--enable-graphify"], ["--register-graphify-skill"], ["--skip-graphify"], ["--skip-openspec"]]) {
+    const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, ...args, "--yes", "--json"], { reject: false });
+    assert.equal(result.code, 1, args.join(" "));
+    assert.match(result.stderr, /requires --opencode/);
+  }
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
 });
@@ -114,7 +145,7 @@ test("set-default-rose does not create a model override", async () => {
   await fixture.cleanup();
 });
 
-test("install defaults sync OpenCode config without model override", async () => {
+test("--opencode install defaults sync OpenCode config without model override", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
 
@@ -295,7 +326,7 @@ test("DCP zero interaction preserves third-party files metadata symlinks plugins
       }
 
       const before = await capturePathState(dcpPath, symlinkTarget);
-      const args = [command, "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-openspec"];
+      const args = [command, "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-openspec"];
       if (state !== "custom-home-bytes") args.push("--json");
       const result = await runCli(args, {
         cwd: await safeCommandCwd(fixture),
@@ -332,7 +363,7 @@ test("Playwright MCP pin and unrelated MCP and plugin config are preserved", asy
     mcp: { unrelated: { type: "local", command: ["unrelated"], enabled: true } }
   })}\n`, "utf8");
 
-  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-playwright", "--skip-openspec", "--json"]);
+  await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-playwright", "--skip-openspec", "--json"]);
   const config = JSON.parse(await readFile(path.join(opencodeHome, "opencode.json"), "utf8"));
   assert.equal(config.default_agent, "existing-agent");
   assert.equal(config.agent.rose.model, "existing/model");
@@ -352,7 +383,7 @@ test("explicit OpenSpec update uses installed command without npm install", { sk
   await writeStub(binDir, "openspec", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["update", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["update", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
@@ -377,7 +408,7 @@ test("OpenSpec missing during update installs package then runs project command"
   await writeOpenSpecStub(binDir, logPath, { versionExitCode: 1 });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["update", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["update", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
@@ -404,23 +435,23 @@ test("non-interactive install reports skipped optional decisions with next steps
   assert.equal(summary.graphify.cli.status, "skipped");
   assert.equal(summary.graphify.globalSkill.status, "skipped");
   assert.equal(summary.openspec.status, "skipped");
-  assertDecision(summary, "rose model override", "rose-aili install --model <provider/model>");
-  assertDecision(summary, "Playwright MCP", "rose-aili install --enable-playwright");
-  assertDecision(summary, "CodeGraph", "rose-aili install --enable-codegraph");
-  assertDecision(summary, "Graphify", "rose-aili install --enable-graphify");
-  assertDecision(summary, "OpenSpec", "rose-aili install --enable-openspec --project-root <absolute-canonical-path>");
+  assertDecision(summary, "rose model override", "rose-aili install --opencode --model <provider/model>");
+  assertDecision(summary, "Playwright MCP", "rose-aili install --opencode --enable-playwright");
+  assertDecision(summary, "CodeGraph", "rose-aili install --opencode --enable-codegraph");
+  assertDecision(summary, "Graphify", "rose-aili install --opencode --enable-graphify");
+  assertDecision(summary, "OpenSpec", "rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>");
   await fixture.cleanup();
 });
 
 test("non-interactive install skips OpenSpec without explicit enable and reports exact next step", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
-  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const result = await runCli(["install", "--dry-run", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
   const summary = JSON.parse(result.stdout);
 
   assert.equal(summary.openspec.status, "skipped");
   assert.equal(Object.hasOwn(summary, "dcp"), false);
-  assertDecision(summary, "OpenSpec", "rose-aili install --enable-openspec --project-root <absolute-canonical-path>");
+  assertDecision(summary, "OpenSpec", "rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>");
   await fixture.cleanup();
 });
 
@@ -660,7 +691,7 @@ test("Graphify CLI stage delegates exact uv argv, verifies ownership/version, an
   assert.equal(summary.graphify.cli.exitCode, 0);
   assert.equal(summary.graphify.cli.observedVersion, "0.9.20");
   assert.equal(summary.graphify.globalSkill.status, "pending");
-  assert.equal(summary.graphify.globalSkill.nextStep, "rose-aili install --register-graphify-skill");
+  assert.equal(summary.graphify.globalSkill.nextStep, "rose-aili install --opencode --register-graphify-skill");
   assert.deepEqual(logged.filter((entry) => entry.name === "uv" && entry.args[0] === "tool" && entry.args[1] === "install"), [
     { name: "uv", args: ["tool", "install", "graphifyy"] }
   ]);
@@ -838,7 +869,8 @@ test("default non-interactive install does not inspect or initialize ambient Ope
   });
   const summary = JSON.parse(result.stdout);
   assert.equal(summary.openspec.status, "skipped");
-  assertDecision(summary, "OpenSpec", "rose-aili install --enable-openspec --project-root <absolute-canonical-path>");
+  assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
+  assert.equal(summary.optionalDecisions.some((entry) => entry.name === "OpenSpec"), false);
   await assert.rejects(readFile(logPath, "utf8"));
   await fixture.cleanup();
 });
@@ -851,7 +883,7 @@ test("--skip-openspec skips OpenSpec install", async () => {
   await writeStub(binDir, "openspec", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--skip-openspec", "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--skip-openspec", "--json"], {
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
   const summary = JSON.parse(result.stdout);
@@ -864,7 +896,7 @@ test("--skip-openspec skips OpenSpec install", async () => {
 test("--enable-openspec requires an explicit exact project root", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], { reject: false });
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--json"], { reject: false });
 
   assert.equal(result.code, 1);
   assert.match(result.stderr, /--enable-openspec requires --project-root <path>/);
@@ -880,7 +912,7 @@ test("OpenSpec exact project root rejects root, home, temp, relative, and symlin
   await symlink(target, alias, "dir");
   const opencodeHome = path.join(fixture.root, "opencode");
   for (const unsafeRoot of [path.parse(repoRoot).root, os.homedir(), os.tmpdir(), "relative-project", alias]) {
-    const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", unsafeRoot, "--json"], { reject: false });
+    const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", unsafeRoot, "--json"], { reject: false });
     assert.equal(result.code, 1, unsafeRoot);
     assert.match(result.stderr, /Refusing|requires an absolute canonical directory/);
   }
@@ -898,7 +930,7 @@ test("--enable-openspec installs package then initializes first-time exact proje
   await writeOpenSpecStub(binDir, logPath, { versionExitCode: 1 });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: fixture.root,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
@@ -924,7 +956,7 @@ test("--enable-openspec updates existing OpenSpec project", { skip: openSpecNode
   await writeStub(binDir, "openspec", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: fixture.root,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
@@ -947,7 +979,7 @@ test("OpenSpec optional commands ignore unsafe current-directory PATH entries", 
   await writeStub(projectDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "unsafe openspec ran" });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: [npmBinDir, projectDir, ".", "", openspecBinDir, process.env.PATH].join(path.delimiter) }
   });
@@ -978,7 +1010,7 @@ test("OpenSpec optional commands ignore unsafe absolute project subdirectory PAT
   await writeStub(unsafeBinDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "unsafe project openspec ran" });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: [npmBinDir, unsafeBinDir, openspecBinDir, process.env.PATH].join(path.delimiter) }
   });
@@ -1005,7 +1037,7 @@ test("OpenSpec optional commands ignore relative PATH entries", { skip: openSpec
   await writeStub(unsafeBinDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "relative openspec ran" });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: [npmBinDir, "bin", openspecBinDir, process.env.PATH].join(path.delimiter) }
   });
@@ -1027,7 +1059,7 @@ test("optional commands fail closed when sanitized PATH has no safe entries", { 
   await writeStub(projectDir, "openspec", unsafeLogPath, { exitCode: 99, stderr: "unsafe openspec ran" });
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: [projectDir, ".", "bin", ""].join(path.delimiter) },
     reject: false
@@ -1052,7 +1084,7 @@ test("OpenSpec low Node.js gate is reported separately before optional commands"
   await writeStub(binDir, "openspec", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` },
     reject: false
@@ -1078,7 +1110,7 @@ test("explicit OpenSpec failure returns exit code 1 with the successful core ins
     await writeOpenSpecStub(binDir, logPath, { versionExitCode: 1 });
     const opencodeHome = path.join(fixture.root, "opencode");
 
-    const result = await runCli([command, "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
+    const result = await runCli([command, "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--enable-openspec", "--project-root", projectDir, "--json"], {
       cwd: projectDir,
       env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` },
       reject: false
@@ -1097,7 +1129,7 @@ test("explicit OpenSpec failure returns exit code 1 with the successful core ins
 test("unknown plugins are rejected and not installed", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
-  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--plugin", "unknown-plugin", "--json"], { reject: false });
+  const result = await runCli(["install", "--dry-run", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--plugin", "unknown-plugin", "--json"], { reject: false });
 
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /Unknown plugin/);
@@ -1269,7 +1301,7 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await fixture.cleanup();
 });
 
-test("selective Bash install links shared skills from .agents/skills and preserves OpenCode skills directory", async () => {
+test("skills-only Bash install links shared skills and preserves OpenCode-owned directories", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
   const skillsParent = path.join(opencodeHome, "skills");
@@ -1291,6 +1323,50 @@ test("selective Bash install links shared skills from .agents/skills and preserv
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
   assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
   await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
+  await assert.rejects(stat(path.join(opencodeHome, "AGENTS.md")));
+  await assert.rejects(stat(path.join(opencodeHome, "agents")));
+  await assert.rejects(stat(path.join(opencodeHome, "commands")));
+  await fixture.cleanup();
+});
+
+test("OpenCode-only skills use .opencode sources and install only with --opencode", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const source = path.join(fixture.ailiHome, ".opencode", "skills", "opencode-only");
+  await mkdir(source, { recursive: true });
+  await writeFile(path.join(source, "SKILL.md"), "---\nname: opencode-only\n---\n", "utf8");
+  const manifestPath = path.join(fixture.ailiHome, "manifests", "rose-aili.components.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  manifest.components.skills.push({
+    name: "opencode-only",
+    path: ".opencode/skills/opencode-only",
+    installTargets: [{ kind: "opencode", path: "skills/opencode-only" }],
+    required: true,
+    defaultInstalled: false,
+    repositoryManaged: true
+  });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+  await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "opencode-only")));
+
+  await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--opencode",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  const target = path.join(opencodeHome, "skills", "opencode-only");
+  assert.equal((await lstat(target)).isSymbolicLink(), true);
+  assert.equal(await readlink(target), source);
   await fixture.cleanup();
 });
 
@@ -1436,7 +1512,7 @@ test("invalid config aborts install before component mutation", async () => {
   await mkdir(opencodeHome, { recursive: true });
   await writeFile(path.join(opencodeHome, "opencode.jsonc"), `{ "default_agent": `, "utf8");
 
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], { reject: false });
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], { reject: false });
 
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /invalid JSONC/);
@@ -1446,7 +1522,7 @@ test("invalid config aborts install before component mutation", async () => {
 
 test("json mode preserves compatibility installer stderr on failure", async () => {
   const fixture = await fixtureAiliHome();
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", "/", "--json"], { reject: false });
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", "/", "--json"], { reject: false });
 
   assert.notEqual(result.code, 0);
   assert.equal(result.stdout, "");
@@ -1456,7 +1532,7 @@ test("json mode preserves compatibility installer stderr on failure", async () =
 
 test("OpenCode home traversal resolving to tmp root is rejected before mutation", async () => {
   const fixture = await fixtureAiliHome();
-  const result = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", path.join(os.tmpdir(), "subdir", ".."), "--yes", "--json"], { reject: false });
+  const result = await runCli(["install", "--dry-run", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", path.join(os.tmpdir(), "subdir", ".."), "--yes", "--json"], { reject: false });
 
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /Refusing unsafe OPENCODE_HOME/);
@@ -1481,6 +1557,7 @@ test("Bash installer canonicalizes OpenCode home before unsafe path validation",
     await execFileP("bash", [
       path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
       "--mode", "selective",
+      "--opencode",
       "--aili-home", fixture.ailiHome,
       "--opencode-home", path.join(os.tmpdir(), "subdir", ".."),
       "--dry-run"
@@ -1532,7 +1609,7 @@ test("Bash installer rejects tmp HOME before shared skill mutation", async () =>
 
 test("relative OpenCode home is rejected before component mutation", async () => {
   const fixture = await fixtureAiliHome();
-  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", "relative-opencode", "--yes", "--json"], { reject: false });
+  const result = await runCli(["install", "--opencode", "--aili-home", fixture.ailiHome, "--opencode-home", "relative-opencode", "--yes", "--json"], { reject: false });
 
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /Refusing relative OPENCODE_HOME/);
@@ -1576,7 +1653,7 @@ test("manifest registers local-review command", async () => {
 
   assert.ok(commandNames.has("local-review"), "expected manifest command local-review");
   assert.equal(command.path, "commands/local-review.md");
-  assert.equal(command.defaultInstalled, true);
+  assert.equal(command.defaultInstalled, false);
   assert.deepEqual(repoSourcePaths(command), ["commands/local-review.md"]);
   assert.deepEqual(repoInstallTargets(command), [{ kind: "opencode", path: "commands/local-review.md" }]);
   assert.match(await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8"), /OpenCode's built-in `\/review`/);
@@ -1628,7 +1705,7 @@ test("manifest registers ECC-derived selected agents and skills", async () => {
     const agent = manifest.components.agents.find((entry) => entry.name === name);
     assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
     assert.equal(agent.path, `agents/${name}.md`);
-    assert.equal(agent.defaultInstalled, true);
+    assert.equal(agent.defaultInstalled, false);
     await stat(path.join(repoRoot, "agents", `${name}.md`));
     assert.ok(roseText.includes(`"${name}": allow`));
   }
@@ -1869,6 +1946,8 @@ test("packed package keeps CLI bin executable", async () => {
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/skills/")), false);
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/.codegraph/")), false);
   assert.equal(packedEntries.some((entry) => entry.startsWith("package/.playwright-mcp/")), false);
+  assert.equal(packedEntries.some((entry) => entry.includes("/__pycache__/") || /\.py[cod]$/.test(entry)), false);
+  assert.equal(packedEntries.some((entry) => entry.includes("/obj/")), false);
   await rm(root, { recursive: true, force: true });
 });
 
@@ -1886,6 +1965,7 @@ test("package bin symlink invokes CLI main", async () => {
 test("help documents supported options and omits removed plugin flags", async () => {
   for (const argv of [["help"], ["--help"], ["install", "--help"], ["update", "--help"], ["doctor", "--help"]]) {
     const result = await runCli(argv);
+    assert.match(result.stdout, /--opencode \(also install OpenCode/);
     assert.match(result.stdout, /--skip-opencode-config/);
     assert.match(result.stdout, /--enable-openspec \| --skip-openspec/);
     assert.match(result.stdout, /--enable-graphify \| --skip-graphify/);

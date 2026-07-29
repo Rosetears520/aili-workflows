@@ -2,24 +2,25 @@
 
 This document is for an AI agent installing `Rosetears520/aili-workflows` into OpenCode.
 
-Default rule: install where OpenCode runs.
+[KNOWN] Default scope installs only reusable skills into `$HOME/.agents/skills`. Add `--opencode` only when the user also wants OpenCode global rules, agents, commands, config integration, or OpenCode-only skills.
 
 If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows native, clone and link inside Windows. Do not mix WSL and Windows paths by default. Do not clone into the user home root.
 
-Default installation mode is selective symlink setup.
+[KNOWN] Default installation mode is selective shared-skill setup.
 
-Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. Preserve existing OpenCode agent/command directories and install skills into the shared skills directory:
+Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. The installation scopes are:
 
-- `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`
-- `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`
-- `$HOME/.agents/skills/<skill> -> <repo>/.agents/skills/<skill>`
-- `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`
+- default: `$HOME/.agents/skills/<skill> -> <repo>/.agents/skills/<skill>`;
+- `--opencode`: `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`;
+- `--opencode`: `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`;
+- `--opencode`: `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`;
+- `--opencode`, when manifest entries exist: `~/.config/opencode/skills/<skill> -> <repo>/.opencode/skills/<skill>`.
 
 Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/` and `commands/` directories.
 
 ## Goal
 
-Install ROSE agents and skills for OpenCode while keeping:
+Install reusable skills by default and opt into ROSE/OpenCode integration only when requested, while keeping:
 
 - workflow source synced with this repository
 - existing OpenCode global agents preserved and shared skills kept outside OpenCode home
@@ -105,9 +106,9 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | `/home/<user>/.config/opencode` plus `/home/<user>/.agents/skills` | selective links: agents/commands inside OpenCode home; skills inside shared `.agents/skills` |
-| Linux/macOS | `$AILI_HOME` | `$HOME/.config/opencode` plus `$HOME/.agents/skills` | selective links: agents/commands inside OpenCode home; skills inside shared `.agents/skills` |
-| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | `%USERPROFILE%\.config\opencode` plus `%USERPROFILE%\.agents\skills` | selective symlinks or junctions: agents/commands inside OpenCode home; skills inside shared `.agents\skills` |
+| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | default: `/home/<user>/.agents/skills`; `--opencode`: also `/home/<user>/.config/opencode` | shared skill links by default; OpenCode entries only with `--opencode` |
+| Linux/macOS | `$AILI_HOME` | default: `$HOME/.agents/skills`; `--opencode`: also `$HOME/.config/opencode` | shared skill links by default; OpenCode entries only with `--opencode` |
+| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | default: `%USERPROFILE%\.agents\skills`; OpenCode integration is explicit | shared skill links by default; platform-specific entries remain opt-in |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
 
@@ -129,7 +130,8 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
 - `agents/web-performance-auditor.md` - read-only Web performance audit subagent.
 - `agents/spec-miner.md`, `agents/agent-evaluator.md`, and `agents/opensource-sanitizer.md` - relevant-triggered read-only spec-mining, agent-output evaluation, and OSS/public exposure review subagents.
-- `.agents/skills/*/SKILL.md` - repository source for OpenCode skills.
+- `.agents/skills/*/SKILL.md` - reusable shared skill sources installed by default.
+- `.opencode/skills/*/SKILL.md` - reserved source location for manifest-declared OpenCode-only skills; these install only with `--opencode`.
 - `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode delivery slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
 - `commands/local-review.md` - optional OpenCode slash command entrypoint `/local-review` for report-first local review; it does not override OpenCode's `/review` or replace `/ship`.
 - `.agents/skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
@@ -137,7 +139,7 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
 - `templates/opencode-global-AGENTS.md` - installer-owned source for reusable global OpenCode `AGENTS.md` rules.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
-- `scripts/install_opencode.sh` - safe WSL/Linux installer for OpenCode global AGENTS rules, agents, skills, and commands.
+- `scripts/install_opencode.sh` - safe WSL/Linux installer: shared skills by default, OpenCode integration with `--opencode`.
 
 Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
 
@@ -145,10 +147,11 @@ The canonical role inventory is primary ROSE plus 19 repository-managed subagent
 
 ## Installation Decision Rule
 
-Use `rose-aili install` by default when Node/npm is available. It wraps the same entry-level setup for repository-managed global AGENTS rules, agents, skills, and commands, then safely merges optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so OpenCode does not point at a transient package cache. The npm package bin target is `dist/cli.js`; builds enforce a Node shebang and executable file mode so npm/npx can execute it directly.
+[KNOWN] Use `rose-aili install` for shared skills. Use `rose-aili install --opencode` for repository-managed global AGENTS rules, agents, commands, OpenCode-only skills, and optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
 
 ```bash
 npx -y rose-aili install
+npx -y rose-aili install --opencode
 ```
 
 Before npm publishing, use the GitHub package-spec form from the repository URL:
@@ -160,21 +163,22 @@ npx -y --package github:<owner>/<repo> rose-aili install
 Use these non-interactive flags for AI-agent or scripted setup:
 
 ```bash
-npx -y rose-aili install --yes --model anthropic/claude-sonnet-4-5
-npx -y rose-aili install --set-default-rose
-npx -y rose-aili install --skip-opencode-config
-npx -y rose-aili install --enable-playwright
-npx -y rose-aili install --enable-codegraph
-npx -y rose-aili install --enable-openspec
-npx -y rose-aili install --skip-openspec
-npx -y rose-aili update --skip-openspec
+npx -y rose-aili install --yes
+npx -y rose-aili install --opencode --yes --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --opencode --set-default-rose
+npx -y rose-aili install --opencode --skip-opencode-config
+npx -y rose-aili install --opencode --enable-playwright
+npx -y rose-aili install --opencode --enable-codegraph
+npx -y rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>
+npx -y rose-aili install --opencode --skip-openspec
+npx -y rose-aili update --opencode --skip-openspec
 npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-OpenCode config sync is enabled by default for both `install` and `update`; use `--skip-opencode-config` to disable it. The default sync sets or keeps `default_agent: "rose"` when the value is absent or already `rose`, preserves a conflicting non-rose default unless `--force-default-agent` is passed, writes `agent.rose.model` only when `--model <provider/model>` is provided, and writes Playwright MCP only when `--enable-playwright` is provided. Existing `agent.rose.model` values are preserved unless `--force-model` is passed. Playwright, CodeGraph, Graphify, and OpenSpec are independent explicit opt-ins; optional decisions are reported as skipped/pending with exact next-step commands. `--dry-run` reports planned component/config operations without mutating OpenCode files.
+[KNOWN] OpenCode config sync is disabled outside `--opencode` scope. Within `--opencode`, the existing preserve/conflict behavior remains, and Playwright, CodeGraph, Graphify, and OpenSpec retain their separate explicit flags. OpenCode-specific flags fail closed when `--opencode` is absent.
 
-Interactive `rose-aili install` asks, in order, about the default agent, a missing model override, Playwright MCP, CodeGraph OpenCode integration, Graphify CLI installation, and OpenSpec. Interactive `rose-aili update` asks about CodeGraph and Graphify CLI. Non-interactive setup performs optional integration work only for explicit enable flags. Model preferences are always written to OpenCode JSON/JSONC under `agent.rose.model`, not to `agents/rose.md`.
+[KNOWN] Interactive `install` / `update` without `--opencode` performs no OpenCode prompts. Interactive `install --opencode` asks about the default agent, model, Playwright, CodeGraph, Graphify, and OpenSpec; `update --opencode` asks about CodeGraph and Graphify.
 
 AILI has no active DCP integration. `install`, `update`, and `doctor` do not install, detect, configure, report, migrate, or remove a third-party DCP plugin and do not read or mutate user `dcp.json`/`dcp.jsonc`. Former DCP flags are ordinary unknown options. Historical DCP evidence may remain in archived ideas, accepted-change history, or negative fixtures, but it is not setup/runtime authority.
 
@@ -186,13 +190,13 @@ An explicit `install` or `update`, including `--dry-run`, checks only those thre
 
 Do not manually delete an ambiguous retired-name entry. Review it separately and decide whether it is user content. Rolling back to a prior repository/package version may reinstall that version's managed catalog through the normal installer, but cannot reconstruct user-owned content from guesses.
 
-CodeGraph opt-in is explicit: `rose-aili install --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`. Restart OpenCode after a configured CodeGraph install so OpenCode reloads the MCP integration. If either command is unavailable or fails, the core global `AGENTS.md`/agents/skills/commands install can still succeed and the summary reports CodeGraph recovery instructions separately.
+CodeGraph opt-in is explicit: `rose-aili install --opencode --enable-codegraph` runs `npm install -g @colbymchenry/codegraph@latest`, then delegates `codegraph install --target=opencode --yes`.
 
 Project-local CodeGraph initialization is separate from global install/update. An AI agent should confirm the current repository root before running `codegraph init -i` and `codegraph status` for that repository only. For an A33 host and its declared attachments, confirm root, readiness, and any init approval separately per target; one repository's CodeGraph result never covers another. It must not run `openspec init` as part of CodeGraph initialization, and it must not initialize multiple repositories without explicit approval for each exact target.
 
 Project `AGENTS.md` initialization/update should also check CodeGraph readiness for the same repository. After generating or updating `AGENTS.md`, run or request `codegraph status`; if the repository is not initialized, ask whether to run `codegraph init -i`, then rerun `codegraph status` when approved. If CodeGraph is unavailable, skipped, or not approved, keep the `AGENTS.md` flow non-blocking but report that the project has no CodeGraph code-map coverage yet.
 
-OpenSpec is explicit opt-in for `rose-aili install` and `rose-aili update`. With `--enable-openspec`, it requires Node.js `20.19.0+`, detects an existing CLI with `openspec --version`, runs `npm install -g @fission-ai/openspec@latest` only when the CLI is missing, then runs `openspec update` inside projects with existing OpenSpec markers or `openspec init` for first-time setup. Expanded workflow selection with `openspec config profile` remains a manual follow-up.
+OpenSpec is explicit opt-in under OpenCode scope. `--opencode --enable-openspec --project-root <absolute-canonical-path>` retains the existing Node, detection, install, and project `init/update` gates.
 
 User preferences belong in OpenCode runtime config, not in symlinked upstream agent Markdown:
 
@@ -261,15 +265,16 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. It preserves OpenCode's existing global `agents/` and `commands/` directories, then links skills into `$HOME/.agents/skills`.
+Use this by default. Without `--opencode`, it links only shared skills into `$HOME/.agents/skills` and leaves OpenCode home untouched. With `--opencode`, it also preserves OpenCode's existing global directories and links individual managed entries.
 
 WSL/Linux recommended command:
 
 ```bash
 scripts/install_opencode.sh --mode selective
+scripts/install_opencode.sh --mode selective --opencode
 ```
 
-Core WSL/Linux entry-linking logic is shown below for reference. It does not implement the exact retired-skill ownership reconciliation above; use the CLI or `scripts/install_opencode.sh` for install/update migration.
+The full OpenCode entry-linking logic below corresponds to the `--opencode` scope. It does not implement the exact retired-skill ownership reconciliation above; use the CLI or installer script for real migration.
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -352,7 +357,7 @@ Do not use this mode unless the user explicitly says `aili-workflows` may replac
 WSL/Linux command with explicit confirmation:
 
 ```bash
-CONFIRM_MANAGED_DIRECTORY=yes scripts/install_opencode.sh --mode managed-directory
+CONFIRM_MANAGED_DIRECTORY=yes scripts/install_opencode.sh --mode managed-directory --opencode
 ```
 
 Manual logic, only after explicit approval:
@@ -398,9 +403,10 @@ WSL/Linux command:
 
 ```bash
 scripts/install_opencode.sh --mode copy
+scripts/install_opencode.sh --mode copy --opencode
 ```
 
-Manual logic:
+The manual logic below represents the full `--opencode` copy scope:
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -423,7 +429,7 @@ cp -R "$AILI_HOME/templates/opencode-global-AGENTS.md" "$OPENCODE_HOME/AGENTS.md
 
 ## Windows Native Selective Symlink Setup
 
-Use this only when OpenCode is running natively in Windows.
+Use this only when OpenCode is running natively in Windows and the user requested the equivalent of `--opencode`. A skills-only Windows install writes only `%USERPROFILE%\.agents\skills`.
 
 Do not reuse WSL paths from Windows native OpenCode.
 
@@ -611,7 +617,7 @@ Recommended opt-in runtime add-ons are Playwright MCP, OpenSpec, CodeGraph, the 
 OpenSpec is installed/configured only when explicitly enabled:
 
 ```bash
-rose-aili install --enable-openspec
+rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>
 ```
 
 The delegated command path is:
@@ -680,11 +686,11 @@ AILI provides no cron, scheduler, watcher, webhook, listener, daemon, persistent
 
 ## Source, Adapter, and Distribution Boundaries
 
-- Canonical AILI source is this repository's four command files, top-level canonical `SKILL.md` files and references, agents, templates, manifests, TypeScript, and installer sources.
+- Canonical AILI source is this repository's four command files, shared `.agents/skills`, any explicitly manifest-declared `.opencode/skills`, agents, templates, manifests, TypeScript, and installer sources.
 - Root `AGENTS.md`, `dist/`, installed OpenCode files, and installed shared skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
-- Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned outputs. They remain unchanged and directly callable outside AILI guarantees. AILI does not route to, recommend, wrap, suppress, prevent, control, or count their output as AILI acceptance/readiness/verification/completion evidence.
+- Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned ignored outputs, not repository-managed OpenCode-only skills. They remain outside AILI guarantees and are not installed by `--opencode` unless a future accepted manifest change explicitly promotes a distinct canonical component.
 - Pinned upstream files under canonical skill `references/upstream/` are inert licensed data, not another installed skill or runtime. They use `SKILL.upstream.md`; upstream scripts must remain non-executable data and must never become commands, hooks, or routing targets.
-- `package.json#files` ships canonical agents, `.agents/` (including protocols, inert references, and skill-local deterministic helpers), commands, manifests, both AGENTS templates, `agents_md.py`, the installer script, two explicitly listed Graphify/upstream contract fixtures, README/setup docs, and built CLI. Other repository-only checkers, tests, and harness fixtures are not installed runtime components; the packaged session-handoff helper belongs to that skill and is not registered as a command or independent runnable skill. Root `.worktrees/`, visible `worktrees/`, and historical `.tmp/worktrees/` are excluded.
+- `package.json#files` ships canonical agents, `.agents/`, commands, manifests, both AGENTS templates, required helpers/fixtures, README/setup docs, and built CLI. A future manifest-declared `.opencode/skills/<name>` component must add that exact canonical source to the package allowlist; the package must not broadly include ignored/generated `.opencode` state.
 
 The upstream distribution path is currently fail-closed. OpenCode `1.17.18` installed-catalog recursion remains `UV-005`, and filesystem mode evidence may not prove required upstream `0644` modes; until both are resolved, do not claim distribution/registration/enablement or release readiness. `npm pack --dry-run` is content evidence only and does not publish or resolve runtime catalog/mode behavior.
 
@@ -697,11 +703,11 @@ Graphify CLI installation, global agents-skill registration, and every project-l
 Use only the official two-stage flow. `uv` must already exist; AILI does not bootstrap uv, Python, a system package manager, pip/pipx, or a source build.
 
 ```bash
-rose-aili install --enable-graphify
+rose-aili install --opencode --enable-graphify
 # delegated official command: uv tool install graphifyy
 
 # Run later in a different invocation after a different exact approval:
-rose-aili install --register-graphify-skill
+rose-aili install --opencode --register-graphify-skill
 # delegated official command: graphify install --platform agents
 ```
 

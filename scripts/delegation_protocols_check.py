@@ -570,7 +570,7 @@ def managed_agent_sources(project: Path) -> tuple[Path, list[dict[str, Any]]]:
     by_path: dict[str, dict[str, Any]] = {}
     for entry in entries:
         if not exact_keys(entry, fields) or not isinstance(entry["name"], str) or entry["path"] != f'agents/{entry["name"]}.md' \
-                or entry["required"] is not True or entry["defaultInstalled"] is not True or entry["repositoryManaged"] is not True or entry["path"] in by_path:
+                or entry["required"] is not True or entry["defaultInstalled"] is not False or entry["repositoryManaged"] is not True or entry["path"] in by_path:
             raise ValueError("managed manifest malformed")
         by_path[entry["path"]] = entry
     if set(by_path) != set(P6_AGENT_FILES) or len(by_path) != len(P6_AGENT_FILES):
@@ -587,10 +587,10 @@ def managed_agent_sources(project: Path) -> tuple[Path, list[dict[str, Any]]]:
 
 
 def exact_installer_summary(summary: Any, project: Path, opencode_home: Path) -> bool:
-    return exact_keys(summary, ["mode", "runtime", "aili_home", "opencode_home", "dry_run", "no_update"]) \
-        and summary["mode"] == "copy" and summary["runtime"] in {"linux", "macos", "wsl"} \
+    return exact_keys(summary, ["mode", "scope", "runtime", "aili_home", "opencode_home", "dry_run", "no_update", "retired_skill_reconciliation"]) \
+        and summary["mode"] == "copy" and summary["scope"] == "opencode" and summary["runtime"] in {"linux", "macos", "wsl"} \
         and summary["aili_home"] == str(project) and summary["opencode_home"] == str(opencode_home) \
-        and summary["dry_run"] == "false" and summary["no_update"] == "true"
+        and summary["dry_run"] == "false" and summary["no_update"] == "true" and isinstance(summary["retired_skill_reconciliation"], list)
 
 
 def canonical_copy_installer(project: Path) -> Path | None:
@@ -652,7 +652,7 @@ def observe_managed_profile(state: dict[str, Any], summary: Any) -> dict[str, An
     config_root = run_root / "home" / ".config"
     config_entries = sorted(str(path.relative_to(config_root)).replace("\\", "/") for path in config_root.rglob("*")) if config_root.exists() else []
     if config_entries or any((opencode_home / name).exists() or (opencode_home / name).is_symlink() for name in ["opencode.json", "opencode.jsonc"]) \
-            or sorted(path.name for path in opencode_home.iterdir()) != ["AGENTS.md", "agents", "commands"]:
+            or sorted(path.name for path in opencode_home.iterdir()) != ["AGENTS.md", "agents", "commands", "skills"]:
         raise ValueError("managed override layer unexpected")
     if not exact_installer_summary(summary, project, opencode_home):
         raise ValueError("managed installer summary malformed")
@@ -677,7 +677,7 @@ def validate_managed_collectors(state: dict[str, Any]) -> int:
         return 5
     project, run_root = Path(state.get("project", "")), Path(state.get("run_root", ""))
     script, opencode_home = project / "scripts" / "install_opencode.sh", run_root / "opencode-home"
-    command = ["/bin/bash", str(script), "--mode", "copy", "--aili-home", str(project), "--opencode-home", str(opencode_home), "--no-update"]
+    command = ["/bin/bash", str(script), "--mode", "copy", "--opencode", "--aili-home", str(project), "--opencode-home", str(opencode_home), "--no-update"]
     attempt = state.get("managed_install_attempt")
     controls = {"OPENCODE_ALLOW_CUSTOM_HOME": "yes", "AILI_ALLOW_CROSS_ENV": "yes"}
     provenance = {"HOME": str(run_root / "home"), "XDG_CONFIG_HOME": str(run_root / "home" / ".config"), "XDG_DATA_HOME": str(run_root / "home" / ".local" / "share"), "XDG_CACHE_HOME": str(run_root / "home" / ".cache"), "TMPDIR": str(run_root / "tmp")}
@@ -703,7 +703,7 @@ def validate_managed_collectors(state: dict[str, Any]) -> int:
     if attempt["status"] == "unavailable":
         if not all(record["status"] == "Unverified" and record["exit_code"] == 3 and record.get("before_state") == attempt for record in records):
             return 5
-        synthetic_summary = {"mode": "copy", "runtime": "linux", "aili_home": str(project), "opencode_home": str(opencode_home), "dry_run": "false", "no_update": "true"}
+        synthetic_summary = {"mode": "copy", "scope": "opencode", "runtime": "linux", "aili_home": str(project), "opencode_home": str(opencode_home), "dry_run": "false", "no_update": "true", "retired_skill_reconciliation": []}
         try:
             observe_managed_profile(state, synthetic_summary)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError):

@@ -24,9 +24,9 @@
   "forbidden_output": ["human DCP status", "JSON dcp field", "DCP next step"],
   "preserved_supported_behavior": ["@playwright/mcp@0.0.75", "default_agent", "agent.rose.model", "unrelated mcp", "unrelated plugin", "JSON/JSONC safety", "doctor checks"],
   "openspec": {
-    "interactive_install": "ask when no explicit choice",
+    "interactive_install": "ask only in --opencode scope when no explicit choice",
     "noninteractive_default": "skip without process or project mutation",
-    "next_step": "rose-aili install --enable-openspec",
+    "next_step": "rose-aili install --opencode --enable-openspec",
     "explicit_enable": "existing supported install/detect/init-or-update behavior"
   }
 }

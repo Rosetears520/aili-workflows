@@ -384,7 +384,7 @@ def verify_catalog(root: Path, archive: Path, version: str, closures: list[dict[
             unverified(result, f"UV-005: exact archive install unavailable: {installed.stderr.strip()[-300:]}")
             return
         cli = prefix / "node_modules" / ".bin" / "rose-aili"
-        invoked = subprocess.run([str(cli), "install", "--opencode-home", str(opencode_home), "--yes", "--skip-opencode-config", "--skip-playwright", "--skip-codegraph", "--skip-openspec", "--json"], cwd=neutral, env=env, text=True, capture_output=True, timeout=120, check=False)
+        invoked = subprocess.run([str(cli), "install", "--opencode", "--opencode-home", str(opencode_home), "--yes", "--skip-opencode-config", "--skip-playwright", "--skip-codegraph", "--skip-openspec", "--json"], cwd=neutral, env=env, text=True, capture_output=True, timeout=120, check=False)
         if invoked.returncode != 0:
             error(result, f"installed publish candidate failed: {invoked.stderr.strip()[-300:]}")
             return

@@ -1,7 +1,7 @@
 {
   "name": "rose-aili",
-  "version": "0.2.7",
-  "description": "AILI OpenCode workflow installer CLI",
+  "version": "0.3.0",
+  "description": "AILI shared skills installer with opt-in OpenCode integration",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -27,7 +27,10 @@
     "docs/harness/fixtures/upstream-reference-fixtures.yaml",
     "docs/harness/skill-capability-contract.md",
     "README.md",
-    "docs/opencode-setup.md"
+    "docs/opencode-setup.md",
+    "!**/__pycache__/**",
+    "!**/*.py[cod]",
+    "!**/obj/**"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/make-cli-executable.mjs",

@@ -25,14 +25,15 @@ async function main(argv: string[]): Promise<void> {
     printHelp();
     return;
   }
-  if (command === "install" || command === "update" || command === "doctor") {
+  if (((command === "install" || command === "update") && options.opencode) || command === "doctor") {
     validateOpenCodeHome(options.opencodeHome);
   }
   if (command === "install" || command === "update") {
-    if (options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
+    if (options.opencode && options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
+    const includeOpenCode = Boolean(options.opencode);
     await applyInteractivePrompts(options, command === "install"
-      ? { includeCoreConfig: true, includeOpenspec: true }
-      : { includeCoreConfig: false, includePlaywright: false, includeCodegraph: true, includeOpenspec: false });
+      ? { includeCoreConfig: includeOpenCode, includePlaywright: includeOpenCode, includeCodegraph: includeOpenCode, includeGraphify: includeOpenCode, includeOpenspec: includeOpenCode }
+      : { includeCoreConfig: false, includePlaywright: false, includeCodegraph: includeOpenCode, includeGraphify: includeOpenCode, includeOpenspec: false });
     if (options.enableOpenspec && !options.skipOpenspec && !options.projectRoot) {
       throw new Error("--enable-openspec requires --project-root <path>.");
     }
@@ -62,7 +63,8 @@ interface PromptDecisionOptions {
 
 async function applyInteractivePrompts(options: CliOptions, promptOptions: PromptDecisionOptions = {}): Promise<void> {
   if (options.json || options.yes || !process.stdin.isTTY || !process.stdout.isTTY) return;
-  const config = await readOpenCodeConfig(options.opencodeHome);
+  if (!Object.values(promptOptions).some(Boolean)) return;
+  const config = promptOptions.includeCoreConfig ? await readOpenCodeConfig(options.opencodeHome) : { value: undefined };
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   try {
     await applyPromptDecisions(options, config.value, (prompt) => rl.question(prompt), promptOptions);
@@ -127,6 +129,9 @@ function parseOptions(argv: string[]): CliOptions {
         break;
       case "--opencode-home":
         options.opencodeHome = requireValue(argv, ++index, arg);
+        break;
+      case "--opencode":
+        options.opencode = true;
         break;
       case "--aili-home":
         options.ailiHome = requireValue(argv, ++index, arg);
@@ -215,6 +220,7 @@ function printHelp(): void {
 
 Options:
   --dry-run
+  --opencode (also install OpenCode AGENTS.md, agents, commands, config, and OpenCode-only skills)
   --opencode-home <path>
   --aili-home <path>
   --yes

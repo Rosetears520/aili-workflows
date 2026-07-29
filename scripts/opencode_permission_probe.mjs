@@ -1033,7 +1033,7 @@ function loadRun(options) {
   }
   const expectedScript = join(state.project, "scripts", "install_opencode.sh");
   const expectedHome = join(runRoot, "opencode-home");
-  const expectedCommand = ["/bin/bash", expectedScript, "--mode", "copy", "--aili-home", state.project, "--opencode-home", expectedHome, "--no-update"];
+  const expectedCommand = ["/bin/bash", expectedScript, "--mode", "copy", "--opencode", "--aili-home", state.project, "--opencode-home", expectedHome, "--no-update"];
   const expectedInstallPaths = [expectedHome, join(runRoot, "home", ".agents", "skills")].filter((path) => existsSync(path));
   if (state.project !== realpathSync(resolve(options.project)) || state.managed_install_attempt.script !== expectedScript || state.managed_install_attempt.opencode_home !== expectedHome
     || JSON.stringify(state.managed_install_attempt.command) !== JSON.stringify(expectedCommand)
@@ -1571,7 +1571,7 @@ function managedAgentSources(project) {
   const byPath = new Map();
   for (const entry of entries) {
     if (!exactKeys(entry, fields) || typeof entry.name !== "string" || entry.path !== `agents/${entry.name}.md`
-      || entry.required !== true || entry.defaultInstalled !== true || entry.repositoryManaged !== true || byPath.has(entry.path)) throw new Error("managed manifest malformed");
+      || entry.required !== true || entry.defaultInstalled !== false || entry.repositoryManaged !== true || byPath.has(entry.path)) throw new Error("managed manifest malformed");
     byPath.set(entry.path, entry);
   }
   if (byPath.size !== A33_MANAGED_AGENT_PATHS.length || A33_MANAGED_AGENT_PATHS.some((path) => !byPath.has(path))) throw new Error("managed manifest inventory mismatch");
@@ -1586,10 +1586,10 @@ function managedAgentSources(project) {
 }
 
 function exactInstallerSummary(summary, project, opencodeHome) {
-  return exactKeys(summary, ["mode", "runtime", "aili_home", "opencode_home", "dry_run", "no_update"])
-    && summary.mode === "copy" && ["linux", "macos", "wsl"].includes(summary.runtime)
+  return exactKeys(summary, ["mode", "scope", "runtime", "aili_home", "opencode_home", "dry_run", "no_update", "retired_skill_reconciliation"])
+    && summary.mode === "copy" && summary.scope === "opencode" && ["linux", "macos", "wsl"].includes(summary.runtime)
     && summary.aili_home === project && summary.opencode_home === opencodeHome
-    && summary.dry_run === "false" && summary.no_update === "true";
+    && summary.dry_run === "false" && summary.no_update === "true" && Array.isArray(summary.retired_skill_reconciliation);
 }
 
 function canonicalCopyInstaller(project) {
@@ -1637,7 +1637,7 @@ function observeManagedProfile(project, runRoot, opencodeHome, command, summary)
   const configRoot = join(runRoot, "home", ".config");
   const configEntries = existsSync(configRoot) ? listTree(configRoot) ?? [] : [];
   if (configEntries.length || existsSync(join(opencodeHome, "opencode.json")) || existsSync(join(opencodeHome, "opencode.jsonc"))
-    || JSON.stringify(readdirSync(opencodeHome).sort()) !== JSON.stringify(["AGENTS.md", "agents", "commands"])) throw new Error("managed override layer unexpected");
+    || JSON.stringify(readdirSync(opencodeHome).sort()) !== JSON.stringify(["AGENTS.md", "agents", "commands", "skills"])) throw new Error("managed override layer unexpected");
   return {
     schema_version: A33_INTERNAL_EVIDENCE_VERSION, command, installer_summary: summary, manifest_path: canonical.manifest_path, manifest_regular_nonsymlink: true,
     environment_controls: { ...A33_INSTALL_ENV_CONTROLS },
@@ -1653,7 +1653,7 @@ function observeManagedProfile(project, runRoot, opencodeHome, command, summary)
 function collectManagedProfile(project, runRoot, env, registry) {
   const script = join(project, "scripts", "install_opencode.sh");
   const opencodeHome = join(runRoot, "opencode-home");
-  const args = [script, "--mode", "copy", "--aili-home", project, "--opencode-home", opencodeHome, "--no-update"];
+  const args = [script, "--mode", "copy", "--opencode", "--aili-home", project, "--opencode-home", opencodeHome, "--no-update"];
   const command = ["/bin/bash", ...args];
   const environmentControls = { ...A33_INSTALL_ENV_CONTROLS };
   const attempt = {

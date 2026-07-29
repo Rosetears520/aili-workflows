@@ -21,6 +21,7 @@ import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestA
 
 export interface InstallOptions {
   dryRun: boolean;
+  opencode?: boolean;
   opencodeHome: string;
   ailiHome: string;
   yes?: boolean;
@@ -101,6 +102,7 @@ export interface InstallSummary {
   opencodeHome: string;
   componentInstall: {
     status: "planned" | "completed";
+    scope: "skills" | "opencode";
     code: number | null;
     retiredSkillReconciliation: Array<{
       name: string;
@@ -121,7 +123,7 @@ export interface InstallSummary {
 const CODEGRAPH_INSTALL_COMMAND = ["npm", "install", "-g", "@colbymchenry/codegraph@latest"];
 const CODEGRAPH_OPENCODE_COMMAND = ["codegraph", "install", "--target=opencode", "--yes"];
 const CODEGRAPH_RESTART_STEP = "Restart OpenCode so it loads the CodeGraph OpenCode integration.";
-const GRAPHIFY_REGISTER_STEP = "rose-aili install --register-graphify-skill";
+const GRAPHIFY_REGISTER_STEP = "rose-aili install --opencode --register-graphify-skill";
 const OPENSPEC_INSTALL_COMMAND = ["npm", "install", "-g", "@fission-ai/openspec@latest"];
 const OPENSPEC_DETECT_COMMAND = ["openspec", "--version"];
 const MIN_OPENSPEC_NODE = [20, 19, 0] as const;
@@ -132,7 +134,11 @@ export function defaultAiliHome(): string {
 }
 
 export async function runInstall(command: "install" | "update", rawOptions: InstallOptions): Promise<InstallSummary> {
-  const options = { ...rawOptions, opencodeHome: validateOpenCodeHome(rawOptions.opencodeHome) };
+  validateOpenCodeScope(rawOptions);
+  const options = {
+    ...rawOptions,
+    opencodeHome: rawOptions.opencode ? validateOpenCodeHome(rawOptions.opencodeHome) : rawOptions.opencodeHome
+  };
   if (options.skipGraphify && (options.enableGraphify || options.registerGraphifySkill)) {
     throw new Error("--skip-graphify cannot be combined with a Graphify install or registration flag.");
   }
@@ -145,9 +151,9 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
   }
   const manifest = await loadManifest(options.ailiHome);
   await validateManifestAllowlist(options.ailiHome, manifest);
-  await validateInstallerSources(options.ailiHome);
+  if (options.opencode) await validateInstallerSources(options.ailiHome);
   const playwright = findMcp(manifest, "playwright");
-  const shouldSyncOpenCodeConfig = !options.skipOpenCodeConfig;
+  const shouldSyncOpenCodeConfig = Boolean(options.opencode && !options.skipOpenCodeConfig);
   const shouldConfigurePlaywright = Boolean(shouldSyncOpenCodeConfig && options.enablePlaywright && !options.skipPlaywright);
   const pluginStatuses = validatePlugins(manifest, options.plugins);
   const unknown = pluginStatuses.find((plugin) => plugin.status === "unverified" && !plugin.source);
@@ -165,7 +171,7 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
     playwrightConfig: shouldConfigurePlaywright ? playwright?.config : undefined
   };
   const shouldMergeConfig = shouldSyncOpenCodeConfig && Boolean(configRequest.setDefaultRose || options.model || shouldConfigurePlaywright);
-  const preflightConfig = options.skipOpenCodeConfig
+  const preflightConfig = !shouldSyncOpenCodeConfig
     ? await skippedOpenCodeConfig(options)
     : shouldMergeConfig
     ? await mergeOpenCodeConfig({ ...configRequest, dryRun: true })
@@ -195,53 +201,61 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
 
 async function skippedOpenCodeConfig(options: InstallOptions): Promise<InstallSummary["config"]> {
   return {
-    configPath: await configPathFor(options.opencodeHome),
+    configPath: options.opencode ? await configPathFor(options.opencodeHome) : path.join(options.opencodeHome, "opencode.json"),
     changed: false,
     actions: [],
-    skipped: ["OpenCode config sync explicitly skipped"]
+    skipped: [options.opencode ? "OpenCode config sync explicitly skipped" : "OpenCode integration not enabled; installed shared skills only"]
   };
 }
 
 function buildOptionalDecisions(command: "install" | "update", options: InstallOptions, shouldConfigurePlaywright: boolean, shouldSyncOpenCodeConfig: boolean): InstallSummary["optionalDecisions"] {
   const decisions: InstallSummary["optionalDecisions"] = [];
-  if (!shouldSyncOpenCodeConfig) {
+  if (!options.opencode) {
+    decisions.push({
+      name: "OpenCode integration",
+      status: "skipped",
+      reason: "default installation scope is shared skills only",
+      nextStep: `rose-aili ${command} --opencode`
+    });
+  }
+  if (options.opencode && !shouldSyncOpenCodeConfig) {
     decisions.push({
       name: "OpenCode config",
       status: "skipped",
       reason: "explicitly skipped",
-      nextStep: `rose-aili ${command}`
+      nextStep: `rose-aili ${command} --opencode`
     });
   }
-  if (!options.model) {
+  if (options.opencode && !options.model) {
     decisions.push({
       name: "rose model override",
       status: "skipped",
       reason: "not configured in this install; omit this to use OpenCode's default model behavior",
-      nextStep: "rose-aili install --model <provider/model>"
+      nextStep: "rose-aili install --opencode --model <provider/model>"
     });
   }
-  if (!shouldConfigurePlaywright) {
+  if (options.opencode && !shouldConfigurePlaywright) {
     decisions.push({
       name: "Playwright MCP",
       status: "skipped",
       reason: options.skipPlaywright ? "explicitly skipped" : options.skipOpenCodeConfig ? "OpenCode config sync explicitly skipped" : "not configured in this install",
-      nextStep: "rose-aili install --enable-playwright"
+      nextStep: "rose-aili install --opencode --enable-playwright"
     });
   }
-  if (!options.enableCodegraph) {
+  if (options.opencode && !options.enableCodegraph) {
     decisions.push({
       name: "CodeGraph",
       status: "skipped",
       reason: options.skipCodegraph ? "explicitly skipped" : "not configured in this install",
-      nextStep: "rose-aili install --enable-codegraph"
+      nextStep: "rose-aili install --opencode --enable-codegraph"
     });
   }
-  if (!options.enableGraphify && !options.registerGraphifySkill) {
+  if (options.opencode && !options.enableGraphify && !options.registerGraphifySkill) {
     decisions.push({
       name: "Graphify",
       status: "skipped",
       reason: options.skipGraphify ? "explicitly skipped" : "not installed or registered in this invocation",
-      nextStep: "rose-aili install --enable-graphify"
+      nextStep: "rose-aili install --opencode --enable-graphify"
     });
   } else if (options.enableGraphify && !options.registerGraphifySkill) {
     decisions.push({
@@ -251,12 +265,12 @@ function buildOptionalDecisions(command: "install" | "update", options: InstallO
       nextStep: GRAPHIFY_REGISTER_STEP
     });
   }
-  if (!options.enableOpenspec || options.skipOpenspec) {
+  if (options.opencode && (!options.enableOpenspec || options.skipOpenspec)) {
     decisions.push({
       name: "OpenSpec",
       status: "skipped",
       reason: options.skipOpenspec ? "explicitly skipped" : "not configured in this install",
-      nextStep: "rose-aili install --enable-openspec --project-root <absolute-canonical-path>"
+      nextStep: "rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>"
     });
   }
   return decisions;
@@ -516,7 +530,7 @@ async function runCodeGraphInstall(options: InstallOptions): Promise<OptionalSum
   const opencodeCommand = CODEGRAPH_OPENCODE_COMMAND.join(" ");
   const command = `${installCommand} && ${opencodeCommand}`;
   if (!options.enableCodegraph || options.skipCodegraph) {
-    return { status: "skipped", command, reason: "CodeGraph is explicit opt-in only; run rose-aili install --enable-codegraph." };
+    return { status: "skipped", command, reason: "CodeGraph is explicit opt-in only; run rose-aili install --opencode --enable-codegraph." };
   }
   if (options.dryRun) return { status: "planned", command, nextStep: CODEGRAPH_RESTART_STEP };
   const installResult = await spawnOptional(CODEGRAPH_INSTALL_COMMAND[0], CODEGRAPH_INSTALL_COMMAND.slice(1), options);
@@ -544,7 +558,7 @@ async function runOpenSpecInstall(options: InstallOptions): Promise<OptionalSumm
   if (!options.enableOpenspec || options.skipOpenspec) {
     return {
       status: "skipped",
-      command: "rose-aili install --enable-openspec --project-root <absolute-canonical-path>",
+      command: "rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>",
       reason: options.skipOpenspec ? "OpenSpec explicitly skipped." : "OpenSpec is explicit opt-in only and requires an exact project root."
     };
   }
@@ -553,7 +567,7 @@ async function runOpenSpecInstall(options: InstallOptions): Promise<OptionalSumm
       status: "failed",
       command: OPENSPEC_INSTALL_COMMAND.join(" "),
       reason: `OpenSpec requires Node.js 20.19.0 or higher; current Node.js is ${process.versions.node}.`,
-      recovery: "Upgrade Node.js to 20.19.0+ and rerun: rose-aili install --enable-openspec"
+      recovery: "Upgrade Node.js to 20.19.0+ and rerun: rose-aili install --opencode --enable-openspec"
     };
   }
   if (!options.projectRoot) throw new Error("--enable-openspec requires --project-root <path>.");
@@ -672,10 +686,12 @@ async function runCompatibilityInstaller(options: InstallOptions): Promise<Insta
   await access(script, constants.F_OK);
   const mode = await isGitRepository(options.ailiHome) ? "selective" : "copy";
   const args = [script, "--mode", mode, "--aili-home", options.ailiHome, "--opencode-home", options.opencodeHome];
+  if (options.opencode) args.push("--opencode");
   if (options.dryRun) args.push("--dry-run");
   const result = await spawnInstaller(args, options);
   return {
     status: options.dryRun ? "planned" : "completed",
+    scope: options.opencode ? "opencode" : "skills",
     code: result.code,
     retiredSkillReconciliation: parseRetiredSkillReconciliation(result.stdout)
   };
@@ -761,6 +777,29 @@ async function isGitRepository(ailiHome: string): Promise<boolean> {
 
 async function validateInstallerSources(ailiHome: string): Promise<void> {
   await access(path.join(ailiHome, "templates", "opencode-global-AGENTS.md"), constants.F_OK);
+}
+
+function validateOpenCodeScope(options: InstallOptions): void {
+  if (options.opencode) return;
+  const requested = [
+    [options.setDefaultRose, "--set-default-rose"],
+    [options.model, "--model"],
+    [options.forceDefaultAgent, "--force-default-agent"],
+    [options.forceModel, "--force-model"],
+    [options.skipOpenCodeConfig, "--skip-opencode-config"],
+    [options.enablePlaywright, "--enable-playwright"],
+    [options.skipPlaywright, "--skip-playwright"],
+    [options.enableCodegraph, "--enable-codegraph"],
+    [options.skipCodegraph, "--skip-codegraph"],
+    [options.enableGraphify, "--enable-graphify"],
+    [options.skipGraphify, "--skip-graphify"],
+    [options.registerGraphifySkill, "--register-graphify-skill"],
+    [options.enableOpenspec, "--enable-openspec"],
+    [options.skipOpenspec, "--skip-openspec"],
+    [options.projectRoot, "--project-root"],
+    [options.plugins.length > 0, "--plugin"]
+  ].find(([enabled]) => Boolean(enabled));
+  if (requested) throw new Error(`${requested[1]} requires --opencode because the default installation scope is shared skills only.`);
 }
 
 export function validateOpenCodeHome(opencodeHome: string): string {
