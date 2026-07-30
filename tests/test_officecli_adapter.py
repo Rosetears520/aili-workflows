@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 
@@ -17,9 +18,11 @@ import compile_plan  # noqa: E402
 import emit_visual_review_packet  # noqa: E402
 import init_workspace  # noqa: E402
 import officecli_adapter  # noqa: E402
+import profile_template  # noqa: E402
+import report_layout_preflight  # noqa: E402
 import render_with_officecli  # noqa: E402
 import report_workspace_readiness  # noqa: E402
-from workspace_core import WorkspaceError, canonical_json_bytes, sha256_bytes, sha256_file  # noqa: E402
+from workspace_core import WorkspaceError, canonical_json_bytes, current_template_style_bindings, sha256_bytes, sha256_file  # noqa: E402
 
 
 def write_executable(path: Path, source: str) -> Path:
@@ -31,6 +34,18 @@ def write_executable(path: Path, source: str) -> Path:
 
 def read_json_lines(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+
+def write_minimal_pptx(path: Path, text: str = "Editable text") -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    presentation = '<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldSz cx="9144000" cy="5143500" type="screen16x9"/></p:presentation>'
+    slide = f'''<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:nvSpPr><p:cNvPr id="2" name="Text 1"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1000000" cy="500000"/></a:xfrm><a:prstGeom prst="rect"/></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr sz="2000"><a:latin typeface="Test Sans"/></a:rPr><a:t>{text}</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'''
+    theme = '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Test"><a:themeElements><a:clrScheme name="Test"><a:accent1><a:srgbClr val="112233"/></a:accent1></a:clrScheme><a:fontScheme name="Test"><a:majorFont><a:latin typeface="Test Sans"/><a:ea typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Test Sans"/><a:ea typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Test"/></a:themeElements></a:theme>'
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("ppt/presentation.xml", presentation)
+        archive.writestr("ppt/slides/slide1.xml", slide)
+        archive.writestr("ppt/theme/theme1.xml", theme)
+    return path
 
 
 def fake_officecli(path: Path, version: str = officecli_adapter.PINNED_VERSION) -> Path:
@@ -49,19 +64,13 @@ if log:
         stream.write(json.dumps({{"argv": args, "skip_update": os.environ.get("OFFICECLI_SKIP_UPDATE")}}) + "\\n")
 if args == ["--version"]:
     print("OfficeCLI {version}")
-elif args and args[0] == "help":
+elif args and args[-1:] == ["--help"]:
     print("pptx validate view outline text issues screenshot batch save")
-elif len(args) >= 2 and args[:2] == ["pptx", "batch"]:
-    source = pathlib.Path(args[args.index("--input") + 1])
+elif args and args[0] == "batch":
+    source = pathlib.Path(args[1])
     source.write_bytes(source.read_bytes() + b"|patched")
     print("{{}}")
-elif len(args) >= 2 and args[:2] == ["pptx", "save"]:
-    source = pathlib.Path(args[args.index("--input") + 1])
-    output = pathlib.Path(args[args.index("--output") + 1])
-    output.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, output)
-    print("{{}}")
-elif "screenshot" in args:
+elif args and args[0] == "screenshot":
     output = pathlib.Path(args[args.index("--output") + 1])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(b"PNG:" + " ".join(args).encode("utf-8"))
@@ -78,10 +87,13 @@ def fake_node(path: Path) -> Path:
         f"""#!{sys.executable}
 import pathlib
 import sys
+import zipfile
 args = sys.argv[1:]
 output = pathlib.Path(args[args.index("--output") + 1])
 output.parent.mkdir(parents=True, exist_ok=True)
-output.write_bytes(b"BASE-PPTX")
+slide = '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:nvSpPr><p:cNvPr id="2" name="Text"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1000000" cy="500000"/></a:xfrm></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>Text</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>'
+with zipfile.ZipFile(output, "w") as archive:
+    archive.writestr("ppt/slides/slide1.xml", slide)
 """,
     )
 
@@ -93,12 +105,32 @@ def make_workspace(root: Path, *, patch: bool = True) -> None:
         root.rmdir()
     init_workspace.initialize_workspace(root, "template-edit", "adapter-deck", "Adapter Deck")
     source = root / "sources" / "input.pptx"
-    source.write_bytes(b"SOURCE-PPTX")
+    write_minimal_pptx(source)
     manifest_path = root / "sources" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["sources"][0]["path"] = "sources/input.pptx"
     manifest["sources"][0]["sha256"] = sha256_file(source)
+    manifest["sources"][0]["user_decision"] = "confirmed"
     manifest_path.write_bytes(canonical_json_bytes(manifest))
+    intake_path = root / "intake.json"
+    intake = json.loads(intake_path.read_text(encoding="utf-8"))
+    intake["visual_references"][0].update({"path": "sources/input.pptx", "sha256": sha256_file(source), "user_decision": "confirmed"})
+    intake_path.write_bytes(canonical_json_bytes(intake))
+    profile = profile_template.profile_template(source)
+    profile["source"]["path"] = "sources/input.pptx"
+    (root / "template-profile.json").write_bytes(canonical_json_bytes(profile))
+    font_contract_path = root / "font-contract.json"
+    font_contract = json.loads(font_contract_path.read_text(encoding="utf-8"))
+    font_contract["template_profile_sha256"] = sha256_file(root / "template-profile.json")
+    font_contract["fonts"] = [{"role": "template-run", "family": "Test Sans", "required": True, "fallback_allowed": False, "source": "controlling-template", "template_run_ids": ["slide-01/2/p1/r1"]}]
+    font_contract_path.write_bytes(canonical_json_bytes(font_contract))
+    font_environment_path = root / "font-environment.json"
+    font_environment = json.loads(font_environment_path.read_text(encoding="utf-8"))
+    font_environment["status"] = "ready"
+    font_environment["external_reads"] = {"approval_state": "not-required", "requested_paths": [], "observed_paths": []}
+    for name in ("build", "render"):
+        font_environment["environments"][name].update({"status": "verified", "renderer": f"test-{name}", "visible_fonts": ["Test Sans"]})
+    font_environment_path.write_bytes(canonical_json_bytes(font_environment))
     plan = (
         "# Adapter Deck — Per-Slide Content Plan\n\n"
         "Recommended topic: **Adapter Deck**\n"
@@ -124,6 +156,68 @@ def make_workspace(root: Path, *, patch: bool = True) -> None:
     if readiness["status"] != "ready":
         raise AssertionError(readiness)
     (root / "build" / "workspace-readiness.json").write_bytes(canonical_json_bytes(readiness))
+    (root / "build" / "font-audit.json").write_bytes(canonical_json_bytes(readiness["font_audit"]))
+    proof = write_minimal_pptx(root / "build" / "style-proof.pptx", "Proof")
+    proof_slide = root / "renders" / "style-proof" / "slides" / "opening.png"
+    proof_slide.parent.mkdir(parents=True, exist_ok=True)
+    proof_slide.write_bytes(b"PROOF")
+    proof_contact = root / "renders" / "style-proof" / "contact-sheet.png"
+    proof_contact.write_bytes(b"CONTACT")
+    aggregate = [
+        {"slide_id": "opening", "path": "renders/style-proof/slides/opening.png", "sha256": sha256_file(proof_slide)},
+        {"slide_id": "_contact-sheet", "path": "renders/style-proof/contact-sheet.png", "sha256": sha256_file(proof_contact)},
+    ]
+    render = {
+        "pptx_sha256": sha256_file(proof), "slide_ids": ["opening"], "artifacts": [aggregate[0]],
+        "contact_sheet": {"path": aggregate[1]["path"], "sha256": aggregate[1]["sha256"]},
+        "render_sha256": sha256_bytes(canonical_json_bytes(aggregate)),
+    }
+    (root / "renders" / "style-proof" / "manifest.json").write_bytes(canonical_json_bytes(render))
+    baseline_slide = root / "renders" / "style-proof" / "baseline" / "slides" / "opening.png"
+    baseline_slide.parent.mkdir(parents=True, exist_ok=True)
+    baseline_slide.write_bytes(b"BASELINE-PROOF")
+    baseline_contact = root / "renders" / "style-proof" / "baseline" / "contact-sheet.png"
+    baseline_contact.write_bytes(b"BASELINE-CONTACT")
+    baseline_aggregate = [
+        {"slide_id": "opening", "path": "renders/style-proof/baseline/slides/opening.png", "sha256": sha256_file(baseline_slide)},
+        {"slide_id": "_contact-sheet", "path": "renders/style-proof/baseline/contact-sheet.png", "sha256": sha256_file(baseline_contact)},
+    ]
+    baseline_render = {
+        "pptx_sha256": sha256_file(source), "slide_ids": ["opening"], "artifacts": [baseline_aggregate[0]],
+        "contact_sheet": {"path": baseline_aggregate[1]["path"], "sha256": baseline_aggregate[1]["sha256"]},
+        "render_sha256": sha256_bytes(canonical_json_bytes(baseline_aggregate)),
+    }
+    (root / "renders" / "style-proof" / "baseline" / "manifest.json").write_bytes(canonical_json_bytes(baseline_render))
+    style_issues = {"schema_version": "1.0", "report_kind": "officecli-issues", "pptx_sha256": sha256_file(proof), "count": 0, "issues": []}
+    style_layout = {"schema_version": "1.0", "report_kind": "layout-evidence", "pptx_sha256": sha256_file(proof), "slide_size": {}, "shapes": [], "alignment_groups": [], "issue_dispositions": {}}
+    (root / "build" / "style-proof-officecli-issues.json").write_bytes(canonical_json_bytes(style_issues))
+    (root / "build" / "style-proof-layout-evidence.json").write_bytes(canonical_json_bytes(style_layout))
+    style_preflight = report_layout_preflight.evaluate_layout_preflight(
+        final_pptx_sha256=sha256_file(proof),
+        template_profile_sha256=sha256_file(root / "template-profile.json"),
+        font_audit_sha256=sha256_file(root / "build" / "font-audit.json"),
+        issues_sha256=sha256_file(root / "build" / "style-proof-officecli-issues.json"),
+        layout_evidence_sha256=sha256_file(root / "build" / "style-proof-layout-evidence.json"),
+        layout_evidence=style_layout,
+        issues=style_issues,
+        render_sha256=render["render_sha256"],
+    )
+    (root / "build" / "style-proof-layout-preflight.json").write_bytes(canonical_json_bytes(style_preflight))
+    checks = {"alignment": "pass", "spacing": "pass", "text_wrap": "pass", "overflow": "pass", "image_aspect": "not-applicable", "font_rendering": "pass", "reference_fidelity": "pass"}
+    review = {
+        "review_scope": "style-proof", "reviewer": "fixture-reviewer", "disposition": "pass",
+        "pptx_sha256": sha256_file(proof), "render_sha256": render["render_sha256"], "slide_ids": ["opening"], "findings": [],
+        "pages": [{"slide_id": "opening", "inspection_status": "inspected", "checks": checks, "observations": ["Fixture proof reviewed."]}],
+    }
+    (root / "reviews" / "style-proof-review.json").write_bytes(canonical_json_bytes(review))
+    bindings = current_template_style_bindings(root)
+    confirmation = {
+        "schema_version": "1.0", "report_kind": "template-style-confirmation", "status": "confirmed", "confirmed_by": "fixture-user",
+        "proof_hash": sha256_bytes(canonical_json_bytes(bindings)),
+        "role_coverage": {"image-or-chart": "opening", "longest-text": "opening", "densest-numeric": "opening"},
+        "bindings": bindings,
+    }
+    (root / "reviews" / "template-style-confirmation.json").write_bytes(canonical_json_bytes(confirmation))
 
 
 class ProbeTests(unittest.TestCase):
@@ -155,10 +249,11 @@ class ProbeTests(unittest.TestCase):
             self.assertTrue(result["present"])
             self.assertEqual(result["version"], "1.0.144")
             self.assertTrue(result["version_drift"])
-            self.assertTrue(all(result["capabilities"].values()))
+            self.assertTrue(all(result["capabilities"][name] for name in ("read", "validate", "render", "batch")))
+            self.assertFalse(result["capabilities"]["save"])
             calls = read_json_lines(log)
             self.assertTrue(all(call["skip_update"] == "1" for call in calls))
-            self.assertTrue(all(call["argv"] == ["--version"] or call["argv"][0] == "help" for call in calls))
+            self.assertTrue(all(call["argv"] == ["--version"] or call["argv"][-1] == "--help" for call in calls))
 
     def test_missing_and_drift_recovery_belong_to_aili_installer(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -237,19 +332,17 @@ class BuildTests(unittest.TestCase):
             report = build_workspace.execute_build_plan(plan, environ=env)
             self.assertEqual(report["status"], "succeeded")
             self.assertEqual(report["postbuild"]["operation_order"], ["first-patch", "second-patch"])
-            self.assertEqual((root / "build" / "final.pptx").read_bytes(), b"BASE-PPTX|patched")
+            self.assertTrue(zipfile.is_zipfile(root / "build" / "final.pptx"))
             self.assertEqual(report["final_pptx"]["sha256"], sha256_file(root / "build" / "final.pptx"))
             self.assertEqual(report["final_pptx"]["sha256"], report["validation"]["pptx_sha256"])
             families = [call["argv"][:2] for call in read_json_lines(log) if call["argv"] != ["--version"]]
             self.assertEqual(
                 families,
                 [
-                    ["help", "pptx"],
-                    ["pptx", "batch"],
-                    ["help", "pptx"],
-                    ["pptx", "save"],
-                    ["help", "pptx"],
-                    ["pptx", "validate"],
+                    ["batch", "--help"],
+                    ["batch", str(root / "build" / "draft.pptx")],
+                    ["validate", "--help"],
+                    ["validate", str(root / "build" / "final.pptx")],
                 ],
             )
             self.assertTrue(all(call["skip_update"] == "1" for call in read_json_lines(log)))

@@ -94,6 +94,16 @@ def emit_visual_review_packet(
                 "render_path": record["path"],
                 "render_sha256": current_hash,
                 "inspection_status": "not-inspected",
+                "checks": {
+                    "alignment": "not-inspected",
+                    "spacing": "not-inspected",
+                    "text_wrap": "not-inspected",
+                    "overflow": "not-inspected",
+                    "image_aspect": "not-inspected",
+                    "font_rendering": "not-inspected",
+                    "reference_fidelity": "not-inspected",
+                },
+                "observations": [],
             }
         )
     if artifact_ids != slide_ids:

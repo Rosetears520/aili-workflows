@@ -20,6 +20,7 @@ from workspace_core import (
     select_next_action,
     sha256_bytes,
     sha256_file,
+    validate_template_style_confirmation,
     write_json_atomic,
 )
 
@@ -158,6 +159,17 @@ def evaluate_delivery(workspace_root: Path) -> dict[str, Any]:
                 code="PACKAGE_VALIDATION_NOT_CURRENT",
                 next_action="validate-package",
             )
+        autofit = build.get("autofit")
+        if not isinstance(autofit, dict) or autofit.get("pptx_sha256") != final_pptx_sha:
+            blockers.append(blocker("AUTOFIT_EVIDENCE_NOT_CURRENT", "Build report lacks current AutoFit evidence", path=build_relative, next_action="apply-autofit"))
+        else:
+            _verified_file(
+                root,
+                {"path": autofit.get("evidence_path"), "sha256": autofit.get("evidence_sha256")},
+                blockers,
+                code="AUTOFIT_EVIDENCE_NOT_CURRENT",
+                next_action="apply-autofit",
+            )
 
     render = _load_evidence(root, render_relative, blockers, "RENDER_MANIFEST_MISSING", "render-deck")
     render_sha: str | None = None
@@ -175,9 +187,32 @@ def evaluate_delivery(workspace_root: Path) -> dict[str, Any]:
         render_sha = _render_hash(root, render, blockers)
         if not render_sha or render.get("render_sha256") != render_sha:
             blockers.append(blocker("STALE_RENDER", "Render aggregate hash is stale or invalid", path=render_relative, next_action="render-deck"))
+        issue_scan = render.get("issue_scan")
+        issue_path = _verified_file(root, issue_scan, blockers, code="OFFICECLI_ISSUES_NOT_CURRENT", next_action="scan-issues")
+        if not isinstance(issue_scan, dict) or issue_scan.get("pptx_sha256") != final_pptx_sha:
+            blockers.append(blocker("OFFICECLI_ISSUES_NOT_CURRENT", "OfficeCLI issue evidence is not bound to the current final PPTX", path=render_relative, next_action="scan-issues"))
+        elif issue_path is not None:
+            issue_report = load_json(issue_path)
+            if not isinstance(issue_report, dict) or issue_report.get("pptx_sha256") != final_pptx_sha:
+                blockers.append(blocker("OFFICECLI_ISSUES_NOT_CURRENT", "OfficeCLI issue report lacks the current final PPTX hash", path=issue_scan.get("path"), next_action="scan-issues"))
 
     review = _load_evidence(root, review_relative, blockers, "VISUAL_REVIEW_MISSING", "review-renders")
     if isinstance(review, dict):
+        pages = review.get("pages")
+        page_ids = [item.get("slide_id") for item in pages if isinstance(item, dict)] if isinstance(pages, list) else []
+        pages_passing = (
+            page_ids == expected_slide_ids
+            and all(
+                isinstance(item, dict)
+                and item.get("inspection_status") == "inspected"
+                and isinstance(item.get("observations"), list)
+                and bool(item["observations"])
+                and isinstance(item.get("checks"), dict)
+                and len(item["checks"]) == 7
+                and all(value in {"pass", "not-applicable"} for value in item["checks"].values())
+                for item in pages or []
+            )
+        )
         stale_review = (
             not review.get("reviewer")
             or review.get("review_scope") != "final"
@@ -185,6 +220,7 @@ def evaluate_delivery(workspace_root: Path) -> dict[str, Any]:
             or review.get("render_sha256") != render_sha
             or review.get("slide_ids") != expected_slide_ids
             or not isinstance(review.get("findings"), list)
+            or not pages_passing
         )
         if stale_review:
             blockers.append(
@@ -214,6 +250,30 @@ def evaluate_delivery(workspace_root: Path) -> dict[str, Any]:
                     next_action="repair-and-review",
                 )
             )
+
+    preflight_relative = paths.get("layout_preflight", "build/layout-preflight.json") if isinstance(paths, dict) else "build/layout-preflight.json"
+    preflight = _load_evidence(root, preflight_relative, blockers, "LAYOUT_PREFLIGHT_MISSING", "run-layout-preflight")
+    if isinstance(preflight, dict):
+        font_relative = paths.get("font_audit", "build/font-audit.json") if isinstance(paths, dict) else "build/font-audit.json"
+        issues_relative = paths.get("officecli_issues", "build/officecli-issues.json") if isinstance(paths, dict) else "build/officecli-issues.json"
+        expected_bindings = {
+            "final_pptx_sha256": final_pptx_sha,
+            "template_profile_sha256": workspace_report.get("template_profile_sha256"),
+            "font_audit_sha256": sha256_file(contained_path(root, font_relative, must_exist=True)) if contained_path(root, font_relative).is_file() else None,
+            "officecli_issues_sha256": sha256_file(contained_path(root, issues_relative, must_exist=True)) if contained_path(root, issues_relative).is_file() else None,
+            "render_sha256": render_sha,
+        }
+        bindings = preflight.get("bindings", {}) if isinstance(preflight.get("bindings"), dict) else {}
+        stale_keys = [key for key, value in expected_bindings.items() if bindings.get(key) != value]
+        blocking_findings = [item for item in preflight.get("findings", []) if isinstance(item, dict) and item.get("status") == "blocking"] if isinstance(preflight.get("findings"), list) else ["invalid"]
+        if preflight.get("status") != "ready" or stale_keys or blocking_findings:
+            blockers.append(blocker("LAYOUT_PREFLIGHT_NOT_PASSING", "Layout preflight is blocked or stale for: " + ", ".join(stale_keys or ["findings/status"]), path=preflight_relative, next_action="repair-layout"))
+
+    if isinstance(workspace, dict) and workspace.get("profile") == "template-edit":
+        try:
+            validate_template_style_confirmation(root, workspace)
+        except WorkspaceError as error:
+            blockers.append(blocker(error.code, error.message, path=error.path, next_action="confirm-template-style-proof"))
 
     status = "blocked" if blockers else "ready"
     result: dict[str, Any] = {

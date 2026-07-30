@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from compile_plan import build_outline
-from report_font_audit import evaluate_font_contract
+from report_font_audit import evaluate_font_audit
 from workspace_core import (
     SCHEMA_VERSION,
     SUPPORTED_PROFILES,
@@ -113,6 +113,7 @@ def _full_source_checks(root: Path, blockers: list[dict[str, Any]]) -> None:
         "evidence-plan.json",
         "asset-plan.json",
         "assets/manifest.json",
+        "font-environment.json",
     ):
         _safe_json(root, relative, blockers)
 
@@ -165,80 +166,108 @@ def _open_blocker_checks(root: Path, blockers: list[dict[str, Any]]) -> None:
 
 def _font_checks(root: Path, blockers: list[dict[str, Any]], unverified: list[dict[str, str]]) -> dict[str, Any] | None:
     contract = _safe_json(root, "font-contract.json", blockers)
-    if not isinstance(contract, dict):
+    environment = _safe_json(root, "font-environment.json", blockers)
+    if not isinstance(contract, dict) or not isinstance(environment, dict):
         return None
-    fonts = contract.get("fonts", [])
-    environments = contract.get("environments", {})
-    if not isinstance(fonts, list) or not isinstance(environments, dict):
-        blockers.append(blocker("FONT_CONTRACT_INVALID", "Font contract fonts/environments have invalid shapes", path="font-contract.json", next_action="repair-font-contract"))
-        return None
-    if any(
-        not isinstance(item, dict)
-        or not isinstance(item.get("family"), str)
-        or not item.get("family")
-        or not isinstance(item.get("required"), bool)
-        for item in fonts
-    ):
-        blockers.append(blocker("FONT_CONTRACT_INVALID", "Every font entry needs a family and required boolean", path="font-contract.json", next_action="repair-font-contract"))
-        return None
-    required_families = {
-        item.get("family")
-        for item in fonts
-        if isinstance(item, dict) and item.get("required") is True and isinstance(item.get("family"), str) and item.get("family")
-    }
-    for environment_name in ("build", "render"):
-        environment = environments.get(environment_name, {})
-        available_value = environment.get("available_fonts", []) if isinstance(environment, dict) else None
-        if (
-            not isinstance(environment, dict)
-            or environment.get("status") not in {"verified", "unverified"}
-            or not isinstance(available_value, list)
-            or not all(isinstance(item, str) for item in available_value)
-        ):
-            blockers.append(
-                blocker(
-                    "FONT_CONTRACT_INVALID",
-                    f"Font environment {environment_name} must contain an available_fonts string array",
-                    path="font-contract.json",
-                    next_action="repair-font-contract",
-                )
+    external_reads = environment.get("external_reads", {})
+    if isinstance(external_reads, dict) and external_reads.get("approval_state") == "required" and external_reads.get("requested_paths"):
+        blockers.append(
+            blocker(
+                "FONT_EXTERNAL_READ_APPROVAL_REQUIRED",
+                "Font inventory requires exact approval for external paths: " + ", ".join(external_reads.get("requested_paths", [])),
+                path="font-environment.json",
+                next_action="need-user",
             )
-            continue
-        status = environment.get("status")
-        available = set(available_value)
-        missing = sorted(required_families - available)
-        if status == "verified" and missing:
+        )
+    try:
+        audit = evaluate_font_audit(root)
+    except WorkspaceError as error:
+        blockers.append(blocker(error.code, error.message, path="font-contract.json", next_action="repair-font-contract"))
+        return None
+    for environment_name in ("build", "render"):
+        observed = audit.get("environments", {}).get(environment_name, {})
+        missing = observed.get("required_missing", []) if isinstance(observed, dict) else []
+        unapproved = observed.get("unapproved_substitutions", []) if isinstance(observed, dict) else []
+        if missing:
             blockers.append(
                 blocker(
                     "REQUIRED_FONT_UNAVAILABLE",
                     f"Required fonts are unavailable in {environment_name}: {', '.join(missing)}",
-                    path="font-contract.json",
+                    path="font-environment.json",
                     next_action="need-user",
                 )
             )
-        elif required_families and status != "verified":
+        if unapproved:
             blockers.append(
                 blocker(
-                    "FONT_ENVIRONMENT_UNVERIFIED",
-                    f"Required fonts have not been verified in {environment_name}",
-                    severity="attention",
-                    path="font-contract.json",
+                    "UNAPPROVED_FONT_SUBSTITUTION",
+                    f"Unapproved font substitutions were observed in {environment_name}: {', '.join(unapproved)}",
+                    path="font-environment.json",
                     next_action="need-user",
                 )
             )
-    target = environments.get("target", {})
+    target = audit.get("environments", {}).get("target", {})
     if not isinstance(target, dict) or target.get("status") != "verified":
-        unverified.append(
-            {
-                "code": "TARGET_FONT_UNVERIFIED",
-                "message": "Final presentation environment font availability is Unverified",
-            }
-        )
-    try:
-        return evaluate_font_contract(contract, sha256_file(contained_path(root, "font-contract.json", must_exist=True)))
-    except WorkspaceError as error:
-        blockers.append(blocker(error.code, error.message, path="font-contract.json", next_action="repair-font-contract"))
+        unverified.append({"code": "TARGET_FONT_UNVERIFIED", "message": "Final presentation environment font availability is Unverified"})
+    return audit
+
+
+def _template_checks(root: Path, blockers: list[dict[str, Any]]) -> dict[str, Any] | None:
+    intake = _safe_json(root, "intake.json", blockers)
+    manifest = _safe_json(root, "sources/manifest.json", blockers)
+    profile = _safe_json(root, "template-profile.json", blockers)
+    if not isinstance(intake, dict) or not isinstance(manifest, dict) or not isinstance(profile, dict):
         return None
+    references = intake.get("visual_references")
+    if not isinstance(references, list):
+        blockers.append(blocker("REFERENCE_ROLE_INVALID", "visual_references must be an array", path="intake.json", next_action="repair-intake"))
+        return profile
+    controlling = [item for item in references if isinstance(item, dict) and item.get("role") == "controlling-template"]
+    if len(controlling) != 1:
+        blockers.append(blocker("CONTROLLING_TEMPLATE_AMBIGUOUS", "Template edit requires exactly one controlling template", path="intake.json", next_action="need-user"))
+        return profile
+    reference = controlling[0]
+    if reference.get("user_decision") != "confirmed" or not reference.get("allowed_uses") or reference.get("fidelity_mode") in {None, "none"}:
+        blockers.append(blocker("REFERENCE_PERMISSION_UNRESOLVED", "Controlling template role, allowed uses, and fidelity require a confirmed user decision", path="intake.json", next_action="need-user"))
+    sources = manifest.get("sources", [])
+    source_entries = [item for item in sources if isinstance(item, dict) and item.get("role") == "controlling-template"] if isinstance(sources, list) else []
+    if len(source_entries) != 1:
+        blockers.append(blocker("CONTROLLING_TEMPLATE_AMBIGUOUS", "Source manifest requires exactly one controlling template", path="sources/manifest.json", next_action="repair-source"))
+        return profile
+    source = source_entries[0]
+    relative = source.get("path")
+    if not isinstance(relative, str) or not relative:
+        blockers.append(blocker("REQUIRED_SOURCE_MISSING", "Controlling template path is empty", path="sources/manifest.json", next_action="provide-source"))
+        return profile
+    try:
+        source_path = contained_path(root, relative, must_exist=True)
+    except WorkspaceError as error:
+        blockers.append(blocker(error.code, error.message, path=relative, next_action="provide-source"))
+        return profile
+    current_hash = sha256_file(source_path)
+    if (
+        source.get("sha256") != current_hash
+        or reference.get("sha256") != current_hash
+        or reference.get("path") != relative
+        or source.get("allowed_uses") != reference.get("allowed_uses")
+        or source.get("fidelity_mode") != reference.get("fidelity_mode")
+        or source.get("user_decision") != reference.get("user_decision")
+    ):
+        blockers.append(blocker("REFERENCE_HASH_MISMATCH", "Intake/source reference is not bound to the current controlling template", path=relative, next_action="refresh-template-reference"))
+    profile_source = profile.get("source")
+    if profile.get("status") != "profiled" or not isinstance(profile_source, dict) or profile_source.get("sha256") != current_hash:
+        blockers.append(blocker("TEMPLATE_PROFILE_MISSING_OR_STALE", "Template profile must be current for the controlling template hash", path="template-profile.json", next_action="profile-template"))
+    else:
+        contract = _safe_json(root, "font-contract.json", blockers)
+        summary = profile.get("typography_summary", {})
+        family_rows = summary.get("families", []) if isinstance(summary, dict) else []
+        template_families = {item.get("family") for item in family_rows if isinstance(item, dict) and isinstance(item.get("family"), str) and item.get("family")}
+        contract_fonts = contract.get("fonts", []) if isinstance(contract, dict) else []
+        contracted = {item.get("family") for item in contract_fonts if isinstance(item, dict) and isinstance(item.get("family"), str)} if isinstance(contract_fonts, list) else set()
+        missing_families = sorted(template_families - contracted)
+        if missing_families:
+            blockers.append(blocker("TEMPLATE_FONT_CONTRACT_INCOMPLETE", "Template fonts are missing from the intent contract: " + ", ".join(missing_families), path="font-contract.json", next_action="author-font-contract"))
+    return profile
 
 
 def _outline_checks(root: Path, workspace: dict[str, Any], blockers: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -308,9 +337,12 @@ def evaluate_workspace(workspace_root: Path) -> dict[str, Any]:
     expected_outline: dict[str, Any] | None = None
     renderer_hash: dict[str, Any] | None = None
     font_audit: dict[str, Any] | None = None
+    template_profile: dict[str, Any] | None = None
     if profile in {"from-scratch", "template-edit"}:
         _full_source_checks(root, blockers)
         _open_blocker_checks(root, blockers)
+        if profile == "template-edit":
+            template_profile = _template_checks(root, blockers)
         font_audit = _font_checks(root, blockers, unverified)
         expected_outline = _outline_checks(root, workspace, blockers)
         try:
@@ -347,6 +379,10 @@ def evaluate_workspace(workspace_root: Path) -> dict[str, Any]:
         result["slide_ids"] = [slide["id"] for slide in expected_outline["slides"]]
     if font_audit is not None:
         result["font_audit"] = font_audit
+    if template_profile is not None:
+        result["template_profile_sha256"] = sha256_file(contained_path(root, "template-profile.json", must_exist=True))
+    if profile in {"from-scratch", "template-edit"} and contained_path(root, "font-environment.json").is_file():
+        result["font_environment_sha256"] = sha256_file(contained_path(root, "font-environment.json", must_exist=True))
     return result
 
 

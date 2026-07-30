@@ -16,11 +16,14 @@ from officecli_adapter import (
     OfficeCLIAdapterError,
     PINNED_VERSION,
     officecli_environment,
+    officecli_command_argv,
+    officecli_help_argv,
     parse_version,
     print_json,
     require_pinned_officecli,
     require_safe_officecli_argv,
 )
+from apply_text_autofit import apply_shape_to_fit_text
 
 try:
     from workspace_core import (
@@ -33,6 +36,7 @@ try:
         sha256_file,
         validate_renderer,
         validate_style_lock,
+        validate_template_style_confirmation,
         write_json_atomic,
     )
 except ImportError as error:  # pragma: no cover - exercised through the CLI failure path
@@ -78,6 +82,8 @@ def _require_ready_report(root: Path, relative: str) -> tuple[Path, dict[str, An
         "renderer_source_sha256",
         "slide_ids",
         "font_audit",
+        "font_environment_sha256",
+        "template_profile_sha256",
     )
     if any(report.get(key) != current.get(key) for key in binding_keys) or current.get("status") != "ready":
         raise WorkspaceError("READINESS_STALE", "Saved workspace readiness does not match current authored sources", path=relative)
@@ -135,8 +141,6 @@ def prepare_build_plan(
     workspace = load_json(workspace_path)
     if not isinstance(workspace, dict):
         raise WorkspaceError("WORKSPACE_INVALID", "workspace.json must contain an object", path="workspace.json")
-    if build_kind == "style-proof" and workspace.get("profile") != "from-scratch":
-        raise WorkspaceError("STYLE_PROOF_PROFILE_INVALID", "Style-proof builds apply only to from-scratch workspaces")
     renderer = validate_renderer(root, workspace)
     if renderer["kind"] != SUPPORTED_RENDERER_KIND:
         raise WorkspaceError(
@@ -148,6 +152,8 @@ def prepare_build_plan(
     style_lock: dict[str, Any] | None = None
     if build_kind == "full" and workspace.get("profile") == "from-scratch":
         style_lock = validate_style_lock(root, workspace)
+    if build_kind == "full" and workspace.get("profile") == "template-edit":
+        style_lock = validate_template_style_confirmation(root, workspace)
     entrypoint = contained_path(root, renderer["entrypoint"], must_exist=True)
     defaults = STYLE_PROOF_DEFAULTS if build_kind == "style-proof" else {
         "base": DEFAULT_BASE_OUTPUT,
@@ -190,27 +196,21 @@ def prepare_build_plan(
     if batch_present:
         actions.extend(
             [
-                {"kind": "help", "family": "batch", "argv": [officecli, "help", "pptx", "batch"]},
+                {"kind": "help", "family": "batch", "argv": officecli_help_argv(officecli, "batch")},
                 {
                     "kind": "command",
                     "family": "batch",
-                    "argv": [officecli, "pptx", "batch", "--input", str(draft), "--batch", str(batch_path)],
-                },
-                {"kind": "help", "family": "save", "argv": [officecli, "help", "pptx", "save"]},
-                {
-                    "kind": "command",
-                    "family": "save",
-                    "argv": [officecli, "pptx", "save", "--input", str(draft), "--output", str(final)],
+                    "argv": officecli_command_argv(officecli, "batch", str(draft), batch_input=str(batch_path)),
                 },
             ]
         )
     actions.extend(
         [
-            {"kind": "help", "family": "validate", "argv": [officecli, "help", "pptx", "validate"]},
+            {"kind": "help", "family": "validate", "argv": officecli_help_argv(officecli, "validate")},
             {
                 "kind": "command",
                 "family": "validate",
-                "argv": [officecli, "pptx", "validate", str(final), "--json"],
+                "argv": officecli_command_argv(officecli, "validate", str(final)),
                 "capture_path": relative_workspace_path(root, validation),
             },
         ]
@@ -342,8 +342,36 @@ def execute_build_plan(
         shutil.copy2(base, final)
 
     command_results: list[dict[str, Any]] = []
+    autofit_result: dict[str, Any] | None = None
     office_env = officecli_environment(environ)
     for action in plan["actions"]:
+        if action["family"] == "validate" and plan["postbuild"]["enabled"] and not final.is_file():
+            final.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(draft, final)
+        if action["family"] == "validate" and autofit_result is None:
+            autofit_relative = "build/style-proof-autofit-evidence.json" if plan["build_kind"] == "style-proof" else "build/autofit-evidence.json"
+            layout_relative = "build/style-proof-layout-evidence.json" if plan["build_kind"] == "style-proof" else "build/layout-evidence.json"
+            autofit_path = contained_path(root, autofit_relative)
+            layout_path = contained_path(root, layout_relative)
+            temporary_final = final.with_name(f".{final.name}.autofit-{os.getpid()}")
+            autofit_result = apply_shape_to_fit_text(final, temporary_final)
+            os.replace(temporary_final, final)
+            autofit_result["output_pptx_sha256"] = sha256_file(final)
+            write_json_atomic(autofit_path, autofit_result)
+            write_json_atomic(
+                layout_path,
+                {
+                    "schema_version": "1.0",
+                    "report_kind": "layout-evidence",
+                    "pptx_sha256": sha256_file(final),
+                    "slide_size": {},
+                    "shapes": autofit_result.get("shapes", []),
+                    "alignment_groups": [],
+                    "issue_dispositions": {},
+                },
+            )
+            if autofit_result.get("status") == "blocked":
+                raise RuntimeError("AutoFit could not be applied to every editable text shape")
         argv = action.get("argv")
         if not isinstance(argv, list):
             raise ValueError("OfficeCLI actions must contain argv lists")
@@ -418,6 +446,12 @@ def execute_build_plan(
             "operation_order": plan["postbuild"]["operation_order"],
         },
         "style_lock": plan.get("style_lock"),
+        "autofit": {
+            "status": autofit_result.get("status") if autofit_result else "applied-awaiting-geometry-recalculation",
+            "evidence_path": "build/style-proof-autofit-evidence.json" if plan["build_kind"] == "style-proof" else "build/autofit-evidence.json",
+            "evidence_sha256": sha256_file(contained_path(root, "build/style-proof-autofit-evidence.json" if plan["build_kind"] == "style-proof" else "build/autofit-evidence.json", must_exist=True)),
+            "pptx_sha256": sha256_file(final),
+        },
         "final_pptx": {
             "path": paths["final"],
             "sha256": sha256_file(final),

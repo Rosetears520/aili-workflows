@@ -19,7 +19,7 @@ Do not call, install, register, load, or route to an upstream OfficeCLI Skill, i
 
 ## Syntax authority
 
-[FRAME] The stable local contract names command families and evidence roles, not every flag, property, or enum. Before using a family, query the installed binary with the applicable read-only `officecli help ...`; that installed version owns exact syntax. If help or the required capability is unavailable, stop rather than guessing.
+[FRAME] The adapter has a version-scoped command table for the pinned binary and queries each family with `<command> --help`; it does not assume a `pptx` namespace. The installed help must agree with the table before mutation or evidence capture. If help or the required capability is unavailable, stop rather than guessing or adding a compatibility wrapper.
 
 [FRAME] Probes and all workspace commands set `OFFICECLI_SKIP_UPDATE=1`. Probes may run only `--version` and help/capability queries. Version drift from `1.0.143` requires command-capability revalidation; it never triggers an implicit update or downgrade.
 
@@ -28,5 +28,7 @@ Do not call, install, register, load, or route to an upstream OfficeCLI Skill, i
 ## Visual evidence boundary
 
 [FRAME] `validate`, issues, outline, text, contact sheets, and per-slide PNGs are separate evidence inputs. `watch` is only a collaborative live preview and selection aid; it is not visual-review proof and is never a completion gate.
+
+[FRAME] The issue report records executable/version, exact argv, current final-PPTX hash, issue count and entries; the render manifest binds its report hash. Every issue is blocking unless layout preflight records a slide/shape-specific non-blocking disposition with a reason and current render observation. Overflow, hidden text, unresolved placeholders, distortion, severe overlap, font substitution, and unknown issues cannot be waived.
 
 [FRAME] Screenshots become visual-review evidence only after the current host actually opens and inspects the bound images for clipping, overlap, hierarchy, crop, contrast, typography, substitution, and deck rhythm. File existence, hashes, help output, or a successful render command cannot mark visual review passed.

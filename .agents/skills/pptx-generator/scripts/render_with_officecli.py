@@ -15,6 +15,8 @@ from officecli_adapter import (
     OfficeCLIAdapterError,
     PINNED_VERSION,
     officecli_environment,
+    officecli_command_argv,
+    officecli_help_argv,
     parse_version,
     print_json,
     require_pinned_officecli,
@@ -48,8 +50,8 @@ def _slides_from_outline(outline: Any) -> list[dict[str, Any]]:
     return result
 
 
-def _help_action(binary: str, family: str, *topic: str) -> dict[str, Any]:
-    return {"kind": "help", "family": family, "argv": [binary, "help", "pptx", *topic]}
+def _help_action(binary: str, family: str, command_family: str) -> dict[str, Any]:
+    return {"kind": "help", "family": family, "argv": officecli_help_argv(binary, command_family)}
 
 
 def _command_action(family: str, argv: list[str], **extra: Any) -> dict[str, Any]:
@@ -94,11 +96,12 @@ def prepare_render_packet(
     resolution = require_pinned_officecli(environ=environ)
     binary = str(resolution["path"])
 
+    evidence_prefix = "style-proof-baseline-" if render_root == "renders/style-proof/baseline" else "style-proof-" if render_root == "renders/style-proof" else ""
     evidence_paths = {
-        "validate": "build/package-validation.json",
-        "issues": "build/officecli-issues.json",
-        "outline": "build/officecli-outline.json",
-        "text": "build/officecli-text.json",
+        "validate": f"build/{evidence_prefix}package-validation.json",
+        "issues": f"build/{evidence_prefix}officecli-issues.json",
+        "outline": f"build/{evidence_prefix}officecli-outline.json",
+        "text": f"build/{evidence_prefix}officecli-text.json",
         "contact_sheet": f"{render_root}/contact-sheet.png",
     }
     for relative in evidence_paths.values():
@@ -106,36 +109,37 @@ def prepare_render_packet(
 
     actions: list[dict[str, Any]] = [
         {"kind": "version", "family": "version", "argv": [binary, "--version"]},
-        _help_action(binary, "pptx"),
+        _help_action(binary, "validate", "validate"),
     ]
     command_specs = [
         (
             "validate",
-            ("validate",),
-            [binary, "pptx", "validate", str(pptx_path), "--json"],
+            "validate",
+            officecli_command_argv(binary, "validate", str(pptx_path)),
             evidence_paths["validate"],
         ),
         (
             "issues",
-            ("view", "issues"),
-            [binary, "pptx", "view", "issues", str(pptx_path), "--json"],
+            "view",
+            officecli_command_argv(binary, "issues", str(pptx_path)),
             evidence_paths["issues"],
         ),
         (
             "outline",
-            ("view", "outline"),
-            [binary, "pptx", "view", "outline", str(pptx_path), "--json"],
+            "view",
+            officecli_command_argv(binary, "outline", str(pptx_path)),
             evidence_paths["outline"],
         ),
         (
             "text",
-            ("view", "text"),
-            [binary, "pptx", "view", "text", str(pptx_path), "--json"],
+            "view",
+            officecli_command_argv(binary, "text", str(pptx_path)),
             evidence_paths["text"],
         ),
     ]
-    for family, help_topic, argv, capture_path in command_specs:
-        actions.append(_help_action(binary, family, *help_topic))
+    for family, help_family, argv, capture_path in command_specs:
+        if not (family == "validate" and actions[-1]["kind"] == "help"):
+            actions.append(_help_action(binary, family, help_family))
         actions.append(_command_action(family, argv, capture_path=capture_path))
 
     contact_path = contained_path(root, evidence_paths["contact_sheet"])
@@ -143,7 +147,7 @@ def prepare_render_packet(
     actions.append(
         _command_action(
             "contact-sheet",
-            [binary, "pptx", "screenshot", str(pptx_path), "--contact-sheet", "--output", str(contact_path)],
+            officecli_command_argv(binary, "screenshot", str(pptx_path), contact_sheet=True, output=str(contact_path)),
             expected_path=evidence_paths["contact_sheet"],
         )
     )
@@ -155,16 +159,7 @@ def prepare_render_packet(
         actions.append(
             _command_action(
                 f"slide:{slide['slide_id']}",
-                [
-                    binary,
-                    "pptx",
-                    "screenshot",
-                    str(pptx_path),
-                    "--slide",
-                    str(slide["ordinal"]),
-                    "--output",
-                    str(output),
-                ],
+                officecli_command_argv(binary, "screenshot", str(pptx_path), slide=slide["ordinal"], output=str(output)),
                 expected_path=relative,
                 slide_id=slide["slide_id"],
                 page_id=f"slide-{slide['ordinal']:02d}",
@@ -198,6 +193,7 @@ def prepare_render_packet(
         "artifacts": artifacts,
         "contact_sheet": {"path": evidence_paths["contact_sheet"]},
         "manifest_path": relative_workspace_path(root, manifest_path),
+        "evidence_paths": evidence_paths,
         "actions": actions,
         "watch_included": False,
         "completion_proof": False,
@@ -237,7 +233,7 @@ def execute_render_packet(
         slide_ids=packet.get("slide_ids"),
         environ=environ,
     )
-    comparison_keys = ("officecli", "pptx", "slide_ids", "artifacts", "contact_sheet", "manifest_path", "actions")
+    comparison_keys = ("officecli", "pptx", "slide_ids", "artifacts", "contact_sheet", "manifest_path", "evidence_paths", "actions")
     if any(packet.get(key) != fresh_packet.get(key) for key in comparison_keys):
         raise ValueError("Render packet is stale, mutated, or not produced by the registered orchestrator")
     packet = fresh_packet
@@ -269,6 +265,22 @@ def execute_render_packet(
                 payload: Any = json.loads(completed.stdout) if completed.stdout.strip() else {}
             except json.JSONDecodeError:
                 payload = {"stdout": completed.stdout, "stderr": completed.stderr}
+            if action["family"] == "issues":
+                entries = payload.get("issues", payload.get("data", [])) if isinstance(payload, dict) else payload
+                if isinstance(entries, dict):
+                    entries = entries.get("issues", [])
+                if not isinstance(entries, list):
+                    entries = []
+                payload = {
+                    "schema_version": "1.0",
+                    "report_kind": "officecli-issues",
+                    "officecli_path": packet["officecli"]["path"],
+                    "officecli_version": version,
+                    "argv": argv,
+                    "pptx_sha256": packet["pptx"]["sha256"],
+                    "count": len(entries),
+                    "issues": entries,
+                }
             write_json_atomic(capture_path, payload)
         expected_relative = action.get("expected_path")
         if expected_relative:
@@ -308,6 +320,11 @@ def execute_render_packet(
         "slide_ids": list(packet["slide_ids"]),
         "artifacts": artifact_records,
         "contact_sheet": contact,
+        "issue_scan": {
+            "path": packet["evidence_paths"]["issues"],
+            "sha256": sha256_file(contained_path(root, packet["evidence_paths"]["issues"], must_exist=True)),
+            "pptx_sha256": packet["pptx"]["sha256"],
+        },
         "render_sha256": sha256_bytes(canonical_json_bytes(aggregate)),
         "officecli": {
             "path": packet["officecli"]["path"],

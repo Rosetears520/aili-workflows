@@ -7,7 +7,7 @@
 | Profile | Authored sources | Derived/evidence surface |
 |---|---|---|
 | `from-scratch` | intake, canonical Markdown plan, design/font/evidence/asset contracts, manifests, renderer source | outline, PPTX builds, renders, reviews, readiness reports |
-| `template-edit` | full sources plus an immutable controlling-deck entry and optional replayable patch | preserved-template build, renders, reviews, reports |
+| `template-edit` | full sources plus an immutable controlling-deck entry, confirmed reference role/uses, `template-profile.json`, `font-environment.json`, and optional replayable patch | preserved-template build, AutoFit/layout/issues evidence, baseline/current proof, renders, reviews, reports |
 | `inspect` | workspace identity and inspected-source manifest only | extracted reports, renders, reviews |
 
 [FRAME] Initialize with `python scripts/init_workspace.py <target> --profile <profile> --deck-name <lower-kebab> --deck-title <title>`. Existing targets fail closed; `--update` creates only missing template paths in a matching workspace and never overwrites authored files.
@@ -28,11 +28,13 @@
 
 ## Authoring and Compilation
 
-1. [FRAME] Resolve intake blockers and author the Markdown/design/font/source contracts.
-2. [FRAME] Run `python scripts/compile_plan.py <workspace>`; use `--initialize-ids` only for an explicit migration of missing IDs.
-3. [FRAME] Run `python scripts/report_workspace_readiness.py <workspace>` before build or inspect execution.
-4. [FRAME] For `from-scratch`, build/render/review a representative Style Proof, then create a current lock with `lock_style_proof.py`; a full build fails closed without it.
-5. [FRAME] Build/render/review through the internal adapter documented in [`officecli-adapter.md`](officecli-adapter.md); OfficeCLI does not become another workflow owner.
-6. [FRAME] Run `python scripts/report_delivery_readiness.py <workspace>` before claiming a visually complete PPTX.
+1. [FRAME] Resolve intake blockers and author the Markdown/design/font/source contracts; for template edits confirm exactly one controlling reference and its allowed uses.
+2. [FRAME] Before content mapping, run `profile_template.py` for template edits and `inventory_fonts.py` for build/render/target evidence. External font directories remain operation-gated.
+3. [FRAME] Run `python scripts/compile_plan.py <workspace>`; use `--initialize-ids` only for an explicit migration of missing IDs.
+4. [FRAME] Run `python scripts/report_workspace_readiness.py <workspace>` before build or inspect execution.
+5. [FRAME] Build/render/review the applicable Style Proof. From-scratch creates a current style lock; template-edit obtains user confirmation of the current baseline/current proof hash and role coverage.
+6. [FRAME] Build through the registered renderer and replayable edits; apply shape-to-fit-text to every supported editable text shape, rerender/reopen as needed, reread final geometry, and run `report_layout_preflight.py` after current issue/render evidence exists.
+7. [FRAME] Build/render/review through the internal adapter documented in [`officecli-adapter.md`](officecli-adapter.md); OfficeCLI does not become another workflow owner.
+8. [FRAME] Run `python scripts/report_delivery_readiness.py <workspace>` before claiming a visually complete PPTX.
 
 [FRAME] Schemas under `schemas/` document each JSON contract. Python scripts use only the standard library and enforce the security- and freshness-critical subset directly.

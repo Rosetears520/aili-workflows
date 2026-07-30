@@ -4,7 +4,7 @@
   "title": "Current rendered-slide evidence",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "report_kind", "status", "pptx_path", "pptx_sha256", "render_sha256", "slide_ids", "artifacts", "contact_sheet", "officecli", "visual_review_passed", "host_image_inspection_required", "watch_used_as_proof"],
+  "required": ["schema_version", "report_kind", "status", "pptx_path", "pptx_sha256", "render_sha256", "slide_ids", "artifacts", "contact_sheet", "issue_scan", "officecli", "visual_review_passed", "host_image_inspection_required", "watch_used_as_proof"],
   "properties": {
     "schema_version": {"const": "1.0"},
     "report_kind": {"const": "render-manifest"},
@@ -15,6 +15,16 @@
     "slide_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "artifacts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/slideFile"}},
     "contact_sheet": {"$ref": "#/$defs/file"},
+    "issue_scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "pptx_sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/hash"},
+        "pptx_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
     "officecli": {"type": "object"},
     "visual_review_passed": {"type": "boolean"},
     "host_image_inspection_required": {"const": true},

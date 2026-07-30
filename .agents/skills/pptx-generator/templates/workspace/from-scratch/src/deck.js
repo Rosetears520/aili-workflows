@@ -12,11 +12,16 @@ function loadWorkspaceInputs(workspaceRoot = path.resolve(__dirname, "..")) {
     outline: readJson(workspaceRoot, "outline.json"),
     design: readJson(workspaceRoot, "design-contract.json"),
     fonts: readJson(workspaceRoot, "font-contract.json"),
+    fontEnvironment: readJson(workspaceRoot, "font-environment.json"),
     assets: readJson(workspaceRoot, "assets/manifest.json"),
   };
 }
 
-module.exports = { loadWorkspaceInputs };
+function withShapeToFitText(options = {}) {
+  return { ...options, fit: "resize" };
+}
+
+module.exports = { loadWorkspaceInputs, withShapeToFitText };
 
 if (require.main === module) {
   process.stderr.write("Renderer stub: Package 3 build adapter must supply the PPTX runtime and output path.\n");

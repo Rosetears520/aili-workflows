@@ -74,6 +74,7 @@
     }
   ],
   "unverified": [
-    "No non-OpenCode adapter has current equivalence evidence; Pi compatibility is not claimed."
+    "No non-OpenCode adapter has current equivalence evidence; Pi compatibility is not claimed.",
+    "pptx-generator font inventory remains operation-gated for real Windows/WSL directories; artifact-runtime assignment does not grant external-directory access."
   ]
 }

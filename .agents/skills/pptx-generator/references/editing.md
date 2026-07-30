@@ -43,6 +43,8 @@ Use the style and layout observations in [`human-design-playbook.md`](human-desi
 
 Completion criterion: the deck's reusable grammar is written down before content is remapped.
 
+[FRAME] `template-profile.json` is the executable record for this step. It binds the controlling-template hash and records master/layout/shape identity, palette/layout capacity, image frames, alignment/spacing groups, paragraph properties, and each text run's raw direct formatting, inheritance source, and resolved effective font/size/color/style. Role-level typography summaries are navigation only and must not overwrite local run differences.
+
 ### 3. Map Content to Native Layouts
 
 For every source section:
@@ -84,6 +86,7 @@ For each slide:
 5. retain the original alignment and spacing tokens unless the new content requires a bounded repair;
 6. preserve native chart/table editability when the user needs editable data;
 7. preserve image aspect ratio and reposition the crop inside the established frame.
+8. apply `shape-to-fit-text` to every supported editable text-bearing shape after paragraph/run formatting, then reread its final geometry.
 
 When replacement text is longer, repair in this order:
 
@@ -95,6 +98,8 @@ When replacement text is longer, repair in this order:
 Ask before cutting user-required content. Do not solve overflow by silently shrinking text below a readable size.
 
 Completion criterion: every placeholder is resolved and the new content still follows the template's visual grammar.
+
+[FRAME] AutoFit is not an overflow verdict. If expansion causes overlap, off-slide geometry, broken equal-size groups, spacing drift, or unwanted wrapping, select a better native layout, repair neighboring layout, split the slide, or request a content decision. Do not disable AutoFit or silently normalize run-level formatting to hide the defect.
 
 ### 6. Clean and Repack
 

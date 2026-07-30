@@ -10,6 +10,7 @@
     "workspace_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "deck_name": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
     "profile": {"enum": ["from-scratch", "template-edit", "inspect"]},
+    "text_fit_policy": {"const": "shape-to-fit-text"},
     "paths": {
       "type": "object",
       "additionalProperties": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"}
@@ -36,7 +37,7 @@
   "allOf": [
     {
       "if": {"properties": {"profile": {"enum": ["from-scratch", "template-edit"]}}},
-      "then": {"required": ["renderer"]}
+      "then": {"required": ["renderer", "text_fit_policy"]}
     }
   ]
 }

@@ -6,6 +6,8 @@
 
 [FRAME] Record audience, purpose, setting, language, output location, controlling source/template, expected duration or count, editability, and any material brand, font, data, asset, or fidelity decision.
 
+[FRAME] Every supplied visual deck has an explicit `controlling-template | style-reference | content-only | excluded` role, current path/hash, allowed uses (`layout`, `palette`, `fonts`, `images`, `charts`, `shape-language`), fidelity mode, and confirmed/pending user decision. `template-edit` requires exactly one confirmed controlling template; missing role or reuse permission returns `need-user` before profiling or content mapping.
+
 ## Typed Blockers
 
 [FRAME] Each blocker has a stable `id`, `type`, `severity`, `status`, `description`, and executable `next_action`.
@@ -23,3 +25,5 @@
 - [FRAME] Required build/render font unavailable → `need-user` and block.
 - [FRAME] Missing or stale outline → `compile-plan`.
 - [FRAME] Missing renderer → `repair-renderer`.
+- [FRAME] Missing/stale template profile → `profile-template`.
+- [FRAME] External Windows/WSL font location without exact approval → `need-user`; do not create an empty verified inventory.

@@ -32,6 +32,7 @@ STYLE_LOCK = load_module("lock_style_proof")
 FONT_AUDIT = load_module("report_font_audit")
 WORKSPACE_READINESS = load_module("report_workspace_readiness")
 DELIVERY_READINESS = load_module("report_delivery_readiness")
+LAYOUT_PREFLIGHT = load_module("report_layout_preflight")
 
 
 def plan_text(slides=None, declared_count=None, *, ids=True):
@@ -211,7 +212,7 @@ class WorkspaceTests(unittest.TestCase):
             root = Path(temporary)
             full_required = {
                 "workspace.json", "intake.json", "per-slide-content-plan.md", "design-brief.json",
-                "design-contract.json", "font-contract.json", "evidence-plan.json", "asset-plan.json",
+                "design-contract.json", "font-contract.json", "font-environment.json", "evidence-plan.json", "asset-plan.json",
                 "notes.md", "sources/manifest.json", "src/deck.js", "src/theme.js",
                 "assets/manifest.json", "assets/attribution.csv", "patches/.gitkeep",
             }
@@ -219,6 +220,8 @@ class WorkspaceTests(unittest.TestCase):
                 workspace = self.initialize(root, profile)
                 inventory = {path.relative_to(workspace).as_posix() for path in workspace.rglob("*") if path.is_file()}
                 self.assertTrue(full_required.issubset(inventory))
+                if profile == "template-edit":
+                    self.assertIn("template-profile.json", inventory)
                 self.assertIn("<!-- slide-id: slide-01 -->", (workspace / "per-slide-content-plan.md").read_text())
                 self.assertEqual(json.loads((workspace / "workspace.json").read_text())["profile"], profile)
                 with self.assertRaises(CORE.WorkspaceError):
@@ -315,17 +318,21 @@ class WorkspaceTests(unittest.TestCase):
             self.compile_workspace(workspace)
             font_path = workspace / "font-contract.json"
             contract = json.loads(font_path.read_text())
-            contract["fonts"] = [{"role": "body", "family": "Brand Sans", "required": True, "fallback_allowed": False}]
-            contract["environments"]["build"] = {"status": "verified", "available_fonts": [], "evidence": ["probe"]}
-            contract["environments"]["render"] = {"status": "verified", "available_fonts": ["Brand Sans"], "evidence": ["probe"]}
+            contract["fonts"] = [{"role": "body", "family": "Brand Sans", "required": True, "fallback_allowed": False, "source": "user"}]
             json_write(font_path, contract)
+            environment_path = workspace / "font-environment.json"
+            environment = json.loads(environment_path.read_text())
+            environment["status"] = "ready"
+            environment["environments"]["build"].update({"status": "verified", "renderer": "test-build", "visible_fonts": []})
+            environment["environments"]["render"].update({"status": "verified", "renderer": "test-render", "visible_fonts": ["Brand Sans"]})
+            json_write(environment_path, environment)
             missing = WORKSPACE_READINESS.evaluate_workspace(workspace)
             self.assertEqual(missing["status"], "blocked")
             blocker_item = next(item for item in missing["blockers"] if item["code"] == "REQUIRED_FONT_UNAVAILABLE")
             self.assertEqual(blocker_item["next_action"], "need-user")
 
-            contract["environments"]["build"]["available_fonts"] = ["Brand Sans"]
-            json_write(font_path, contract)
+            environment["environments"]["build"]["visible_fonts"] = ["Brand Sans"]
+            json_write(environment_path, environment)
             target_unknown = WORKSPACE_READINESS.evaluate_workspace(workspace)
             self.assertEqual(target_unknown["status"], "ready")
             self.assertIn("TARGET_FONT_UNVERIFIED", {item["code"] for item in target_unknown["unverified"]})
@@ -380,6 +387,11 @@ class WorkspaceTests(unittest.TestCase):
                 "pptx_sha256": render["pptx_sha256"],
                 "render_sha256": render["render_sha256"],
                 "slide_ids": ["slide-01"],
+                "pages": [{
+                    "slide_id": "slide-01", "inspection_status": "inspected",
+                    "checks": {"alignment": "pass", "spacing": "pass", "text_wrap": "pass", "overflow": "pass", "image_aspect": "not-applicable", "font_rendering": "pass", "reference_fidelity": "not-applicable"},
+                    "observations": ["Style proof page was inspected."],
+                }],
                 "findings": [],
                 "disposition": "pass",
             }
@@ -437,6 +449,20 @@ class DeliveryTests(unittest.TestCase):
         }
         json_write(workspace / "build/build-report.json", build)
 
+        autofit_evidence = {
+            "schema_version": "1.0", "report_kind": "autofit-evidence", "status": "verified",
+            "source_pptx_sha256": pptx_sha, "output_pptx_sha256": pptx_sha,
+            "text_fit_policy": "shape-to-fit-text", "shapes": [], "blockers": [],
+        }
+        json_write(workspace / "build/autofit-evidence.json", autofit_evidence)
+        build["autofit"] = {
+            "status": "verified",
+            "evidence_path": "build/autofit-evidence.json",
+            "evidence_sha256": CORE.sha256_file(workspace / "build/autofit-evidence.json"),
+            "pptx_sha256": pptx_sha,
+        }
+        json_write(workspace / "build/build-report.json", build)
+
         slide_image = workspace / "renders/final/slide-01.png"
         contact = workspace / "renders/final/contact-sheet.png"
         slide_image.write_bytes(b"rendered-slide")
@@ -457,7 +483,39 @@ class DeliveryTests(unittest.TestCase):
             "artifacts": artifacts,
             "contact_sheet": contact_record,
         }
+        issues = {
+            "schema_version": "1.0", "report_kind": "officecli-issues", "officecli_path": "/fake/officecli",
+            "officecli_version": "1.0.143", "argv": ["/fake/officecli", "view", "build/final.pptx", "issues", "--json"],
+            "pptx_sha256": pptx_sha, "count": 0, "issues": [],
+        }
+        json_write(workspace / "build/officecli-issues.json", issues)
+        render["issue_scan"] = {
+            "path": "build/officecli-issues.json",
+            "sha256": CORE.sha256_file(workspace / "build/officecli-issues.json"),
+            "pptx_sha256": pptx_sha,
+        }
         json_write(workspace / "renders/final/manifest.json", render)
+        json_write(workspace / "build/font-audit.json", readiness["font_audit"])
+        layout_evidence = {
+            "schema_version": "1.0", "report_kind": "layout-evidence", "pptx_sha256": pptx_sha,
+            "slide_size": {"w": 100, "h": 100}, "shapes": [], "alignment_groups": [], "issue_dispositions": {},
+        }
+        json_write(workspace / "build/layout-evidence.json", layout_evidence)
+        preflight = LAYOUT_PREFLIGHT.evaluate_layout_preflight(
+            final_pptx_sha256=pptx_sha,
+            template_profile_sha256=None,
+            font_audit_sha256=CORE.sha256_file(workspace / "build/font-audit.json"),
+            issues_sha256=CORE.sha256_file(workspace / "build/officecli-issues.json"),
+            layout_evidence_sha256=CORE.sha256_file(workspace / "build/layout-evidence.json"),
+            layout_evidence=layout_evidence,
+            issues=issues,
+            render_sha256=render_sha,
+        )
+        json_write(workspace / "build/layout-preflight.json", preflight)
+        passing_checks = {
+            "alignment": "pass", "spacing": "pass", "text_wrap": "pass", "overflow": "pass",
+            "image_aspect": "not-applicable", "font_rendering": "pass", "reference_fidelity": "not-applicable",
+        }
         review = {
             "schema_version": "1.0",
             "review_scope": "final",
@@ -465,6 +523,11 @@ class DeliveryTests(unittest.TestCase):
             "pptx_sha256": pptx_sha,
             "render_sha256": render_sha,
             "slide_ids": ["slide-01"],
+            "pages": [{
+                "slide_id": "slide-01", "page_id": "slide-01", "render_path": "renders/final/slide-01.png",
+                "render_sha256": artifacts[0]["sha256"], "inspection_status": "inspected", "checks": passing_checks,
+                "observations": ["No clipping, wrapping, or alignment drift is visible in the bound render."],
+            }],
             "findings": [],
             "disposition": "pass",
         }
@@ -489,6 +552,16 @@ class DeliveryTests(unittest.TestCase):
             review_path = workspace / "reviews/visual-review-final.json"
             review = json.loads(review_path.read_text())
             review["reviewer"] = ""
+            json_write(review_path, review)
+            blocked = DELIVERY_READINESS.evaluate_delivery(workspace)
+            self.assertIn("STALE_VISUAL_REVIEW", {item["code"] for item in blocked["blockers"]})
+
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = self.initialize_ready_workspace(Path(temporary))
+            self.create_current_chain(workspace)
+            review_path = workspace / "reviews/visual-review-final.json"
+            review = json.loads(review_path.read_text())
+            review["pages"] = []
             json_write(review_path, review)
             blocked = DELIVERY_READINESS.evaluate_delivery(workspace)
             self.assertIn("STALE_VISUAL_REVIEW", {item["code"] for item in blocked["blockers"]})

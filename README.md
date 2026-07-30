@@ -220,7 +220,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `minimax-docx` | [框架内] DOCX 唯一 artifact owner；对 installed-help-confirmed 简单操作优先使用 installer-managed OfficeCLI，复杂结构/模板保真保留 OpenXML fallback |
 | `minimax-pdf` | PDF 生成、表单填写和视觉重排 |
 | `minimax-xlsx` | [框架内] XLSX/CSV/TSV 唯一 artifact owner；简单 `.xlsx` 操作优先使用 installer-managed OfficeCLI，CSV/TSV 分析保留 pandas，`.xlsm`/VBA/高保真场景保留 XML fallback |
-| `pptx-generator` | [框架内] 唯一通用 PowerPoint/PPTX workflow owner；采用 workspace-first 可重建工作区，以逐页 Markdown 作为页数、顺序、标题、Layout 与 Content 的唯一语义源，并用 hash-bound outline/build/render/visual-review readiness 失败关闭；OfficeCLI 仅为内部非路由 local-prefix tool adapter。[已知\|用户] 该 Skill 继续融合用户批准的 MiniMax 基础、人工 PPT 学习笔记英文译注、图片自然语言描述和脱敏逐页规划方法，不分发原课程 PPT、PDF、图片、会话原文或个人数据。来源：2026-07-29 用户批准的 harness 改造与 accepted change `pptx-workspace-officecli-integration`。 |
+| `pptx-generator` | [框架内] 唯一通用 PowerPoint/PPTX workflow owner；采用 workspace-first 可重建工作区，以逐页 Markdown 作为页数、顺序、标题、Layout 与 Content 的唯一语义源，并用 hash-bound outline/build/render/visual-review readiness 失败关闭。模板编辑先确认参考角色和复用范围，再记录 template profile、shape→paragraph→run 样式与 renderer-visible 字体环境；所有可编辑文本形状使用 shape-to-fit-text，且必须通过重算后几何、OfficeCLI issues、图片比例、逐页视觉观察和模板 proof 确认门禁。OfficeCLI 仅为内部非路由 local-prefix tool adapter。[已知\|用户] 该 Skill 继续融合用户批准的 MiniMax 基础、人工 PPT 学习笔记英文译注、图片自然语言描述和脱敏逐页规划方法，不分发原课程 PPT、PDF、图片、会话原文或个人数据。来源：2026-07-29 至 2026-07-30 用户批准的 harness 改造与 accepted change `pptx-workspace-officecli-integration`。 |
 | `react-native-dev` | React Native、Expo、导航、状态、测试和发布 |
 | `shader-dev` | GLSL、ShaderToy、SDF、粒子和视觉特效 |
 

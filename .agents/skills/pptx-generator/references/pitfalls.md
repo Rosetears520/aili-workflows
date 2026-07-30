@@ -18,11 +18,12 @@
 
 1. [FRAME] Compile canonical Markdown to `outline.json`; a mismatch is `STALE_OR_MUTATED_OUTLINE`.
 2. [FRAME] Compute workspace readiness and repair typed blockers before build.
-3. [FRAME] Build/repack and bind the report to current plan, outline, authored-source, renderer, and final-PPTX hashes.
+3. [FRAME] Build/repack, apply and verify shape-to-fit-text for every editable text shape, and bind the report to current plan, outline, authored-source, renderer, font/template, AutoFit, and final-PPTX hashes.
 4. [FRAME] Extract content and compare it with the canonical Markdown/outline.
-5. [FRAME] Render every slide and hash each image plus the contact sheet.
-6. [FRAME] Read those images, record concrete slide-ID findings, and repair each issue at its authored or renderer source.
-7. [FRAME] Rebuild/re-render/review every invalidated downstream step, then compute delivery readiness.
+5. [FRAME] Capture current OfficeCLI issues, render every slide, and hash each image plus the contact sheet.
+6. [FRAME] Reread post-AutoFit geometry and run layout preflight for overflow, wrapping, font bounds, images, boundaries, collision, alignment, spacing, placeholders, and issue dispositions.
+7. [FRAME] Read those images, complete every page-level check with a concrete observation, and repair each issue at its authored or renderer source.
+8. [FRAME] Rebuild/re-render/review every invalidated downstream step, then compute delivery readiness.
 
 Do not require a ceremonial fix when the first output passes all selected checks. Do not skip re-verification after an actual repair.
 
@@ -134,7 +135,7 @@ slide.addShape(pres.shapes.RECTANGLE, { shadow: makeShadow() });
 
 ### Preserve Title Fit Deliberately
 
-Use a larger box, shorten the title, or use a supported shrink-to-fit option. Do not hide an overlong conclusion by making it unreadably small.
+[FRAME] Use `fit: "resize"` for PptxGenJS text options to express shape-to-fit-text, then inspect the expanded final geometry. Do not use `fit: "shrink"` as a substitute for the accepted AutoFit policy or hide an overlong conclusion by making it unreadably small.
 
 ## Failure Outcomes
 

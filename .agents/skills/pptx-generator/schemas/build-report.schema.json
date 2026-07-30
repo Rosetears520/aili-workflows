@@ -4,7 +4,7 @@
   "title": "Current PPTX build hash chain",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "report_kind", "status", "build_kind", "source_plan_sha256", "outline_sha256", "source_fingerprint", "renderer_source_sha256", "renderer", "officecli", "base_pptx", "postbuild", "style_lock", "final_pptx", "validation", "build_fingerprint"],
+  "required": ["schema_version", "report_kind", "status", "build_kind", "source_plan_sha256", "outline_sha256", "source_fingerprint", "renderer_source_sha256", "renderer", "officecli", "base_pptx", "postbuild", "style_lock", "autofit", "final_pptx", "validation", "build_fingerprint"],
   "properties": {
     "schema_version": {"const": "1.0"},
     "report_kind": {"const": "build-report"},
@@ -40,6 +40,17 @@
       "additionalProperties": false
     },
     "style_lock": {"type": ["object", "null"]},
+    "autofit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_path", "evidence_sha256", "pptx_sha256"],
+      "properties": {
+        "status": {"enum": ["applied-awaiting-geometry-recalculation", "verified"]},
+        "evidence_path": {"type": "string", "minLength": 1},
+        "evidence_sha256": {"$ref": "#/$defs/hash"},
+        "pptx_sha256": {"$ref": "#/$defs/hash"}
+      }
+    },
     "validation": {
       "type": "object",
       "additionalProperties": false,

@@ -55,7 +55,9 @@ Near misses:
 
 [FRAME] When a template exists, derive its grammar instead of imposing defaults. Otherwise use [`references/design-system.md`](references/design-system.md), [`references/human-design-playbook.md`](references/human-design-playbook.md), and [`references/design-contract.md`](references/design-contract.md). Record content area, hierarchy, palette roles, shape/image/chart language, and navigation in the design contract without duplicating slide copy.
 
-[FRAME] Follow [`references/font-policy.md`](references/font-policy.md). Required fonts must be verified separately in build and render environments; missing/unknown required fonts return `need-user`. Unknown target-player availability remains named `Unverified`.
+[FRAME] For `template-edit`, first confirm every visual reference's role, allowed uses, fidelity mode, path, and hash. Before mapping content, run `scripts/profile_template.py` and require a current `template-profile.json` that preserves shape→paragraph→run raw/inherited/effective typography, palette usage, native layout IDs, capacity, alignment, spacing, and image-frame evidence. A role summary never overrides a run-level exception.
+
+[FRAME] Follow [`references/font-policy.md`](references/font-policy.md). `font-contract.json` records intent; `font-environment.json` separately records registration, mounted files, and renderer-visible families. Required fonts must be verified separately in build and render environments; missing/unknown required fonts return `need-user`. Unknown target-player availability remains named `Unverified`.
 
 [FRAME] For from-scratch work, render and actually review a representative Style Proof before full build. A style lock binds current design/proof/review hashes; any bound change invalidates it.
 
@@ -77,6 +79,8 @@ Near misses:
 - **Template-preserving edit:** follow [`references/editing.md`](references/editing.md).
 - **From scratch:** use the registered renderer and technical patterns in [`references/pptxgenjs.md`](references/pptxgenjs.md).
 
+[FRAME] Every supported editable text-bearing shape in a final from-scratch or template-edit PPTX uses `shape-to-fit-text`. Apply it after paragraph/run formatting, then reread the final geometry. Unsupported, locked, unreadable, or non-recalculated objects are blockers; AutoFit never waives overlap, boundary, single-line, font-size, spacing, alignment, or visual checks.
+
 [FRAME] `src/` reads current outline/design/font/assets and implements layouts; it never stores a second copy of page titles or content. Keep custom slide builders keyed by stable slide ID and include all renderer source in the build fingerprint.
 
 [FRAME] OfficeCLI use stays behind [`references/officecli-adapter.md`](references/officecli-adapter.md). The AILI installer owns installation and recovery; this Skill retains only PPTX-specific probe/build/render use. Use installed-version help as syntax authority; do not run npm or install/load OfficeCLI Skills, MCP, PATH integration, or another presentation owner.
@@ -89,9 +93,11 @@ Near misses:
 
 1. [FRAME] validate/repack the current final PPTX and bind validation to its hash;
 2. [FRAME] render every slide and a contact sheet, then hash each artifact;
-3. [FRAME] read the actual images and record reviewer, exact PPTX/render hashes, exact slide IDs, findings, finding dispositions, and overall disposition;
-4. [FRAME] repair at source and rebuild every invalidated downstream step;
-5. [FRAME] run `scripts/report_delivery_readiness.py`; missing or stale evidence fails closed.
+3. [FRAME] run `scripts/report_layout_preflight.py` against the current final PPTX, post-AutoFit geometry, font audit, image-fit evidence, and individually dispositioned OfficeCLI issues; any blocking or unknown item fails closed;
+4. [FRAME] read the actual images and record reviewer, exact PPTX/render hashes, exact slide IDs, per-page checks, concrete observations, findings, finding dispositions, and overall disposition;
+5. [FRAME] for `template-edit`, obtain user confirmation of the current baseline/current proof hash before a full build; confirmation never waives final per-page review;
+6. [FRAME] repair at source and rebuild every invalidated downstream step;
+7. [FRAME] run `scripts/report_delivery_readiness.py`; missing or stale evidence fails closed.
 
 [FRAME] Completion criterion: the current plan→outline→build→PPTX→render→visual-review hash chain is `ready`; unsupported target-viewer, font, animation, or visual claims remain `Unverified`.
 

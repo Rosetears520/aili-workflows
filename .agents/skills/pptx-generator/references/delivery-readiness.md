@@ -14,10 +14,12 @@
 
 [FRAME] `report_delivery_readiness.py` returns only `ready` or `blocked`. Ready requires one current chain:
 
-`normalized Markdown hash → generated outline hash → authored-source/renderer hashes → successful build report → current final PPTX hash → strict validation → current per-slide/contact-sheet render hashes → current visual review`.
+`normalized Markdown hash → generated outline hash → authored-source/renderer hashes → template/font hashes when applicable → successful build report and AutoFit evidence → current final PPTX hash → strict validation → current OfficeCLI issues → current per-slide/contact-sheet render hashes → passing layout preflight → current page-level visual review`.
 
 [FRAME] Missing or stale evidence fails closed with a typed blocker and next action. Target-player font uncertainty may remain named `Unverified`; it does not become a claim of target fidelity.
 
 [FRAME] Build and render producers must use the report schemas and workspace-contained paths. See [`workspace.md`](workspace.md), [`visual-review.md`](visual-review.md), and the internal [`officecli-adapter.md`](officecli-adapter.md).
 
 [FRAME] A full from-scratch build additionally requires a current Style Proof lock bound to authored-source, outline, renderer, design, proof-build, proof-PPTX, proof-render, review, and selected-slide hashes. Style-proof build mode is the bounded producer used before that lock exists.
+
+[FRAME] A full template-edit build additionally requires a current user confirmation bound to the controlling-template profile, font environment, baseline/current proof PPTX/render/review hashes, selected slide IDs, and image-or-chart/longest-text/densest-numeric role coverage. The final delivery gate still requires current AutoFit geometry, issue dispositions, preflight, and every-slide visual observations.

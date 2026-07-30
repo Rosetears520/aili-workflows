@@ -197,6 +197,8 @@ def workspace_source_roots(workspace: dict[str, Any]) -> list[str]:
                 configured.get("design_brief", "design-brief.json"),
                 configured.get("design_contract", "design-contract.json"),
                 configured.get("font_contract", "font-contract.json"),
+                configured.get("font_environment", "font-environment.json"),
+                configured.get("template_profile", "template-profile.json") if profile == "template-edit" else "",
                 configured.get("evidence_plan", "evidence-plan.json"),
                 configured.get("asset_plan", "asset-plan.json"),
                 "notes.md",
@@ -317,6 +319,8 @@ def current_style_lock_bindings(workspace_root: Path, workspace: dict[str, Any] 
 
     review = load_json(review_path)
     findings = review.get("findings") if isinstance(review, dict) else None
+    pages = review.get("pages") if isinstance(review, dict) else None
+    page_ids = [item.get("slide_id") for item in pages if isinstance(item, dict)] if isinstance(pages, list) else []
     review_current = (
         isinstance(review, dict)
         and isinstance(review.get("reviewer"), str)
@@ -326,6 +330,17 @@ def current_style_lock_bindings(workspace_root: Path, workspace: dict[str, Any] 
         and review.get("pptx_sha256") == pptx_sha
         and review.get("render_sha256") == render_fingerprint["sha256"]
         and review.get("slide_ids") == render_fingerprint["slide_ids"]
+        and page_ids == render_fingerprint["slide_ids"]
+        and all(
+            isinstance(item, dict)
+            and item.get("inspection_status") == "inspected"
+            and isinstance(item.get("observations"), list)
+            and bool(item["observations"])
+            and isinstance(item.get("checks"), dict)
+            and len(item["checks"]) == 7
+            and all(value in {"pass", "not-applicable"} for value in item["checks"].values())
+            for item in pages or []
+        )
         and isinstance(findings, list)
         and all(
             isinstance(item, dict)
@@ -369,6 +384,126 @@ def validate_style_lock(workspace_root: Path, workspace: dict[str, Any] | None =
     if lock != expected:
         raise WorkspaceError("STYLE_LOCK_STALE", "Style lock does not exactly match the current proof and authored sources", path=lock_relative)
     return {"path": lock_relative, "sha256": sha256_file(lock_path), "lock": lock}
+
+
+def current_template_style_bindings(workspace_root: Path, workspace: dict[str, Any] | None = None) -> dict[str, Any]:
+    root = workspace_root.resolve()
+    workspace = load_json(root / "workspace.json") if workspace is None else workspace
+    if not isinstance(workspace, dict) or workspace.get("profile") != "template-edit":
+        raise WorkspaceError("TEMPLATE_STYLE_PROFILE_INVALID", "Template Style Proof applies only to template-edit workspaces")
+    paths = workspace.get("paths", {}) if isinstance(workspace.get("paths"), dict) else {}
+    profile_path = contained_path(root, paths.get("template_profile", "template-profile.json"), must_exist=True)
+    font_path = contained_path(root, paths.get("font_environment", "font-environment.json"), must_exist=True)
+    pptx_path = contained_path(root, paths.get("style_proof_pptx", STYLE_PROOF_PATHS["pptx"]), must_exist=True)
+    render_path = contained_path(root, paths.get("style_proof_render_manifest", STYLE_PROOF_PATHS["render_manifest"]), must_exist=True)
+    baseline_render_path = contained_path(root, paths.get("style_proof_baseline_render_manifest", "renders/style-proof/baseline/manifest.json"), must_exist=True)
+    review_path = contained_path(root, paths.get("style_proof_review", STYLE_PROOF_PATHS["review"]), must_exist=True)
+    preflight_path = contained_path(root, paths.get("style_proof_layout_preflight", "build/style-proof-layout-preflight.json"), must_exist=True)
+    font_audit_path = contained_path(root, paths.get("font_audit", "build/font-audit.json"), must_exist=True)
+    issues_path = contained_path(root, paths.get("style_proof_officecli_issues", "build/style-proof-officecli-issues.json"), must_exist=True)
+    layout_evidence_path = contained_path(root, paths.get("style_proof_layout_evidence", "build/style-proof-layout-evidence.json"), must_exist=True)
+    render = load_json(render_path)
+    if not isinstance(render, dict) or render.get("pptx_sha256") != sha256_file(pptx_path):
+        raise WorkspaceError("STALE_RENDER", "Template Style Proof render is not bound to the current proof PPTX")
+    render_fingerprint = render_manifest_fingerprint(root, render)
+    profile = load_json(profile_path)
+    profile_source = profile.get("source") if isinstance(profile, dict) else None
+    if not isinstance(profile_source, dict) or not isinstance(profile_source.get("path"), str):
+        raise WorkspaceError("TEMPLATE_PROFILE_INVALID", "Template profile lacks its controlling source path")
+    baseline_template_path = contained_path(root, profile_source["path"], must_exist=True)
+    baseline_template_sha = sha256_file(baseline_template_path)
+    if profile_source.get("sha256") != baseline_template_sha:
+        raise WorkspaceError("TEMPLATE_PROFILE_STALE", "Template profile source hash is stale")
+    baseline_render = load_json(baseline_render_path)
+    if not isinstance(baseline_render, dict) or baseline_render.get("pptx_sha256") != baseline_template_sha:
+        raise WorkspaceError("STALE_RENDER", "Baseline Style Proof render is not bound to the controlling template")
+    baseline_fingerprint = render_manifest_fingerprint(root, baseline_render)
+    if baseline_fingerprint["slide_ids"] != render_fingerprint["slide_ids"]:
+        raise WorkspaceError("TEMPLATE_STYLE_BASELINE_MISMATCH", "Baseline/current Style Proof slide selections differ")
+    review = load_json(review_path)
+    pages = review.get("pages") if isinstance(review, dict) else None
+    page_ids = [item.get("slide_id") for item in pages if isinstance(item, dict)] if isinstance(pages, list) else []
+    review_current = (
+        isinstance(review, dict)
+        and isinstance(review.get("reviewer"), str)
+        and bool(review["reviewer"].strip())
+        and review.get("review_scope") == "style-proof"
+        and review.get("disposition") == "pass"
+        and review.get("pptx_sha256") == sha256_file(pptx_path)
+        and review.get("render_sha256") == render_fingerprint["sha256"]
+        and review.get("slide_ids") == render_fingerprint["slide_ids"]
+        and page_ids == render_fingerprint["slide_ids"]
+        and all(
+            isinstance(item, dict)
+            and item.get("inspection_status") == "inspected"
+            and isinstance(item.get("observations"), list)
+            and bool(item["observations"])
+            and isinstance(item.get("checks"), dict)
+            and len(item["checks"]) == 7
+            and all(value in {"pass", "not-applicable"} for value in item["checks"].values())
+            for item in pages or []
+        )
+        and isinstance(review.get("findings"), list)
+        and all(isinstance(item, dict) and item.get("disposition") == "resolved" for item in review["findings"])
+    )
+    if not review_current:
+        raise WorkspaceError("TEMPLATE_STYLE_REVIEW_NOT_PASSING", "Template Style Proof review is missing, stale, or lacks page-level evidence")
+    preflight = load_json(preflight_path)
+    preflight_bindings = preflight.get("bindings", {}) if isinstance(preflight, dict) else {}
+    if (
+        not isinstance(preflight, dict)
+        or preflight.get("status") != "ready"
+        or preflight_bindings.get("final_pptx_sha256") != sha256_file(pptx_path)
+        or preflight_bindings.get("template_profile_sha256") != sha256_file(profile_path)
+        or preflight_bindings.get("font_audit_sha256") != sha256_file(font_audit_path)
+        or preflight_bindings.get("officecli_issues_sha256") != sha256_file(issues_path)
+        or preflight_bindings.get("layout_evidence_sha256") != sha256_file(layout_evidence_path)
+        or preflight_bindings.get("render_sha256") != render_fingerprint["sha256"]
+    ):
+        raise WorkspaceError("TEMPLATE_STYLE_PREFLIGHT_NOT_PASSING", "Template Style Proof layout preflight is missing, stale, or blocked")
+    bindings = {
+        "source_fingerprint": source_fingerprint(root, workspace)["sha256"],
+        "outline_sha256": sha256_file(contained_path(root, paths.get("outline", "outline.json"), must_exist=True)),
+        "renderer_source_sha256": renderer_fingerprint(root, workspace)["sha256"],
+        "baseline_template_sha256": baseline_template_sha,
+        "baseline_render_sha256": baseline_fingerprint["sha256"],
+        "template_profile_sha256": sha256_file(profile_path),
+        "font_environment_sha256": sha256_file(font_path),
+        "proof_pptx_sha256": sha256_file(pptx_path),
+        "proof_render_sha256": render_fingerprint["sha256"],
+        "proof_layout_preflight_sha256": sha256_file(preflight_path),
+        "proof_review_sha256": sha256_file(review_path),
+        "slide_ids": render_fingerprint["slide_ids"],
+    }
+    return bindings
+
+
+def validate_template_style_confirmation(workspace_root: Path, workspace: dict[str, Any] | None = None) -> dict[str, Any]:
+    root = workspace_root.resolve()
+    workspace = load_json(root / "workspace.json") if workspace is None else workspace
+    paths = workspace.get("paths", {}) if isinstance(workspace, dict) and isinstance(workspace.get("paths"), dict) else {}
+    relative = paths.get("template_style_confirmation", "reviews/template-style-confirmation.json")
+    path = contained_path(root, relative, must_exist=True)
+    confirmation = load_json(path)
+    bindings = current_template_style_bindings(root, workspace)
+    roles = confirmation.get("role_coverage", {}) if isinstance(confirmation, dict) else {}
+    required_roles = {"image-or-chart", "longest-text", "densest-numeric"}
+    role_ids = {roles.get(role) for role in required_roles} if isinstance(roles, dict) else set()
+    expected_hash = sha256_bytes(canonical_json_bytes(bindings))
+    valid = (
+        isinstance(confirmation, dict)
+        and confirmation.get("status") == "confirmed"
+        and isinstance(confirmation.get("confirmed_by"), str)
+        and bool(confirmation["confirmed_by"].strip())
+        and confirmation.get("bindings") == bindings
+        and confirmation.get("proof_hash") == expected_hash
+        and len(role_ids) >= 1
+        and None not in role_ids
+        and role_ids.issubset(set(bindings["slide_ids"]))
+    )
+    if not valid:
+        raise WorkspaceError("TEMPLATE_STYLE_CONFIRMATION_STALE", "Template Style Proof confirmation is missing, stale, or lacks required role coverage", path=relative)
+    return {"path": relative, "sha256": sha256_file(path), "confirmation": confirmation}
 
 
 def blocker(

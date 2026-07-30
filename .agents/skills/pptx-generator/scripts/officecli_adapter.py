@@ -18,15 +18,15 @@ PACKAGE_SPEC = f"{PACKAGE_NAME}@{PINNED_VERSION}"
 MANAGED_TARGET_PARTS = (".agents", "tools", "officecli")
 SKIP_UPDATE_ENV = "OFFICECLI_SKIP_UPDATE"
 
-PROBE_HELP_TOPICS: tuple[tuple[str, ...], ...] = (
-    ("help",),
-    ("help", "pptx"),
-    ("help", "pptx", "validate"),
-    ("help", "pptx", "view"),
-    ("help", "pptx", "screenshot"),
-    ("help", "pptx", "batch"),
-    ("help", "pptx", "save"),
-)
+COMMAND_TABLES: dict[str, dict[str, tuple[str, ...]]] = {
+    "1.0.143": {
+        "validate": ("validate",),
+        "view": ("view",),
+        "screenshot": ("screenshot",),
+        "batch": ("batch",),
+    }
+}
+PROBE_HELP_FAMILIES = ("validate", "view", "screenshot", "batch")
 
 
 class OfficeCLIAdapterError(ValueError):
@@ -161,6 +161,46 @@ def require_safe_officecli_argv(argv: Sequence[str]) -> None:
         raise OfficeCLIAdapterError("FORBIDDEN_OFFICECLI_COMMAND", f"Forbidden OfficeCLI command family: {joined}")
 
 
+def officecli_help_argv(binary: str, family: str, *, version: str = PINNED_VERSION) -> list[str]:
+    table = COMMAND_TABLES.get(version)
+    if table is None or family not in table:
+        raise OfficeCLIAdapterError("OFFICECLI_COMMAND_UNSUPPORTED", f"No command table for OfficeCLI {version} family {family}")
+    return [binary, *table[family], "--help"]
+
+
+def officecli_command_argv(
+    binary: str,
+    family: str,
+    document: str,
+    *,
+    version: str = PINNED_VERSION,
+    output: str | None = None,
+    slide: int | None = None,
+    contact_sheet: bool = False,
+    batch_input: str | None = None,
+) -> list[str]:
+    table = COMMAND_TABLES.get(version)
+    if table is None or family not in {"validate", "issues", "outline", "text", "screenshot", "batch"}:
+        raise OfficeCLIAdapterError("OFFICECLI_COMMAND_UNSUPPORTED", f"No command table for OfficeCLI {version} family {family}")
+    if family == "validate":
+        return [binary, *table["validate"], document, "--json"]
+    if family in {"issues", "outline", "text"}:
+        return [binary, *table["view"], document, family, "--json"]
+    if family == "batch":
+        if not batch_input:
+            raise OfficeCLIAdapterError("OFFICECLI_COMMAND_INVALID", "batch requires a batch input path")
+        return [binary, *table["batch"], document, "--input", batch_input]
+    if not output:
+        raise OfficeCLIAdapterError("OFFICECLI_COMMAND_INVALID", "screenshot requires an output path")
+    argv = [binary, *table["screenshot"], document]
+    if contact_sheet:
+        argv.append("--contact-sheet")
+    if slide is not None:
+        argv.extend(["--slide", str(slide)])
+    argv.extend(["--output", output])
+    return argv
+
+
 def run_officecli(
     argv: Sequence[str],
     *,
@@ -264,8 +304,7 @@ def probe_officecli(
 
     binary = str(resolution["path"])
     queries = [("version", [binary, "--version"])] + [
-        ("help:" + "/".join(topic[1:]) if len(topic) > 1 else "help", [binary, *topic])
-        for topic in PROBE_HELP_TOPICS
+        ("help:" + family, officecli_help_argv(binary, family)) for family in PROBE_HELP_FAMILIES
     ]
     query_success: dict[str, bool] = {}
     for name, argv in queries:
@@ -290,11 +329,11 @@ def probe_officecli(
     version = result["version"]
     result["version_drift"] = version != PINNED_VERSION if version is not None else True
     result["capabilities"] = {
-        "read": query_success.get("help:pptx", False) and query_success.get("help:pptx/view", False),
-        "validate": query_success.get("help:pptx/validate", False),
-        "render": query_success.get("help:pptx/screenshot", False),
-        "batch": query_success.get("help:pptx/batch", False),
-        "save": query_success.get("help:pptx/save", False),
+        "read": query_success.get("help:view", False),
+        "validate": query_success.get("help:validate", False),
+        "render": query_success.get("help:screenshot", False),
+        "batch": query_success.get("help:batch", False),
+        "save": False,
     }
     if version is None:
         result["errors"].append({"code": "VERSION_UNPARSEABLE", "message": "--version did not report a semantic version"})
