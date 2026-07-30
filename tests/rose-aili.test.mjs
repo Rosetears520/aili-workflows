@@ -10,7 +10,7 @@ import { loadManifest, repoInstallTargets, repoSourcePaths } from "../dist/manif
 
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, "dist", "cli.js");
-const SKIP_DEFAULT_ADDONS = ["--opencode", "--skip-openspec"];
+const SKIP_DEFAULT_ADDONS = ["--opencode", "--skip-openspec", "--skip-officecli"];
 const openSpecNodeSkip = supportsOpenSpecSuccessNode(process.versions.node) ? false : "OpenSpec install success paths require Node.js 20.19.0+";
 const SPECIALIZED_QA_LANES = [
   { agent: "test-coverage-reviewer", skill: "coverage-review", owner: "subagent:review", nearMiss: "Writing/modifying tests, PR-wide matrices, CI logs, or browser artifacts are different primary intents" },
@@ -65,6 +65,217 @@ test("install defaults to shared skills without reading or mutating OpenCode hom
   await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
+});
+
+test("OfficeCLI manifest fixes the local-prefix package and non-routable managed target", async () => {
+  const manifest = JSON.parse(await readFile(path.join(repoRoot, "manifests", "officecli-tool.json"), "utf8"));
+
+  assert.equal(manifest.packageSpec, "@officecli/officecli@1.0.143");
+  assert.equal(manifest.managedTarget, ".agents/tools/officecli");
+  assert.equal(manifest.shimPath, "node_modules/.bin/officecli");
+  assert.equal(manifest.license, "Apache-2.0");
+  assert.deepEqual(manifest.install.args, ["install", "--prefix", "{target}", "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"]);
+  assert.deepEqual(manifest.environment, { OFFICECLI_SKIP_UPDATE: "1" });
+});
+
+test("OfficeCLI dry-run and explicit skip perform no probe, directory creation, or npm command", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeOfficeCliNpmStub(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const target = managedOfficeCliTarget(fixture);
+
+  const dryRun = await runCli(["install", "--dry-run", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env,
+    officecli: true
+  });
+  const drySummary = JSON.parse(dryRun.stdout);
+  assert.equal(drySummary.officecli.status, "planned");
+  assert.equal(drySummary.officecli.target, target);
+  assert.deepEqual(drySummary.officecli.argv, ["npm", "install", "--prefix", target, "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"]);
+  assert.match(drySummary.officecli.effects.join("\n"), /network dependency resolution/);
+  await assert.rejects(stat(target));
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+
+  await writeManagedOfficeCli(fixture, "1.0.143", { logPath: stubs.logPath });
+  const skipped = await runCli(["update", "--skip-officecli", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env,
+    officecli: true
+  });
+  assert.equal(JSON.parse(skipped.stdout).officecli.status, "skipped");
+  await assert.rejects(readFile(stubs.logPath, "utf8"));
+  await fixture.cleanup();
+});
+
+test("OfficeCLI default install and update use one exact local-prefix npm command and postverify the managed shim", async () => {
+  for (const command of ["install", "update"]) {
+    const fixture = await fixtureAiliHome();
+    const stubs = await writeOfficeCliNpmStub(fixture);
+    const opencodeHome = path.join(fixture.root, "opencode");
+    const target = managedOfficeCliTarget(fixture);
+
+    const result = await runCli([command, "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+      cwd: await safeCommandCwd(fixture),
+      env: stubs.env,
+      officecli: true
+    });
+    const summary = JSON.parse(result.stdout);
+    const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+    assert.equal(summary.componentInstall.status, "completed");
+    assert.equal(summary.componentInstall.scope, "skills");
+    assert.equal(summary.officecli.status, "installed");
+    assert.equal(summary.officecli.observedVersion, "1.0.143");
+    assert.deepEqual(summary.officecli.argv, ["npm", "install", "--prefix", target, "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"]);
+    assert.deepEqual(logged.map(({ name, args }) => ({ name, args })), [
+      { name: "npm", args: ["install", "--prefix", target, "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"] },
+      { name: "officecli", args: ["--version"] }
+    ]);
+    assert.ok(logged.every((entry) => entry.skipUpdate === "1"));
+    await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+    await fixture.cleanup();
+  }
+});
+
+test("OfficeCLI exact managed version is preserved without npm and drift is reinstalled", async () => {
+  for (const initialVersion of ["1.0.143", "1.0.144"]) {
+    const fixture = await fixtureAiliHome();
+    const stubs = await writeOfficeCliNpmStub(fixture);
+    const opencodeHome = path.join(fixture.root, "opencode");
+    await writeManagedOfficeCli(fixture, initialVersion, { logPath: stubs.logPath });
+
+    const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+      cwd: await safeCommandCwd(fixture),
+      env: stubs.env,
+      officecli: true
+    });
+    const summary = JSON.parse(result.stdout);
+    const logged = JSON.parse(await readFile(stubs.logPath, "utf8"));
+
+    assert.equal(summary.officecli.status, initialVersion === "1.0.143" ? "preserved" : "installed");
+    assert.equal(summary.officecli.observedVersion, "1.0.143");
+    assert.equal(logged.filter((entry) => entry.name === "npm").length, initialVersion === "1.0.143" ? 0 : 1);
+    assert.ok(logged.filter((entry) => entry.name === "officecli").every((entry) => entry.skipUpdate === "1"));
+    await fixture.cleanup();
+  }
+});
+
+test("OfficeCLI postinstall verification failure is nonzero while completed Skill sync remains", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeOfficeCliNpmStub(fixture, { installedVersion: "1.0.144" });
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const result = await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--json"], {
+    cwd: await safeCommandCwd(fixture),
+    env: stubs.env,
+    officecli: true,
+    reject: false
+  });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(result.code, 1);
+  assert.equal(summary.componentInstall.status, "completed");
+  assert.equal(summary.officecli.status, "failed");
+  assert.equal(summary.officecli.exitCode, 0);
+  assert.match(summary.officecli.reason, /postinstall verification was drift/);
+  assert.match(summary.officecli.recovery, /npm install --prefix .* --no-save --no-package-lock @officecli\/officecli@1\.0\.143/);
+  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await fixture.cleanup();
+});
+
+test("doctor read-only OfficeCLI readiness affects ok for current, missing, and drift states", async () => {
+  for (const state of ["current", "missing", "drift"]) {
+    const fixture = await fixtureAiliHome();
+    const opencodeHome = path.join(fixture.root, "opencode");
+    const logPath = path.join(fixture.safeRoot, `doctor-officecli-${state}.log`);
+    await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+    if (state !== "missing") await writeManagedOfficeCli(fixture, state === "current" ? "1.0.143" : "1.0.144", { logPath });
+
+    const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { reject: false });
+    const summary = JSON.parse(result.stdout);
+    const expectedStatus = state === "current" ? "ready" : state;
+
+    assert.equal(result.code, state === "current" ? 0 : 1);
+    assert.equal(summary.ok, state === "current");
+    assert.equal(summary.officecli.status, expectedStatus);
+    assert.equal(summary.officecli.expectedVersion, "1.0.143");
+    assert.equal(summary.required.find((entry) => entry.type === "tool" && entry.name === "officecli").installed, state === "current");
+    assert.match(summary.officecli.recovery, /@officecli\/officecli@1\.0\.143/);
+    if (state === "missing") await assert.rejects(readFile(logPath, "utf8"));
+    else {
+      const logged = JSON.parse(await readFile(logPath, "utf8"));
+      assert.deepEqual(logged, [{ name: "officecli", args: ["--version"], skipUpdate: "1" }]);
+    }
+    await fixture.cleanup();
+  }
+});
+
+test("direct Bash OfficeCLI lane matches default, dry-run, skip, and failure retention semantics", async () => {
+  const installedFixture = await fixtureAiliHome();
+  const installedStubs = await writeOfficeCliNpmStub(installedFixture);
+  const installed = await execFileP("bash", [
+    path.join(installedFixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", installedFixture.ailiHome,
+    "--opencode-home", path.join(installedFixture.root, "opencode"),
+    "--no-update"
+  ], { env: installerEnv(installedFixture.root, installedStubs.env), officecli: true });
+  const installedSummary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
+  assert.equal(installedSummary.officecli.status, "installed");
+  assert.deepEqual(installedSummary.officecli.argv, ["npm", "install", "--prefix", managedOfficeCliTarget(installedFixture), "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"]);
+  assert.equal(JSON.parse(await readFile(installedStubs.logPath, "utf8")).filter((entry) => entry.name === "npm").length, 1);
+  await installedFixture.cleanup();
+
+  const dryFixture = await fixtureAiliHome();
+  const dryStubs = await writeOfficeCliNpmStub(dryFixture);
+  const dry = await execFileP("bash", [
+    path.join(dryFixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", dryFixture.ailiHome,
+    "--opencode-home", path.join(dryFixture.root, "opencode"),
+    "--dry-run"
+  ], { env: installerEnv(dryFixture.root, dryStubs.env), officecli: true });
+  assert.equal(JSON.parse(dry.stdout.trim().split(/\r?\n/).at(-1)).officecli.status, "planned");
+  await assert.rejects(stat(managedOfficeCliTarget(dryFixture)));
+  await assert.rejects(readFile(dryStubs.logPath, "utf8"));
+  await dryFixture.cleanup();
+
+  const skippedFixture = await fixtureAiliHome();
+  const skippedStubs = await writeOfficeCliNpmStub(skippedFixture);
+  await writeManagedOfficeCli(skippedFixture, "1.0.143", { logPath: skippedStubs.logPath });
+  const skipped = await execFileP("bash", [
+    path.join(skippedFixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", skippedFixture.ailiHome,
+    "--opencode-home", path.join(skippedFixture.root, "opencode"),
+    "--no-update"
+  ], { env: installerEnv(skippedFixture.root, skippedStubs.env) });
+  assert.equal(JSON.parse(skipped.stdout.trim().split(/\r?\n/).at(-1)).officecli.status, "skipped");
+  await assert.rejects(readFile(skippedStubs.logPath, "utf8"));
+  await skippedFixture.cleanup();
+
+  const failedFixture = await fixtureAiliHome();
+  const failedStubs = await writeOfficeCliNpmStub(failedFixture, { exitCode: 9, stderr: "fake npm failed" });
+  let failure;
+  try {
+    await execFileP("bash", [
+      path.join(failedFixture.ailiHome, "scripts", "install_opencode.sh"),
+      "--mode", "selective",
+      "--aili-home", failedFixture.ailiHome,
+      "--opencode-home", path.join(failedFixture.root, "opencode"),
+      "--no-update"
+    ], { env: installerEnv(failedFixture.root, failedStubs.env), officecli: true });
+    assert.fail("expected direct Bash OfficeCLI install failure");
+  } catch (error) {
+    failure = error;
+  }
+  const failedSummary = JSON.parse(failure.stdout.trim().split(/\r?\n/).at(-1));
+  assert.equal(failedSummary.officecli.status, "failed");
+  assert.equal(failedSummary.officecli.exitCode, 9);
+  assert.match(failedSummary.officecli.reason, /fake npm failed/);
+  assert.equal((await lstat(path.join(sharedSkillsHome(failedFixture), "rose-memory"))).isSymbolicLink(), true);
+  await failedFixture.cleanup();
 });
 
 test("OpenCode-specific options require the --opencode suffix", async () => {
@@ -1146,6 +1357,7 @@ test("doctor reports required components and optional project CodeGraph separate
   await writeStub(binDir, "codegraph", logPath);
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--model", "anthropic/claude-sonnet-4-5", ...SKIP_DEFAULT_ADDONS, "--json"]);
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
     cwd: projectDir,
@@ -1187,6 +1399,7 @@ test("doctor reports upstream Graphify CLI and global agents skill separately wi
   await writeFile(path.join(stubs.targetPath, "SKILL.md"), "# Graphify\n", "utf8");
   await writeFile(path.join(stubs.targetPath, ".graphify_version"), "0.9.20", "utf8");
   await writeFile(path.join(stubs.targetPath, "references", "usage.md"), "# Usage\n", "utf8");
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
     cwd: await safeCommandCwd(fixture),
@@ -1214,6 +1427,7 @@ test("doctor reports repo source drift without failing core OpenCode install", a
   await rm(path.join(fixture.ailiHome, ".agents", "skills", "rose-memory", "SKILL.md"));
   const templateAgents = await readFile(path.join(fixture.ailiHome, "templates", "AGENTS.md"), "utf8");
   await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents.replace(/AILI_AGENTS_TEMPLATE_VERSION:\s*\d+/, "AILI_AGENTS_TEMPLATE_VERSION: 0"), "utf8");
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
   const summary = JSON.parse(result.stdout);
@@ -1234,6 +1448,7 @@ test("doctor reports missing shared skill source separately from installed OpenC
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
   await rm(path.join(fixture.ailiHome, ".agents", "skills"), { recursive: true, force: true });
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
   const summary = JSON.parse(result.stdout);
@@ -1255,6 +1470,7 @@ test("doctor reports configured CodeGraph when OpenCode config has CodeGraph MCP
   const config = JSON.parse(await readFile(configPath, "utf8"));
   config.mcp = { ...(config.mcp ?? {}), codegraph: { type: "local", command: ["codegraph", "serve", "--mcp"], enabled: true } };
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
   const summary = JSON.parse(result.stdout);
@@ -1270,6 +1486,7 @@ test("doctor reports initialized project CodeGraph index when .codegraph exists"
   await mkdir(path.join(projectDir, ".codegraph"), { recursive: true });
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
+  await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
   const summary = JSON.parse(result.stdout);
@@ -1970,6 +2187,7 @@ test("help documents supported options and omits removed plugin flags", async ()
     assert.match(result.stdout, /--enable-openspec \| --skip-openspec/);
     assert.match(result.stdout, /--enable-graphify \| --skip-graphify/);
     assert.match(result.stdout, /--register-graphify-skill/);
+    assert.match(result.stdout, /--skip-officecli/);
     assert.match(result.stdout, /--project-root <absolute-canonical-path>/);
     assert.doesNotMatch(result.stdout, /--(?:enable|skip)-dcp/);
   }
@@ -2005,8 +2223,9 @@ async function safeCommandCwd(fixture) {
 }
 
 function runCli(args, options = {}) {
+  const cliArgs = testSafeOfficeCliArgs(args, options.officecli === true);
   return new Promise((resolve, reject) => {
-    execFile(process.execPath, [cliPath, ...args], { cwd: options.cwd ?? repoRoot, env: testCliEnv(args, options.env) }, (error, stdout, stderr) => {
+    execFile(process.execPath, [cliPath, ...cliArgs], { cwd: options.cwd ?? repoRoot, env: testCliEnv(cliArgs, options.env) }, (error, stdout, stderr) => {
       const code = error && typeof error.code === "number" ? error.code : 0;
       const result = { code, stdout, stderr };
       if (error && options.reject !== false) reject(Object.assign(error, result));
@@ -2016,12 +2235,25 @@ function runCli(args, options = {}) {
 }
 
 function execFileP(file, args, options = {}) {
+  const { officecli = false, ...execOptions } = options;
+  const commandArgs = testSafeBashInstallerArgs(file, args, officecli);
   return new Promise((resolve, reject) => {
-    execFile(file, args, options, (error, stdout, stderr) => {
+    execFile(file, commandArgs, execOptions, (error, stdout, stderr) => {
       if (error) reject(Object.assign(error, { stdout, stderr }));
       else resolve({ stdout, stderr });
     });
   });
+}
+
+function testSafeOfficeCliArgs(args, allowOfficeCli) {
+  if (allowOfficeCli || args.includes("--skip-officecli") || !["install", "update"].includes(args[0])) return args;
+  return [...args, "--skip-officecli"];
+}
+
+function testSafeBashInstallerArgs(file, args, allowOfficeCli) {
+  const invokesInstaller = path.basename(file) === "bash" && args[0]?.endsWith("/scripts/install_opencode.sh");
+  if (allowOfficeCli || !invokesInstaller || args.includes("--skip-officecli")) return args;
+  return [...args, "--skip-officecli"];
 }
 
 function testCliEnv(args, baseEnv = process.env) {
@@ -2261,4 +2493,74 @@ if (args.length === 1 && args[0] === "--version") {
 process.exit(0);
 `, "utf8");
   await chmod(scriptPath, 0o755);
+}
+
+function managedOfficeCliTarget(fixture) {
+  return path.join(fixture.root, ".agents", "tools", "officecli");
+}
+
+async function writeManagedOfficeCli(fixture, version = "1.0.143", options = {}) {
+  const shimPath = path.join(managedOfficeCliTarget(fixture), "node_modules", ".bin", "officecli");
+  if (options.logPath) await mkdir(path.dirname(options.logPath), { recursive: true });
+  await mkdir(path.dirname(shimPath), { recursive: true });
+  await writeFile(shimPath, officeCliShimSource(version, options), "utf8");
+  await chmod(shimPath, 0o755);
+  return shimPath;
+}
+
+function officeCliShimSource(version, options = {}) {
+  const logPath = options.logPath;
+  return `#!${process.execPath}
+import { readFileSync, writeFileSync } from "node:fs";
+const args = process.argv.slice(2);
+${logPath ? `const logPath = ${JSON.stringify(logPath)};
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: "officecli", args, skipUpdate: process.env.OFFICECLI_SKIP_UPDATE });
+writeFileSync(logPath, JSON.stringify(entries));` : ""}
+if (args.length !== 1 || args[0] !== "--version") {
+  process.stderr.write("forbidden officecli command: " + args.join(" "));
+  process.exit(64);
+}
+process.stdout.write(${JSON.stringify(`officecli ${version}\n`)});
+process.exit(${Number(options.exitCode ?? 0)});
+`;
+}
+
+async function writeOfficeCliNpmStub(fixture, options = {}) {
+  const binDir = safeBinDir(fixture, options.binName ?? "officecli-bin");
+  const logPath = path.join(fixture.safeRoot, `${options.binName ?? "officecli"}-commands.log`);
+  const npmPath = path.join(binDir, "npm");
+  const installedVersion = options.installedVersion ?? "1.0.143";
+  const installedShim = officeCliShimSource(installedVersion, { logPath, exitCode: options.shimExitCode ?? 0 });
+  await mkdir(binDir, { recursive: true });
+  await writeFile(npmPath, `#!${process.execPath}
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+const logPath = ${JSON.stringify(logPath)};
+const args = process.argv.slice(2);
+let entries = [];
+try { entries = JSON.parse(readFileSync(logPath, "utf8")); } catch {}
+entries.push({ name: "npm", args, skipUpdate: process.env.OFFICECLI_SKIP_UPDATE });
+writeFileSync(logPath, JSON.stringify(entries));
+if (${Number(options.exitCode ?? 0)} !== 0) {
+  process.stderr.write(${JSON.stringify(options.stderr ?? "fake npm failed")});
+  process.exit(${Number(options.exitCode ?? 0)});
+}
+const expected = ["install", "--prefix"];
+if (args[0] !== expected[0] || args[1] !== expected[1] || args.length !== 6 || args[3] !== "--no-save" || args[4] !== "--no-package-lock" || args[5] !== "@officecli/officecli@1.0.143") {
+  process.stderr.write("unexpected npm argv: " + args.join(" "));
+  process.exit(64);
+}
+const shimPath = path.join(args[2], "node_modules", ".bin", "officecli");
+mkdirSync(path.dirname(shimPath), { recursive: true });
+writeFileSync(shimPath, ${JSON.stringify(installedShim)});
+chmodSync(shimPath, 0o755);
+`, "utf8");
+  await chmod(npmPath, 0o755);
+  return {
+    binDir,
+    logPath,
+    env: { ...process.env, PATH: isolatedStubPath(binDir) }
+  };
 }

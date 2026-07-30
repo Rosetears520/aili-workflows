@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "name": "officecli",
+  "package": "@officecli/officecli",
+  "version": "1.0.143",
+  "packageSpec": "@officecli/officecli@1.0.143",
+  "registry": "https://registry.npmjs.org",
+  "license": "Apache-2.0",
+  "source": "https://github.com/iOfficeAI/OfficeCLI/tree/v1.0.143",
+  "managedTarget": ".agents/tools/officecli",
+  "shimPath": "node_modules/.bin/officecli",
+  "install": {
+    "command": "npm",
+    "args": [
+      "install",
+      "--prefix",
+      "{target}",
+      "--no-save",
+      "--no-package-lock",
+      "@officecli/officecli@1.0.143"
+    ],
+    "effects": [
+      "network dependency resolution",
+      "local-prefix package files under the managed target"
+    ]
+  },
+  "environment": {
+    "OFFICECLI_SKIP_UPDATE": "1"
+  },
+  "upgradePolicy": "exact-pin-only"
+}

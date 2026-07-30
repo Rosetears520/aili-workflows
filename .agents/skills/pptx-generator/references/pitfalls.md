@@ -14,13 +14,15 @@
 
 ## Verification Loop
 
-1. Compile or repack the PPTX.
-2. Extract its text and compare it with the approved slide plan/source content.
-3. Render every affected slide.
-4. Record concrete issues rather than assuming the first output is correct or incorrect.
-5. Repair each issue at its source.
-6. Re-run the checks affected by the repair.
-7. Finish when a fresh pass supports the accepted claims and introduces no new known issue.
+[FRAME] In a full workspace, follow the current hash chain:
+
+1. [FRAME] Compile canonical Markdown to `outline.json`; a mismatch is `STALE_OR_MUTATED_OUTLINE`.
+2. [FRAME] Compute workspace readiness and repair typed blockers before build.
+3. [FRAME] Build/repack and bind the report to current plan, outline, authored-source, renderer, and final-PPTX hashes.
+4. [FRAME] Extract content and compare it with the canonical Markdown/outline.
+5. [FRAME] Render every slide and hash each image plus the contact sheet.
+6. [FRAME] Read those images, record concrete slide-ID findings, and repair each issue at its authored or renderer source.
+7. [FRAME] Rebuild/re-render/review every invalidated downstream step, then compute delivery readiness.
 
 Do not require a ceremonial fix when the first output passes all selected checks. Do not skip re-verification after an actual repair.
 
@@ -93,7 +95,7 @@ Stop and repair when:
 - package XML is malformed or namespaces were rewritten incorrectly;
 - the deck opens but silently drops content.
 
-Retain the last known-good file while diagnosing corruption.
+[FRAME] Retain the last known-good file while diagnosing corruption. Invalid Markdown compilation must not overwrite the last valid `outline.json`; stale build/render/review evidence remains present but ineligible.
 
 ## PptxGenJS Pitfalls
 
@@ -137,7 +139,9 @@ Use a larger box, shorten the title, or use a supported shrink-to-fit option. Do
 ## Failure Outcomes
 
 - Corrupt or repair-prompting PPTX after one focused repair pass: `blocked`.
-- Missing visual renderer: visual claims remain `Unverified`.
+- Missing registered renderer: full-workspace readiness is `blocked`; visual claims remain `Unverified`.
 - Missing animation-capable runtime: animation behavior remains `Unverified`.
 - Content cannot fit without deletion or a layout decision: `need-user`.
 - Required source content, chart data, citation, or asset is absent: `need-evidence`.
+- Current render without a reviewer/hash-bound finding disposition: delivery readiness is `blocked`.
+- Required build/render font unavailable: `need-user`; target-player font availability may remain named `Unverified`.

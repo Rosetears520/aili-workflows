@@ -1,6 +1,6 @@
 {
   "fixture": "skill-routing",
-  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "minimax-docx", "minimax-xlsx", "pptx-generator", "OfficeCLI", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
   "cases": [
     {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
     {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
@@ -28,6 +28,16 @@
     {"id": "planning-explicit-packages", "skill": "planning-and-task-breakdown", "input": "split the accepted payments specification into dependency-ordered implementation packages", "expected": "trigger"},
     {"id": "planning-clear-eight-file-edit", "skill": "planning-and-task-breakdown", "input": "the clear accepted edit touches eight files; implement directly without a new plan", "expected": "non-trigger"},
     {"id": "browser-direct-evidence", "skill": "browser-testing-with-devtools", "input": "collect direct Playwright console and POST evidence for the exact local checkout route; do not edit source", "expected": "trigger"},
-    {"id": "browser-source-fix-handoff", "skill": "browser-testing-with-devtools", "input": "browser evidence identifies a source fix and a durable test-plan need", "expected": "trigger", "expected_handoff": "return source fix and durable test-plan needs to ROSE"}
+    {"id": "browser-source-fix-handoff", "skill": "browser-testing-with-devtools", "input": "browser evidence identifies a source fix and a durable test-plan need", "expected": "trigger", "expected_handoff": "return source fix and durable test-plan needs to ROSE"},
+    {"id": "docx-generic-owner", "skill": "minimax-docx", "input": "Create an editable DOCX report and preserve the source document", "expected": "trigger"},
+    {"id": "docx-officecli-simple", "skill": "minimax-docx", "input": "Use managed OfficeCLI to replace one placeholder in this DOCX after installed help confirms the operation", "expected": "trigger", "expected_handoff": "minimax-docx remains the sole DOCX owner; use an explicit output copy and claim-matched evidence"},
+    {"id": "docx-openxml-fallback", "skill": "minimax-docx", "input": "Transfer complex per-section headers, footers, TOC, and tracked changes into this DOCX", "expected": "trigger", "expected_handoff": "select the OpenXML fallback and run its setup/env gate without weakening preservation checks"},
+    {"id": "xlsx-generic-owner", "skill": "minimax-xlsx", "input": "Create an editable XLSX workbook with formulas and verify formula readback", "expected": "trigger"},
+    {"id": "xlsx-officecli-simple", "skill": "minimax-xlsx", "input": "Use managed OfficeCLI for a simple XLSX cell edit after installed help confirms input, output, sheet, and range", "expected": "trigger", "expected_handoff": "minimax-xlsx remains the sole spreadsheet owner; command success alone does not prove formula correctness"},
+    {"id": "xlsx-preservation-fallback", "skill": "minimax-xlsx", "input": "Edit this .xlsm while preserving VBA and unsupported workbook extensions", "expected": "trigger", "expected_handoff": "preserve the original and use the XML fallback or return need-evidence; do not claim zero-format-loss"},
+    {"id": "pptx-generic-owner", "skill": "pptx-generator", "input": "Create an editable PowerPoint deck and verify the rendered slides", "expected": "trigger"},
+    {"id": "pptx-officecli-internal-adapter", "skill": "pptx-generator", "input": "Use OfficeCLI to inspect and render this PPTX inside the canonical presentation workflow", "expected": "trigger", "expected_handoff": "OfficeCLI remains an internal non-routable adapter; do not install officecli-pptx or a second PPT Skill"},
+    {"id": "pptx-duplicate-skill-denied", "skill": "pptx-generator", "input": "Install officecli-pptx as a second presentation Skill", "expected": "trigger", "expected_handoff": "deny duplicate presentation routing and retain pptx-generator as sole owner"},
+    {"id": "pptx-non-artifact-advice", "skill": "pptx-generator", "input": "Give me three speaking tips; do not create or edit a PPTX", "expected": "non-trigger"}
   ]
 }

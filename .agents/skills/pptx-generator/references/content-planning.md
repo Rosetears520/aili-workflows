@@ -2,7 +2,9 @@
 
 [KNOWN|USER] This reference adapts the user-provided information-synthesis notes and one user-approved local conversation example into a reusable workflow. It retains the interaction pattern and planning methods while excluding personal identifiers, uploaded source files, raw transcript content, and project-specific data. Source: user-approved harness change, 2026-07-29.
 
-[FRAME] The per-slide plan is a content contract between source analysis and PPTX implementation. It decides what the deck says and how each page divides its information; it is not a substitute for source verification or rendered-slide QA.
+[KNOWN|USER] `<deck-name>-per-slide-content-plan.md` is the sole semantic source for page count, order, title, Layout, and Content in a full PPTX workspace. Source: accepted change `pptx-workspace-officecli-integration`, decision `m0020`.
+
+[FRAME] The per-slide plan is the content contract between source analysis and PPTX implementation. Generated `outline.json`, renderer source, PPTX files, and reviews never become parallel semantic editing surfaces; source verification and rendered-slide QA remain separate evidence.
 
 ## When to Write the Plan
 
@@ -14,9 +16,9 @@ Write a task-scoped Markdown plan before slide production when any of these cond
 - a supplied template must be matched to source content page by page;
 - the user explicitly asks for a reusable outline or per-slide planning file.
 
-The plan is optional when the user already supplies an accepted page-by-page script or the requested deck is simple enough that no material content decision is needed.
+[FRAME] A full `from-scratch` or `template-edit` workspace always keeps this plan, even when the user supplies an accepted page-by-page script; transpose that accepted script into the contract without inventing content. The `inspect` profile does not manufacture a content plan.
 
-Use `<deck-name>-per-slide-content-plan.md` or a localized equivalent such as `<主题>每页内容规划.md`. Store it with the owning task's approved artifacts; writing to an external directory retains its separate approval gate.
+[FRAME] Use `<deck-name>-per-slide-content-plan.md` and store it at the workspace-configured contained path. Writing to an external directory retains its separate approval gate.
 
 Completion criterion: the plan is required only where it prevents content loss, unsupported invention, or premature slide production.
 
@@ -165,6 +167,7 @@ Overall logic: **<stage> → <stage> → <stage> → <stage>**
 ---
 
 ## Slide 01: <conclusion-style title>
+<!-- slide-id: <stable-lower-kebab-id> -->
 
 ### 1. Layout
 <State the structural arrangement and the information assigned to each region.>
@@ -177,6 +180,7 @@ Page takeaway: **<one sentence, when useful>**
 ---
 
 ## Slide 02: <conclusion-style title>
+<!-- slide-id: <another-stable-lower-kebab-id> -->
 
 ### 1. Layout
 ...
@@ -186,6 +190,8 @@ Page takeaway: **<one sentence, when useful>**
 ```
 
 Keep `Page takeaway` inside `Content`; it is not a third default section. Cover and navigation pages may omit it when it adds no value.
+
+[FRAME] Every slide section contains exactly one `<!-- slide-id: lower-kebab -->` comment. IDs remain attached to the semantic slide when pages are reordered or retitled. Normal compilation never edits Markdown; use `compile_plan.py --initialize-ids` only to insert missing IDs during an explicit migration.
 
 Use inline annotations such as `[Source: ...]`, `[Unverified]`, or `[Need user]` inside `Content` when traceability or a decision is required. Do not manufacture a citation to make the plan appear complete.
 
@@ -229,6 +235,7 @@ Before implementation, check:
 - numbers, units, labels, and comparison bases match the source;
 - no unsupported causal claim, analogy, or invented detail was introduced;
 - each proposed layout has enough capacity for its assigned content;
+- slide ordinals are continuous and every stable slide ID is valid and unique;
 - the file uses only `Layout` and `Content` by default;
 - asset or image recommendations appear only when requested;
 - unresolved material content decisions are visible.

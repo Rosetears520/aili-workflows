@@ -31,7 +31,7 @@ Slide dimensions (coordinates in inches):
 ```javascript
 // Basic text
 slide.addText("Simple Text", {
-  x: 1, y: 1, w: 8, h: 2, fontSize: 24, fontFace: "Arial",
+  x: 1, y: 1, w: 8, h: 2, fontSize: 24, fontFace: theme.bodyFont,
   color: "363636", bold: true, align: "center", valign: "middle"
 });
 

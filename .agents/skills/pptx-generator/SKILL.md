@@ -7,14 +7,16 @@ description: "Generate, edit, inspect, or verify editable PowerPoint/PPTX decks 
 
 ## Contract
 
-[FRAME] This skill treats a presentation as a communication artifact first and a collection of decorated slides second. The goal is a deck whose argument, information hierarchy, visual grammar, and editable PPTX implementation agree.
+[KNOWN|USER] `pptx-generator` is the sole general PPT/PPTX workflow owner. OfficeCLI is an internal non-routable tool adapter, not another Skill or lifecycle owner. Source: accepted change `pptx-workspace-officecli-integration`, decision `m0020`.
+
+[FRAME] This skill treats a presentation as a communication artifact first and a collection of decorated slides second. It is workspace-first: authored sources, generated artifacts, and verification evidence stay separated and hash-linked.
 
 Use one of three branches:
 
 | Branch | Trigger | Primary evidence |
 |---|---|---|
 | Inspect | Read, inventory, summarize, or diagnose an existing PPTX | Extracted content plus package/visual evidence appropriate to the claim |
-| Template-preserving edit | Modify a supplied deck while retaining its slide size, masters, layouts, theme, and recurring visual language | Before/after structure and rendered-slide comparison |
+| Template edit | Modify a supplied deck while retaining its slide size, masters, layouts, theme, and recurring visual language | Preserved source hash, replayable edit/build evidence, and rendered comparison |
 | From scratch | Produce a new editable PPTX without a controlling template | Approved brief, slide plan, successful compile, and rendered QA |
 
 Near misses:
@@ -33,74 +35,83 @@ Near misses:
 
 ## Common Workflow
 
-### 1. Fix the delivery contract
+### 1. Initialize the profile workspace
 
-Capture the audience, presentation setting, purpose, language, expected duration or slide count, source material, brand/template constraints, required output path, and whether the user wants native editability or only a visual result.
+[FRAME] Choose `from-scratch`, `template-edit`, or `inspect`, then follow [`references/workspace.md`](references/workspace.md). Capture audience, setting, purpose, language, duration/count, source/template, output path, editability, and material blockers in the profile-owned sources described by [`references/intake-and-blockers.md`](references/intake-and-blockers.md).
 
-Completion criterion: the artifact type and any material content, template, or placement decision are explicit.
+[FRAME] Completion criterion: the workspace profile and artifact contract are explicit; required sources exist or are typed blockers.
 
-### 2. Choose the branch before touching slides
+### 2. Establish the canonical plan
 
-- Existing deck plus “keep the format/style” means template-preserving edit.
-- Existing deck plus “analyze/review” means inspect unless modification is also explicit.
-- No controlling deck means from scratch.
+[KNOWN|USER] `<deck-name>-per-slide-content-plan.md` is the sole semantic source for slide count, order, title, Layout, and Content. Source: accepted change `pptx-workspace-officecli-integration`, decision `m0020`.
 
-Completion criterion: one branch owns the work; do not mix template preservation with an unrequested clean rebuild.
+[FRAME] Follow [`references/content-planning.md`](references/content-planning.md). Every slide uses exact `## Slide NN:`, one stable `<!-- slide-id: lower-kebab -->`, exactly one `### 1. Layout`, and exactly one `### 2. Content`. Keep page takeaways and source/status annotations inside Content.
 
-### 3. Distill the sources and build the per-slide plan
+[FRAME] Compile with `scripts/compile_plan.py`; `outline.json` is generated-only. Normal compilation never edits Markdown. Use `--initialize-ids` only for an explicit migration that inserts missing IDs without changing semantic text.
 
-For source-heavy decks, material content selection, or an explicit request to plan every page, follow [`references/content-planning.md`](references/content-planning.md) and write a task-scoped Markdown plan before slide production. Keep each slide entry to `Layout` followed by `Content` unless the user requests another contract; place any page takeaway inside `Content`.
+[FRAME] Completion criterion: the deterministic outline exactly matches current normalized Markdown and has continuous ordinals plus unique stable IDs.
 
-Use [`references/human-design-playbook.md`](references/human-design-playbook.md) for the underlying synthesis methods, information relationships, and practical layout formulas.
+### 3. Establish design and fonts
 
-Completion criterion: the source is reduced into a coherent deck spine, every planned slide has one primary point and a source-grounded content allocation, and any required Markdown plan is ready to drive implementation.
+[FRAME] When a template exists, derive its grammar instead of imposing defaults. Otherwise use [`references/design-system.md`](references/design-system.md), [`references/human-design-playbook.md`](references/human-design-playbook.md), and [`references/design-contract.md`](references/design-contract.md). Record content area, hierarchy, palette roles, shape/image/chart language, and navigation in the design contract without duplicating slide copy.
 
-### 4. Establish the visual grammar
+[FRAME] Follow [`references/font-policy.md`](references/font-policy.md). Required fonts must be verified separately in build and render environments; missing/unknown required fonts return `need-user`. Unknown target-player availability remains named `Unverified`.
 
-When a template exists, derive the grammar from the deck instead of imposing this skill's defaults. Otherwise choose a coherent style from [`references/design-system.md`](references/design-system.md).
+[FRAME] For from-scratch work, render and actually review a representative Style Proof before full build. A style lock binds current design/proof/review hashes; any bound change invalidates it.
 
-Record the content area, title zone, alignment lines, type hierarchy, palette roles, shape language, image treatment, chart/table treatment, and recurring navigation/footer behavior.
+[FRAME] Use the `style-proof` build kind and stable-ID render selection before creating the lock; the default full from-scratch build fails closed when the lock is missing or stale. Generate the hash-bound font audit from the current contract evidence before relying on font readiness.
 
-Completion criterion: the deck has one reusable visual system, not independently styled pages.
+[FRAME] Completion criterion: current contracts define one implementable visual grammar, required fonts are evidenced, and applicable Style Proof evidence is current.
 
-### 5. Plan pages from information relationships
+### 4. Compute workspace readiness
 
-Assign each slide a base role and a content relationship. Use [`references/slide-types.md`](references/slide-types.md) for cover, navigation, divider, content, and closing roles, then select a parallel, comparison, process, timeline, hierarchy, matrix, cycle, data, table, or image-led layout.
+[FRAME] Run `scripts/report_workspace_readiness.py`. `workspace.json` records identity/configuration and never supplies manual completion truth. Resolve typed `blocked` or `needs_attention` results before building.
 
-Completion criterion: layout follows meaning; visual variety does not break deck-wide consistency.
+[FRAME] Only registered renderer kinds and contained workspace-relative entrypoints are allowed. Arbitrary command strings, absolute paths, `..`, and escaped symlinks are blocked. Readiness fingerprints renderer source and authored inputs.
 
-### 6. Implement with the selected branch
+[FRAME] Completion criterion: readiness is `ready` for the selected branch and all named `Unverified` limits remain explicit.
+
+### 5. Implement with the selected branch
 
 - **Inspect:** extract text and package metadata; render slides when making visual claims.
 - **Template-preserving edit:** follow [`references/editing.md`](references/editing.md).
-- **From scratch:** use a supported PPTX runtime and the technical patterns in [`references/pptxgenjs.md`](references/pptxgenjs.md). A modular `slide-XX` plus compile entrypoint structure is recommended for multi-slide decks, but the owning repository controls artifact placement.
+- **From scratch:** use the registered renderer and technical patterns in [`references/pptxgenjs.md`](references/pptxgenjs.md).
 
-Keep source files, generated previews, and final artifacts task-scoped. Do not add a dependency or global package merely because an example command names one.
+[FRAME] `src/` reads current outline/design/font/assets and implements layouts; it never stores a second copy of page titles or content. Keep custom slide builders keyed by stable slide ID and include all renderer source in the build fingerprint.
 
-Completion criterion: all planned slides exist, all user content is mapped, and no placeholder survives.
+[FRAME] OfficeCLI use stays behind [`references/officecli-adapter.md`](references/officecli-adapter.md). The AILI installer owns installation and recovery; this Skill retains only PPTX-specific probe/build/render use. Use installed-version help as syntax authority; do not run npm or install/load OfficeCLI Skills, MCP, PATH integration, or another presentation owner.
 
-### 7. Verify content, visuals, and package integrity
+[FRAME] Completion criterion: all canonical slides exist, content is mapped once from outline, no placeholder survives, and the build report binds current source/renderer/outline/final-PPTX hashes.
 
-Follow [`references/pitfalls.md`](references/pitfalls.md). Run the smallest fresh checks that support the exact completion claim:
+### 6. Verify content, visuals, and delivery
 
-1. compile or repack without corruption;
-2. extract and compare text/content order;
-3. render and inspect every affected slide for clipping, overlap, contrast, alignment, spacing, crop, and font substitution;
-4. inspect deck-wide consistency and the presentation's narrative flow;
-5. recheck affected slides after each repair.
+[FRAME] Follow [`references/pitfalls.md`](references/pitfalls.md), [`references/visual-review.md`](references/visual-review.md), and [`references/delivery-readiness.md`](references/delivery-readiness.md):
 
-Completion criterion: fresh evidence supports the stated content, visual, and file-integrity claims; unsupported claims remain `Unverified`.
+1. [FRAME] validate/repack the current final PPTX and bind validation to its hash;
+2. [FRAME] render every slide and a contact sheet, then hash each artifact;
+3. [FRAME] read the actual images and record reviewer, exact PPTX/render hashes, exact slide IDs, findings, finding dispositions, and overall disposition;
+4. [FRAME] repair at source and rebuild every invalidated downstream step;
+5. [FRAME] run `scripts/report_delivery_readiness.py`; missing or stale evidence fails closed.
+
+[FRAME] Completion criterion: the current plan→outline→build→PPTX→render→visual-review hash chain is `ready`; unsupported target-viewer, font, animation, or visual claims remain `Unverified`.
 
 ## Reference Map
 
 | Need | Reference |
 |---|---|
+| Workspace profiles, ownership, initialization, and safe renderer paths | [`workspace.md`](references/workspace.md) |
+| Intake fields, typed blockers, and next actions | [`intake-and-blockers.md`](references/intake-and-blockers.md) |
 | Source distillation and a reusable per-slide Markdown content plan | [`content-planning.md`](references/content-planning.md) |
 | Complete English translation of the curated learning notes, including natural-language descriptions of source visuals | [`human-design-playbook.md`](references/human-design-playbook.md) |
 | Base slide roles and relationship-led layouts | [`slide-types.md`](references/slide-types.md) |
 | Palette, typography, spacing, and shape recipes | [`design-system.md`](references/design-system.md) |
+| Design brief/contract and Style Proof lock | [`design-contract.md`](references/design-contract.md) |
+| Font selection and build/render/target evidence | [`font-policy.md`](references/font-policy.md) |
 | Existing-template inventory and fidelity-preserving edits | [`editing.md`](references/editing.md) |
 | Compile, content, visual, and package QA | [`pitfalls.md`](references/pitfalls.md) |
+| Actual image review and hash-bound findings | [`visual-review.md`](references/visual-review.md) |
+| Workspace/delivery freshness gates | [`delivery-readiness.md`](references/delivery-readiness.md) |
+| Internal non-routable OfficeCLI tool use | [`officecli-adapter.md`](references/officecli-adapter.md) |
 | PptxGenJS implementation patterns | [`pptxgenjs.md`](references/pptxgenjs.md) |
 
 ## Hard Boundaries
@@ -109,15 +120,19 @@ Completion criterion: fresh evidence supports the stated content, visual, and fi
 - Do not rebuild a supplied template from scratch merely because generation is easier.
 - Do not invent data, citations, logos, customer names, or source claims to fill a slide.
 - Do not begin slide production before a required per-slide content plan exists and its material omissions, claims, or structure decisions are resolved.
+- Do not edit `outline.json` as a semantic source or copy slide meaning into renderer source.
+- Do not accept unregistered renderer kinds, arbitrary command strings, or workspace-escaping paths.
 - Do not hide PPTX corruption or layout defects by shipping only screenshots or a PDF.
+- Do not treat a render, issue scan, file-existence check, or reviewer-free record as visual completion.
+- Do not silently substitute a required build/render font or claim an unknown target font environment is verified.
 - Do not force a page-number badge, palette, font, gradient, animation, or decorative motif when the brief or controlling template does not use it.
 - Do not recurse, invoke another process skill, or delegate. Return any routing, research, capability, approval, or independent-work need to ROSE.
 
 ## Terminal Outcomes
 
 - `complete`: the requested PPTX work is produced and claim-matched verification is current.
-- `need-user`: one material audience, content, template, output, or fidelity decision is unresolved.
+- `need-user`: one material audience, content, template, output, style, required-font, or fidelity decision is unresolved.
 - `need-evidence`: required source content or visual/package evidence is unavailable.
 - `material-delta`: implementation reveals a new dependency, public artifact contract, permission, or verification-strategy change.
-- `blocked`: required transform capability or exact operation approval is missing, or the PPTX remains corrupt.
+- `blocked`: required capability/approval is missing, workspace/delivery readiness fails closed, renderer/path policy is violated, or the PPTX remains corrupt.
 - `Unverified`: the file exists but one or more claimed visual behaviors could not be freshly inspected.

@@ -2,15 +2,16 @@
 
 This document is for an AI agent installing `Rosetears520/aili-workflows` into OpenCode.
 
-[KNOWN] Default scope installs only reusable skills into `$HOME/.agents/skills`. Add `--opencode` only when the user also wants OpenCode global rules, agents, commands, config integration, or OpenCode-only skills.
+[FRAME] Default scope installs reusable skills into `$HOME/.agents/skills` and runs the installer-owned OfficeCLI detect-or-install step at `$HOME/.agents/tools/officecli`. Pass `--skip-officecli` to skip that tool step. Add `--opencode` only when the user also wants OpenCode global rules, agents, commands, config integration, or OpenCode-only skills.
 
 If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows native, clone and link inside Windows. Do not mix WSL and Windows paths by default. Do not clone into the user home root.
 
-[KNOWN] Default installation mode is selective shared-skill setup.
+[FRAME] Default installation mode is selective shared-skill setup plus installer-managed OfficeCLI; OfficeCLI remains a non-routable tool rather than another Skill.
 
 Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. The installation scopes are:
 
 - default: `$HOME/.agents/skills/<skill> -> <repo>/.agents/skills/<skill>`;
+- default unless `--skip-officecli`: fixed OfficeCLI target `$HOME/.agents/tools/officecli`, with no Skill/MCP/PATH/shell integration;
 - `--opencode`: `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`;
 - `--opencode`: `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`;
 - `--opencode`: `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`;
@@ -20,12 +21,13 @@ Managed directory symlink mode is only allowed when the user explicitly asks to 
 
 ## Goal
 
-Install reusable skills by default and opt into ROSE/OpenCode integration only when requested, while keeping:
+Install reusable skills and the shared non-routable OfficeCLI tool by default, and opt into ROSE/OpenCode integration only when requested, while keeping:
 
 - workflow source synced with this repository
 - existing OpenCode global agents preserved and shared skills kept outside OpenCode home
 - OpenCode global config lightweight
 - reusable global AGENTS rules installed in OpenCode home
+- DOCX, XLSX, and PPTX routing owned by their existing artifact Skills rather than OfficeCLI
 - project memory local to each project
 - project `AGENTS.md` self-contained and project-specific
 
@@ -106,9 +108,9 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | default: `/home/<user>/.agents/skills`; `--opencode`: also `/home/<user>/.config/opencode` | shared skill links by default; OpenCode entries only with `--opencode` |
-| Linux/macOS | `$AILI_HOME` | default: `$HOME/.agents/skills`; `--opencode`: also `$HOME/.config/opencode` | shared skill links by default; OpenCode entries only with `--opencode` |
-| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | default: `%USERPROFILE%\.agents\skills`; OpenCode integration is explicit | shared skill links by default; platform-specific entries remain opt-in |
+| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | default: `/home/<user>/.agents/skills` and `/home/<user>/.agents/tools/officecli`; `--opencode`: also `/home/<user>/.config/opencode` | shared skill links plus OfficeCLI tool step by default; OpenCode entries only with `--opencode` |
+| Linux/macOS | `$AILI_HOME` | default: `$HOME/.agents/skills` and `$HOME/.agents/tools/officecli`; `--opencode`: also `$HOME/.config/opencode` | shared skill links plus OfficeCLI tool step by default; OpenCode entries only with `--opencode` |
+| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | default: `%USERPROFILE%\.agents\skills` and managed OfficeCLI target; OpenCode integration is explicit | shared skill links plus OfficeCLI tool step by default; platform-specific entries remain opt-in |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
 
@@ -139,7 +141,7 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
 - `templates/opencode-global-AGENTS.md` - installer-owned source for reusable global OpenCode `AGENTS.md` rules.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
-- `scripts/install_opencode.sh` - safe WSL/Linux installer: shared skills by default, OpenCode integration with `--opencode`.
+- `scripts/install_opencode.sh` - safe WSL/Linux fallback installer: shared skills plus OfficeCLI by default, `--skip-officecli` to omit the tool, and OpenCode integration with `--opencode`.
 
 Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
 
@@ -147,7 +149,7 @@ The canonical role inventory is primary ROSE plus 19 repository-managed subagent
 
 ## Installation Decision Rule
 
-[KNOWN] Use `rose-aili install` for shared skills. Use `rose-aili install --opencode` for repository-managed global AGENTS rules, agents, commands, OpenCode-only skills, and optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
+[FRAME] Use `rose-aili install` for shared skills plus default OfficeCLI detect-or-install. Use `--skip-officecli` when the user explicitly declines that tool step. Use `rose-aili install --opencode` for repository-managed global AGENTS rules, agents, commands, OpenCode-only skills, and optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
 
 ```bash
 npx -y rose-aili install
@@ -164,6 +166,8 @@ Use these non-interactive flags for AI-agent or scripted setup:
 
 ```bash
 npx -y rose-aili install --yes
+npx -y rose-aili install --dry-run
+npx -y rose-aili install --skip-officecli
 npx -y rose-aili install --opencode --yes --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --opencode --set-default-rose
 npx -y rose-aili install --opencode --skip-opencode-config
@@ -172,11 +176,20 @@ npx -y rose-aili install --opencode --enable-codegraph
 npx -y rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>
 npx -y rose-aili install --opencode --skip-openspec
 npx -y rose-aili update --opencode --skip-openspec
+npx -y rose-aili update --skip-officecli
 npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-[KNOWN] OpenCode config sync is disabled outside `--opencode` scope. Within `--opencode`, the existing preserve/conflict behavior remains, and Playwright, CodeGraph, Graphify, and OpenSpec retain their separate explicit flags. OpenCode-specific flags fail closed when `--opencode` is absent.
+[FRAME] OfficeCLI default-on/skip/dry-run behavior is independent of `--opencode`. OpenCode config sync remains disabled outside `--opencode` scope. Within `--opencode`, the existing preserve/conflict behavior remains, and Playwright, CodeGraph, Graphify, and OpenSpec retain their separate explicit flags. OpenCode-specific flags fail closed when `--opencode` is absent.
+
+### Managed OfficeCLI Tool
+
+[FRAME] `install` and `update` detect the fixed managed shim first. An exact current version is preserved without npm; a missing or drifted version uses the fixed local-prefix package contract from `manifests/officecli-tool.json`. The summary reports component installation and OfficeCLI separately; OfficeCLI failure returns nonzero without rolling back already-synced Skills.
+
+[FRAME] `--skip-officecli` performs no OfficeCLI probe, target creation, or npm command. `--dry-run` reports the exact target, package, argv, and network/dependency effects without creating the target or running an executable. Neither flag installs an OfficeCLI Skill, MCP, public command, PATH entry, shell integration, or package full installer.
+
+[UNVERIFIED] Fake/temp repository checks do not prove a real npm/native install, DOCX/XLSX/PPTX rendering, complex Word/workbook round-trip, or cross-viewer fidelity. Do not report those outcomes as verified after setup alone.
 
 [KNOWN] Interactive `install` / `update` without `--opencode` performs no OpenCode prompts. Interactive `install --opencode` asks about the default agent, model, Playwright, CodeGraph, Graphify, and OpenSpec; `update --opencode` asks about CodeGraph and Graphify.
 
@@ -265,16 +278,17 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. Without `--opencode`, it links only shared skills into `$HOME/.agents/skills` and leaves OpenCode home untouched. With `--opencode`, it also preserves OpenCode's existing global directories and links individual managed entries.
+Use this by default. Without `--opencode`, it links shared skills into `$HOME/.agents/skills`, runs the OfficeCLI tool step unless skipped, and leaves OpenCode home untouched. With `--opencode`, it also preserves OpenCode's existing global directories and links individual managed entries.
 
 WSL/Linux recommended command:
 
 ```bash
 scripts/install_opencode.sh --mode selective
+scripts/install_opencode.sh --mode selective --skip-officecli
 scripts/install_opencode.sh --mode selective --opencode
 ```
 
-The full OpenCode entry-linking logic below corresponds to the `--opencode` scope. It does not implement the exact retired-skill ownership reconciliation above; use the CLI or installer script for real migration.
+The full OpenCode entry-linking logic below corresponds only to the component portion of the `--opencode` scope. It does not implement OfficeCLI, exact retired-skill ownership reconciliation, or structured failure reporting; use the CLI or installer script rather than hand-rolling those steps.
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -833,7 +847,7 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-For symlink setup, update the cloned repository; the global `AGENTS.md` symlink will read the updated `templates/opencode-global-AGENTS.md` immediately after OpenCode restart:
+For symlink setup, `rose-aili update` refreshes components and performs OfficeCLI detect-or-install unless `--skip-officecli` is passed. Updating only the cloned repository makes symlinked content current but does not run the OfficeCLI tool step; the global `AGENTS.md` symlink will read the updated template after OpenCode restart:
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -856,5 +870,6 @@ After setup, report:
 - backup files created
 - global config changes
 - verification results
+- OfficeCLI status (`preserved`, `installed`, `skipped`, or `failed`) and any recovery command, without claiming real render/viewer fidelity
 - update command
 - anything skipped because it was optional, unavailable, or not requested

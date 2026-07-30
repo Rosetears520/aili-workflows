@@ -20,7 +20,8 @@ Write to an edited copy unless the user explicitly asks to replace the original.
 
 1. Keep the supplied deck unchanged.
 2. Create one task-scoped working copy inside the approved artifact location.
-3. Record the original slide count, slide dimensions, and output target.
+3. Record the original workspace-relative path and SHA-256 in `sources/manifest.json`, together with slide count, dimensions, and output target.
+4. Put the page mapping, final order, title, Layout, and Content in the canonical per-slide Markdown rather than a second editable mapping file.
 
 Completion criterion: the original remains recoverable and the working target is explicit.
 
@@ -65,6 +66,8 @@ Before editing final copy:
 3. reorder slides;
 4. update section/navigation structure;
 5. confirm the final slide count and mapping.
+
+[FRAME] Express rebuildable OfficeCLI mutations in `patches/officecli-postbuild.batch.json` and replay them from the current base deck. Direct edits to a derived final PPTX are not the normal source of truth.
 
 For package-level XML work, keep `presentation.xml`, slide XML, relationship files, `[Content_Types].xml`, notes, comments, and media references consistent. Do not copy a slide XML file without its required relationship and content-type updates.
 

@@ -174,33 +174,13 @@ Add animation only when the brief requires it and the selected runtime can prese
 
 ---
 
-## Font Reference
+## Font Contract
 
-### Recommended Fonts
+[FRAME] Follow [`font-policy.md`](font-policy.md). Choose typefaces from the controlling template/brand, explicit user choice, accepted profile/configuration, and fonts verified in the actual build/render environments; do not apply a universal language default.
 
-| Language | Default Font | Alternatives |
-|----------|-------------|--------------|
-| **Chinese** | Microsoft YaHei when available | A user/template-approved CJK font |
-| **English** | Arial | Georgia, Calibri, Cambria, Trebuchet MS |
+[FRAME] Microsoft YaHei, Arial, and Calibri are compatibility examples only when a controlling template requires them or the user explicitly approves them as fallbacks. Record title/body/data/source roles and any approved fallback in `font-contract.json`.
 
-- For mixed Chinese-English content: use Microsoft YaHei for Chinese, the chosen font for English
-- Prefer system fonts for cross-platform compatibility
-- Titles and body text can use different font pairings (e.g. Georgia + Calibri)
-
-### Recommended Font Pairings
-
-| Header Font | Body Font |
-|-------------|-----------|
-| Georgia | Calibri |
-| Arial Black | Arial |
-| Calibri | Calibri Light |
-| Cambria | Calibri |
-| Trebuchet MS | Calibri |
-| Impact | Arial |
-| Palatino | Garamond |
-| Consolas | Calibri |
-
-**Choose an interesting font pairing** — don't default to Arial for everything. Pick a header font with personality and pair it with a clean body font.
+[FRAME] For mixed-language content, verify every required script coverage in both build and render environments. A visually interesting pairing is still invalid when it conflicts with the controlling source or cannot render required glyphs.
 
 ### Body Weight
 
@@ -211,9 +191,9 @@ Prefer regular weight for ordinary body, caption, legend, and footnote text. Res
 - Reserve bold for titles and headings only
 
 ```javascript
-// Correct
-slide.addText("Main Title", { bold: true, fontSize: 36, fontFace: "Arial" });
-slide.addText("Body text here.", { bold: false, fontSize: 14, fontFace: "Arial" });
+// Correct: font roles come from the current design/font contracts
+slide.addText("Main Title", { bold: true, fontSize: 36, fontFace: theme.titleFont });
+slide.addText("Body text here.", { bold: false, fontSize: 14, fontFace: theme.bodyFont });
 
 // Poor default: body emphasis everywhere flattens hierarchy
 slide.addText("Body text here.", { bold: true, fontSize: 14 });

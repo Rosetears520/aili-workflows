@@ -39,7 +39,7 @@ async function main(argv: string[]): Promise<void> {
     }
     const summary = await runInstall(command, options);
     print(summary, options.json);
-    if (options.enableOpenspec && !options.skipOpenspec && summary.openspec.status === "failed") {
+    if (summary.officecli.status === "failed" || (options.enableOpenspec && !options.skipOpenspec && summary.openspec.status === "failed")) {
       process.exitCode = 1;
     }
     return;
@@ -181,6 +181,9 @@ function parseOptions(argv: string[]): CliOptions {
       case "--skip-openspec":
         options.skipOpenspec = true;
         break;
+      case "--skip-officecli":
+        options.skipOfficecli = true;
+        break;
       case "--project-root":
         options.projectRoot = requireValue(argv, ++index, arg);
         break;
@@ -234,6 +237,7 @@ Options:
   --enable-graphify | --skip-graphify (CLI install only; existing uv required)
   --register-graphify-skill (separate global ~/.agents/skills/graphify registration)
   --enable-openspec | --skip-openspec (OpenSpec installs only when explicitly enabled)
+  --skip-officecli (skip default managed OfficeCLI detect-or-install)
   --project-root <absolute-canonical-path> (required with --enable-openspec)
   --plugin <name>
   --json`);

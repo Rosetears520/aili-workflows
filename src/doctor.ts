@@ -6,6 +6,7 @@ import path from "node:path";
 import { readOpenCodeConfig } from "./config.js";
 import { inspectGraphifySkillInventory, inspectGraphifyVersion } from "./graphify.js";
 import { RepoComponent, checkRepoManifestDrift, loadManifest, repoInstallTargets } from "./manifest.js";
+import { inspectOfficeCli, OfficeCliReadiness } from "./officecli.js";
 
 export interface DoctorOptions {
   opencodeHome: string;
@@ -59,17 +60,20 @@ export interface DoctorSummary {
     issues: string[];
     ownership: "upstream";
   };
+  officecli: OfficeCliReadiness;
   plugins: Array<{ name: string; status: "missing-optional" | "unverified" }>;
 }
 
 export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> {
   const manifest = await loadManifest(options.ailiHome);
   const installRoots = { opencode: options.opencodeHome, shared: sharedInstallHome() };
+  const officecli = await inspectOfficeCli(options.ailiHome);
   const required = [
     { type: "global", name: "AGENTS.md", installed: await exists(path.join(options.opencodeHome, "AGENTS.md")) },
     ...(await Promise.all(manifest.components.agents.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "agent", entry, `agents/${entry.name}.md`)))),
     ...(await Promise.all(manifest.components.commands.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "command", entry, `commands/${entry.name}.md`)))),
-    ...(await Promise.all(manifest.components.skills.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "skill", entry, `.agents/skills/${entry.name}`, "SKILL.md"))))
+    ...(await Promise.all(manifest.components.skills.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "skill", entry, `.agents/skills/${entry.name}`, "SKILL.md")))),
+    { type: "tool", name: "officecli", installed: officecli.status === "ready" }
   ];
   const config = await readOpenCodeConfig(options.opencodeHome);
   const defaultAgent = typeof config.value?.default_agent === "string" ? config.value.default_agent : null;
@@ -116,6 +120,7 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> 
     codegraph,
     graphifyCli,
     graphifyGlobalSkill,
+    officecli,
     plugins: manifest.components.plugins.map((entry) => ({ name: entry.name, status: "missing-optional" }))
   };
 }

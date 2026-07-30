@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rose-aili.local/pptx/intake.schema.json",
+  "title": "PPTX intake and blockers",
+  "type": "object",
+  "required": ["schema_version", "blockers"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "audience": {"type": "string"},
+    "purpose": {"type": "string"},
+    "setting": {"type": "string"},
+    "language": {"type": "string"},
+    "output_path": {"type": "string"},
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "severity", "status", "description", "next_action"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "type": {"enum": ["content", "source", "design", "font", "template", "asset", "output", "permission"]},
+          "severity": {"enum": ["hard", "attention"]},
+          "status": {"enum": ["open", "resolved"]},
+          "description": {"type": "string", "minLength": 1},
+          "next_action": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

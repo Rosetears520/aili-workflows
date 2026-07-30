@@ -8,6 +8,15 @@ OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
 DRY_RUN="false"
 NO_UPDATE="false"
 INSTALL_OPENCODE="false"
+SKIP_OFFICECLI="false"
+OFFICECLI_STATUS=""
+OFFICECLI_PACKAGE_SPEC=""
+OFFICECLI_VERSION=""
+OFFICECLI_TARGET=""
+OFFICECLI_SHIM=""
+OFFICECLI_REASON=""
+OFFICECLI_OBSERVED_VERSION=""
+OFFICECLI_EXIT_CODE=""
 RETIRED_SKILL_NAMES=("using-agent-skills" "repo-evidence-first" "verification-before-completion" "skill-authoring-and-validation")
 RETIRED_RECONCILIATION_NAMES=()
 RETIRED_RECONCILIATION_TARGETS=()
@@ -16,7 +25,7 @@ RETIRED_RECONCILIATION_REASONS=()
 
 usage() {
   cat >&2 <<'EOF'
-Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--opencode] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update]
+Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--opencode] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update] [--skip-officecli]
 
 Default scope installs only shared skills into $HOME/.agents/skills. Add --opencode to also install OpenCode integration files.
 
@@ -31,6 +40,7 @@ Options:
   --opencode          Also install global AGENTS.md, agents, commands, and OpenCode-only skills.
   --dry-run           Print planned actions without writing OpenCode files or mutating directories.
   --no-update         Skip git pull when AILI_HOME is an existing git repository.
+  --skip-officecli    Skip the default managed OfficeCLI detect-or-install step.
 EOF
 }
 
@@ -71,6 +81,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-update)
       NO_UPDATE="true"
+      shift
+      ;;
+    --skip-officecli)
+      SKIP_OFFICECLI="true"
       shift
       ;;
     -h|--help)
@@ -359,6 +373,233 @@ retired_skill_reconciliation_json() {
     separator=','
   done
   printf ']'
+}
+
+load_officecli_contract() {
+  local manifest_path="$AILI_HOME/manifests/officecli-tool.json"
+  local managed_target shim_path
+  if ! IFS=$'\t' read -r OFFICECLI_PACKAGE_SPEC OFFICECLI_VERSION managed_target shim_path < <(python3 - "$manifest_path" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+try:
+    value = json.loads(path.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError) as exc:
+    print(f"Unable to load OfficeCLI tool manifest {path}: {exc}", file=sys.stderr)
+    raise SystemExit(2)
+
+expected_args = ["install", "--prefix", "{target}", "--no-save", "--no-package-lock", "@officecli/officecli@1.0.143"]
+valid = (
+    value.get("schemaVersion") == 1
+    and value.get("name") == "officecli"
+    and value.get("package") == "@officecli/officecli"
+    and value.get("version") == "1.0.143"
+    and value.get("packageSpec") == "@officecli/officecli@1.0.143"
+    and value.get("registry") == "https://registry.npmjs.org"
+    and value.get("license") == "Apache-2.0"
+    and value.get("source") == "https://github.com/iOfficeAI/OfficeCLI/tree/v1.0.143"
+    and value.get("managedTarget") == ".agents/tools/officecli"
+    and value.get("shimPath") == "node_modules/.bin/officecli"
+    and value.get("install", {}).get("command") == "npm"
+    and value.get("install", {}).get("args") == expected_args
+    and value.get("install", {}).get("effects") == ["network dependency resolution", "local-prefix package files under the managed target"]
+    and value.get("environment", {}).get("OFFICECLI_SKIP_UPDATE") == "1"
+    and value.get("upgradePolicy") == "exact-pin-only"
+)
+if not valid:
+    print(f"OfficeCLI tool manifest differs from the fixed managed-install contract: {path}", file=sys.stderr)
+    raise SystemExit(2)
+print("\t".join([value["packageSpec"], value["version"], value["managedTarget"], value["shimPath"]]))
+PY
+  ); then
+    return 1
+  fi
+
+  local home_root
+  if [ -z "${HOME:-}" ]; then
+    log "Refusing empty HOME for OfficeCLI managed target."
+    return 1
+  fi
+  home_root="$(canonicalize_path "$HOME")"
+  case "$home_root" in
+    /|/tmp|/tmp/)
+      log "Refusing unsafe HOME for OfficeCLI managed target: $home_root"
+      return 1
+      ;;
+  esac
+  OFFICECLI_TARGET="$home_root/$managed_target"
+  OFFICECLI_SHIM="$OFFICECLI_TARGET/$shim_path"
+}
+
+probe_officecli() {
+  local output code observed
+  OFFICECLI_OBSERVED_VERSION=""
+  if [ ! -e "$OFFICECLI_SHIM" ] && [ ! -L "$OFFICECLI_SHIM" ]; then
+    OFFICECLI_STATUS="missing"
+    OFFICECLI_REASON="Managed OfficeCLI shim is missing."
+    return
+  fi
+
+  set +e
+  output="$(OFFICECLI_SKIP_UPDATE=1 "$OFFICECLI_SHIM" --version 2>&1)"
+  code=$?
+  set -e
+  if [ "$code" -ne 0 ]; then
+    OFFICECLI_STATUS="invalid"
+    OFFICECLI_REASON="${output:-managed OfficeCLI --version failed with exit code $code}"
+    return
+  fi
+  observed="$(printf '%s' "$output" | python3 -c 'import re,sys; versions=sorted(set(re.findall(r"(?<![0-9])([0-9]+\.[0-9]+\.[0-9]+)(?![0-9])", sys.stdin.read()))); sys.stdout.write(versions[0]) if len(versions) == 1 else sys.exit(1)' 2>/dev/null || true)"
+  if [ -z "$observed" ]; then
+    OFFICECLI_STATUS="invalid"
+    OFFICECLI_REASON="Managed OfficeCLI --version output did not contain exactly one semantic version."
+    return
+  fi
+  OFFICECLI_OBSERVED_VERSION="$observed"
+  if [ "$observed" != "$OFFICECLI_VERSION" ]; then
+    OFFICECLI_STATUS="drift"
+    OFFICECLI_REASON="Managed OfficeCLI version $observed differs from $OFFICECLI_VERSION."
+    return
+  fi
+  OFFICECLI_STATUS="ready"
+  OFFICECLI_REASON=""
+}
+
+officecli_protected_fingerprint() {
+  python3 - "$HOME" "$OPENCODE_HOME" <<'PY'
+import hashlib
+import json
+import os
+import pathlib
+import stat
+import sys
+
+home = pathlib.Path(sys.argv[1]).resolve()
+opencode_homes = {home / ".config" / "opencode", pathlib.Path(sys.argv[2]).resolve()}
+paths = [home / ".agents" / "skills" / name for name in ("officecli", "officecli-docx", "officecli-xlsx", "officecli-pptx")]
+paths.extend(home / name for name in (".bashrc", ".bash_profile", ".profile", ".zshrc"))
+for root in opencode_homes:
+    paths.extend((root / "opencode.json", root / "opencode.jsonc"))
+    paths.extend(root / "skills" / name for name in ("officecli", "officecli-docx", "officecli-xlsx", "officecli-pptx"))
+
+def fingerprint(path):
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return "missing"
+    if stat.S_ISLNK(info.st_mode):
+        return "link:" + os.readlink(path)
+    if stat.S_ISREG(info.st_mode):
+        return f"file:{stat.S_IMODE(info.st_mode)}:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    if stat.S_ISDIR(info.st_mode):
+        return f"directory:{stat.S_IMODE(info.st_mode)}:" + "|".join(f"{child.name}:{fingerprint(child)}" for child in sorted(path.iterdir(), key=lambda item: item.name))
+    return f"other:{stat.S_IMODE(info.st_mode)}"
+
+print(json.dumps({str(path): fingerprint(path) for path in sorted(set(paths), key=str)}, sort_keys=True, separators=(",", ":")))
+PY
+}
+
+run_officecli_install() {
+  local before after npm_output npm_code previous_status previous_reason
+  if ! load_officecli_contract; then
+    OFFICECLI_STATUS="failed"
+    OFFICECLI_REASON="OfficeCLI managed-install contract could not be loaded."
+    return 1
+  fi
+  if [ "$SKIP_OFFICECLI" = "true" ]; then
+    OFFICECLI_STATUS="skipped"
+    OFFICECLI_REASON="OfficeCLI explicitly skipped; no probe or install command ran."
+    return 0
+  fi
+  if [ "$DRY_RUN" = "true" ]; then
+    OFFICECLI_STATUS="planned"
+    OFFICECLI_REASON="Would detect the managed exact version and install only if missing or drifted; dry-run performed no probe, directory creation, or command execution."
+    return 0
+  fi
+
+  before="$(officecli_protected_fingerprint)"
+  probe_officecli
+  after="$(officecli_protected_fingerprint)"
+  if [ "$before" != "$after" ]; then
+    OFFICECLI_STATUS="failed"
+    OFFICECLI_REASON="OfficeCLI version probe changed a protected Skill, MCP, or shell integration path."
+    return 1
+  fi
+  if [ "$OFFICECLI_STATUS" = "ready" ]; then
+    OFFICECLI_STATUS="preserved"
+    OFFICECLI_REASON="Existing exact managed OfficeCLI version preserved; npm did not run."
+    return 0
+  fi
+
+  previous_status="$OFFICECLI_STATUS"
+  previous_reason="$OFFICECLI_REASON"
+  set +e
+  npm_output="$(OFFICECLI_SKIP_UPDATE=1 npm install --prefix "$OFFICECLI_TARGET" --no-save --no-package-lock "$OFFICECLI_PACKAGE_SPEC" 2>&1)"
+  npm_code=$?
+  set -e
+  OFFICECLI_EXIT_CODE="$npm_code"
+  if [ -n "$npm_output" ]; then
+    log "$npm_output"
+  fi
+  if [ "$npm_code" -ne 0 ]; then
+    after="$(officecli_protected_fingerprint)"
+    OFFICECLI_STATUS="failed"
+    OFFICECLI_REASON="${npm_output:-npm local-prefix install exited with code $npm_code}; prior status was $previous_status: $previous_reason"
+    if [ "$before" != "$after" ]; then
+      OFFICECLI_REASON="$OFFICECLI_REASON; protected Skill, MCP, or shell integration path changed"
+    fi
+    return 1
+  fi
+
+  probe_officecli
+  after="$(officecli_protected_fingerprint)"
+  if [ "$before" != "$after" ]; then
+    OFFICECLI_STATUS="failed"
+    OFFICECLI_REASON="OfficeCLI local-prefix install changed a protected Skill, MCP, or shell integration path."
+    return 1
+  fi
+  if [ "$OFFICECLI_STATUS" != "ready" ]; then
+    previous_status="$OFFICECLI_STATUS"
+    previous_reason="$OFFICECLI_REASON"
+    OFFICECLI_STATUS="failed"
+    OFFICECLI_REASON="npm exited successfully but managed postinstall verification was $previous_status: $previous_reason"
+    return 1
+  fi
+  OFFICECLI_STATUS="installed"
+  OFFICECLI_REASON="Fixed local-prefix install passed managed shim and exact-version verification."
+  return 0
+}
+
+officecli_summary_json() {
+  local observed_json="null" exit_code_json="null"
+  if [ -n "$OFFICECLI_OBSERVED_VERSION" ]; then
+    observed_json="$(json_escape "$OFFICECLI_OBSERVED_VERSION")"
+  fi
+  if [ -n "$OFFICECLI_EXIT_CODE" ]; then
+    exit_code_json="$OFFICECLI_EXIT_CODE"
+  fi
+  printf '{"status":%s,"package":%s,"expectedVersion":%s,"observedVersion":%s,"target":%s,"shim":%s,"command":%s,"argv":[%s,%s,%s,%s,%s,%s,%s],"effects":[%s,%s],"reason":%s,"recovery":%s,"exitCode":%s}' \
+    "$(json_escape "$OFFICECLI_STATUS")" \
+    "$(json_escape "$OFFICECLI_PACKAGE_SPEC")" \
+    "$(json_escape "$OFFICECLI_VERSION")" \
+    "$observed_json" \
+    "$(json_escape "$OFFICECLI_TARGET")" \
+    "$(json_escape "$OFFICECLI_SHIM")" \
+    "$(json_escape "npm install --prefix $OFFICECLI_TARGET --no-save --no-package-lock $OFFICECLI_PACKAGE_SPEC")" \
+    "$(json_escape "npm")" \
+    "$(json_escape "install")" \
+    "$(json_escape "--prefix")" \
+    "$(json_escape "$OFFICECLI_TARGET")" \
+    "$(json_escape "--no-save")" \
+    "$(json_escape "--no-package-lock")" \
+    "$(json_escape "$OFFICECLI_PACKAGE_SPEC")" \
+    "$(json_escape "network dependency resolution")" \
+    "$(json_escape "local-prefix package files under the managed target")" \
+    "$(json_escape "$OFFICECLI_REASON")" \
+    "$(json_escape "Rerun rose-aili install, or run the fixed local-prefix command: npm install --prefix $OFFICECLI_TARGET --no-save --no-package-lock $OFFICECLI_PACKAGE_SPEC")" \
+    "$exit_code_json"
 }
 
 validate_manifest_allowlist() {
@@ -704,6 +945,9 @@ case "$MODE" in
     ;;
 esac
 
+OFFICECLI_RESULT=0
+run_officecli_install || OFFICECLI_RESULT=$?
+
 printf '{"mode":%s,"scope":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
   "$(json_escape "$MODE")" \
   "$(json_escape "$([ "$INSTALL_OPENCODE" = "true" ] && printf opencode || printf skills)")" \
@@ -713,4 +957,7 @@ printf '{"mode":%s,"scope":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dr
   "$(json_escape "$DRY_RUN")" \
   "$(json_escape "$NO_UPDATE")"
 retired_skill_reconciliation_json
+printf ',"officecli":'
+officecli_summary_json
 printf '}\n'
+exit "$OFFICECLI_RESULT"

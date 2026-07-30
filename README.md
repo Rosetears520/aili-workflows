@@ -217,14 +217,18 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `frontend-dev` | 高级前端、视觉设计、动画和媒体增强页面 |
 | `fullstack-dev` | 全栈后端架构、REST API、认证和前后端集成 |
 | `ios-application-dev` | iOS、UIKit、SnapKit、SwiftUI 和 Apple HIG |
-| `minimax-docx` | DOCX 创建、编辑、填充和模板格式化 |
+| `minimax-docx` | [框架内] DOCX 唯一 artifact owner；对 installed-help-confirmed 简单操作优先使用 installer-managed OfficeCLI，复杂结构/模板保真保留 OpenXML fallback |
 | `minimax-pdf` | PDF 生成、表单填写和视觉重排 |
-| `minimax-xlsx` | Excel、CSV、公式、财务表格和格式保真编辑 |
-| `pptx-generator` | PowerPoint 生成、编辑和读取；[已知\|用户] 在 MiniMax skill 基础上融合用户指定的人工 PPT 学习笔记英文译注、图片自然语言描述，以及经脱敏提炼的逐页内容规划方法（来源：2026-07-29 用户批准的 harness 改造），不分发原课程 PPT、PDF、图片、会话原文或个人数据 |
+| `minimax-xlsx` | [框架内] XLSX/CSV/TSV 唯一 artifact owner；简单 `.xlsx` 操作优先使用 installer-managed OfficeCLI，CSV/TSV 分析保留 pandas，`.xlsm`/VBA/高保真场景保留 XML fallback |
+| `pptx-generator` | [框架内] 唯一通用 PowerPoint/PPTX workflow owner；采用 workspace-first 可重建工作区，以逐页 Markdown 作为页数、顺序、标题、Layout 与 Content 的唯一语义源，并用 hash-bound outline/build/render/visual-review readiness 失败关闭；OfficeCLI 仅为内部非路由 local-prefix tool adapter。[已知\|用户] 该 Skill 继续融合用户批准的 MiniMax 基础、人工 PPT 学习笔记英文译注、图片自然语言描述和脱敏逐页规划方法，不分发原课程 PPT、PDF、图片、会话原文或个人数据。来源：2026-07-29 用户批准的 harness 改造与 accepted change `pptx-workspace-officecli-integration`。 |
 | `react-native-dev` | React Native、Expo、导航、状态、测试和发布 |
 | `shader-dev` | GLSL、ShaderToy、SDF、粒子和视觉特效 |
 
 未纳入 `vision-analysis`、`gif-sticker-maker`、`minimax-multimodal-toolkit`、`minimax-music-gen`、`minimax-music-playlist`、`buddy-sings`，因为它们更偏 MiniMax API key 驱动的视觉、多模态或音乐娱乐工作流，不属于当前默认个人 OpenCode 工作流范围。
+
+[已知|外部] `pptx-generator` 的 source hierarchy、fingerprint、readiness、render QA 与 delivery-audit 机制以 clean-room 方式选择性参考 [siril9/presentation-skill](https://github.com/siril9/presentation-skill/tree/3a22eed290fa2205b6a1e2de5549b4429c5fffd0) 固定提交 `3a22eed290fa2205b6a1e2de5549b4429c5fffd0`（MIT License，Copyright (c) 2026 Siril Sengolraj）。来源：该固定 GitHub revision。[框架内] 本仓库不复制其文件字节、不 vendoring 或注册其 Skill/plugin/model/subagent/lifecycle runtime，因此不制造 upstream byte mapping 或第二个 PPT 路由入口。
+
+[已知|外部] OfficeCLI adapter 固定 `@officecli/officecli@1.0.143`，其许可为 Apache-2.0。来源：[OfficeCLI v1.0.143](https://github.com/iOfficeAI/OfficeCLI/releases/tag/v1.0.143) 与 installer-owned `manifests/officecli-tool.json`。[框架内] OfficeCLI 是 DOCX/XLSX/PPTX 三个现有 artifact Skills 共用的 non-routable external tool；安装所有权属于 AILI installer，默认 managed target 为 `$HOME/.agents/tools/officecli`。仓库不提交 OfficeCLI binary/node_modules，不注册 OfficeCLI Skill/MCP/public command，不修改 PATH/shell 配置，也不调用 package full installer。[未验证] 本仓库的 fake/temp 检查不证明真实 npm/native install、三格式复杂 round-trip、目标 viewer fidelity 或非 OpenCode Harness 等价性。
 
 ### 来自 bytedance/deer-flow 的 clean-room pattern absorption
 
@@ -288,12 +292,13 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 ### OpenCode 设置
 
 [KNOWN] 推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本仍保留为兼容 fallback。
-[KNOWN] 默认安装只同步共享 `$HOME/.agents/skills`。只有显式添加 `--opencode`，才会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`，并安装 agents、commands、OpenCode 专属 skills 及同步 OpenCode config；项目级事实仍由各项目自己的瘦 `AGENTS.md` 管理。
+[框架内] 默认 `install` / `update` 先同步共享 `$HOME/.agents/skills`，再 detect-or-install installer-managed OfficeCLI；`--skip-officecli` 显式跳过该 tool step。只有显式添加 `--opencode`，才会把全局通用规则从 `templates/opencode-global-AGENTS.md` 安装到 OpenCode home 的 `AGENTS.md`，并安装 agents、commands、OpenCode 专属 skills 及同步 OpenCode config；项目级事实仍由各项目自己的瘦 `AGENTS.md` 管理。
 
-[KNOWN] `install` / `update` 默认只写共享 `$HOME/.agents/skills`，不会读取或修改 OpenCode home。`--opencode` 才启用 OpenCode 安装范围；Playwright MCP、CodeGraph、Graphify 和 OpenSpec 仍是独立显式 opt-in，AILI 不安装、检测、配置、迁移或删除 DCP。
+[框架内] 默认 scope 可写共享 `$HOME/.agents/skills` 与固定 OfficeCLI target `$HOME/.agents/tools/officecli`，但不会读取或修改 OpenCode home。`--skip-officecli` 不探测、不创建 tool target、不运行 npm；`--dry-run` 只报告 exact package/target/argv 与 network/dependency effects。`--opencode` 才启用 OpenCode 安装范围；Playwright MCP、CodeGraph、Graphify 和 OpenSpec 仍是独立显式 opt-in，AILI 不安装、检测、配置、迁移或删除 DCP。
 
 ```bash
 npx -y rose-aili install
+npx -y rose-aili install --skip-officecli
 npx -y rose-aili install --opencode
 ```
 
@@ -307,11 +312,12 @@ npx -y --package github:<owner>/<repo> rose-aili install
 
 ```bash
 npx -y rose-aili update
+npx -y rose-aili update --skip-officecli
 npx -y rose-aili update --opencode
 npx -y rose-aili doctor
 ```
 
-[KNOWN] `rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全语义，只安装 manifest 中目标为 `shared` 的 `.agents/skills`。`--opencode` 在此基础上安装全局 `AGENTS.md`、agents、commands，以及源自 `.opencode/skills` 且 manifest 目标为 `opencode` 的专属 skills；从普通 git clone 安装时使用 selective symlink，从 npm/npx packaged 非 git 目录安装时使用 copy。显式 `install`/`update` 仍只清理能证明由当前 canonical source 管理的退役 skill symlink，其他内容全部保留并报告。OpenSpec 仅在 `--opencode --enable-openspec` 下运行。OpenCode config 同步也只在 `--opencode` 范围启用，并继续保留冲突默认值和既有 model：
+[框架内] `rose-aili install` 默认复用 `scripts/install_opencode.sh` 的条目级安全语义同步 manifest 中目标为 `shared` 的 `.agents/skills`，随后由 installer owner 执行一次 OfficeCLI detect-or-install；compatibility invocation 会抑制重复 tool step。OfficeCLI failure 返回非零并单独报告，但不回滚已完成的 Skill 同步。`--opencode` 在此基础上安装全局 `AGENTS.md`、agents、commands，以及源自 `.opencode/skills` 且 manifest 目标为 `opencode` 的专属 skills；从普通 git clone 安装时使用 selective symlink，从 npm/npx packaged 非 git 目录安装时使用 copy。显式 `install`/`update` 仍只清理能证明由当前 canonical source 管理的退役 skill symlink，其他内容全部保留并报告。OpenSpec 仅在 `--opencode --enable-openspec` 下运行。OpenCode config 同步也只在 `--opencode` 范围启用，并继续保留冲突默认值和既有 model：
 
 [KNOWN] 只有交互式 `rose-aili install --opencode` 才询问 default agent、model override、Playwright MCP、CodeGraph、Graphify CLI 和 OpenSpec；`update --opencode` 询问 CodeGraph 与 Graphify CLI。无 `--opencode` 的交互安装不读取 OpenCode config，也不提出 OpenCode 集成问题。
 
@@ -330,6 +336,8 @@ npx -y rose-aili doctor
 
 ```bash
 npx -y rose-aili install --yes
+npx -y rose-aili install --dry-run
+npx -y rose-aili install --skip-officecli
 npx -y rose-aili install --opencode --set-default-rose
 npx -y rose-aili install --opencode --model anthropic/claude-sonnet-4-5
 npx -y rose-aili install --opencode --skip-opencode-config
@@ -341,6 +349,7 @@ npx -y rose-aili install --opencode --register-graphify-skill
 npx -y rose-aili install --opencode --enable-openspec --project-root /absolute/project
 npx -y rose-aili install --opencode --skip-openspec
 npx -y rose-aili update --opencode --skip-openspec
+npx -y rose-aili update --skip-officecli
 ```
 
 [KNOWN] 非交互或 `--yes` 模式不会假装已经询问用户问题；默认 summary 会报告 `componentInstall.scope: "skills"` 并给出 `--opencode` 后续命令。`--opencode` 范围内的 config 同步会设置/保持 `default_agent: "rose"`，但不会静默启用 Playwright、CodeGraph、Graphify、OpenSpec 或 model override。
@@ -373,9 +382,9 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 该 skill 内的 `scripts/session_handoff.py` 不是另一个 workflow 或公共命令，而是低自由度的确定性 helper：它统一处理 exclusive collision suffix、containment/symlink validation、draft/finalize、pointer replacement、bounded-frontmatter LIST、exact-first RESOLVE、legacy read-only 和 localized exact-path resume output。没有显式触发时不创建 handoff；没有自动 memory promotion、rotation、archive 或 prune；恢复仍要重新验证当前 root/worktree/Git/contracts/permissions/evidence。
 
-[KNOWN] Bash fallback 的 `scripts/install_opencode.sh --mode selective` 默认只安装共享 skills；要安装 OpenCode 全局 `AGENTS.md`、agents、commands 和 OpenCode-only skills，使用 `scripts/install_opencode.sh --mode selective --opencode`。
+[框架内] Direct Bash fallback 的 `scripts/install_opencode.sh --mode selective` 默认同步共享 skills 并执行同一固定 OfficeCLI detect-or-install contract；传 `--skip-officecli` 可只同步 components。要安装 OpenCode 全局 `AGENTS.md`、agents、commands 和 OpenCode-only skills，使用 `scripts/install_opencode.sh --mode selective --opencode`。
 
-[KNOWN] 默认目标只有 `$HOME/.agents/skills/`。在 `--opencode` 范围内，agents/commands 安装到 OpenCode home，共享 skills 仍安装到 `$HOME/.agents/skills/`，OpenCode-only skills 从仓库 `.opencode/skills/<name>` 安装到 OpenCode home 的 `skills/<name>`。
+[框架内] Component 默认目标是 `$HOME/.agents/skills/`，OfficeCLI tool 默认目标另为 `$HOME/.agents/tools/officecli`。在 `--opencode` 范围内，agents/commands 安装到 OpenCode home，共享 skills 仍安装到 `$HOME/.agents/skills/`，OpenCode-only skills 从仓库 `.opencode/skills/<name>` 安装到 OpenCode home 的 `skills/<name>`。
 
 项目级 `AGENTS.md` 不走软链接。使用 `agents-md-initialization` skill 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -383,13 +392,13 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
-2. 默认运行 `rose-aili install`，仅更新共享 skills。
+2. 默认运行 `rose-aili install`，同步共享 skills 并检查 installer-managed OfficeCLI；不需要该工具时显式传 `--skip-officecli`。
 3. 需要 ROSE agents、commands 或 OpenCode 专属 skills 时运行 `rose-aili install --opencode`。
 4. OpenCode 从共享 `$HOME/.agents/skills/` 发现 `.agents/skills/`，并从自己的 `skills/` 发现 manifest 声明的 `.opencode/skills/`。
 5. `--opencode` 安装后可使用 ROSE primary agent、subagents 和 delivery commands。
 ```
 
-[KNOWN] 共享 skill 变化后运行默认安装；agent、command 或 OpenCode-only skill 变化后运行带 `--opencode` 的安装，再重启 OpenCode 或开启新 session。
+[框架内] 共享 skill 变化后运行默认安装；该命令也会执行 OfficeCLI detect-or-install，除非传 `--skip-officecli`。agent、command 或 OpenCode-only skill 变化后运行带 `--opencode` 的安装，再重启 OpenCode 或开启新 session。
 
 `docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在共享 `$HOME/.agents/skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 

@@ -18,6 +18,7 @@ import {
   verifyGraphifyCatalog
 } from "./graphify.js";
 import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestAllowlist } from "./manifest.js";
+import { OfficeCliInstallSummary, runOfficeCliInstall } from "./officecli.js";
 
 export interface InstallOptions {
   dryRun: boolean;
@@ -39,6 +40,7 @@ export interface InstallOptions {
   registerGraphifySkill?: boolean;
   enableOpenspec?: boolean;
   skipOpenspec?: boolean;
+  skipOfficecli?: boolean;
   projectRoot?: string;
   plugins: string[];
   json?: boolean;
@@ -111,6 +113,7 @@ export interface InstallSummary {
       reason: string;
     }>;
   };
+  officecli: OfficeCliInstallSummary;
   config: Awaited<ReturnType<typeof mergeOpenCodeConfig>>;
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
@@ -179,6 +182,12 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
 
   const componentInstall = await runCompatibilityInstaller(options);
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
+  const officecli = await runOfficeCliInstall({
+    ailiHome: options.ailiHome,
+    opencodeHome: options.opencodeHome,
+    dryRun: options.dryRun,
+    skip: options.skipOfficecli
+  });
   const codegraph = await runCodeGraphInstall(options);
   const graphify = await runGraphifyInstall(options);
   const openspec = await runOpenSpecInstall(options);
@@ -189,6 +198,7 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
     ailiHome: options.ailiHome,
     opencodeHome: options.opencodeHome,
     componentInstall,
+    officecli,
     config,
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
     optionalDecisions: buildOptionalDecisions(command, options, shouldConfigurePlaywright, shouldSyncOpenCodeConfig),
@@ -687,6 +697,7 @@ async function runCompatibilityInstaller(options: InstallOptions): Promise<Insta
   const mode = await isGitRepository(options.ailiHome) ? "selective" : "copy";
   const args = [script, "--mode", mode, "--aili-home", options.ailiHome, "--opencode-home", options.opencodeHome];
   if (options.opencode) args.push("--opencode");
+  args.push("--skip-officecli");
   if (options.dryRun) args.push("--dry-run");
   const result = await spawnInstaller(args, options);
   return {
