@@ -45,6 +45,12 @@
       "optionalCapabilities": ["artifact.store", "repo.read"],
       "sideEffectClass": "local-artifact",
       "missingBehavior": "need-evidence or BLOCKED"
+    },
+    "presentation-style": {
+      "requiredCapabilities": [],
+      "optionalCapabilities": [],
+      "sideEffectClass": "none",
+      "missingBehavior": "SKIP; leave the active owner's response shape unchanged"
     }
   },
   "assignments": [
@@ -67,6 +73,10 @@
     {
       "profile": "artifact-runtime",
       "skills": ["android-native-dev", "flutter-dev", "frontend-dev", "ios-application-dev", "minimax-docx", "minimax-pdf", "minimax-xlsx", "pptx-generator", "react-native-dev", "shader-dev"]
+    },
+    {
+      "profile": "presentation-style",
+      "skills": ["i-have-adhd"]
     },
     {
       "profile": "repo-workflow",

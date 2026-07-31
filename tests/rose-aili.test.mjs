@@ -63,6 +63,8 @@ test("install defaults to shared skills without reading or mutating OpenCode hom
   assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
   assert.equal(summary.optionalDecisions.some((entry) => entry.name === "Graphify"), false);
   await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await stat(path.join(sharedSkillsHome(fixture), "i-have-adhd", "SKILL.md"));
+  await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd", "hooks")));
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
 });
@@ -1535,10 +1537,14 @@ test("skills-only Bash install links shared skills and preserves OpenCode-owned 
   ], { env: installerEnv(fixture.root) });
 
   const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory");
+  const adhdSkillTarget = path.join(sharedSkillsHome(fixture), "i-have-adhd");
   assert.equal((await lstat(skillsParent)).isDirectory(), true);
   assert.equal(await readFile(preserved, "utf8"), "keep\n");
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
   assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
+  assert.equal((await lstat(adhdSkillTarget)).isSymbolicLink(), true);
+  assert.equal(await readlink(adhdSkillTarget), path.join(fixture.ailiHome, ".agents", "skills", "i-have-adhd"));
+  await assert.rejects(stat(path.join(adhdSkillTarget, "hooks")));
   await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
   await assert.rejects(stat(path.join(opencodeHome, "AGENTS.md")));
   await assert.rejects(stat(path.join(opencodeHome, "agents")));

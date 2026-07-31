@@ -41,6 +41,7 @@ aili-workflows/
 │       ├── github-evidence-triage/
 │       ├── harness-evolution/
 │       ├── harness-issue-triage/
+│       ├── i-have-adhd/
 │       ├── idea-refine/
 │       ├── incremental-implementation/
 │       ├── ios-application-dev/
@@ -177,6 +178,14 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `test-document-generator` | 在显式 test-plan/QA/acceptance-matrix intent 或正式 DEFINE 的具体 testability gap 下生成紧凑测试文档；不为普通 implementation、TDD、review 或 completion 自动建流程 |
 
 `requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
+
+### 来自 ayghri/i-have-adhd 的适配
+
+| Skill | 说明 |
+|---|---|
+| `i-have-adhd` | 仅在显式调用或明确请求 ADHD/action-first 低摩擦表达时塑造当前回复：答案或行动优先、必要时编号、抑制旁支、只报告当前增量，并让安全、证据、授权和用户要求的细节优先于简短。它不安装 Hook、flag、service 或全局规则，也不承诺后续轮次或跨会话持续生效。 |
+
+该 Skill 改编自 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) 固定提交 `34f746dda9664fb5ea52149be5dbab2adc6e60d3`，遵循 MIT License，Copyright (c) 2026 Ayoub Ghriss。固定上游正文、许可证和 notice 以不可运行的 revisioned reference 形式保存在 canonical Skill 内；上游 Hook、vendor metadata、session persistence、强制时长估算和五项列表限制不属于本仓库运行时行为。
 
 ### 来自 addyosmani/agent-skills
 
