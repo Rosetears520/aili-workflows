@@ -140,6 +140,17 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
   const pristineManifest = await readFile(path.join(root, "manifests/rose-aili.components.json"), "utf8");
   const pristinePackage = await readFile(path.join(root, "package.json"), "utf8");
   const pristineComponents = await readFile(path.join(root, "workflow.components.yaml"), "utf8");
+  const formalSourcePaths = [
+    ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md",
+    ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
+    ".agents/skills/aili-delivery-flow/references/lifecycle.md",
+  ];
+  const pristineFormalSources = new Map(await Promise.all(formalSourcePaths.map(async (relative) => [
+    relative,
+    await readFile(path.join(root, relative), "utf8"),
+  ])));
 
   t.after(async () => { await rm(scratch, { recursive: true, force: true }); });
   t.beforeEach(async () => {
@@ -152,6 +163,9 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     await writeFile(path.join(root, "manifests/rose-aili.components.json"), pristineManifest, "utf8");
     await writeFile(path.join(root, "package.json"), pristinePackage, "utf8");
     await writeFile(path.join(root, "workflow.components.yaml"), pristineComponents, "utf8");
+    for (const [relative, content] of pristineFormalSources) {
+      await writeFile(path.join(root, relative), content, "utf8");
+    }
     await writeSyntheticOpenSpecFixture(root);
   });
 
@@ -166,6 +180,10 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => row.status === "Partial"));
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => Object.keys(row).length === 9));
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => row.disposition === "ROSE-owned: unresolved"));
+    assert.equal(scaffold.payload.formal_agent_orchestration.protocols.selection, "aili-agent-selection/v1");
+    assert.equal(scaffold.payload.formal_agent_orchestration.protocols.board, "aili-task-board/v1");
+    assert.equal(scaffold.payload.formal_agent_orchestration.canonical_roles.length, 19);
+    assert.equal(scaffold.payload.formal_agent_orchestration.cases.length, 21);
 
     const generated = runWorkflow(root, "generated-adapter-boundary", generatedFixture);
     assert.equal(generated.status, 0, generated.stderr || generated.stdout);
@@ -180,6 +198,76 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     assert.equal(residual.payload.status, "pass");
     assert.ok(residual.payload.matches.length > 0);
     assert.equal(residual.payload.classifications.some((row) => row.classification === "active violation"), false);
+  });
+
+  await t.test("rejects a shrunken formal orchestration fixture case contract", async () => {
+    const fixture = await loadJson(root, workflowFixture);
+    fixture.formal_agent_orchestration.cases = fixture.formal_agent_orchestration.cases.slice(1);
+    await saveJson(root, workflowFixture, fixture);
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /formal_agent_orchestration.*exact shared selection\/Board contract/i);
+  });
+
+  await t.test("rejects canonical role matrix drift and general formal ownership", async () => {
+    const relative = ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md";
+    const mutated = pristineFormalSources.get(relative)
+      .replace(/^\| `web-performance-auditor` .*\n/m, "")
+      .replace("| `opensource-sanitizer` |", "| `general` |")
+      .replace("`general` is not a canonical specialist role", "`general` is a canonical specialist role");
+    await writeFile(path.join(root, relative), mutated, "utf8");
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /role inventory|general role row|selection matrix/i);
+  });
+
+  await t.test("rejects formal Board ownership and ordered package-field drift", async () => {
+    const relative = ".agents/skills/aili-delivery-flow/references/formal-task-board.md";
+    const mutated = pristineFormalSources.get(relative)
+      .replace("Every accepted task ID belongs to exactly one current task-execution package.", "Accepted task ownership is flexible.")
+      .replace("  - Package kind:", "  - Package type:");
+    await writeFile(path.join(root, relative), mutated, "utf8");
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /task Board reference|Board package fields/i);
+  });
+
+  await t.test("rejects portable packet and result envelope field drift", async () => {
+    const packet = ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md";
+    const resultPath = ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md";
+    await writeFile(
+      path.join(root, packet),
+      pristineFormalSources.get(packet).replace("Forbidden scope:\n", ""),
+      "utf8"
+    );
+    await writeFile(
+      path.join(root, resultPath),
+      pristineFormalSources.get(resultPath).replace("continuation_recommendation: same-package | new-package | none\n", ""),
+      "utf8"
+    );
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /task packet fields|result fields|canonical result/i);
+  });
+
+  await t.test("rejects human-artifact claim prefixes in shared formal references", async () => {
+    const relative = ".agents/skills/aili-delivery-flow/references/formal-task-board.md";
+    await writeFile(path.join(root, relative), `${pristineFormalSources.get(relative)}\n[KNOWN] runtime-only completion proof\n`, "utf8");
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /human-artifact claim prefix/i);
+  });
+
+  await t.test("rejects decision and implementation-authorization vocabulary drift", async () => {
+    const relative = ".agents/skills/aili-delivery-flow/references/lifecycle.md";
+    const mutated = pristineFormalSources.get(relative).replace(
+      "`proposed`, `direction-recorded`, `conditional`, `awaiting-confirmation`, `accepted`, `rejected`, or `superseded`",
+      "`proposed`, `accepted`, or `rejected`"
+    );
+    await writeFile(path.join(root, relative), mutated, "utf8");
+    const result = runWorkflow(root, "scaffold");
+    assert.equal(result.status, 5);
+    assert.match(result.payload.errors.join("\n"), /lifecycle\.md: missing formal orchestration marker/i);
   });
 
   await t.test("private ideas are neither required nor gate inputs", async () => {

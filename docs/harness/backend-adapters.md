@@ -8,8 +8,8 @@ grant a runtime capability or operation permission.
 
 | Adapter | Used for | Must preserve |
 |---|---|---|
-| OpenSpec | proposal, design, specs, tasks, `interview.md`, `test-plan.md`, validation | approved scope, tasks, strict validation, `requirements-grilling` interview generation, `test-document-generator` test-plan generation |
-| Custom files | repo-local plans, tickets, docs | source evidence and acceptance criteria |
+| OpenSpec | proposal, design, specs, tasks, `interview.md`, `test-plan.md`, change-local `formal-task-board.md`, validation | approved scope in `tasks.md`, one `aili-task-board/v1` current-state projection across formal phases, strict validation, `requirements-grilling` interview generation, `test-document-generator` test-plan generation |
+| Custom files | repo-local plans, tickets, docs, adapter-mapped formal Board | source evidence, acceptance criteria, and one repository-local Board path when formal packages exist |
 | Auto detection | inferring available backend from repo | conservative fallback and clarification when ambiguous |
 
 ## Rules
@@ -17,6 +17,7 @@ grant a runtime capability or operation permission.
 - IDEATE stays non-implementation even if a backend has tasks.
 - Formal DEFINE stops before BUILD until applicable material questions are resolved, required artifacts are coherent/validated, and the final `test-plan.md` is explicitly accepted. `Unverified` does not substitute for a material decision.
 - OpenSpec DEFINE uses deterministic placement under `openspec/changes/<change-id>/`; non-OpenSpec DEFINE asks once where to place interview and test-plan artifacts and records that decision in the active change context.
+- After stable formal identity and package decomposition, OpenSpec persists one Board at `openspec/changes/<change-id>/formal-task-board.md`. A non-OpenSpec adapter uses an existing repository-local Board mapping or one explicit repository-local placement decision. Runtime-private selector/session mappings remain adapter-owned and cannot be the Board's only completion evidence.
 - BUILD follows approved packages and forbidden scope.
 - SHIP uses the same proactive trigger scan and affected-claim verification owner regardless of backend; an eligible review/repair gap dispatches promptly, and direct inspection is the no-trigger/blocked fallback.
 

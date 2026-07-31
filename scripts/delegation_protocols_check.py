@@ -31,12 +31,15 @@ REQUIRED_FILES = [
     ".agents/skills/review-pipeline/SKILL.md",
     ".agents/skills/session-handoff/SKILL.md",
     ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
+    ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
+    ".agents/skills/aili-delivery-flow/references/implementation-packages.md",
     ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
     ".agents/skills/aili-delivery-flow/references/build-execution-loop.md",
     ".agents/skills/aili-delivery-flow/references/test-document-policy.md",
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md",
     ".agents/skills/aili-delivery-flow/references/protocols/compact-evidence-pack.md",
+    ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md",
     ".agents/skills/mature-project-pattern-research/SKILL.md",
     ".agents/skills/mature-project-pattern-research/references/research-rubric.md",
     ".agents/skills/aili-delivery-flow/references/protocols/worktree-context.md",
@@ -85,11 +88,14 @@ CONTENT_CHECKS = {
     "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
     "templates/opencode-global-AGENTS.md": ["proactive delegation scan", "not a hard cap", "suitable owners", "first-class lifecycle entries", "do not ask the user to restate"],
-    ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "not a hard cap", "explicit join plan"],
-    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Run this proactive delegation scan", "dispatch before duplicating", "not a hard cap", "explicit join plan", "same Task message", "Never resume an old `task_id`", "Do not automatically retry", "fresh trigger-and-benefit decision", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
-    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["Run a proactive delegation scan", "dispatch is the default action", "One current intent has at most one auxiliary capability", "not a hard cap", "same Task message", "Do not automatically add review"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Goal:", "Scope:", "Never pass or resume an old `task_id`", "not automatically retried", "fresh trigger-and-benefit decision", "Allowed actions:", "Expected result:", "Stop when:"],
-    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "status: completed | partial | blocked | unverified", "Never resume the result's old `task_id`", "does not authorize an automatic fresh-session retry", "fresh trigger-and-benefit decision"],
+    ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "Formal work uses the separate `aili-task-board/v1` lane", "exact canonical owner", "`general` cannot own a formal package", "not a hard cap", "explicit join plan"],
+    ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Run this proactive delegation scan", "dispatch before duplicating", "references/agent-selection-matrix.md", "assignment shape", "ready formal Agent-owned package", "not a hard cap", "explicit join plan", "same Task message", "current OpenCode Task adapter", "old `task_id` is never resumed", "Do not automatically retry", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
+    ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md": ["Protocol: `aili-agent-selection/v1`", "Role namespace: `canonical`", "Selector mapping: `adapter-owned`", "Phase affinity is advisory", "`general` is not a canonical specialist role"],
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["## Ordinary lane", "## Formal lane", "requires dispatch to that exact role", "valid waiver recorded before work", "One current intent has at most one auxiliary capability", "not a hard cap", "launch them together", "Do not automatically add review"],
+    ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["Protocol: `aili-task-board/v1`", "Package kind: `evidence | task-execution`", "exactly one current task-execution package", "waiver is recorded before execution", "stable join ID", "returned → done", "Workers return package-bound evidence"],
+    ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["Every accepted task ID belongs to exactly one current task-execution package", "exact canonical owner", "One-shot and persistent adapters", "do not write the Board or `progress.txt`"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Package ID:", "Role ID:", "Assignment:", "Scope:", "Forbidden scope:", "Allowed actions:", "Expected result:", "Expected evidence:", "Execution: sync | async", "Join:", "Continuation: same-package | new-package", "Stop when:", "current OpenCode Task adapter", "persistent Agent identity"],
+    ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "package_id:", "role_id:", "status: completed | partial | blocked | unverified", "summary:", "evidence:", "changed_files:", "verification:", "risks:", "continuation_recommendation: same-package | new-package | none", "current OpenCode Task adapter", "persistent adapter"],
     ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most one auxiliary specialist capability", "Default concurrency is at most two but is not a hard cap", "suitable owners", "explicit join plan", "one targeted recheck"],
     ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
     ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["active accepted contract", "A33 admission and operation gates", "Hidden or unrequested AILI self-automation", "explicitly scoped product/repository CI", "IMPLEMENTED_TARGETED_VERIFIED"],
@@ -109,6 +115,13 @@ DISPATCH_FORBIDDEN_LOCAL_SCHEMA = [
     "## Compact packet", "## Compact result", "\nGoal:\n", "\nScope:\n",
     "\nAllowed actions:\n", "\nExpected result:\n", "\nStop when:\n",
     "\nSTATUS:", "\nEVIDENCE:", "\nBLOCKERS:",
+]
+CANONICAL_AGENT_ROLES = [
+    "code-scout", "doc-researcher", "web-researcher", "spec-miner", "plan-auditor",
+    "implementer", "test-engineer", "test-coverage-reviewer", "pr-test-analyzer",
+    "code-reviewer", "security-auditor", "silent-failure-reviewer", "convergence-reviewer",
+    "browser-qa-runner", "e2e-artifact-runner", "web-performance-auditor",
+    "ai-regression-scout", "agent-evaluator", "opensource-sanitizer",
 ]
 A33_SCHEMA = "aili.a33-worktree-evidence.v1"
 A33_FIXTURE_SCHEMA = "aili.cross-worktree-permission-fixtures.v3"
@@ -1845,6 +1858,72 @@ def static_source_failures(project: Path) -> list[str]:
     return failures
 
 
+def formal_delegation_failures(project: Path) -> list[str]:
+    failures: list[str] = []
+    matrix_path = project / ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md"
+    board_path = project / ".agents/skills/aili-delivery-flow/references/formal-task-board.md"
+    packet_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md"
+    result_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md"
+    lane_path = project / ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md"
+    try:
+        matrix = matrix_path.read_text(encoding="utf-8")
+        board = board_path.read_text(encoding="utf-8")
+        packet = packet_path.read_text(encoding="utf-8")
+        result = result_path.read_text(encoding="utf-8")
+        lanes = lane_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return [f"formal delegation sources unavailable: {exc}"]
+
+    roles = re.findall(r"^\| `([a-z][a-z0-9-]+)` \|", matrix, re.MULTILINE)
+    if roles != CANONICAL_AGENT_ROLES:
+        failures.append(f"FORMAL ROLE MATRIX: expected exact canonical role order, observed={roles!r}")
+    if re.search(r"^\| `general` \|", matrix, re.MULTILINE):
+        failures.append("FORMAL ROLE MATRIX: general must not be a canonical role row")
+    if any(marker in matrix for marker in ("Pi Agent", "OpenCode selector", "agent://", "history://")):
+        failures.append("FORMAL ROLE MATRIX: runtime selector or URI leaked into shared matrix")
+
+    lane_requirements = [
+        "## Ordinary lane", "trigger-and-benefit scan", "## Formal lane",
+        "requires dispatch to that exact role", "valid waiver recorded before work",
+    ]
+    failures.extend(
+        f"FORMAL LANE SPLIT: missing {marker!r}" for marker in lane_requirements if marker not in lanes
+    )
+    board_requirements = [
+        "Every accepted task ID belongs to exactly one current task-execution package",
+        "Owner: `ROSE | agent:<canonical-role-id>`",
+        "A post-hoc waiver is invalid",
+        "Every async package declares a stable join ID",
+        "returned → done",
+        "Dispatch without result consumption is incomplete work",
+    ]
+    failures.extend(
+        f"FORMAL BOARD DISPATCH: missing {marker!r}" for marker in board_requirements if marker not in board
+    )
+    packet_requirements = [
+        "Package ID:", "Role ID:", "Forbidden scope:", "Expected evidence:",
+        "Execution: sync | async", "Join: immediate | <stable-join-id> | N/A",
+        "Continuation: same-package | new-package", "persistent Agent identity",
+    ]
+    result_requirements = [
+        "package_id:", "role_id:", "status: completed | partial | blocked | unverified",
+        "summary:", "evidence:", "changed_files:", "verification:", "risks:",
+        "continuation_recommendation: same-package | new-package | none",
+    ]
+    failures.extend(
+        f"PORTABLE TASK PACKET: missing {marker!r}" for marker in packet_requirements if marker not in packet
+    )
+    failures.extend(
+        f"PORTABLE RESULT: missing {marker!r}" for marker in result_requirements if marker not in result
+    )
+    for text, label in ((packet, "packet"), (result, "result")):
+        if "automatic retry" not in text and "automatically retried" not in text:
+            failures.append(f"FORMAL NON-NESTING: {label} lacks automatic-retry prohibition")
+    if "Every non-ROSE subagent remains non-delegating" not in packet:
+        failures.append("FORMAL NON-NESTING: packet lacks non-delegating worker boundary")
+    return failures
+
+
 def static_case(id_: str, status: str, evidence: list[str]) -> dict[str, Any]:
     return {"id": id_, "subset": "static", "status": status, "exit_code": 0 if status == "pass" else 5, "operation_id": None, "approval_ref": None, "host_identity": None, "source_identity": None, "target_identity": None, "expected_delta": None, "observed_delta": None, "evidence_refs": evidence, "unverified": [], "cleanup_state": None}
 
@@ -2316,6 +2395,7 @@ def main() -> int:
                 failures.append(f"STALE P5 AUTHORITY: {relative_path} :: {marker}")
 
     failures.extend(p6_permission_failures())
+    failures.extend(formal_delegation_failures(ROOT))
 
     if not permissions_only:
         code_scout_text = (ROOT / "agents/code-scout.md").read_text(encoding="utf-8")

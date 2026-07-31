@@ -56,7 +56,7 @@
     {"agent":"agents/web-researcher.md","edit":"deny","task":"deny"}
   ],
   "shared_result_envelope": {
-    "result_fields": ["result_id", "trace_id", "lane", "owner", "status", "confidence", "worktree_context_ref", "declared_repository", "cwd", "target_rules_ref", "artifact_destination", "inspected_scope", "checks", "freshness", "skipped_checks", "soft_boundary_limitations", "blockers", "unverified", "findings", "convergence_links", "review_arbitration_ref"],
+    "result_fields": ["result_id", "trace_id", "lane", "owner", "package_id", "role_id", "status", "confidence", "worktree_context_ref", "declared_repository", "cwd", "target_rules_ref", "artifact_destination", "inspected_scope", "summary", "evidence", "changed_files", "verification", "checks", "freshness", "skipped_checks", "soft_boundary_limitations", "blockers", "risks", "unverified", "continuation_recommendation", "findings", "convergence_links", "review_arbitration_ref"],
     "finding_fields": ["finding_id", "source", "claim", "severity", "evidence_anchors", "affected_requirement", "proposed_disposition", "required_action", "verification"],
     "proposed_dispositions": ["fix", "refute-with-counter-evidence", "accept-named-risk", "Unverified-block"],
     "final_disposition_owner": "ROSE"

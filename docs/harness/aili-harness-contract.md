@@ -11,7 +11,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 - **Delivery flow skill**: one semantic router/control plane for first-class natural-language and shortcut lifecycle/ordinary loops, approvals, directed hydration, proactive delegation scans, and verification ownership.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
-- **Protocols**: reusable artifact and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/protocols/` in this repository.
+- **Protocols**: reusable lifecycle, formal Board, artifact, and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/`, plus canonical Agent selection under `.agents/skills/parallel-subagent-dispatch/references/`.
 - **Fixtures and runner**: static smoke coverage for routing and evidence claims.
 - **Source classes**: canonical AILI source is distinct from generated/installed adapters, inert upstream references, and upstream runtime behavior.
 - **Managed role inventory**: exactly primary ROSE plus 19 repository-managed subagents. All 19 managed profiles retain `external_directory: deny`; ROSE alone retains per-operation ask. `web-researcher` remains the web-only external-research role and gains no external local-directory, mutation, or delegation authority.
@@ -21,7 +21,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 - Treat unambiguous natural-language IDEATE, DEFINE, BUILD, and SHIP requests as first-class entries to the same canonical loops. Never require slash syntax; ask one focused mode/target question only for genuine ambiguity.
 - Run a proactive delegation scan at the start of each non-trivial intent and whenever changed evidence exposes a new work split. When an existing Task trigger is met, dispatch before duplicating that assignment directly unless overlap, dependency, permission, ownership, or negative-benefit evidence blocks delegation.
 - Default concurrency is at most two but is not a hard cap. ROSE chooses any larger bounded fan-out from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; ready lanes launch together rather than being avoidably serialized.
-- Preserve fresh single-use Task contexts, no `task_id` reuse, no nested delegation, no automatic retry, no permission broadening, and no unconditional review/test/security swarm. ROSE remains the integration and final-verdict owner.
+- Ordinary work uses trigger/benefit routing after assignment-shape classification; formal ready Agent-owned packages use their exact `aili-agent-selection/v1` role unless a valid waiver was recorded before direct execution. The shared package contract supports one-shot and persistent adapters, while the current OpenCode Task adapter remains fresh, terminal, and non-resumable. Preserve no nested delegation, no automatic retry, no permission broadening, and no unconditional review/test/security swarm. ROSE remains the decision, integration, inspection, verification, disposition, and final-verdict owner.
 
 ## Lifecycle Gates
 
@@ -36,6 +36,8 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Artifact Authority
 
 - Lifecycle: `.agents/skills/aili-delivery-flow/references/lifecycle.md`.
+- Canonical Agent selection: `.agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md` (`aili-agent-selection/v1`).
+- Formal package/evidence Board: `.agents/skills/aili-delivery-flow/references/formal-task-board.md` (`aili-task-board/v1`).
 - Neutral BUILD execution, loop profiles, and canonical budgets: `.agents/skills/aili-delivery-flow/references/build-execution-loop.md`, `.agents/skills/aili-delivery-flow/references/implementation-packages.md`, and `.agents/skills/aili-delivery-flow/references/artifact-contracts.md`.
 - Planning evidence shape: `.agents/skills/aili-delivery-flow/references/protocols/research-evidence-pack.md`, plus official-doc and prior-art skills where they are the lighter source.
 - Backend adapters: `docs/harness/backend-adapters.md` and `.agents/skills/aili-delivery-flow/references/backend-routing.md`.

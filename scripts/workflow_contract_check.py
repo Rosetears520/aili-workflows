@@ -521,6 +521,7 @@ WORKFLOW_PROFILE_CONTRACT = {
             "traceability",
             "task_oracle",
             "agent_inventory",
+            "formal_agent_orchestration",
             "a33_scaffold",
             "a33_rejections",
             "regression_probes",
@@ -678,6 +679,8 @@ RESULT_FIELD_ORDER = (
     "trace_id",
     "lane",
     "owner",
+    "package_id",
+    "role_id",
     "status",
     "confidence",
     "worktree_context_ref",
@@ -686,12 +689,18 @@ RESULT_FIELD_ORDER = (
     "target_rules_ref",
     "artifact_destination",
     "inspected_scope",
+    "summary",
+    "evidence",
+    "changed_files",
+    "verification",
     "checks",
     "freshness",
     "skipped_checks",
     "soft_boundary_limitations",
     "blockers",
+    "risks",
     "unverified",
+    "continuation_recommendation",
     "findings",
     "convergence_links",
     "review_arbitration_ref",
@@ -709,6 +718,137 @@ FINDING_FIELD_ORDER = (
     "verification",
 )
 FINDING_FIELDS = set(FINDING_FIELD_ORDER)
+CANONICAL_AGENT_ROLE_IDS = (
+    "code-scout",
+    "doc-researcher",
+    "web-researcher",
+    "spec-miner",
+    "plan-auditor",
+    "implementer",
+    "test-engineer",
+    "test-coverage-reviewer",
+    "pr-test-analyzer",
+    "code-reviewer",
+    "security-auditor",
+    "silent-failure-reviewer",
+    "convergence-reviewer",
+    "browser-qa-runner",
+    "e2e-artifact-runner",
+    "web-performance-auditor",
+    "ai-regression-scout",
+    "agent-evaluator",
+    "opensource-sanitizer",
+)
+FORMAL_BOARD_PACKAGE_FIELDS = (
+    "Phase",
+    "Package kind",
+    "Source refs",
+    "Accepted task IDs",
+    "Status",
+    "Owner",
+    "Dispatch",
+    "Dispatch reason",
+    "No-dispatch reason",
+    "Execution",
+    "Join",
+    "Depends on",
+    "Decision gate",
+    "Final test-plan gate",
+    "Implementation authorization",
+    "Operation permissions",
+    "Scope",
+    "Forbidden scope",
+    "Expected result",
+    "Expected evidence",
+    "Acceptance",
+    "Dispatch evidence",
+    "Result evidence",
+    "Evidence",
+    "ROSE disposition",
+    "Blocker",
+    "Next action",
+)
+TASK_PACKET_FIELDS = (
+    "Package ID",
+    "Role ID",
+    "Assignment",
+    "Scope",
+    "Forbidden scope",
+    "WT-001 context ref",
+    "Allowed actions",
+    "Expected result",
+    "Expected evidence",
+    "Execution",
+    "Join",
+    "Continuation",
+    "Stop when",
+)
+FORMAL_AGENT_ORCHESTRATION_CASES = [
+    {"id": "ordinary-direct-no-trigger", "expected": "ROSE-direct"},
+    {"id": "ordinary-specialist-trigger", "expected": "dispatch-narrowest-role"},
+    {"id": "narrowest-role-selection", "expected": "most-specific-evidence-contract"},
+    {"id": "formal-exact-owner", "expected": "dispatch-exact-canonical-role"},
+    {"id": "formal-general-invalid", "expected": "blocked"},
+    {"id": "formal-waiver-prerecorded", "expected": "direct-allowed"},
+    {"id": "formal-waiver-posthoc", "expected": "invalid"},
+    {"id": "async-stable-join", "expected": "join-required"},
+    {"id": "async-missing-join", "expected": "invalid"},
+    {"id": "returned-not-done", "expected": "ROSE-inspection-required"},
+    {"id": "unread-result", "expected": "dependent-work-blocked"},
+    {"id": "one-shot-package-realization", "expected": "portable"},
+    {"id": "persistent-same-package-continuation", "expected": "allowed"},
+    {"id": "persistent-changed-package", "expected": "new-dispatch-or-job"},
+    {"id": "nested-dispatch", "expected": "rejected"},
+    {"id": "decision-direction-only", "expected": "direction-recorded"},
+    {"id": "decision-conditional-rationale", "expected": "awaiting-confirmation"},
+    {"id": "accepted-plan-no-implementation-intent", "expected": "BUILD-blocked"},
+    {"id": "same-turn-explicit-accept-and-implement", "expected": "two-separate-states"},
+    {"id": "document-authored-authority", "expected": "invalid"},
+    {"id": "human-artifact-output", "expected": "ordinary-prose"},
+]
+FORMAL_AGENT_ORCHESTRATION_CONTRACT = {
+    "schema_version": "1.0",
+    "protocols": {
+        "selection": "aili-agent-selection/v1",
+        "board": "aili-task-board/v1",
+    },
+    "paths": {
+        "selection": ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md",
+        "board": ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
+        "openspec_board": "openspec/changes/<change-id>/formal-task-board.md",
+    },
+    "board_creation": {
+        "requires_stable_identity": True,
+        "non_openspec": "adapter-mapped repository-local path or one explicit repository-local placement decision",
+        "one_board_across_phases": True,
+        "retained_package_phase": True,
+    },
+    "canonical_roles": list(CANONICAL_AGENT_ROLE_IDS),
+    "phase_affinity": {
+        "IDEATE": ["code-scout", "doc-researcher", "web-researcher", "spec-miner", "agent-evaluator"],
+        "DEFINE": ["code-scout", "spec-miner", "plan-auditor", "test-coverage-reviewer", "security-auditor", "ai-regression-scout"],
+        "BUILD": ["implementer", "test-engineer", "browser-qa-runner", "e2e-artifact-runner"],
+        "SHIP": ["code-reviewer", "security-auditor", "silent-failure-reviewer", "test-coverage-reviewer", "pr-test-analyzer", "convergence-reviewer", "opensource-sanitizer"],
+    },
+    "phase_affinity_is_allowlist": False,
+    "general_is_formal_owner": False,
+    "package_kinds": ["evidence", "task-execution"],
+    "source_ref_types": ["requirement", "decision", "risk", "artifact", "verification", "task"],
+    "accepted_task_ownership": "exactly-one-current-task-execution-package",
+    "multi_task_aggregation": "allowed-with-one-owner-dependency-join-scope-acceptance-evidence-boundary",
+    "pre_readiness_split": ["different canonical owners", "independent joins", "independently completable scopes"],
+    "agent_states": ["pending", "ready", "running", "returned", "done"],
+    "rose_states": ["pending", "ready", "running", "done"],
+    "progress_events": ["BOARD_CREATED", "READY", "DISPATCHED", "WAIVED", "RETURNED", "INSPECTED", "JOINED", "DONE", "BLOCKED", "UNBLOCKED", "CANCELLED", "RECONCILED"],
+    "decision_states": ["proposed", "direction-recorded", "conditional", "awaiting-confirmation", "accepted", "rejected", "superseded"],
+    "implementation_authorization": ["absent", "granted", "expired", "revoked"],
+    "package_acceptance_creates_lifecycle_authority": False,
+    "final_test_plan_acceptance_grants_implementation": False,
+    "adapter_realizations": ["one-shot", "persistent"],
+    "runtime_private_mapping": "adapter-owned",
+    "human_artifact_surface": "ordinary prose without epistemic claim-tag prefixes or opaque runtime-only evidence",
+    "cases": FORMAL_AGENT_ORCHESTRATION_CASES,
+}
 GENERATED_ROUTE_MAP = {
     "IDEATE": "commands/ideate.md",
     "DEFINE": "commands/define.md",
@@ -1496,6 +1636,208 @@ def parse_canonical_result_block(
     ):
         return None
     return result_fields, finding_fields
+
+
+def parse_named_text_block_fields(text: str, unique_field: str) -> tuple[str, ...] | None:
+    for match in re.finditer(r"```(?:text|markdown)\n(?P<body>[\s\S]*?)\n```", text):
+        body = match.group("body")
+        if f"{unique_field}:" not in body:
+            continue
+        return tuple(
+            value.strip()
+            for value in re.findall(r"^(?:  - )?([^\n:]+):", body, re.MULTILINE)
+        )
+    return None
+
+
+def validate_formal_agent_orchestration(
+    project: Path, fixture: dict[str, Any], errors: list[str]
+) -> dict[str, Any]:
+    declared = fixture.get("formal_agent_orchestration")
+    if declared != FORMAL_AGENT_ORCHESTRATION_CONTRACT:
+        errors.append("formal_agent_orchestration must equal the exact shared selection/Board contract")
+
+    paths = FORMAL_AGENT_ORCHESTRATION_CONTRACT["paths"]
+    source_text: dict[str, str] = {}
+    for name in ("selection", "board"):
+        relative = paths[name]
+        target, resolution_error = resolve_repo_field_target(
+            project, relative, f"formal_agent_orchestration.paths.{name}", allow_missing=False
+        )
+        if resolution_error:
+            errors.append(resolution_error)
+            source_text[name] = ""
+            continue
+        try:
+            assert target is not None
+            source_text[name] = target.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"cannot read formal orchestration {name} source: {exc}")
+            source_text[name] = ""
+
+    matrix_text = source_text["selection"]
+    observed_roles = tuple(
+        re.findall(r"^\| `([a-z][a-z0-9-]+)` \|", matrix_text, re.MULTILINE)
+    )
+    if observed_roles != CANONICAL_AGENT_ROLE_IDS:
+        errors.append(
+            "canonical Agent selection matrix role inventory/order differs; "
+            f"observed={list(observed_roles)!r}"
+        )
+    if re.search(r"^\| `general` \|", matrix_text, re.MULTILINE):
+        errors.append("canonical Agent selection matrix must not contain a general role row")
+    matrix_markers = [
+        "Protocol: `aili-agent-selection/v1`",
+        "Role namespace: `canonical`",
+        "Selector mapping: `adapter-owned`",
+        "| Role ID | Use when | Do not use when | Expected evidence | Phase affinity | Execution guidance |",
+        "Classify the assignment shape and required capability before choosing a role.",
+        "select the narrowest responsibility with the most specific expected-evidence contract",
+        "Phase affinity is advisory",
+        "A ready formal Agent-owned package fixes the exact canonical Role ID",
+        "`general` is not a canonical specialist role",
+        "canonical Agent descriptions under `agents/*.md`",
+    ]
+    for marker in matrix_markers:
+        if marker not in matrix_text:
+            errors.append(f"agent selection matrix missing marker: {marker}")
+
+    board_text = source_text["board"]
+    board_markers = [
+        "Protocol: `aili-task-board/v1`",
+        "Create a Board only after one stable formal task identity exists",
+        "openspec/changes/<change-id>/formal-task-board.md",
+        "adapter-mapped repository-local Board path",
+        "When the Board header advances phase, retained packages keep the phase",
+        "Package kind: `evidence | task-execution`",
+        "Every accepted task ID belongs to exactly one current task-execution package",
+        "split the task into separate accepted `tasks.md` rows during DEFINE before readiness",
+        "Record a non-applicable gate as `N/A`; never represent it as granted.",
+        "`Acceptance` means package-level completion criteria only",
+        "pending → ready → running → returned → done",
+        "A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation",
+        "waiver is recorded before execution",
+        "Every async package declares a stable join ID",
+        "Workers return package-bound evidence. They do not edit the Board or `progress.txt`",
+        "BOARD_CREATED",
+        "RECONCILED",
+    ]
+    for marker in board_markers:
+        if marker not in board_text:
+            errors.append(f"formal task Board reference missing marker: {marker}")
+    observed_board_fields = parse_named_text_block_fields(board_text, "Package kind")
+    if observed_board_fields != FORMAL_BOARD_PACKAGE_FIELDS:
+        errors.append(
+            "formal task Board package fields differ from the canonical ordered contract; "
+            f"observed={observed_board_fields!r}"
+        )
+
+    packet_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md"
+    result_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md"
+    try:
+        packet_text = packet_path.read_text(encoding="utf-8")
+        result_text = result_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        errors.append(f"cannot read portable packet/result contract: {exc}")
+        packet_text = result_text = ""
+    observed_packet_fields = parse_named_text_block_fields(packet_text, "Package ID")
+    if observed_packet_fields != TASK_PACKET_FIELDS:
+        errors.append(
+            "subagent task packet fields differ from portable package envelope; "
+            f"observed={observed_packet_fields!r}"
+        )
+    if parse_canonical_result_block(result_text) != (RESULT_FIELD_ORDER, FINDING_FIELD_ORDER):
+        errors.append("subagent result fields differ from the portable package envelope")
+
+    integration_markers = {
+        ".agents/skills/aili-delivery-flow/SKILL.md": [
+            "Formal work uses the separate `aili-task-board/v1` lane",
+            "`general` cannot own a formal package",
+            "Phase role lists are advisory",
+            "current final-test-plan gate",
+        ],
+        ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": [
+            "## Ordinary lane",
+            "## Formal lane",
+            "valid waiver recorded before work",
+        ],
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
+            "Every accepted task ID belongs to exactly one current task-execution package",
+            "One-shot and persistent adapters implement the same package identity",
+            "They do not write the Board or `progress.txt`",
+        ],
+        ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
+            "`proposed`, `direction-recorded`, `conditional`, `awaiting-confirmation`, `accepted`, `rejected`, or `superseded`",
+            "`absent`, `granted`, `expired`, or `revoked`",
+            "Final test-plan acceptance satisfies only the lifecycle acceptance gate",
+        ],
+        ".agents/skills/requirements-grilling/SKILL.md": [
+            "## Decision-state contract",
+            "only a later explicit user confirmation can make it `accepted`",
+            "Keep decision state separate from `implementation_authorization",
+        ],
+        ".agents/skills/test-document-generator/SKILL.md": [
+            "marking a test plan final never marks user acceptance",
+            "never grants BUILD authorization",
+        ],
+    }
+    for relative, markers in integration_markers.items():
+        try:
+            text = (project / relative).read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"cannot read formal orchestration integration source {relative}: {exc}")
+            continue
+        for marker in markers:
+            if marker not in text:
+                errors.append(f"{relative}: missing formal orchestration marker {marker!r}")
+
+    forbidden_runtime_markers = ("Pi Agent", "OpenCode selector", "agent://", "history://")
+    claim_prefix = re.compile(
+        r"^\s*(?:[-*]\s*)?\[(?:KNOWN|COMPUTED|INFERRED|UNVERIFIED|OPEN QUESTION|已知|工具结果|推断|未验证|开放问题)\]\s*",
+        re.MULTILINE,
+    )
+    for name, text in source_text.items():
+        for marker in forbidden_runtime_markers:
+            if marker in text:
+                errors.append(f"formal orchestration {name} source contains runtime-specific marker {marker!r}")
+        if claim_prefix.search(text):
+            errors.append(f"formal orchestration {name} source contains a human-artifact claim prefix")
+
+    try:
+        manifest = json.loads((project / "manifests/rose-aili.components.json").read_text(encoding="utf-8"))
+        capability = json.loads((project / "manifests/skill-capabilities.json").read_text(encoding="utf-8"))
+        components = json.loads((project / "workflow.components.yaml").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot read formal orchestration installation/governance manifests: {exc}")
+    else:
+        skill_rows = {
+            row.get("name"): row
+            for row in manifest.get("components", {}).get("skills", [])
+            if isinstance(row, dict)
+        }
+        for name in ("aili-delivery-flow", "parallel-subagent-dispatch"):
+            row = skill_rows.get(name, {})
+            expected_path = f".agents/skills/{name}"
+            if (
+                row.get("path") != expected_path
+                or row.get("defaultInstalled") is not True
+                or row.get("installTargets") != [{"kind": "shared", "path": expected_path}]
+            ):
+                errors.append(f"{name} must remain whole-directory default-installed as a shared Skill")
+        dispatch_assignment = next(
+            (row for row in capability.get("assignments", []) if row.get("profile") == "subagent-dispatch"),
+            {},
+        )
+        dispatch_skills = set(dispatch_assignment.get("skills", []))
+        if not {"aili-delivery-flow", "parallel-subagent-dispatch"}.issubset(dispatch_skills):
+            errors.append("subagent-dispatch capability assignment must own both orchestration Skills")
+        component_map = {
+            row.get("id"): row for row in components.get("components", []) if isinstance(row, dict)
+        }
+        if component_map.get("protocol", {}).get("authority") != ".agents/skills/aili-delivery-flow/references/":
+            errors.append("workflow protocol authority must include delivery reference-root protocols")
+
+    return dict(declared) if isinstance(declared, dict) else {}
 
 
 def scan_rejected_machinery(
@@ -3186,6 +3528,9 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
     a33_scaffold, a33_rejections = validate_a33_scaffold_and_rejections(
         project, fixture, errors
     )
+    formal_agent_orchestration = validate_formal_agent_orchestration(
+        project, fixture, errors
+    )
     aggregate_traceability = validate_aggregate_traceability(
         project, fixture, package_ownership, errors
     )
@@ -3232,6 +3577,7 @@ def scaffold(project: Path, change: str, fixture: dict[str, Any]) -> dict[str, A
     payload["traceability"] = aggregate_traceability
     payload["task_oracle"] = task_oracle
     payload["agent_inventory"] = agent_inventory
+    payload["formal_agent_orchestration"] = formal_agent_orchestration
     payload["a33_scaffold"] = a33_scaffold
     payload["a33_rejections"] = a33_rejections
     payload["regression_probes"] = regression_probes
