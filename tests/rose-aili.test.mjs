@@ -63,8 +63,7 @@ test("install defaults to shared skills without reading or mutating OpenCode hom
   assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
   assert.equal(summary.optionalDecisions.some((entry) => entry.name === "Graphify"), false);
   await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
-  await stat(path.join(sharedSkillsHome(fixture), "i-have-adhd", "SKILL.md"));
-  await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd", "hooks")));
+  await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
 });
@@ -675,8 +674,10 @@ test("install copies global AGENTS rules into OpenCode home", async () => {
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, ...SKIP_DEFAULT_ADDONS, "--json"]);
   const target = path.join(opencodeHome, "AGENTS.md");
   const text = await readFile(target, "utf8");
+  const source = await readFile(path.join(fixture.ailiHome, "templates", "opencode-global-AGENTS.md"), "utf8");
 
   assert.equal((await lstat(target)).isSymbolicLink(), false);
+  assert.equal(text, source);
   assert.match(text, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates\/opencode-global-AGENTS\.md/);
   assert.match(text, /Project facts, repository commands, local test locations/);
   assert.match(text, /Do not symlink this global file into project roots/);
@@ -1537,14 +1538,11 @@ test("skills-only Bash install links shared skills and preserves OpenCode-owned 
   ], { env: installerEnv(fixture.root) });
 
   const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory");
-  const adhdSkillTarget = path.join(sharedSkillsHome(fixture), "i-have-adhd");
   assert.equal((await lstat(skillsParent)).isDirectory(), true);
   assert.equal(await readFile(preserved, "utf8"), "keep\n");
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
   assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
-  assert.equal((await lstat(adhdSkillTarget)).isSymbolicLink(), true);
-  assert.equal(await readlink(adhdSkillTarget), path.join(fixture.ailiHome, ".agents", "skills", "i-have-adhd"));
-  await assert.rejects(stat(path.join(adhdSkillTarget, "hooks")));
+  await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
   await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
   await assert.rejects(stat(path.join(opencodeHome, "AGENTS.md")));
   await assert.rejects(stat(path.join(opencodeHome, "agents")));
@@ -1657,6 +1655,29 @@ test("write-skills rename preserves ambiguous old installed content", async () =
   assert.match(retired.reason, /copied, modified, or user-owned content is preserved/);
   assert.equal(await readFile(marker, "utf8"), "preserve user-owned content\n");
   assert.equal((await lstat(path.join(sharedRoot, "write-skills"))).isSymbolicLink(), true);
+  await fixture.cleanup();
+});
+
+test("i-have-adhd retirement unlinks only the proven managed symlink", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const sharedRoot = sharedSkillsHome(fixture);
+  const retiredTarget = path.join(sharedRoot, "i-have-adhd");
+  const retiredSource = path.join(fixture.ailiHome, ".agents", "skills", "i-have-adhd");
+  await mkdir(sharedRoot, { recursive: true });
+  await symlink(retiredSource, retiredTarget);
+
+  const installed = await execFileP("bash", [
+    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
+    "--mode", "selective",
+    "--aili-home", fixture.ailiHome,
+    "--opencode-home", opencodeHome,
+    "--no-update"
+  ], { env: installerEnv(fixture.root) });
+  const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
+  const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === "i-have-adhd");
+  assert.equal(retired.action, "unlinked");
+  await assert.rejects(lstat(retiredTarget));
   await fixture.cleanup();
 });
 
@@ -2145,17 +2166,21 @@ test("packed package keeps CLI bin executable", async () => {
   const packedGlobalAgents = path.join(extractDir, "package", "templates", "opencode-global-AGENTS.md");
   const packedText = await readFile(packedCli, "utf8");
   const packedGlobalAgentsText = await readFile(packedGlobalAgents, "utf8");
+  const sourceGlobalAgentsText = await readFile(path.join(repoRoot, "templates", "opencode-global-AGENTS.md"), "utf8");
   const packedStat = await stat(packedCli);
   const packedEntries = (await execFileP("tar", ["-tzf", tarball])).stdout.split(/\r?\n/).filter(Boolean);
 
   assert.match(packedText, /^#!\/usr\/bin\/env node/);
   assert.match(packedGlobalAgentsText, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE/);
+  assert.equal(packedGlobalAgentsText, sourceGlobalAgentsText);
   assert.ok((packedStat.mode & 0o111) !== 0, `expected ${packedCli} to be executable`);
   assert.ok(packedEntries.includes("package/manifests/rose-aili.components.json"));
   assert.ok(packedEntries.includes("package/agents/rose.md"));
   assert.ok(packedEntries.includes("package/commands/build.md"));
   assert.ok(packedEntries.includes("package/commands/local-review.md"));
+  assert.ok(packedEntries.includes("package/THIRD_PARTY_NOTICES.md"));
   assert.ok(packedEntries.includes("package/.agents/skills/rose-memory/SKILL.md"));
+  assert.equal(packedEntries.some((entry) => entry.includes("i-have-adhd")), false);
   const manifest = await loadManifest(repoRoot);
   for (const agent of manifest.components.agents) {
     assert.ok(packedEntries.includes(`package/${agent.path}`), `expected packed agent ${agent.path}`);

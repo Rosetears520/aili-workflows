@@ -41,7 +41,6 @@ aili-workflows/
 │       ├── github-evidence-triage/
 │       ├── harness-evolution/
 │       ├── harness-issue-triage/
-│       ├── i-have-adhd/
 │       ├── idea-refine/
 │       ├── incremental-implementation/
 │       ├── ios-application-dev/
@@ -179,13 +178,11 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 `requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
 
-### 来自 ayghri/i-have-adhd 的适配
+### 全局 Agent 行为参考
 
-| Skill | 说明 |
-|---|---|
-| `i-have-adhd` | 仅在显式调用或明确请求 ADHD/action-first 低摩擦表达时塑造当前回复：答案或行动优先、必要时编号、抑制旁支、只报告当前增量，并让安全、证据、授权和用户要求的细节优先于简短。它不安装 Hook、flag、service 或全局规则，也不承诺后续轮次或跨会话持续生效。 |
+`templates/opencode-global-AGENTS.md` 是这些通用行为规则的唯一运行时来源。它直接采用并筛选了 [aarnphm/aarnphm.github.io](https://github.com/aarnphm/aarnphm.github.io) `AGENTS.md`（提交 `30bc525c7235828c628a4e59bb19741e3ea00b0d`）和 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) `skills/i-have-adhd/SKILL.md`（提交 `b837bf132b9d05765c5deed5b30935f562abba86`）中的原文规则。
 
-该 Skill 改编自 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) 固定提交 `34f746dda9664fb5ea52149be5dbab2adc6e60d3`，遵循 MIT License，Copyright (c) 2026 Ayoub Ghriss。固定上游正文、许可证和 notice 以不可运行的 revisioned reference 形式保存在 canonical Skill 内；上游 Hook、vendor metadata、session persistence、强制时长估算和五项列表限制不属于本仓库运行时行为。
+未引入 aarnphm 仓库专属的工具链、Quartz 目录、Cloudflare、样式、禁止注释、禁止 build、兼容策略和运行时日志约束。i-have-adhd 的 ADHD 读者前提、阅读摩擦说明、十条响应规则、破例条件和发送前检查已较大化吸收到全局合同；仅排除 Skill 路由、Hook、session 开关、无依据的强制时长估算、硬性五项截断和每轮完整状态复述。许可证和修改说明集中保存在 `THIRD_PARTY_NOTICES.md`，不另建运行时 Skill 或重复行为正文。
 
 ### 来自 addyosmani/agent-skills
 

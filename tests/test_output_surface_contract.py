@@ -88,35 +88,63 @@ class OutputSurfaceContractTests(unittest.TestCase):
             contract,
         )
 
-    def test_i_have_adhd_is_current_response_only_and_safety_first(self) -> None:
-        skill = read(".agents/skills/i-have-adhd/SKILL.md")
-        normalized_skill = " ".join(skill.split())
+    def test_global_contract_owns_action_first_and_state_anchoring(self) -> None:
+        contract = read("templates/opencode-global-AGENTS.md")
+        normalized_contract = " ".join(contract.split())
 
         required = (
-            "Positive trigger",
-            "Near misses",
-            "shape only the current response",
-            "failure → cause → fix → verification",
-            "Correctness, complete required findings, evidence, uncertainty, safety gates",
+            "### Communication and State Anchoring",
+            "The reader has ADHD. Output is not just brief. It is shaped so an ADHD brain can act on it.",
+            "Working memory is small. Anything not on screen is forgotten",
+            "Knowing the answer is not doing the answer",
+            "Starting is the hardest step",
+            "Time estimates feel uniform",
+            "Dopamine is scarce. Visible progress matters",
+            "Lead with the answer, result, decision, blocker, path, command, or next required action",
+            "If the answer is a command, path, or snippet, it goes first",
+            "If the work takes more than one step, write a numbered list",
+            "If anything is left open, name one concrete next action",
+            "The checklist does the restating; do not also narrate the full plan as prose",
+            "Make completed work visible",
+            "failure, cause, fix, and verification",
+            "Forbidden openers include \"Great question,\"",
+            "Forbidden closers include \"Let me know if you need anything else,\"",
             "Do not invent duration estimates",
-            "Do not omit required blockers, safety findings, or requested items",
-            "no flag file, Hook, plugin, service, global-rule projection, or",
-            "does not claim survival across later turns",
+            "Do not cap lists at an arbitrary number",
+            "If the last three attempts have been \"still broken,\" stop iterating on code",
+            "If a rule fights the task, the task wins and the shape stays",
+            "If a rule fights the harness, the system and harness constraints win and the shape stays",
+            "Delete the first sentence if it only announces what you are about to do",
+            "Remove hedging that adds no information, but keep uncertainty that changes the claim",
+            "Choose the simplest implementation that fully meets the current requirements",
+            "Grow the system in layers",
+            "Do not assume a library lacks a capability without checking its documentation and types",
+            "Do not read source files and regex implementation text",
         )
         for marker in required:
             with self.subTest(marker=marker):
-                self.assertIn(marker, normalized_skill)
+                self.assertIn(marker, normalized_contract)
 
         forbidden = (
             "disable-model-invocation",
             "These rules apply to every response for the rest of the session",
             "Turn them off only when",
+            "stop adhd mode",
             "Give specific time estimates",
             "Cap lists at 5 items",
+            "@quartz/plugins/transformers",
+            "dev.ts",
+            "window.addCleanup",
+            "Cloudflare Secrets",
+            "Use `pnpm`, `oxlint`, `oxfmt`, and `tsgo`",
+            "Do not write comments",
+            "Ship minimal production code that fixes the owning boundary",
+            "Do not run bundle or build",
+            "Skip shims and backward compatibility unless aarnphm asks",
         )
         for marker in forbidden:
             with self.subTest(marker=marker):
-                self.assertNotIn(marker, normalized_skill)
+                self.assertNotIn(marker, normalized_contract)
 
 
 if __name__ == "__main__":

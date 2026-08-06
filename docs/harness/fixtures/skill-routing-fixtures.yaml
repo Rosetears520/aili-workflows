@@ -1,6 +1,6 @@
 {
   "fixture": "skill-routing",
-  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "minimax-docx", "minimax-xlsx", "pptx-generator", "i-have-adhd", "action-first", "OfficeCLI", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "minimax-docx", "minimax-xlsx", "pptx-generator", "OfficeCLI", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
   "cases": [
     {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
     {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
@@ -38,13 +38,6 @@
     {"id": "pptx-generic-owner", "skill": "pptx-generator", "input": "Create an editable PowerPoint deck and verify the rendered slides", "expected": "trigger"},
     {"id": "pptx-officecli-internal-adapter", "skill": "pptx-generator", "input": "Use OfficeCLI to inspect and render this PPTX inside the canonical presentation workflow", "expected": "trigger", "expected_handoff": "OfficeCLI remains an internal non-routable adapter; do not install officecli-pptx or a second PPT Skill"},
     {"id": "pptx-duplicate-skill-denied", "skill": "pptx-generator", "input": "Install officecli-pptx as a second presentation Skill", "expected": "trigger", "expected_handoff": "deny duplicate presentation routing and retain pptx-generator as sole owner"},
-    {"id": "pptx-non-artifact-advice", "skill": "pptx-generator", "input": "Give me three speaking tips; do not create or edit a PPTX", "expected": "non-trigger"},
-    {"id": "adhd-explicit-skill", "skill": "i-have-adhd", "input": "Use i-have-adhd for this response", "expected": "trigger"},
-    {"id": "adhd-action-first-style", "skill": "i-have-adhd", "input": "Use ADHD-friendly action-first style for this answer only", "expected": "trigger", "expected_handoff": "shape the current response only; ROSE retains scope, permissions, verification, and verdict"},
-    {"id": "adhd-ordinary-code", "skill": "i-have-adhd", "input": "Fix this ordinary TypeScript error", "expected": "non-trigger"},
-    {"id": "adhd-ordinary-plan", "skill": "i-have-adhd", "input": "Plan the accepted implementation packages", "expected": "non-trigger"},
-    {"id": "adhd-ordinary-doc", "skill": "i-have-adhd", "input": "Update the README for the new command", "expected": "non-trigger"},
-    {"id": "adhd-concise-no-style", "skill": "i-have-adhd", "input": "What is the shortest path to parse JSON?", "expected": "non-trigger"},
-    {"id": "adhd-later-turn-no-persistence", "skill": "i-have-adhd", "input": "Continue the task; no response style requested in this turn", "expected": "non-trigger"}
+    {"id": "pptx-non-artifact-advice", "skill": "pptx-generator", "input": "Give me three speaking tips; do not create or edit a PPTX", "expected": "non-trigger"}
   ]
 }

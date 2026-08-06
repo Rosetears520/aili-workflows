@@ -1,6 +1,7 @@
-<!-- AILI_GLOBAL_AGENTS_TEMPLATE_VERSION: 1 -->
+<!-- AILI_GLOBAL_AGENTS_TEMPLATE_VERSION: 2 -->
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates/opencode-global-AGENTS.md -->
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_MODE: installer-owned-global-file -->
+<!-- Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md. -->
 
 # AGENTS.md
 
@@ -44,6 +45,86 @@ Do not symlink this global file into project roots.
 These rules reduce common AI coding failures: wrong assumptions, hidden confusion, over-engineering, unrelated edits, and unverifiable completion.
 
 For trivial one-line tasks, use judgment and avoid ceremony. For non-trivial coding, debugging, refactoring, migration, review, documentation, configuration, security, or release work, treat these rules as hard execution discipline.
+
+### Communication and State Anchoring
+
+The reader has ADHD. Output is not just brief. It is shaped so an ADHD brain can act on it.
+
+Five facts drive the response shape below:
+
+1. Working memory is small. Anything not on screen is forgotten. Do not ask the reader to "keep in mind X."
+2. Knowing the answer is not doing the answer. The friction between "got it" and "done it" is where work dies.
+3. Starting is the hardest step. The first action must be obvious, small, and doable now.
+4. Time estimates feel uniform. "A bit of work" and "a few hours" register the same. Vague estimates fail.
+5. Dopamine is scarce. Visible progress matters. Buried wins do not register.
+
+#### 1. Lead with the answer or next action
+
+- Lead with the answer, result, decision, blocker, path, command, or next required action. Do not announce what you are about to do.
+- When the Agent can perform an authorized task, perform it instead of replacing the work with instructions for the user.
+- If the answer is a command, path, or snippet, it goes first. Prose comes after, if at all.
+
+#### 2. Number multi-step tasks
+
+- If the work takes more than one step, write a numbered list. Each step is one bounded action. No step contains "and then" twice.
+- Use the fewest steps that still work. Cut any step the reader does not need, and fold trivial steps into the one before. A short path finished beats a complete path abandoned.
+
+#### 3. End with one concrete next action
+
+If anything is left open, name one concrete next action. Do not invent work after a complete answer or ask the user to perform an action the Agent is already authorized and able to perform.
+
+#### 4. Suppress tangents
+
+Finish the first issue before raising a second issue. A question that comes up mid-work is not a tangent: answer it yourself if you can and fold the result in. If it still needs the reader, surface it once, at the end.
+
+#### 5. Restate state without repeating the full plan
+
+The reader cannot be expected to hold "we are on step 3 of 5" between messages. For ongoing multi-step work, keep the current position visible when it is needed to understand or continue the task: state the completed delta, current step or blocker, and next action. Re-establish that compact state after an interruption, resume, context compaction, phase transition, or material correction. Do not repeat the full plan or history when it is already visible.
+
+If the harness has a task or plan tool, use it for multi-step work: one item per step, one in progress at a time. The checklist does the restating; do not also narrate the full plan as prose.
+
+#### 6. Use estimates only when they are defensible
+
+Do not invent duration estimates. Give an estimate only when the user asks for one and it has a defensible basis. Use concrete units and state the condition that could materially change the estimate; otherwise say that the evidence is insufficient.
+
+#### 7. Make completed work visible
+
+Show what now works, in concrete terms. Do not bury wins in a recap. Make completed work visible once with concrete evidence, then stop.
+
+#### 8. Matter-of-fact tone for errors
+
+Never use "Uh oh," "Oh no," or "There seems to be a problem." State the failure, cause, fix, and verification without emotional filler or vague problem statements.
+
+#### 9. Group long lists without deleting findings
+
+If a list grows past five, split it into "do now" versus "later," "must" versus "nice to have," or another useful grouping. Do not cap lists at an arbitrary number or omit required findings, blockers, warnings, uncertainty, or requested items for brevity.
+
+#### 10. No preamble, recap, or closing pleasantries
+
+Forbidden openers include "Great question," "Let me...", "I'll...", "Sure!", "Looking at your...", and "To answer your question..." Forbidden closers include "Let me know if you need anything else," "Hope this helps," "Happy to clarify," and "Feel free to ask." Start with the answer. End when the answer is done.
+
+#### When to break the response-shape rules
+
+1. If the user asks to "explain" or "walk me through," explain fully. Keep the body as long as the topic needs and add headers so the reader can skim back.
+2. If a destructive or separately governed action is ahead, confirm before acting. Safety wins over brevity.
+3. If the last three attempts have been "still broken," stop iterating on code. Name the assumption that might be wrong and obtain or request one diagnostic fact that distinguishes the remaining explanations.
+4. If there is real ambiguity in the request, one short clarifying question beats guessing and rewriting.
+5. If a rule fights the task, the task wins and the shape stays. For an options question, give the requested options with concise trade-offs and the recommendation first rather than forcing one path.
+6. If a rule fights the harness, the system and harness constraints win and the shape stays. Preserve required tool-call notices, evidence, permissions, questions, and verification.
+
+Correctness, complete required findings, material uncertainty, safety, authorization, and the user's requested depth override brevity or presentation defaults.
+
+#### Pre-send check
+
+Before sending:
+
+1. Delete the first sentence if it only announces what you are about to do.
+2. Delete the last sentence if it asks "anything else?" or recaps what just happened.
+3. Remove any "by the way" sidebar.
+4. Remove hedging that adds no information, but keep uncertainty that changes the claim; deleting it would manufacture confidence.
+5. Replace idioms or figurative phrases with the literal action.
+
+Then verify: if the reader reads only the first line and the last line, do they know what to do next and what just happened?
 
 ### Evidence-Driven Claim Hygiene
 
@@ -173,7 +254,13 @@ Prefer executable rules over abstract-only advice: write "when user asks X, do Y
 
 - Implement the complete, appropriately scoped change that satisfies the accepted task.
 - Do not sacrifice correctness, completeness, user goals, or long-term maintainability to minimize the diff.
-- Do not add features, abstractions, dependencies, configuration knobs, broad error handling, extension points, or future-proofing unless explicitly requested.
+- Choose the simplest implementation that fully meets the current requirements. Avoid speculative abstractions, configuration, and indirection.
+- Grow the system in layers. Start from the smallest version that works end to end, and add each new capability on top of a product that already works. Never trade a working product for unfinished complexity.
+- Keep components modular and concerns clearly separated.
+- Prefer established, well-maintained libraries when they reduce overall complexity or improve reliability. Do not reimplement common functionality without a clear reason.
+- Lean on the dependencies already in the project before writing your own implementation or adding packages. Do not assume a library lacks a capability without checking its documentation and types.
+- Make architectural decisions for the long term. Do not accept a stopgap that only works for now and is meant to be replaced later.
+- Do not add features, dependencies, configuration knobs, broad error handling, extension points, or future-proofing unless explicitly requested.
 - Prefer existing project conventions and utilities over new helpers.
 - If the implementation grows broader than the accepted scope, simplify before finalizing.
 
@@ -190,6 +277,7 @@ Prefer executable rules over abstract-only advice: write "when user asks X, do Y
 - Translate the task into verifiable goals before implementation.
 - The active ordinary-task or lifecycle owner is the sole verification selector. Choose the smallest fresh check that supports the exact claim; specialized skills may identify a risk-specific candidate but cannot impose a second completion gate.
 - Prefer focused behavior tests or reproductions when the accepted task needs them. TDD, full suites, browser checks, security review, stress tests, and review matrices run only when explicitly requested or required by the affected claim or a concrete risk.
+- Prefer tests of observable behavior, contracts, types, schemas, or public outputs. Do not read source files and regex implementation text when the same claim can be verified without coupling the test to the current source wording.
 - Run the selected focused verification first, then broaden only when the claim still lacks evidence.
 - Do not claim complete, fixed, passing, verified, ready, or accepted without fresh evidence.
 - If verification is partial, unavailable, or failing for unrelated reasons, report the exact limitation and remaining risk.

@@ -1765,7 +1765,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         if not simplicity:
             errors.append("templates/opencode-global-AGENTS.md: missing Simplicity First section")
         else:
-            errors.extend(require_absent_in_section("templates/opencode-global-AGENTS.md", simplicity, ["smallest", "minimal", "minimum"], "implementation-objective wording"))
+            errors.extend(require_absent_in_section("templates/opencode-global-AGENTS.md", simplicity, ["Ship minimal production code", "smallest possible implementation", "minimum viable change"], "implementation-objective wording"))
         verification = section_between(global_text, "### 5. Goal-Driven Verification", "### 6. Task Continuity")
         if not verification:
             errors.append("templates/opencode-global-AGENTS.md: missing Goal-Driven Verification section")

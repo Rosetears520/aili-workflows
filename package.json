@@ -1,6 +1,6 @@
 {
   "name": "rose-aili",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "AILI shared skills installer with opt-in OpenCode integration",
   "license": "MIT",
   "repository": {
@@ -27,6 +27,7 @@
     "docs/harness/fixtures/upstream-reference-fixtures.yaml",
     "docs/harness/skill-capability-contract.md",
     "README.md",
+    "THIRD_PARTY_NOTICES.md",
     "docs/opencode-setup.md",
     "!**/__pycache__/**",
     "!**/*.py[cod]",
