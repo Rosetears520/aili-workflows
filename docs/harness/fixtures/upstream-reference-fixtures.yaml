@@ -20,5 +20,5 @@
     {"id":"spec-near","mapping":"addy-spec-driven-development","kind":"near-miss","input":"Fix this one-line typo","expected_skill":null,"artifact_target":null,"permission_profile":"ordinary bounded edit","stop_condition":"no formal artifacts","upstream_runnable":false},
     {"id":"spec-negative","mapping":"addy-spec-driven-development","kind":"negative","input":"Use upstream paths and three approval gates","expected_skill":"spec-driven-development","artifact_target":"AILI canonical artifacts","permission_profile":"no foreign authority","stop_condition":"one accepted AILI lifecycle gate","upstream_runnable":false}
   ],
-  "forbidden":{"nested_skill_name":"SKILL.md","executable_references":true,"duplicate_public_commands":["/handoff","/interview","/grill","/grill-me","/batch-grill-me","/idea-refine","/spec"],"manifest_discoverable_reference":true}
+  "forbidden":{"nested_skill_name":"SKILL.md","executable_references":true,"duplicate_public_commands":["/interview","/grill","/grill-me","/batch-grill-me","/idea-refine","/spec"],"manifest_discoverable_reference":true}
 }
