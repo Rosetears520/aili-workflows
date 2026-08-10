@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "adapter": "pi",
+  "authorityBoundary": {
+    "mayNarrow": ["prompt syntax", "prompt path", "capability loadability", "private runtime ID mapping"],
+    "mayNotRedefine": ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]
+  },
+  "prompt": {
+    "descriptionPrefix": "AILI command:",
+    "argumentHint": "[request]",
+    "argumentPlaceholder": "$ARGUMENTS"
+  },
+  "installation": {
+    "allowedSourceGlob": "generated/pi/prompts/*.md",
+    "destinationGlob": "~/.pi/agent/prompts/*.md",
+    "discovery": "non-recursive",
+    "commandName": "filename-without-.md",
+    "packageOnly": ["generated/pi/system.md", "generated/pi/role-metadata.json", "generated/pi/selection-map.json", "generated/pi/installation-contract.json", "generated/pi/protocols/*.json"],
+    "forbiddenRuntimeOperations": ["install runtime metadata", "run AgentSession", "start scheduler", "start daemon", "park or revive a session", "automatic retry"]
+  }
+}

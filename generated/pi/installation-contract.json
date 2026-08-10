@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "adapter": "pi",
+  "installation": {
+    "allowedSourceGlob": "generated/pi/prompts/*.md",
+    "destinationGlob": "~/.pi/agent/prompts/*.md",
+    "discovery": "non-recursive",
+    "commandName": "filename-without-.md",
+    "packageOnly": [
+      "generated/pi/system.md",
+      "generated/pi/role-metadata.json",
+      "generated/pi/selection-map.json",
+      "generated/pi/installation-contract.json",
+      "generated/pi/protocols/*.json"
+    ],
+    "forbiddenRuntimeOperations": [
+      "install runtime metadata",
+      "run AgentSession",
+      "start scheduler",
+      "start daemon",
+      "park or revive a session",
+      "automatic retry"
+    ]
+  },
+  "contract": "Only generated/pi/prompts/*.md may be installed as Pi prompts. All runtime/session metadata is package-only.",
+  "generated": {
+    "generator": "aili-runtime-projections/v1",
+    "canonicalInputs": [
+      "adapters/pi/adapter.json",
+      "manifests/runtime-projections.json"
+    ],
+    "inputSha256": "b625aa38c63cb9d9825226b23ef3a68772b85f21c29a54bbd7c51811294541d5"
+  }
+}

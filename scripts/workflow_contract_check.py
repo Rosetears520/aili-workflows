@@ -112,7 +112,7 @@ CANONICAL_PATH_CONTRACT = {
         "state": "planned",
     },
     "graphify_reference": {
-        "path": ".agents/skills/local-review-gate/references/graphify-local-review.md",
+        "path": "README.md",
         "owner": "P9",
         "state": "present",
     },
@@ -195,6 +195,7 @@ P6_REQUIRED_ROLE_PATHS = {
     "agents/web-performance-auditor.md",
     "agents/web-researcher.md",
 }
+CANONICAL_AGENT_ROLE_PATHS = P6_REQUIRED_ROLE_PATHS | {"agents/solution-architect.md"}
 P6_REQUIRED_CROSS_ROOT_PATHS = P6_REQUIRED_ROLE_PATHS | {
     ".agents/skills/git-workflow-and-versioning/SKILL.md",
     ".agents/skills/aili-delivery-flow/references/protocols/worktree-context.md",
@@ -209,6 +210,7 @@ P6_REQUIRED_CROSS_ROOT_PATHS = P6_REQUIRED_ROLE_PATHS | {
     "tests/opencode-permission-probe.test.mjs",
 }
 MANAGED_AGENT_PATHS = P6_REQUIRED_ROLE_PATHS - {"agents/rose.md"}
+CANONICAL_MANAGED_AGENT_PATHS = CANONICAL_AGENT_ROLE_PATHS - {"agents/rose.md"}
 A33_IDENTITY_FIELDS = (
     "identity_state",
     "declared_root",
@@ -472,7 +474,7 @@ A33_REJECTION_CONTRACT = {
     ],
     "forbidden_package_entries": [".worktrees", "worktrees", ".tmp/worktrees"],
     "managed_subagents": {
-        "count": 19,
+        "count": 20,
         "external_directory": "deny",
         "ask_or_allow": "reject",
         "rose_distinction": "per-operation ask only",
@@ -505,7 +507,18 @@ A33_FORBIDDEN_NEW_PATHS = {
     "baseline-manifest.json",
 }
 A33_FORBIDDEN_PACKAGE_ROOTS = {".worktrees", "worktrees", ".tmp/worktrees"}
-EXPECTED_PUBLIC_COMMANDS = {"build", "define", "ideate", "local-review", "ship"}
+EXPECTED_PUBLIC_COMMANDS = {
+    "agents-md",
+    "build",
+    "define",
+    "handoff",
+    "harness-audit",
+    "ideate",
+    "local-review",
+    "retro",
+    "security-review",
+    "ship",
+}
 WORKFLOW_PROFILE_CONTRACT = {
     "scaffold": {
         "ready": True,
@@ -642,9 +655,9 @@ INDEPENDENT_RESIDUAL_SOURCE_ROOTS = {
     ".agents/skills",
 }
 REQUIRED_COMPONENT_REGISTRY_IDS = {
-    "lifecycle", "backend", "harness-triage", "harness-change", "protocol",
-    "verification", "memory", "command", "install", "source-boundary",
-    "upstream-provenance", "distribution",
+    "lifecycle", "backend", "harness-triage", "harness-change", "governance",
+    "roles", "protocol", "verification", "memory", "command", "install",
+    "adapter-projections", "source-boundary", "upstream-provenance", "distribution",
 }
 REQUIRED_PACKAGE_AUTHORITY_ENTRIES = {
     "agents/", ".agents/", "commands/", "manifests/", "templates/AGENTS.md",
@@ -724,6 +737,7 @@ CANONICAL_AGENT_ROLE_IDS = (
     "web-researcher",
     "spec-miner",
     "plan-auditor",
+    "solution-architect",
     "implementer",
     "test-engineer",
     "test-coverage-reviewer",
@@ -786,7 +800,10 @@ TASK_PACKET_FIELDS = (
 FORMAL_AGENT_ORCHESTRATION_CASES = [
     {"id": "ordinary-direct-no-trigger", "expected": "ROSE-direct"},
     {"id": "ordinary-specialist-trigger", "expected": "dispatch-narrowest-role"},
+    {"id": "ordinary-specialist-preferred", "expected": "dispatch-when-clear-bounded-non-trivial-and-permitted"},
+    {"id": "ordinary-direct-exceptions", "expected": "ROSE-direct-with-named-exception"},
     {"id": "narrowest-role-selection", "expected": "most-specific-evidence-contract"},
+    {"id": "solution-architect-bounded-proposal", "expected": "ROSE-disposition-required"},
     {"id": "formal-exact-owner", "expected": "dispatch-exact-canonical-role"},
     {"id": "formal-general-invalid", "expected": "blocked"},
     {"id": "formal-waiver-prerecorded", "expected": "direct-allowed"},
@@ -798,6 +815,8 @@ FORMAL_AGENT_ORCHESTRATION_CASES = [
     {"id": "one-shot-package-realization", "expected": "portable"},
     {"id": "persistent-same-package-continuation", "expected": "allowed"},
     {"id": "persistent-changed-package", "expected": "new-dispatch-or-job"},
+    {"id": "runtime-id-only-completion", "expected": "incomplete-or-Unverified"},
+    {"id": "automatic-retry", "expected": "rejected"},
     {"id": "nested-dispatch", "expected": "rejected"},
     {"id": "decision-direction-only", "expected": "direction-recorded"},
     {"id": "decision-conditional-rationale", "expected": "awaiting-confirmation"},
@@ -817,6 +836,11 @@ FORMAL_AGENT_ORCHESTRATION_CONTRACT = {
         "board": ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
         "openspec_board": "openspec/changes/<change-id>/formal-task-board.md",
     },
+    "protocol_sources": {
+        "base": "core/protocols/package-envelope.schema.json",
+        "selection": "core/protocols/aili-agent-selection.v1.schema.json",
+        "board": "core/protocols/aili-task-board.v1.schema.json",
+    },
     "board_creation": {
         "requires_stable_identity": True,
         "non_openspec": "adapter-mapped repository-local path or one explicit repository-local placement decision",
@@ -826,7 +850,7 @@ FORMAL_AGENT_ORCHESTRATION_CONTRACT = {
     "canonical_roles": list(CANONICAL_AGENT_ROLE_IDS),
     "phase_affinity": {
         "IDEATE": ["code-scout", "doc-researcher", "web-researcher", "spec-miner", "agent-evaluator"],
-        "DEFINE": ["code-scout", "spec-miner", "plan-auditor", "test-coverage-reviewer", "security-auditor", "ai-regression-scout"],
+        "DEFINE": ["code-scout", "spec-miner", "plan-auditor", "solution-architect", "test-coverage-reviewer", "security-auditor", "ai-regression-scout"],
         "BUILD": ["implementer", "test-engineer", "browser-qa-runner", "e2e-artifact-runner"],
         "SHIP": ["code-reviewer", "security-auditor", "silent-failure-reviewer", "test-coverage-reviewer", "pr-test-analyzer", "convergence-reviewer", "opensource-sanitizer"],
     },
@@ -1471,10 +1495,10 @@ def validate_task_oracle(
 
 def inspect_agent_inventory(project: Path, errors: list[str]) -> dict[str, Any]:
     disk_paths = sorted(path.relative_to(project).as_posix() for path in (project / "agents").glob("*.md"))
-    expected_paths = sorted(P6_REQUIRED_ROLE_PATHS)
+    expected_paths = sorted(CANONICAL_AGENT_ROLE_PATHS)
     if disk_paths != expected_paths:
         errors.append(
-            "canonical Agent inventory must be exactly ROSE plus 19 managed subagents; "
+            "canonical Agent inventory must be exactly ROSE plus 20 managed subagents; "
             f"missing={sorted(set(expected_paths) - set(disk_paths))}, "
             f"extra={sorted(set(disk_paths) - set(expected_paths))}"
         )
@@ -1498,11 +1522,11 @@ def inspect_agent_inventory(project: Path, errors: list[str]) -> dict[str, Any]:
         errors.append("ROSE must remain distinct with per-operation external_directory ask")
     invalid_managed = sorted(
         relative
-        for relative in MANAGED_AGENT_PATHS
+        for relative in CANONICAL_MANAGED_AGENT_PATHS
         if observed_modes.get(relative) != "subagent" or observed_external.get(relative) != "deny"
     )
     if invalid_managed:
-        errors.append(f"all 19 managed subagents must be subagent/external_directory deny: {invalid_managed}")
+        errors.append(f"all 20 managed subagents must be subagent/external_directory deny: {invalid_managed}")
 
     manifest_path = project / "manifests/rose-aili.components.json"
     try:
@@ -1516,7 +1540,7 @@ def inspect_agent_inventory(project: Path, errors: list[str]) -> dict[str, Any]:
             row.get("path") for row in rows if isinstance(row, dict) and isinstance(row.get("path"), str)
         )
         if manifest_paths != expected_paths:
-            errors.append("Agent component manifest differs from the exact ROSE-plus-19 source inventory")
+            errors.append("Agent component manifest differs from the exact ROSE-plus-20 source inventory")
 
     web_path = project / "agents/web-researcher.md"
     try:
@@ -1537,8 +1561,8 @@ def inspect_agent_inventory(project: Path, errors: list[str]) -> dict[str, Any]:
 
     return {
         "primary": "agents/rose.md",
-        "managed": sorted(MANAGED_AGENT_PATHS),
-        "managed_count": len(MANAGED_AGENT_PATHS),
+        "managed": sorted(CANONICAL_MANAGED_AGENT_PATHS),
+        "managed_count": len(CANONICAL_MANAGED_AGENT_PATHS),
         "canonical_count": len(expected_paths),
         "all_managed_external_directory": "deny",
         "rose_external_directory": "ask-per-operation",
@@ -1594,7 +1618,7 @@ def validate_a33_scaffold_and_rejections(
             row.get("name") for row in command_rows if isinstance(row, dict) and isinstance(row.get("name"), str)
         )
         if set(command_names) != EXPECTED_PUBLIC_COMMANDS:
-            errors.append("public command inventory differs from four delivery commands plus standalone local-review")
+            errors.append("public command inventory differs from the exact four Delivery Commands and six Utility Commands")
 
     observed_rejections = dict(rejection_contract) if isinstance(rejection_contract, dict) else {}
     observed_rejections["repository_inspection"] = {
@@ -1657,6 +1681,30 @@ def validate_formal_agent_orchestration(
     if declared != FORMAL_AGENT_ORCHESTRATION_CONTRACT:
         errors.append("formal_agent_orchestration must equal the exact shared selection/Board contract")
 
+    protocol_sources = FORMAL_AGENT_ORCHESTRATION_CONTRACT["protocol_sources"]
+    try:
+        base_schema = json.loads((project / protocol_sources["base"]).read_text(encoding="utf-8"))
+        selection_schema = json.loads((project / protocol_sources["selection"]).read_text(encoding="utf-8"))
+        board_schema = json.loads((project / protocol_sources["board"]).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"cannot read core formal protocol sources: {exc}")
+    else:
+        base_required = [
+            "package_id", "role_id", "assignment", "scope", "forbidden_scope",
+            "permission_boundary", "acceptance_boundary", "write_scope", "expected_result", "expected_evidence",
+        ]
+        base_properties = base_schema.get("properties", {}) if isinstance(base_schema, dict) else {}
+        if base_schema.get("$id") != "aili://protocols/package-envelope/v1" or base_schema.get("required") != base_required:
+            errors.append("core package envelope base identity or required fields drifted")
+        if "source_refs" in base_properties or not {"result", "verification_evidence", "convergence"}.issubset(base_properties):
+            errors.append("core package envelope must keep source refs formal-only and retain result/evidence/convergence links")
+        if selection_schema.get("$id") != "aili://protocols/aili-agent-selection/v1" or selection_schema.get("properties", {}).get("package", {}).get("$ref") != "package-envelope.schema.json":
+            errors.append("core agent-selection protocol must preserve v1 identity and shared base reference")
+        board_properties = board_schema.get("properties", {}) if isinstance(board_schema, dict) else {}
+        formal_fields = {"accepted_task_ids", "board_identity", "depends_on", "join", "lifecycle_gate", "source_refs"}
+        if board_schema.get("$id") != "aili://protocols/aili-task-board/v1" or not formal_fields.issubset(board_properties):
+            errors.append("core task-board protocol must preserve v1 identity and formal-only extensions")
+
     paths = FORMAL_AGENT_ORCHESTRATION_CONTRACT["paths"]
     source_text: dict[str, str] = {}
     for name in ("selection", "board"):
@@ -1696,7 +1744,7 @@ def validate_formal_agent_orchestration(
         "Phase affinity is advisory",
         "A ready formal Agent-owned package fixes the exact canonical Role ID",
         "`general` is not a canonical specialist role",
-        "canonical Agent descriptions under `agents/*.md`",
+        "`core/roles/roles.json` owns each role's detailed behavior",
     ]
     for marker in matrix_markers:
         if marker not in matrix_text:
@@ -1834,8 +1882,8 @@ def validate_formal_agent_orchestration(
         component_map = {
             row.get("id"): row for row in components.get("components", []) if isinstance(row, dict)
         }
-        if component_map.get("protocol", {}).get("authority") != ".agents/skills/aili-delivery-flow/references/":
-            errors.append("workflow protocol authority must include delivery reference-root protocols")
+        if component_map.get("protocol", {}).get("authority") != "core/protocols/":
+            errors.append("workflow protocol authority must be core/protocols/")
 
     return dict(declared) if isinstance(declared, dict) else {}
 

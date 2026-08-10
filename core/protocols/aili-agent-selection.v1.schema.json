@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aili://protocols/aili-agent-selection/v1",
+  "title": "AILI agent selection v1",
+  "type": "object",
+  "required": ["protocol", "package", "selected_role", "dispatch", "decision_owner"],
+  "properties": {
+    "protocol": { "const": "aili-agent-selection/v1" },
+    "package": { "$ref": "package-envelope.schema.json" },
+    "selected_role": { "type": "string", "minLength": 1 },
+    "dispatch": { "type": "string", "enum": ["required", "waived", "forbidden"] },
+    "decision_owner": { "const": "ROSE" },
+    "effective_capabilities": { "type": "array", "items": { "type": "string" } },
+    "adapter_runtime_id": { "type": "string", "description": "Private adapter mapping only; never completion evidence." }
+  },
+  "additionalProperties": false
+}

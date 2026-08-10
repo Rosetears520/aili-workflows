@@ -2,6 +2,9 @@
 set -euo pipefail
 
 MODE="selective"
+PROFILE="default"
+SELECTED_SKILLS=()
+SELECTED_SKILL_GROUPS=()
 REPO_URL="https://github.com/Rosetears520/aili-workflows.git"
 AILI_HOME="${AILI_HOME:-$HOME/code/ai/aili-workflows}"
 OPENCODE_HOME="${OPENCODE_HOME:-$HOME/.config/opencode}"
@@ -9,6 +12,8 @@ DRY_RUN="false"
 NO_UPDATE="false"
 INSTALL_OPENCODE="false"
 SKIP_OFFICECLI="false"
+ENABLE_OFFICECLI="false"
+RECONCILE_RETIRED_SKILLS="false"
 OFFICECLI_STATUS=""
 OFFICECLI_PACKAGE_SPEC=""
 OFFICECLI_VERSION=""
@@ -17,7 +22,7 @@ OFFICECLI_SHIM=""
 OFFICECLI_REASON=""
 OFFICECLI_OBSERVED_VERSION=""
 OFFICECLI_EXIT_CODE=""
-RETIRED_SKILL_NAMES=("using-agent-skills" "repo-evidence-first" "verification-before-completion" "skill-authoring-and-validation" "i-have-adhd")
+RETIRED_SKILL_NAMES=()
 RETIRED_RECONCILIATION_NAMES=()
 RETIRED_RECONCILIATION_TARGETS=()
 RETIRED_RECONCILIATION_ACTIONS=()
@@ -25,9 +30,9 @@ RETIRED_RECONCILIATION_REASONS=()
 
 usage() {
   cat >&2 <<'EOF'
-Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--opencode] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update] [--skip-officecli]
+Usage: scripts/install_opencode.sh [--mode selective|symlink|copy|managed-directory|repair] [--profile default|pi|opencode] [--skill NAME] [--skill-group research|specialized-dev] [--aili-home PATH] [--opencode-home PATH] [--dry-run] [--no-update] [--enable-officecli|--skip-officecli] [--reconcile-retired-skills]
 
-Default scope installs only shared skills into $HOME/.agents/skills. Add --opencode to also install OpenCode integration files.
+The default profile installs Core shared Skills. The pi profile adds generated Pi prompts. The opencode profile adds generated OpenCode integration files.
 
 Modes:
   selective           Link shared skills; with --opencode, preserve OpenCode directories and link their managed entries.
@@ -37,10 +42,15 @@ Modes:
   repair             Restore agents/, legacy skills/, and commands/ if they were replaced by directory-level symlinks.
 
 Options:
-  --opencode          Also install global AGENTS.md, agents, commands, and OpenCode-only skills.
+  --profile NAME      Select default, pi, or opencode.
+  --opencode          Legacy alias for --profile opencode.
+  --skill NAME        Select one retained Skill; repeatable.
+  --skill-group NAME  Select research or specialized-dev; repeatable.
   --dry-run           Print planned actions without writing OpenCode files or mutating directories.
   --no-update         Skip git pull when AILI_HOME is an existing git repository.
-  --skip-officecli    Skip the default managed OfficeCLI detect-or-install step.
+  --enable-officecli  Run the separately approved managed OfficeCLI operation.
+  --skip-officecli    Do not plan or run OfficeCLI.
+  --reconcile-retired-skills  Reconcile only proven installer-owned retired entries.
 EOF
 }
 
@@ -62,6 +72,18 @@ while [ "$#" -gt 0 ]; do
       MODE="${2:-}"
       shift 2
       ;;
+    --profile)
+      PROFILE="${2:-}"
+      shift 2
+      ;;
+    --skill)
+      SELECTED_SKILLS+=("${2:-}")
+      shift 2
+      ;;
+    --skill-group)
+      SELECTED_SKILL_GROUPS+=("${2:-}")
+      shift 2
+      ;;
     --aili-home)
       AILI_HOME="${2:-}"
       shift 2
@@ -71,6 +93,11 @@ while [ "$#" -gt 0 ]; do
       shift 2
       ;;
     --opencode)
+      if [ "$PROFILE" != "default" ] && [ "$PROFILE" != "opencode" ]; then
+        log "--opencode cannot be combined with --profile $PROFILE"
+        exit 2
+      fi
+      PROFILE="opencode"
       INSTALL_OPENCODE="true"
       shift
       ;;
@@ -85,6 +112,14 @@ while [ "$#" -gt 0 ]; do
       ;;
     --skip-officecli)
       SKIP_OFFICECLI="true"
+      shift
+      ;;
+    --enable-officecli)
+      ENABLE_OFFICECLI="true"
+      shift
+      ;;
+    --reconcile-retired-skills)
+      RECONCILE_RETIRED_SKILLS="true"
       shift
       ;;
     -h|--help)
@@ -107,6 +142,23 @@ case "$MODE" in
     exit 2
     ;;
 esac
+
+case "$PROFILE" in
+  default|pi|opencode) ;;
+  *)
+    log "Unknown profile: $PROFILE"
+    exit 2
+    ;;
+esac
+
+if [ "$PROFILE" = "opencode" ]; then
+  INSTALL_OPENCODE="true"
+fi
+
+if [ "$SKIP_OFFICECLI" = "true" ] && [ "$ENABLE_OFFICECLI" = "true" ]; then
+  log "--enable-officecli cannot be combined with --skip-officecli"
+  exit 2
+fi
 
 if [ "$INSTALL_OPENCODE" != "true" ] && { [ "$MODE" = "managed-directory" ] || [ "$MODE" = "repair" ]; }; then
   log "Mode $MODE requires --opencode because it mutates OpenCode-owned directories."
@@ -255,7 +307,7 @@ copy_entry() {
 
 install_global_agents() {
   local action="$1"
-  local source="$AILI_HOME/templates/opencode-global-AGENTS.md"
+  local source="$AILI_HOME/generated/opencode/AGENTS.md"
   local target="$OPENCODE_HOME/AGENTS.md"
 
   if [ ! -f "$source" ]; then
@@ -268,6 +320,29 @@ install_global_agents() {
   fi
 
   "$action" "$source" "$target"
+}
+
+manifest_component_entries() {
+  local component_kind="$1"
+  python3 - "$AILI_HOME" "$component_kind" <<'PY'
+import json
+import pathlib
+import sys
+
+home = pathlib.Path(sys.argv[1])
+kind = sys.argv[2]
+manifest = json.loads((home / "manifests" / "rose-aili.components.json").read_text(encoding="utf-8"))
+for entry in manifest.get("components", {}).get(kind, []):
+    source = entry.get("sourcePath") or entry["path"]
+    targets = entry.get("installTargets") or [{"kind": "opencode", "path": entry["path"]}]
+    if len(targets) != 1 or targets[0].get("kind") != "opencode":
+        raise SystemExit(f"Invalid manifest {kind} install target for {entry.get('name')}")
+    print(f"{source}\t{targets[0]['path']}")
+PY
+}
+
+validate_skill_selection() {
+  manifest_skill_entries shared >/dev/null
 }
 
 shared_skill_install_root() {
@@ -321,6 +396,15 @@ reconcile_retired_skill_entries() {
     target="$skills_target_root/$name"
     expected_source="$(canonicalize_path "$AILI_HOME/.agents/skills/$name")"
 
+    if [ "$RECONCILE_RETIRED_SKILLS" != "true" ]; then
+      if [ -e "$target" ] || [ -L "$target" ]; then
+        record_retired_skill_reconciliation "$name" "$target" "preserved" "Retired-entry reconciliation requires the explicit --reconcile-retired-skills operation."
+      else
+        record_retired_skill_reconciliation "$name" "$target" "absent" "Retired skill destination is absent."
+      fi
+      continue
+    fi
+
     if [ -L "$target" ]; then
       if ! raw_target="$(readlink "$target")"; then
         reason="symlink target could not be read; ownership is ambiguous"
@@ -373,6 +457,24 @@ retired_skill_reconciliation_json() {
     separator=','
   done
   printf ']'
+}
+
+load_retired_skill_names() {
+  local names
+  if ! names="$(python3 - "$AILI_HOME/manifests/rose-aili.components.json" <<'PY'
+import json
+import pathlib
+import sys
+
+manifest = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+for entry in sorted(manifest["retiredSkills"], key=lambda value: value["name"]):
+    print(entry["name"])
+PY
+  )"; then
+    log "Unable to load retired Skill inventory from the component manifest."
+    exit 2
+  fi
+  mapfile -t RETIRED_SKILL_NAMES <<<"$names"
 }
 
 load_officecli_contract() {
@@ -513,6 +615,11 @@ run_officecli_install() {
     OFFICECLI_REASON="OfficeCLI explicitly skipped; no probe or install command ran."
     return 0
   fi
+  if [ "$ENABLE_OFFICECLI" != "true" ]; then
+    OFFICECLI_STATUS="planned"
+    OFFICECLI_REASON="OfficeCLI is default-selected but requires a separate exact install approval; no probe or install command ran."
+    return 0
+  fi
   if [ "$DRY_RUN" = "true" ]; then
     OFFICECLI_STATUS="planned"
     OFFICECLI_REASON="Would detect the managed exact version and install only if missing or drifted; dry-run performed no probe, directory creation, or command execution."
@@ -631,6 +738,58 @@ if manifest.get("name") != "rose-aili" or manifest.get("schemaVersion") != 1:
     fail(f"Unsupported component manifest: {manifest_path}")
 
 components = manifest.get("components", {})
+retired_entries = manifest.get("retiredSkills", [])
+expected_retired = {
+    "agents-md-initialization",
+    "evidence-scoped-retrospective",
+    "harness-optimization-audit",
+    "local-review-gate",
+    "rose-memory",
+    "session-handoff",
+}
+if not isinstance(retired_entries, list) or len(retired_entries) != len(expected_retired):
+    fail("Invalid deferred retired Skill inventory")
+retired_names = set()
+for entry in retired_entries:
+    if not isinstance(entry, dict):
+        fail("Invalid deferred retired Skill inventory")
+    name = entry.get("name")
+    if name not in expected_retired or name in retired_names or entry.get("path") != f".agents/skills/{name}":
+        fail("Invalid deferred retired Skill inventory")
+    validate_relative(f"retired Skill for {name}", entry["path"])
+    retired_names.add(name)
+if retired_names != expected_retired:
+    fail("Invalid deferred retired Skill inventory")
+
+skills = components.get("skills", [])
+optional = {
+    "academic-paper-review",
+    "systematic-literature-review",
+    "newsletter-generation",
+    "consulting-analysis",
+    "android-native-dev",
+    "ios-application-dev",
+    "flutter-dev",
+    "react-native-dev",
+    "shader-dev",
+}
+if len(skills) != 58 or sum(bool(entry.get("defaultInstalled")) for entry in skills) != 49:
+    fail("Component manifest must contain exactly 58 Skills with 49 default-installed Core Skills")
+if {entry.get("name") for entry in skills if not entry.get("defaultInstalled")} != optional:
+    fail("Component manifest Optional Skill inventory is invalid")
+expected_groups = {
+    "research": {"academic-paper-review", "systematic-literature-review", "newsletter-generation", "consulting-analysis"},
+    "specialized-dev": {"android-native-dev", "ios-application-dev", "flutter-dev", "react-native-dev", "shader-dev"},
+}
+for group, names in expected_groups.items():
+    if {entry.get("name") for entry in skills if group in (entry.get("groups") or [])} != names:
+        fail(f"Component manifest Skill group is invalid: {group}")
+
+expected_commands = {
+    "ideate", "define", "build", "ship", "local-review", "handoff", "agents-md", "harness-audit", "retro", "security-review",
+}
+if {entry.get("name") for entry in components.get("commands", [])} != expected_commands or len(components.get("commands", [])) != len(expected_commands):
+    fail("Component manifest command inventory is invalid")
 
 def validate_install_targets(kind, name, targets, expected_targets):
     if len(targets) != len(expected_targets):
@@ -699,7 +858,7 @@ def disk_skills(manifest_skill_names):
     names = []
     shared_root = home / ".agents" / "skills"
     if shared_root.is_dir():
-        names.extend(path.name for path in shared_root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file())
+        names.extend(path.name for path in shared_root.iterdir() if path.is_dir() and (path / "SKILL.md").is_file() and path.name not in retired_names)
     opencode_root = home / ".opencode" / "skills"
     if opencode_root.is_dir():
         names.extend(path.name for path in opencode_root.iterdir() if path.name in manifest_skill_names and path.is_dir() and (path / "SKILL.md").is_file())
@@ -729,7 +888,15 @@ PY
 
 manifest_skill_entries() {
   local target_kind="$1"
-  python3 - "$AILI_HOME" "$target_kind" <<'PY'
+  local selector
+  set --
+  for selector in "${SELECTED_SKILLS[@]}"; do
+    set -- "$@" --skill "$selector"
+  done
+  for selector in "${SELECTED_SKILL_GROUPS[@]}"; do
+    set -- "$@" --skill-group "$selector"
+  done
+  python3 - "$AILI_HOME" "$target_kind" "$@" <<'PY'
 import json
 import pathlib
 import sys
@@ -737,11 +904,34 @@ import sys
 home = pathlib.Path(sys.argv[1])
 target_kind = sys.argv[2]
 manifest = json.loads((home / "manifests" / "rose-aili.components.json").read_text(encoding="utf-8"))
-for entry in manifest.get("components", {}).get("skills", []):
+skills = manifest.get("components", {}).get("skills", [])
+by_name = {entry["name"]: entry for entry in skills}
+selected = {entry["name"] for entry in skills if entry.get("defaultInstalled")}
+index = 3
+while index < len(sys.argv):
+    flag = sys.argv[index]
+    if index + 1 >= len(sys.argv):
+        raise SystemExit(f"Missing value for {flag}")
+    value = sys.argv[index + 1]
+    index += 2
+    if flag == "--skill":
+        if value not in by_name:
+            raise SystemExit(f"Unknown skill: {value}")
+        selected.add(value)
+    elif flag == "--skill-group":
+        if value not in {"research", "specialized-dev"}:
+            raise SystemExit(f"Unknown skill group: {value}")
+        selected.update(entry["name"] for entry in skills if value in entry.get("groups", []))
+    else:
+        raise SystemExit(f"Unknown selector: {flag}")
+
+for entry in skills:
+    if entry["name"] not in selected:
+        continue
     targets = entry.get("installTargets") or []
     if len(targets) != 1 or targets[0].get("kind") != target_kind:
         continue
-    print(f"{entry['path']}\t{targets[0]['path']}")
+    print(f"{entry.get('sourcePath') or entry['path']}\t{targets[0]['path']}")
 PY
 }
 
@@ -750,6 +940,8 @@ install_entries() {
   local skills_target_root
   skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
+  load_retired_skill_names
+  validate_skill_selection
   if [ "$DRY_RUN" = "true" ]; then
     log "DRY RUN: would ensure shared skills directory exists: $skills_target_root"
   else
@@ -758,13 +950,18 @@ install_entries() {
 
   reconcile_retired_skill_entries "$skills_target_root"
 
-  local source_path target_path source target file name
+  local source_path target_path source target
   while IFS=$'\t' read -r source_path target_path; do
     [ -n "$source_path" ] || continue
     source="$AILI_HOME/$source_path"
     target="$HOME/$target_path"
     "$action" "$source" "$target"
   done < <(manifest_skill_entries shared)
+
+  if [ "$PROFILE" = "pi" ]; then
+    install_pi_prompts "$action"
+    return
+  fi
 
   if [ "$INSTALL_OPENCODE" != "true" ]; then
     return
@@ -783,12 +980,10 @@ install_entries() {
 
   install_global_agents "$action"
 
-  for file in "$AILI_HOME"/agents/*.md; do
-    [ -f "$file" ] || continue
-    name="$(basename "$file")"
-    target="$OPENCODE_HOME/agents/$name"
-    "$action" "$file" "$target"
-  done
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    "$action" "$AILI_HOME/$source_path" "$OPENCODE_HOME/$target_path"
+  done < <(manifest_component_entries agents)
 
   while IFS=$'\t' read -r source_path target_path; do
     [ -n "$source_path" ] || continue
@@ -797,11 +992,30 @@ install_entries() {
     "$action" "$source" "$target"
   done < <(manifest_skill_entries opencode)
 
-  for file in "$AILI_HOME"/commands/*.md; do
-    [ -f "$file" ] || continue
-    name="$(basename "$file")"
-    target="$OPENCODE_HOME/commands/$name"
-    "$action" "$file" "$target"
+  while IFS=$'\t' read -r source_path target_path; do
+    [ -n "$source_path" ] || continue
+    "$action" "$AILI_HOME/$source_path" "$OPENCODE_HOME/$target_path"
+  done < <(manifest_component_entries commands)
+}
+
+install_pi_prompts() {
+  local action="$1"
+  local source_root="$AILI_HOME/generated/pi/prompts"
+  local target_root="$HOME/.pi/agent/prompts"
+  local source name
+  if [ ! -d "$source_root" ]; then
+    log "Missing generated Pi prompt source: $source_root"
+    exit 2
+  fi
+  if [ "$DRY_RUN" = "true" ]; then
+    log "DRY RUN: would ensure Pi prompt directory exists: $target_root"
+  else
+    mkdir -p "$target_root"
+  fi
+  for source in "$source_root"/*.md; do
+    [ -f "$source" ] || continue
+    name="$(basename "$source")"
+    "$action" "$source" "$target_root/$name"
   done
 }
 
@@ -809,6 +1023,8 @@ managed_directory() {
   local skills_target_root
   skills_target_root="$(shared_skill_install_root)"
   validate_manifest_allowlist
+  load_retired_skill_names
+  validate_skill_selection
 
   if [ "${CONFIRM_MANAGED_DIRECTORY:-}" != "yes" ]; then
     log "Refusing managed directory mode without explicit confirmation."
@@ -948,9 +1164,10 @@ esac
 OFFICECLI_RESULT=0
 run_officecli_install || OFFICECLI_RESULT=$?
 
-printf '{"mode":%s,"scope":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
+printf '{"mode":%s,"profile":%s,"scope":%s,"runtime":%s,"aili_home":%s,"opencode_home":%s,"dry_run":%s,"no_update":%s,"retired_skill_reconciliation":' \
   "$(json_escape "$MODE")" \
-  "$(json_escape "$([ "$INSTALL_OPENCODE" = "true" ] && printf opencode || printf skills)")" \
+  "$(json_escape "$PROFILE")" \
+  "$(json_escape "$([ "$PROFILE" = "opencode" ] && printf opencode || { [ "$PROFILE" = "pi" ] && printf pi || printf skills; })")" \
   "$(json_escape "$RUNTIME")" \
   "$(json_escape "$AILI_HOME")" \
   "$(json_escape "$OPENCODE_HOME")" \

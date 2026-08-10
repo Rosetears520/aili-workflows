@@ -31,8 +31,7 @@ const ECC_SELECTED_SKILLS = [
   "comment-accuracy-review",
   "oss-release-readiness",
   "build-failure-repair",
-  "code-review-quality-gates",
-  "harness-optimization-audit"
+  "code-review-quality-gates"
 ];
 
 test("dry-run install reports operations without mutating OpenCode home", async () => {
@@ -62,9 +61,76 @@ test("install defaults to shared skills without reading or mutating OpenCode hom
   assert.deepEqual(summary.config.skipped, ["OpenCode integration not enabled; installed shared skills only"]);
   assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
   assert.equal(summary.optionalDecisions.some((entry) => entry.name === "Graphify"), false);
-  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await stat(path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md"));
   await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
   await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("profiles and repeatable Skill selectors resolve the accepted additive inventory before mutation", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+
+  const defaultResult = await runCli(["install", "--dry-run", "--profile", "default", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  const defaultSummary = JSON.parse(defaultResult.stdout);
+  assert.equal(defaultSummary.profile, "default");
+  assert.equal(defaultSummary.selectedSkills.length, 49);
+  assert.equal(defaultSummary.componentInstall.scope, "skills");
+  assert.equal(defaultSummary.externalToolOperations.find((entry) => entry.name === "MemPalace").status, "planned");
+
+  const piResult = await runCli(["install", "--dry-run", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  const piSummary = JSON.parse(piResult.stdout);
+  assert.equal(piSummary.profile, "pi");
+  assert.equal(piSummary.componentInstall.scope, "pi");
+  assert.equal(piSummary.selectedSkills.length, 49);
+
+  const selectedResult = await runCli(["install", "--dry-run", "--skill", "shader-dev", "--skill", "shader-dev", "--skill-group", "research", "--skill-group", "research", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  const selectedSummary = JSON.parse(selectedResult.stdout);
+  assert.equal(selectedSummary.selectedSkills.length, 54);
+  assert.ok(selectedSummary.selectedSkills.includes("shader-dev"));
+  assert.equal(selectedSummary.selectedSkills.filter((name) => name === "shader-dev").length, 1);
+  assert.equal(selectedSummary.selectedSkills.includes("android-native-dev"), false);
+
+  for (const args of [["--profile", "unknown"], ["--skill", "unknown-skill"], ["--skill-group", "unknown-group"]]) {
+    const result = await runCli(["install", "--dry-run", ...args, "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"], { reject: false });
+    assert.equal(result.code, 1, args.join(" "));
+    assert.match(result.stderr, /Unknown (profile|skill|skill group)/);
+  }
+  await assert.rejects(stat(opencodeHome));
+  await fixture.cleanup();
+});
+
+test("pi doctor requires generated prompts but not OpenCode assets", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"], { env: stubs.env });
+
+  const result = await runCli(["doctor", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: await safeCommandCwd(fixture), env: stubs.env });
+  const summary = JSON.parse(result.stdout);
+  assert.equal(summary.profile, "pi");
+  assert.equal(summary.ok, true);
+  assert.ok(summary.required.some((entry) => entry.type === "pi-prompt" && entry.name === "ideate.md" && entry.installed));
+  assert.equal(summary.required.some((entry) => entry.type === "agent"), false);
+  assert.equal(summary.defaultAgent, null);
+  await fixture.cleanup();
+});
+
+test("doctor reports generated projection drift without mutating or invalidating installed Core Skills", async () => {
+  const fixture = await fixtureAiliHome();
+  const stubs = await writeGraphifyStubs(fixture);
+  const opencodeHome = path.join(fixture.root, "opencode");
+  await runCli(["install", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"], { env: stubs.env });
+  await writeFile(path.join(fixture.ailiHome, "generated", "pi", "prompts", "ideate.md"), "tampered projection\n", "utf8");
+
+  const result = await runCli(["doctor", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: await safeCommandCwd(fixture), env: stubs.env });
+  const summary = JSON.parse(result.stdout);
+
+  assert.equal(summary.ok, true);
+  assert.equal(summary.install.ok, true);
+  assert.equal(summary.source.generated.status, "drift");
+  assert.ok(summary.source.generated.paths.includes("generated/opencode/commands/local-review.md"));
+  assert.match(summary.source.generated.issues.join("\n"), /Generated output drift: generated\/pi\/prompts\/ideate\.md/);
   await fixture.cleanup();
 });
 
@@ -134,7 +200,7 @@ test("OfficeCLI default install and update use one exact local-prefix npm comman
       { name: "officecli", args: ["--version"] }
     ]);
     assert.ok(logged.every((entry) => entry.skipUpdate === "1"));
-    await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+    await stat(path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md"));
     await fixture.cleanup();
   }
 });
@@ -181,11 +247,11 @@ test("OfficeCLI postinstall verification failure is nonzero while completed Skil
   assert.equal(summary.officecli.exitCode, 0);
   assert.match(summary.officecli.reason, /postinstall verification was drift/);
   assert.match(summary.officecli.recovery, /npm install --prefix .* --no-save --no-package-lock @officecli\/officecli@1\.0\.143/);
-  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
+  await stat(path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md"));
   await fixture.cleanup();
 });
 
-test("doctor read-only OfficeCLI readiness affects ok for current, missing, and drift states", async () => {
+test("doctor reports OfficeCLI readiness without making it a Core requirement", async () => {
   for (const state of ["current", "missing", "drift"]) {
     const fixture = await fixtureAiliHome();
     const opencodeHome = path.join(fixture.root, "opencode");
@@ -197,11 +263,11 @@ test("doctor read-only OfficeCLI readiness affects ok for current, missing, and 
     const summary = JSON.parse(result.stdout);
     const expectedStatus = state === "current" ? "ready" : state;
 
-    assert.equal(result.code, state === "current" ? 0 : 1);
-    assert.equal(summary.ok, state === "current");
+    assert.equal(result.code, 0);
+    assert.equal(summary.ok, true);
     assert.equal(summary.officecli.status, expectedStatus);
     assert.equal(summary.officecli.expectedVersion, "1.0.143");
-    assert.equal(summary.required.find((entry) => entry.type === "tool" && entry.name === "officecli").installed, state === "current");
+    assert.equal(summary.required.some((entry) => entry.type === "tool" && entry.name === "officecli"), false);
     assert.match(summary.officecli.recovery, /@officecli\/officecli@1\.0\.143/);
     if (state === "missing") await assert.rejects(readFile(logPath, "utf8"));
     else {
@@ -275,7 +341,7 @@ test("direct Bash OfficeCLI lane matches default, dry-run, skip, and failure ret
   assert.equal(failedSummary.officecli.status, "failed");
   assert.equal(failedSummary.officecli.exitCode, 9);
   assert.match(failedSummary.officecli.reason, /fake npm failed/);
-  assert.equal((await lstat(path.join(sharedSkillsHome(failedFixture), "rose-memory"))).isSymbolicLink(), true);
+  assert.equal((await lstat(path.join(sharedSkillsHome(failedFixture), "aili-delivery-flow"))).isSymbolicLink(), true);
   await failedFixture.cleanup();
 });
 
@@ -674,15 +740,15 @@ test("install copies global AGENTS rules into OpenCode home", async () => {
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, ...SKIP_DEFAULT_ADDONS, "--json"]);
   const target = path.join(opencodeHome, "AGENTS.md");
   const text = await readFile(target, "utf8");
-  const source = await readFile(path.join(fixture.ailiHome, "templates", "opencode-global-AGENTS.md"), "utf8");
+  const source = await readFile(path.join(fixture.ailiHome, "generated", "opencode", "AGENTS.md"), "utf8");
 
   assert.equal((await lstat(target)).isSymbolicLink(), false);
   assert.equal(text, source);
   assert.match(text, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates\/opencode-global-AGENTS\.md/);
-  assert.match(text, /Project facts, repository commands, local test locations/);
-  assert.match(text, /Do not symlink this global file into project roots/);
-  assert.match(text, /codegraph init -i/);
-  assert.match(text, /refuse batch or multi-repository initialization even under broad approval, and do not run `openspec init`/);
+  assert.match(text, /canonical backend-neutral governance source/);
+  assert.match(text, /ROSE is the Decision Core/);
+  assert.match(text, /only Delivery Commands and lifecycle selectors/);
+  assert.match(text, /smallest fresh check that supports the exact claim/);
   await fixture.cleanup();
 });
 
@@ -1362,7 +1428,7 @@ test("doctor reports required components and optional project CodeGraph separate
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", "--model", "anthropic/claude-sonnet-4-5", ...SKIP_DEFAULT_ADDONS, "--json"]);
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
     cwd: projectDir,
     env: { ...process.env, PATH: `${binDir}${path.delimiter}${process.env.PATH}` }
   });
@@ -1384,9 +1450,9 @@ test("doctor reports required components and optional project CodeGraph separate
   assert.equal(summary.source.agentsMd.status, "missing");
   assert.ok(summary.required.some((entry) => entry.type === "global" && entry.name === "AGENTS.md" && entry.installed));
   assert.ok(summary.required.some((entry) => entry.type === "agent" && entry.name === "rose" && entry.installed));
-  assert.ok(summary.required.some((entry) => entry.type === "skill" && entry.name === "rose-memory" && entry.installed));
-  await stat(path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md"));
-  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory", "SKILL.md")));
+  assert.ok(summary.required.some((entry) => entry.type === "skill" && entry.name === "aili-delivery-flow" && entry.installed));
+  await stat(path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md"));
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "aili-delivery-flow", "SKILL.md")));
   await assert.rejects(readFile(logPath, "utf8"));
   await fixture.cleanup();
 });
@@ -1404,7 +1470,7 @@ test("doctor reports upstream Graphify CLI and global agents skill separately wi
   await writeFile(path.join(stubs.targetPath, "references", "usage.md"), "# Usage\n", "utf8");
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], {
     cwd: await safeCommandCwd(fixture),
     env: stubs.env
   });
@@ -1427,12 +1493,12 @@ test("doctor reports repo source drift without failing core OpenCode install", a
   const opencodeHome = path.join(fixture.root, "opencode");
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
   await writeFile(path.join(fixture.ailiHome, "agents", "unmanifested-agent.md"), "# extra\n", "utf8");
-  await rm(path.join(fixture.ailiHome, ".agents", "skills", "rose-memory", "SKILL.md"));
+  await rm(path.join(fixture.ailiHome, ".agents", "skills", "aili-delivery-flow", "SKILL.md"));
   const templateAgents = await readFile(path.join(fixture.ailiHome, "templates", "AGENTS.md"), "utf8");
   await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents.replace(/AILI_AGENTS_TEMPLATE_VERSION:\s*\d+/, "AILI_AGENTS_TEMPLATE_VERSION: 0"), "utf8");
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
   const summary = JSON.parse(result.stdout);
 
   assert.equal(result.code, 0);
@@ -1440,7 +1506,7 @@ test("doctor reports repo source drift without failing core OpenCode install", a
   assert.equal(summary.install.ok, true);
   assert.equal(summary.source.ok, false);
   assert.deepEqual(summary.source.manifestDrift.agents.unmanifested, ["unmanifested-agent"]);
-  assert.ok(summary.source.manifestDrift.skills.missing.includes("rose-memory"));
+  assert.ok(summary.source.manifestDrift.skills.missing.includes("aili-delivery-flow"));
   assert.equal(summary.source.agentsMd.status, "stale");
   assert.match(summary.source.agentsMd.issues.join("\n"), /template version mismatch/);
   await fixture.cleanup();
@@ -1453,13 +1519,13 @@ test("doctor reports missing shared skill source separately from installed OpenC
   await rm(path.join(fixture.ailiHome, ".agents", "skills"), { recursive: true, force: true });
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
   const summary = JSON.parse(result.stdout);
 
   assert.equal(result.code, 0);
   assert.equal(summary.ok, true);
   assert.equal(summary.source.sharedSkills.status, "missing");
-  assert.ok(summary.source.manifestDrift.skills.missing.includes("rose-memory"));
+  assert.ok(summary.source.manifestDrift.skills.missing.includes("aili-delivery-flow"));
   await fixture.cleanup();
 });
 
@@ -1475,7 +1541,7 @@ test("doctor reports configured CodeGraph when OpenCode config has CodeGraph MCP
   await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
   const summary = JSON.parse(result.stdout);
 
   assert.equal(summary.codegraph.opencodeMcp, "configured");
@@ -1491,7 +1557,7 @@ test("doctor reports initialized project CodeGraph index when .codegraph exists"
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
   await writeManagedOfficeCli(fixture);
 
-  const result = await runCli(["doctor", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
+  const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { cwd: projectDir });
   const summary = JSON.parse(result.stdout);
 
   assert.equal(summary.codegraph.projectIndex.status, "initialized");
@@ -1507,16 +1573,16 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await runCli(["install", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--yes", ...SKIP_DEFAULT_ADDONS, "--json"]);
 
   const roseTarget = path.join(opencodeHome, "agents", "rose.md");
-  const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory", "SKILL.md");
+  const skillTarget = path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md");
   const globalAgentsTarget = path.join(opencodeHome, "AGENTS.md");
   assert.equal((await lstat(roseTarget)).isSymbolicLink(), false);
   assert.equal((await lstat(path.dirname(skillTarget))).isSymbolicLink(), false);
   assert.equal((await lstat(globalAgentsTarget)).isSymbolicLink(), false);
-  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "aili-delivery-flow")));
 
   await rm(fixture.ailiHome, { recursive: true, force: true });
   assert.match(await readFile(roseTarget, "utf8"), /# ROSE\n[\s\S]*## Role\n[\s\S]*## Goal\n[\s\S]*## Success criteria/);
-  assert.match(await readFile(skillTarget, "utf8"), /rose-memory/);
+  assert.match(await readFile(skillTarget, "utf8"), /aili-delivery-flow/);
   assert.match(await readFile(globalAgentsTarget, "utf8"), /installer-owned-global-file/);
   await fixture.cleanup();
 });
@@ -1537,65 +1603,42 @@ test("skills-only Bash install links shared skills and preserves OpenCode-owned 
     "--no-update"
   ], { env: installerEnv(fixture.root) });
 
-  const skillTarget = path.join(sharedSkillsHome(fixture), "rose-memory");
+  const skillTarget = path.join(sharedSkillsHome(fixture), "aili-delivery-flow");
   assert.equal((await lstat(skillsParent)).isDirectory(), true);
   assert.equal(await readFile(preserved, "utf8"), "keep\n");
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
-  assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "rose-memory"));
+  assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "aili-delivery-flow"));
   await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
-  await assert.rejects(stat(path.join(opencodeHome, "skills", "rose-memory")));
+  await assert.rejects(stat(path.join(opencodeHome, "skills", "aili-delivery-flow")));
   await assert.rejects(stat(path.join(opencodeHome, "AGENTS.md")));
   await assert.rejects(stat(path.join(opencodeHome, "agents")));
   await assert.rejects(stat(path.join(opencodeHome, "commands")));
   await fixture.cleanup();
 });
 
-test("OpenCode-only skills use .opencode sources and install only with --opencode", async () => {
+test("pi profile installs generated prompts without OpenCode assets", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
-  const source = path.join(fixture.ailiHome, ".opencode", "skills", "opencode-only");
-  await mkdir(source, { recursive: true });
-  await writeFile(path.join(source, "SKILL.md"), "---\nname: opencode-only\n---\n", "utf8");
-  const manifestPath = path.join(fixture.ailiHome, "manifests", "rose-aili.components.json");
-  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  manifest.components.skills.push({
-    name: "opencode-only",
-    path: ".opencode/skills/opencode-only",
-    installTargets: [{ kind: "opencode", path: "skills/opencode-only" }],
-    required: true,
-    defaultInstalled: false,
-    repositoryManaged: true
-  });
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-
   await execFileP("bash", [
     path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
     "--mode", "selective",
+    "--profile", "pi",
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
-    "--no-update"
+    "--no-update",
+    "--skip-officecli"
   ], { env: installerEnv(fixture.root) });
-  await assert.rejects(stat(path.join(opencodeHome, "skills", "opencode-only")));
-
-  await execFileP("bash", [
-    path.join(fixture.ailiHome, "scripts", "install_opencode.sh"),
-    "--mode", "selective",
-    "--opencode",
-    "--aili-home", fixture.ailiHome,
-    "--opencode-home", opencodeHome,
-    "--no-update"
-  ], { env: installerEnv(fixture.root) });
-  const target = path.join(opencodeHome, "skills", "opencode-only");
-  assert.equal((await lstat(target)).isSymbolicLink(), true);
-  assert.equal(await readlink(target), source);
+  await stat(path.join(fixture.root, ".pi", "agent", "prompts", "ideate.md"));
+  await assert.rejects(stat(path.join(opencodeHome, "agents")));
+  await assert.rejects(stat(path.join(opencodeHome, "commands")));
   await fixture.cleanup();
 });
 
-test("write-skills rename retires a proven managed old symlink and installs the new canonical target", async () => {
+test("retirement reconciliation unlinks only a proven managed retired symlink", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
   const sharedRoot = sharedSkillsHome(fixture);
-  const oldName = "skill-authoring-and-validation";
+  const oldName = "rose-memory";
   const oldTarget = path.join(sharedRoot, oldName);
   const oldSource = path.join(fixture.ailiHome, ".agents", "skills", oldName);
   const newTarget = path.join(sharedRoot, "write-skills");
@@ -1609,7 +1652,8 @@ test("write-skills rename retires a proven managed old symlink and installs the 
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
     "--dry-run",
-    "--no-update"
+    "--no-update",
+    "--reconcile-retired-skills"
   ], { env: installerEnv(fixture.root) });
   const drySummary = JSON.parse(dryRun.stdout.trim().split(/\r?\n/).at(-1));
   const dryOld = drySummary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
@@ -1621,7 +1665,8 @@ test("write-skills rename retires a proven managed old symlink and installs the 
     "--mode", "selective",
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
-    "--no-update"
+    "--no-update",
+    "--reconcile-retired-skills"
   ], { env: installerEnv(fixture.root) });
   const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
   const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
@@ -1632,11 +1677,11 @@ test("write-skills rename retires a proven managed old symlink and installs the 
   await fixture.cleanup();
 });
 
-test("write-skills rename preserves ambiguous old installed content", async () => {
+test("retirement reconciliation preserves ambiguous old installed content", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
   const sharedRoot = sharedSkillsHome(fixture);
-  const oldName = "skill-authoring-and-validation";
+  const oldName = "rose-memory";
   const oldTarget = path.join(sharedRoot, oldName);
   const marker = path.join(oldTarget, "user-note.txt");
   await mkdir(oldTarget, { recursive: true });
@@ -1647,7 +1692,8 @@ test("write-skills rename preserves ambiguous old installed content", async () =
     "--mode", "selective",
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
-    "--no-update"
+    "--no-update",
+    "--reconcile-retired-skills"
   ], { env: installerEnv(fixture.root) });
   const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
   const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === oldName);
@@ -1658,12 +1704,12 @@ test("write-skills rename preserves ambiguous old installed content", async () =
   await fixture.cleanup();
 });
 
-test("i-have-adhd retirement unlinks only the proven managed symlink", async () => {
+test("session-handoff retirement unlinks only the proven managed symlink", async () => {
   const fixture = await fixtureAiliHome();
   const opencodeHome = path.join(fixture.root, "opencode");
   const sharedRoot = sharedSkillsHome(fixture);
-  const retiredTarget = path.join(sharedRoot, "i-have-adhd");
-  const retiredSource = path.join(fixture.ailiHome, ".agents", "skills", "i-have-adhd");
+  const retiredTarget = path.join(sharedRoot, "session-handoff");
+  const retiredSource = path.join(fixture.ailiHome, ".agents", "skills", "session-handoff");
   await mkdir(sharedRoot, { recursive: true });
   await symlink(retiredSource, retiredTarget);
 
@@ -1672,10 +1718,11 @@ test("i-have-adhd retirement unlinks only the proven managed symlink", async () 
     "--mode", "selective",
     "--aili-home", fixture.ailiHome,
     "--opencode-home", opencodeHome,
-    "--no-update"
+    "--no-update",
+    "--reconcile-retired-skills"
   ], { env: installerEnv(fixture.root) });
   const summary = JSON.parse(installed.stdout.trim().split(/\r?\n/).at(-1));
-  const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === "i-have-adhd");
+  const retired = summary.retired_skill_reconciliation.find((entry) => entry.name === "session-handoff");
   assert.equal(retired.action, "unlinked");
   await assert.rejects(lstat(retiredTarget));
   await fixture.cleanup();
@@ -1693,7 +1740,7 @@ test("selective Bash dry-run reports .agents skill source without mutating OpenC
     "--dry-run"
   ], { env: installerEnv(fixture.root) });
 
-  assert.match(result.stderr, new RegExp(`DRY RUN: would link entry: ${escapeRegExp(path.join(sharedSkillsHome(fixture), "rose-memory"))} -> .*\/\.agents\/skills\/rose-memory`));
+  assert.match(result.stderr, new RegExp(`DRY RUN: would link entry: ${escapeRegExp(path.join(sharedSkillsHome(fixture), "aili-delivery-flow"))} -> .*\/\.agents\/skills\/aili-delivery-flow`));
   await assert.rejects(stat(opencodeHome));
   await assert.rejects(stat(sharedSkillsHome(fixture)));
   await fixture.cleanup();
@@ -1730,7 +1777,7 @@ test("direct Bash install rejects missing manifest components before mutation", 
   const opencodeHome = path.join(fixture.root, "opencode");
   await rm(path.join(fixture.ailiHome, "agents", "rose.md"));
   await rm(path.join(fixture.ailiHome, "commands", "build.md"));
-  await rm(path.join(fixture.ailiHome, ".agents", "skills", "rose-memory", "SKILL.md"));
+  await rm(path.join(fixture.ailiHome, ".agents", "skills", "aili-delivery-flow", "SKILL.md"));
 
   try {
     await execFileP("bash", [
@@ -1744,7 +1791,7 @@ test("direct Bash install rejects missing manifest components before mutation", 
   } catch (error) {
     assert.match(error.stderr, /Manifest agents component\(s\) missing from AILI_HOME: rose/);
     assert.match(error.stderr, /Manifest commands component\(s\) missing from AILI_HOME: build/);
-    assert.match(error.stderr, /Manifest skills component\(s\) missing from AILI_HOME: rose-memory/);
+    assert.match(error.stderr, /Manifest skills component\(s\) missing from AILI_HOME: aili-delivery-flow/);
   }
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
@@ -1877,17 +1924,22 @@ test("unmanifested repo components abort install before mutation", async () => {
   await fixture.cleanup();
 });
 
-test("manifest skills declare canonical shared source and shared install target", async () => {
+test("manifest declares the exact Core and Optional Skill tiers", async () => {
   const manifest = await loadManifest(repoRoot);
-  const skill = manifest.components.skills.find((entry) => entry.name === "rose-memory");
-  assert.ok(skill, "expected rose-memory skill manifest entry");
+  const skill = manifest.components.skills.find((entry) => entry.name === "aili-delivery-flow");
+  assert.ok(skill, "expected aili-delivery-flow skill manifest entry");
 
-  assert.equal(skill.path, ".agents/skills/rose-memory");
-  assert.deepEqual(repoSourcePaths(skill), [".agents/skills/rose-memory"]);
-  assert.deepEqual(repoInstallTargets(skill), [
-    { kind: "shared", path: ".agents/skills/rose-memory" }
+  assert.equal(manifest.components.skills.length, 58);
+  assert.equal(manifest.components.skills.filter((entry) => entry.defaultInstalled).length, 49);
+  assert.deepEqual(manifest.components.commands.map((entry) => entry.name).sort(), [
+    "agents-md", "build", "define", "handoff", "harness-audit", "ideate", "local-review", "retro", "security-review", "ship"
   ]);
-  await stat(path.join(repoRoot, ".agents", "skills", "rose-memory", "SKILL.md"));
+  assert.equal(skill.path, ".agents/skills/aili-delivery-flow");
+  assert.deepEqual(repoSourcePaths(skill), [".agents/skills/aili-delivery-flow"]);
+  assert.deepEqual(repoInstallTargets(skill), [
+    { kind: "shared", path: ".agents/skills/aili-delivery-flow" }
+  ]);
+  await stat(path.join(repoRoot, ".agents", "skills", "aili-delivery-flow", "SKILL.md"));
 });
 
 test("manifest registers local-review command", async () => {
@@ -1898,9 +1950,9 @@ test("manifest registers local-review command", async () => {
   assert.ok(commandNames.has("local-review"), "expected manifest command local-review");
   assert.equal(command.path, "commands/local-review.md");
   assert.equal(command.defaultInstalled, false);
-  assert.deepEqual(repoSourcePaths(command), ["commands/local-review.md"]);
+  assert.deepEqual(repoSourcePaths(command), ["generated/opencode/commands/local-review.md", "commands/local-review.md"]);
   assert.deepEqual(repoInstallTargets(command), [{ kind: "opencode", path: "commands/local-review.md" }]);
-  assert.match(await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8"), /OpenCode's built-in `\/review`/);
+  assert.match(await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8"), /GENERATED: aili-runtime-projections/);
 });
 
 test("manifest registers specialized QA agents and skills", async () => {
@@ -1913,7 +1965,7 @@ test("manifest registers specialized QA agents and skills", async () => {
   for (const { agent: name } of SPECIALIZED_QA_LANES) {
     assert.ok(agentNames.has(name), `expected manifest agent ${name}`);
     const agentText = await readFile(path.join(repoRoot, "agents", `${name}.md`), "utf8");
-    assert.ok(roseText.includes(`"${name}": allow`));
+    assert.match(roseText, /# ROSE/);
     assert.match(agentText, /## Role\n[\s\S]*## Goal\n[\s\S]*## Success criteria/);
     assert.ok(agentText.includes("external_directory: deny"));
     assert.ok(agentText.includes("task: deny"));
@@ -1951,7 +2003,7 @@ test("manifest registers ECC-derived selected agents and skills", async () => {
     assert.equal(agent.path, `agents/${name}.md`);
     assert.equal(agent.defaultInstalled, false);
     await stat(path.join(repoRoot, "agents", `${name}.md`));
-    assert.ok(roseText.includes(`"${name}": allow`));
+    assert.match(roseText, /# ROSE/);
   }
 
   assert.ok(reviewPipelineText.includes("Choose at most one auxiliary specialist capability"));
@@ -2004,8 +2056,7 @@ test("ECC-derived components preserve safety boundaries and exclusions", async (
     ["comment-accuracy-review", "General review, large documentation authoring, style-only writing, or implementation"],
     ["oss-release-readiness", "Actual publishing, tagging, release creation, deletion, history rewrite"],
     ["build-failure-repair", "Dependency upgrades, lockfile regeneration, toolchain migration, or CI redesign"],
-    ["code-review-quality-gates", "It does not create a reviewer persona"],
-    ["harness-optimization-audit", "Do not edit core harness controls from this skill"]
+    ["code-review-quality-gates", "It does not create a reviewer persona"]
   ]);
 
   for (const [name, marker] of expectedSkillBoundaries) {
@@ -2179,7 +2230,7 @@ test("packed package keeps CLI bin executable", async () => {
   assert.ok(packedEntries.includes("package/commands/build.md"));
   assert.ok(packedEntries.includes("package/commands/local-review.md"));
   assert.ok(packedEntries.includes("package/THIRD_PARTY_NOTICES.md"));
-  assert.ok(packedEntries.includes("package/.agents/skills/rose-memory/SKILL.md"));
+  assert.ok(packedEntries.includes("package/.agents/skills/aili-delivery-flow/SKILL.md"));
   assert.equal(packedEntries.some((entry) => entry.includes("i-have-adhd")), false);
   const manifest = await loadManifest(repoRoot);
   for (const agent of manifest.components.agents) {
@@ -2213,7 +2264,10 @@ test("package bin symlink invokes CLI main", async () => {
 test("help documents supported options and omits removed plugin flags", async () => {
   for (const argv of [["help"], ["--help"], ["install", "--help"], ["update", "--help"], ["doctor", "--help"]]) {
     const result = await runCli(argv);
-    assert.match(result.stdout, /--opencode \(also install OpenCode/);
+    assert.match(result.stdout, /--profile <default\|pi\|opencode>/);
+    assert.match(result.stdout, /--opencode \(legacy alias/);
+    assert.match(result.stdout, /--skill <skill-name>/);
+    assert.match(result.stdout, /--skill-group <research\|specialized-dev>/);
     assert.match(result.stdout, /--skip-opencode-config/);
     assert.match(result.stdout, /--enable-openspec \| --skip-openspec/);
     assert.match(result.stdout, /--enable-graphify \| --skip-graphify/);
@@ -2229,7 +2283,7 @@ async function fixtureAiliHome() {
   const safeRoot = path.join(repoRoot, ".opencode", "test-fixtures", path.basename(root));
   const ailiHome = path.join(root, "aili-home");
   await mkdir(ailiHome, { recursive: true });
-  for (const entry of ["agents", ".agents", "commands", "manifests", "scripts", "templates"]) {
+  for (const entry of ["adapters", "agents", ".agents", "commands", "core", "generated", "manifests", "scripts", "templates"]) {
     await cp(path.join(repoRoot, entry), path.join(ailiHome, entry), { recursive: true });
   }
   return {
@@ -2277,12 +2331,14 @@ function execFileP(file, args, options = {}) {
 }
 
 function testSafeOfficeCliArgs(args, allowOfficeCli) {
+  if (allowOfficeCli && !args.includes("--enable-officecli") && !args.includes("--skip-officecli") && ["install", "update"].includes(args[0])) return [...args, "--enable-officecli"];
   if (allowOfficeCli || args.includes("--skip-officecli") || !["install", "update"].includes(args[0])) return args;
   return [...args, "--skip-officecli"];
 }
 
 function testSafeBashInstallerArgs(file, args, allowOfficeCli) {
   const invokesInstaller = path.basename(file) === "bash" && args[0]?.endsWith("/scripts/install_opencode.sh");
+  if (allowOfficeCli && invokesInstaller && !args.includes("--enable-officecli") && !args.includes("--skip-officecli")) return [...args, "--enable-officecli"];
   if (allowOfficeCli || !invokesInstaller || args.includes("--skip-officecli")) return args;
   return [...args, "--skip-officecli"];
 }

@@ -16,20 +16,14 @@ class OutputSurfaceContractTests(unittest.TestCase):
         contract = read("templates/opencode-global-AGENTS.md")
 
         required = (
-            "`conversation`",
-            "`agent-internal`",
-            "`human-artifact`",
-            "Do not tag every sentence or bullet",
-            "Simple answers may use no labels",
-            "Source code,\nconfiguration, schemas, manifests, lockfiles, machine-readable JSON/YAML",
-            "When a\nnatural-language destination is ambiguous, treat it as `human-artifact`",
-            "`claim_status: observed | inferred | unverified`",
-            "`source_kind: user-message | repository | command | external`",
-            "`decision_status: proposed | conditional | accepted | rejected`",
-            "`authorization_status: absent | granted | expired | revoked`",
-            "`verification_status: not-run | partial | passed | failed | stale`",
-            "final test-plan acceptance does not itself start BUILD",
-            "a passing command or test does not establish user acceptance",
+            "## Evidence-driven claim hygiene",
+            "Conversation may use localized `KNOWN`, `COMPUTED`, `INFERRED`, `UNVERIFIED`, and `OPEN QUESTION` labels",
+            "Do not mark every sentence.",
+            "Agent-internal packets keep `claim_status`, `source_kind`, `source_ref`, `decision_status`, `authorization_status`, `verification_status`, and confidence distinct.",
+            "Human-facing artifacts use ordinary prose rather than opaque runtime metadata.",
+            "Acceptance of a specification or test plan is not BUILD authorization.",
+            "A command result is not acceptance.",
+            "an accepted test plan is not BUILD authorization; passing a command is not user acceptance",
         )
         for marker in required:
             with self.subTest(marker=marker):
@@ -37,8 +31,9 @@ class OutputSurfaceContractTests(unittest.TestCase):
 
         forbidden = (
             "TAG every claim",
-            "For sourced claims in documents, reports, handoffs, and formal artifacts",
-            "User-facing conclusions, recommendations, readiness/completion",
+            "`verification_status: not-run | partial | passed | failed | stale`",
+            "final test-plan acceptance does not itself start BUILD",
+            "a passing command or test does not establish user acceptance",
         )
         for marker in forbidden:
             with self.subTest(marker=marker):
@@ -55,8 +50,6 @@ class OutputSurfaceContractTests(unittest.TestCase):
         )
 
         stress = read(".agents/skills/strategy-stress-test/SKILL.md")
-        retrospective = read(".agents/skills/evidence-scoped-retrospective/SKILL.md")
-        local_review = read(".agents/skills/local-review-gate/SKILL.md")
         local_review_command = read("commands/local-review.md")
         human_report_skills = (
             ".agents/skills/academic-paper-review/SKILL.md",
@@ -67,9 +60,8 @@ class OutputSurfaceContractTests(unittest.TestCase):
 
         self.assertNotIn("tag every claim in stress-test conclusions", stress)
         self.assertIn("Persisted human-facing reports use ordinary prose", stress)
-        self.assertIn("Persisted human-facing reports state evidence limits", retrospective)
-        self.assertNotIn("CONFIDENCE:", local_review)
-        self.assertNotIn("confidence are recorded", local_review)
+        self.assertNotIn("CONFIDENCE:", local_review_command)
+        self.assertNotIn("confidence are recorded", local_review_command)
         self.assertIn("evidence limits recorded", local_review_command)
         for relative in human_report_skills:
             with self.subTest(relative=relative):
@@ -80,11 +72,11 @@ class OutputSurfaceContractTests(unittest.TestCase):
     def test_contract_keeps_acceptance_and_authorization_independent(self) -> None:
         contract = read("templates/opencode-global-AGENTS.md")
         self.assertIn(
-            "decision acceptance does not grant implementation or operation authorization",
+            "Acceptance of a specification or test plan is not BUILD authorization.",
             contract,
         )
         self.assertIn(
-            "Agent judgment that a condition is met does not replace required user confirmation",
+            "an Agent judgment does not replace required user confirmation",
             contract,
         )
 
@@ -93,33 +85,20 @@ class OutputSurfaceContractTests(unittest.TestCase):
         normalized_contract = " ".join(contract.split())
 
         required = (
-            "### Communication and State Anchoring",
-            "The reader has ADHD. Output is not just brief. It is shaped so an ADHD brain can act on it.",
-            "Working memory is small. Anything not on screen is forgotten",
-            "Knowing the answer is not doing the answer",
-            "Starting is the hardest step",
-            "Time estimates feel uniform",
-            "Dopamine is scarce. Visible progress matters",
-            "Lead with the answer, result, decision, blocker, path, command, or next required action",
-            "If the answer is a command, path, or snippet, it goes first",
-            "If the work takes more than one step, write a numbered list",
-            "If anything is left open, name one concrete next action",
-            "The checklist does the restating; do not also narrate the full plan as prose",
-            "Make completed work visible",
+            "## Communication and state anchoring",
+            "Lead with the answer, decision, blocker, path, command, or next action.",
+            "For multi-step work, use the smallest numbered sequence with one bounded action per item.",
+            "End an incomplete result with one concrete next action.",
+            "Use estimates only when requested and defensible.",
+            "Make errors matter-of-fact",
+            "keep the first action obvious",
             "failure, cause, fix, and verification",
-            "Forbidden openers include \"Great question,\"",
-            "Forbidden closers include \"Let me know if you need anything else,\"",
-            "Do not invent duration estimates",
-            "Do not cap lists at an arbitrary number",
-            "If the last three attempts have been \"still broken,\" stop iterating on code",
-            "If a rule fights the task, the task wins and the shape stays",
-            "If a rule fights the harness, the system and harness constraints win and the shape stays",
-            "Delete the first sentence if it only announces what you are about to do",
-            "Remove hedging that adds no information, but keep uncertainty that changes the claim",
-            "Choose the simplest implementation that fully meets the current requirements",
-            "Grow the system in layers",
-            "Do not assume a library lacks a capability without checking its documentation and types",
-            "Do not read source files and regex implementation text",
+            "### 3. Simplicity First",
+            "Use the simplest viable design.",
+            "### 4. Task-Scoped Changes",
+            "Touch only lines traceable to the active request",
+            "### 5. Goal-Driven Verification",
+            "Prefer observable behavior, contract, type, schema, and public-output checks",
         )
         for marker in required:
             with self.subTest(marker=marker):
@@ -127,20 +106,12 @@ class OutputSurfaceContractTests(unittest.TestCase):
 
         forbidden = (
             "disable-model-invocation",
-            "These rules apply to every response for the rest of the session",
-            "Turn them off only when",
-            "stop adhd mode",
-            "Give specific time estimates",
-            "Cap lists at 5 items",
-            "@quartz/plugins/transformers",
-            "dev.ts",
-            "window.addCleanup",
-            "Cloudflare Secrets",
-            "Use `pnpm`, `oxlint`, `oxfmt`, and `tsgo`",
-            "Do not write comments",
+            "### Communication and State Anchoring",
+            "The reader has ADHD. Output is not just brief.",
+            "Forbidden openers include \"Great question,\"",
             "Ship minimal production code that fixes the owning boundary",
             "Do not run bundle or build",
-            "Skip shims and backward compatibility unless aarnphm asks",
+            "Skip shims and backward compatibility unless",
         )
         for marker in forbidden:
             with self.subTest(marker=marker):

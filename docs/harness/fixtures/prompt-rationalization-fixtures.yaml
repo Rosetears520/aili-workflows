@@ -21,7 +21,7 @@
     {"id": "compact-packet-result", "families": ["rose", "research", "review-security", "test", "implementer", "browser-e2e-specialist"], "expected": "packet contains goal, scope, allowed actions, expected result, and stop condition; result contains status, evidence, blockers, and confidence"},
     {"id": "no-automatic-review-test-security-fanout", "families": ["rose", "review-security", "test"], "expected": "no automatic swarm or nested delegation"},
     {"id": "minimum-claim-matched-verification", "families": ["rose", "test", "implementer", "browser-e2e-specialist"], "expected": "smallest check supporting the exact claim; no automatic verifier, full suite, or repair loop"},
-    {"id": "memory-owner-boundary", "families": ["rose"], "expected": "memory detail stays in rose-memory and is not duplicated in commands or ROSE"},
+    {"id": "memory-owner-boundary", "families": ["rose"], "expected": "memory detail stays in the MemPalace provider contract and is not duplicated in commands or ROSE"},
     {"id": "product-automation-formal-gated", "families": ["rose", "implementer"], "expected": "explicit product/repository automation remains eligible through normal formal and high-risk gates"},
     {"id": "hidden-aili-automation-block", "families": ["rose"], "expected": "hidden or unrequested AILI self-automation blocks with zero mutation and no LP substitution"},
     {"id": "dynamic-convergence-current-contract", "families": ["rose", "review-security"], "expected": "generic queues and audits derive from the active contract and current task rows"},
@@ -64,7 +64,7 @@
   },
   "prompt_owner_map": {
     "claim_tags_and_confidence": "global AGENTS",
-    "memory": ".agents/skills/rose-memory/SKILL.md",
+    "memory": "core/governance/mempalace.md",
     "lifecycle_classifier_automation_convergence": ".agents/skills/aili-delivery-flow/references/",
     "delegation": [".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md", ".agents/skills/aili-delivery-flow/references/protocols/"],
     "compact_routers_only": ["agents/rose.md", "commands/ideate.md", "commands/define.md", "commands/build.md", "commands/ship.md"]

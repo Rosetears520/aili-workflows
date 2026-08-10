@@ -29,7 +29,7 @@ REQUIRED_FILES = [
     ".agents/skills/aili-delivery-flow/SKILL.md",
     ".agents/skills/parallel-subagent-dispatch/SKILL.md",
     ".agents/skills/review-pipeline/SKILL.md",
-    ".agents/skills/session-handoff/SKILL.md",
+    "core/commands/handoff.md",
     ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md",
     ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
     ".agents/skills/aili-delivery-flow/references/implementation-packages.md",
@@ -71,10 +71,16 @@ P6_AGENT_FILES = [
     "agents/web-performance-auditor.md",
     "agents/web-researcher.md",
 ]
+CANONICAL_AGENT_FILES = [
+    *P6_AGENT_FILES[:15],
+    "agents/solution-architect.md",
+    *P6_AGENT_FILES[15:],
+]
 
 ROSE_TASK_RULES = [
     ("*", "deny"), ("code-scout", "allow"), ("convergence-reviewer", "allow"),
     ("doc-researcher", "allow"), ("web-researcher", "allow"), ("plan-auditor", "allow"),
+    ("solution-architect", "allow"),
     ("implementer", "allow"), ("code-reviewer", "allow"),
     ("test-coverage-reviewer", "allow"), ("pr-test-analyzer", "allow"),
     ("ai-regression-scout", "allow"), ("silent-failure-reviewer", "allow"),
@@ -84,14 +90,14 @@ ROSE_TASK_RULES = [
 ]
 
 CONTENT_CHECKS = {
-    "agents/rose.md": ["# ROSE", "proactive delegation scan", "Default concurrency is at most two", "not a hard cap", "suitable owners", "explicit join plan", "first-class lifecycle entries", "do not ask the user to restate", "Every Task context is fresh, single-use, and terminal", "Never pass or resume an old `task_id`", "new requirements, or scope changes", "omits every prior `task_id`", "smallest claim-matched", "aili-delivery-flow"],
-    "agents/implementer.md": ["## Role", "single-use OpenCode subagent", "terminal result or failure", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
+    "agents/rose.md": ["# ROSE", "proactive delegation scan", "Default concurrency is at most two", "not a hard cap", "suitable owners", "explicit join plan", "first-class lifecycle entries", "do not ask the user to restate", "persistent adapter may continue only unchanged same-package work", "Automatic retry is never inferred", "smallest fresh check that supports the exact claim", "aili-delivery-flow"],
+    "agents/implementer.md": ["## Role", "bounded, single-use implementation Worker", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
     "templates/opencode-global-AGENTS.md": ["proactive delegation scan", "not a hard cap", "suitable owners", "first-class lifecycle entries", "do not ask the user to restate"],
     ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "Formal work uses the separate `aili-task-board/v1` lane", "exact canonical owner", "`general` cannot own a formal package", "not a hard cap", "explicit join plan"],
     ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Run this proactive delegation scan", "dispatch before duplicating", "references/agent-selection-matrix.md", "assignment shape", "ready formal Agent-owned package", "not a hard cap", "explicit join plan", "same Task message", "current OpenCode Task adapter", "old `task_id` is never resumed", "Do not automatically retry", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
     ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md": ["Protocol: `aili-agent-selection/v1`", "Role namespace: `canonical`", "Selector mapping: `adapter-owned`", "Phase affinity is advisory", "`general` is not a canonical specialist role"],
-    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["## Ordinary lane", "## Formal lane", "requires dispatch to that exact role", "valid waiver recorded before work", "One current intent has at most one auxiliary capability", "not a hard cap", "launch them together", "Do not automatically add review"],
+    ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["## Ordinary lane", "Specialist-preferred dispatch", "clear bounded non-trivial package", "## Formal lane", "requires dispatch to that exact role", "valid waiver recorded before work", "One current intent has at most one auxiliary capability", "not a hard cap", "launch them together", "Do not automatically add review"],
     ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["Protocol: `aili-task-board/v1`", "Package kind: `evidence | task-execution`", "exactly one current task-execution package", "waiver is recorded before execution", "stable join ID", "returned → done", "Workers return package-bound evidence"],
     ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["Every accepted task ID belongs to exactly one current task-execution package", "exact canonical owner", "One-shot and persistent adapters", "do not write the Board or `progress.txt`"],
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Package ID:", "Role ID:", "Assignment:", "Scope:", "Forbidden scope:", "Allowed actions:", "Expected result:", "Expected evidence:", "Execution: sync | async", "Join:", "Continuation: same-package | new-package", "Stop when:", "current OpenCode Task adapter", "persistent Agent identity"],
@@ -117,7 +123,7 @@ DISPATCH_FORBIDDEN_LOCAL_SCHEMA = [
     "\nSTATUS:", "\nEVIDENCE:", "\nBLOCKERS:",
 ]
 CANONICAL_AGENT_ROLES = [
-    "code-scout", "doc-researcher", "web-researcher", "spec-miner", "plan-auditor",
+    "code-scout", "doc-researcher", "web-researcher", "spec-miner", "plan-auditor", "solution-architect",
     "implementer", "test-engineer", "test-coverage-reviewer", "pr-test-analyzer",
     "code-reviewer", "security-auditor", "silent-failure-reviewer", "convergence-reviewer",
     "browser-qa-runner", "e2e-artifact-runner", "web-performance-auditor",
@@ -284,14 +290,16 @@ def nested_permission_rules(fm: str, key: str) -> list[tuple[str, str]]:
 def p6_permission_failures() -> list[str]:
     failures: list[str] = []
     current = {path.relative_to(ROOT).as_posix() for path in (ROOT / "agents").glob("*.md")}
-    expected = set(P6_AGENT_FILES)
-    if len(P6_AGENT_FILES) != 20 or len(expected) != 20:
-        failures.append("LEAN AGENT INVENTORY: expected exactly 20 unique Agent files")
+    expected = set(CANONICAL_AGENT_FILES)
+    if len(P6_AGENT_FILES) != 20 or len(set(P6_AGENT_FILES)) != 20:
+        failures.append("A33 LEAN AGENT BASELINE: expected exactly 20 unique original Agent files")
+    if len(CANONICAL_AGENT_FILES) != 21 or len(expected) != 21:
+        failures.append("CANONICAL AGENT INVENTORY: expected exactly 21 unique Agent files")
     if current != expected:
         failures.append(f"LEAN AGENT INVENTORY MISMATCH: missing={sorted(expected-current)!r} extra={sorted(current-expected)!r}")
 
     headings = ["## Role", "## Goal", "## Success criteria", "## Constraints", "## Tools", "## Output", "## Stop"]
-    for relative_path in P6_AGENT_FILES:
+    for relative_path in CANONICAL_AGENT_FILES:
         path = ROOT / relative_path
         if not path.is_file():
             continue
@@ -577,19 +585,20 @@ def managed_agent_sources(project: Path) -> tuple[Path, list[dict[str, Any]]]:
         raise ValueError("managed manifest path mismatch")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     entries = manifest.get("components", {}).get("agents") if isinstance(manifest, dict) else None
-    fields = ["name", "path", "required", "defaultInstalled", "repositoryManaged"]
-    if not isinstance(manifest, dict) or manifest.get("name") != "rose-aili" or manifest.get("schemaVersion") != 1 or not isinstance(entries, list) or len(entries) != 20:
+    fields = ["name", "path", "sourcePath", "projection", "required", "defaultInstalled", "repositoryManaged"]
+    if not isinstance(manifest, dict) or manifest.get("name") != "rose-aili" or manifest.get("schemaVersion") != 1 or not isinstance(entries, list) or len(entries) != 21:
         raise ValueError("managed manifest malformed")
     by_path: dict[str, dict[str, Any]] = {}
     for entry in entries:
         if not exact_keys(entry, fields) or not isinstance(entry["name"], str) or entry["path"] != f'agents/{entry["name"]}.md' \
+                or entry["sourcePath"] != f'generated/opencode/agents/{entry["name"]}.md' or entry["projection"] != "generated-compatibility" \
                 or entry["required"] is not True or entry["defaultInstalled"] is not False or entry["repositoryManaged"] is not True or entry["path"] in by_path:
             raise ValueError("managed manifest malformed")
         by_path[entry["path"]] = entry
-    if set(by_path) != set(P6_AGENT_FILES) or len(by_path) != len(P6_AGENT_FILES):
+    if set(by_path) != set(CANONICAL_AGENT_FILES) or len(by_path) != len(CANONICAL_AGENT_FILES):
         raise ValueError("managed manifest inventory mismatch")
     agents: list[dict[str, Any]] = []
-    for relative in P6_AGENT_FILES:
+    for relative in CANONICAL_AGENT_FILES:
         entry = by_path[relative]
         canonical_path = project / entry["path"]
         if canonical_path.resolve(strict=True) != canonical_path or canonical_path.is_symlink() or not canonical_path.is_file():
@@ -675,10 +684,10 @@ def observe_managed_profile(state: dict[str, Any], summary: Any) -> dict[str, An
         "environment_controls": {"OPENCODE_ALLOW_CUSTOM_HOME": "yes", "AILI_ALLOW_CROSS_ENV": "yes"},
         "environment_provenance": {"HOME": str(run_root / "home"), "XDG_CONFIG_HOME": str(run_root / "home" / ".config"), "XDG_DATA_HOME": str(run_root / "home" / ".local" / "share"), "XDG_CACHE_HOME": str(run_root / "home" / ".cache"), "TMPDIR": str(run_root / "tmp")},
         "manifest_agent_paths": [entry["path"] for entry in json.loads(manifest_path.read_text(encoding="utf-8"))["components"]["agents"]],
-        "canonical_agent_paths": list(P6_AGENT_FILES), "aili_home": str(project), "opencode_home": str(opencode_home),
+        "canonical_agent_paths": list(CANONICAL_AGENT_FILES), "aili_home": str(project), "opencode_home": str(opencode_home),
         "canonical_agent_names": expected_names, "installed_agent_names": installed_names, "agents": agents,
         "no_additional_override_layer": True, "isolated_config_entries": config_entries,
-        "managed_subagents_restricted": len([agent for agent in agents if agent["name"] != "rose"]) == 19,
+        "managed_subagents_restricted": len([agent for agent in agents if agent["name"] != "rose"]) == 20,
         "rose_distinction": next(agent for agent in agents if agent["name"] == "rose"), "builtins_inferred": False, "uv006_resolved": False,
     }
 
@@ -1851,8 +1860,8 @@ def static_source_failures(project: Path) -> list[str]:
     try:
         manifest = json.loads((project / "manifests/rose-aili.components.json").read_text(encoding="utf-8"))
         manifest_agents = {entry["path"] for entry in manifest["components"]["agents"]}
-        if manifest_agents != set(P6_AGENT_FILES) or len(manifest_agents) != 20:
-            failures.append("manifest Agent inventory is not exact ROSE+19")
+        if manifest_agents != set(CANONICAL_AGENT_FILES) or len(manifest_agents) != 21:
+            failures.append("manifest Agent inventory is not exact ROSE+20")
     except (OSError, KeyError, TypeError, json.JSONDecodeError):
         failures.append("manifest Agent inventory unavailable")
     return failures
@@ -1883,7 +1892,7 @@ def formal_delegation_failures(project: Path) -> list[str]:
         failures.append("FORMAL ROLE MATRIX: runtime selector or URI leaked into shared matrix")
 
     lane_requirements = [
-        "## Ordinary lane", "trigger-and-benefit scan", "## Formal lane",
+        "## Ordinary lane", "Specialist-preferred dispatch", "## Formal lane",
         "requires dispatch to that exact role", "valid waiver recorded before work",
     ]
     failures.extend(
@@ -1921,6 +1930,41 @@ def formal_delegation_failures(project: Path) -> list[str]:
             failures.append(f"FORMAL NON-NESTING: {label} lacks automatic-retry prohibition")
     if "Every non-ROSE subagent remains non-delegating" not in packet:
         failures.append("FORMAL NON-NESTING: packet lacks non-delegating worker boundary")
+    core_protocols = project / "core" / "protocols"
+    try:
+        base = json.loads((core_protocols / "package-envelope.schema.json").read_text(encoding="utf-8"))
+        selection = json.loads((core_protocols / "aili-agent-selection.v1.schema.json").read_text(encoding="utf-8"))
+        board_schema = json.loads((core_protocols / "aili-task-board.v1.schema.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        failures.append(f"CORE PROTOCOLS: unavailable: {exc}")
+    else:
+        if base.get("$id") != "aili://protocols/package-envelope/v1" or "source_refs" in base.get("properties", {}):
+            failures.append("CORE PROTOCOLS: shared base identity or formal-only source boundary drifted")
+        if selection.get("$id") != "aili://protocols/aili-agent-selection/v1" or selection.get("properties", {}).get("package", {}).get("$ref") != "package-envelope.schema.json":
+            failures.append("CORE PROTOCOLS: selection v1 must retain the shared base reference")
+        formal_fields = {"accepted_task_ids", "board_identity", "depends_on", "join", "lifecycle_gate", "source_refs"}
+        if board_schema.get("$id") != "aili://protocols/aili-task-board/v1" or not formal_fields.issubset(board_schema.get("properties", {})):
+            failures.append("CORE PROTOCOLS: Board v1 formal extension drifted")
+    try:
+        role_document = json.loads((project / "core" / "roles" / "roles.json").read_text(encoding="utf-8"))
+        solution = next(role for role in role_document.get("roles", []) if role.get("id") == "solution-architect")
+        adapter = json.loads((project / "adapters" / "opencode" / "adapter.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, StopIteration, AttributeError) as exc:
+        failures.append(f"SOLUTION ARCHITECT: canonical role or adapter envelope unavailable: {exc}")
+    else:
+        required_solution_terms = [
+            "Repository-grounded", "options", "trade-offs", "boundaries", "interfaces", "data flow", "call flow",
+            "dependencies", "migration", "rollout", "observability", "security", "testability", "candidate implementation packages", "unclear items",
+        ]
+        solution_text = " ".join(str(solution.get(field, "")) for field in ("description", "goal", "successCriteria", "constraints", "output"))
+        if solution.get("mode") != "research" or any(term not in solution_text for term in required_solution_terms):
+            failures.append("SOLUTION ARCHITECT: required repository-grounded proposal coverage is incomplete")
+        forbidden_solution_terms = ["Never implement", "delegate", "accept an architecture", "make product decisions", "approve ADRs", "issue a final verdict"]
+        if any(term not in solution_text for term in forbidden_solution_terms):
+            failures.append("SOLUTION ARCHITECT: non-implementation/non-delegation/non-verdict boundary is incomplete")
+        primary_task = adapter.get("roleProfiles", {}).get("primary", {}).get("permission", {}).get("task", {})
+        if adapter.get("roles", {}).get("solution-architect") != "readonly" or primary_task.get("solution-architect") != "allow":
+            failures.append("SOLUTION ARCHITECT: OpenCode permission envelope must be readonly and explicitly loadable by ROSE")
     return failures
 
 
@@ -2424,7 +2468,7 @@ def main() -> int:
         return 1
 
     print("PASS delegation protocol checks")
-    print(f"Checked {len(required_files)} protocol files and {len(P6_AGENT_FILES)} lean Agent profiles")
+    print(f"Checked {len(required_files)} protocol files and {len(CANONICAL_AGENT_FILES)} canonical Agent profiles")
     return 0
 
 

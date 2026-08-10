@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "name": "mempalace",
+  "package": "mempalace",
+  "version": "3.6.0",
+  "packageSpec": "mempalace==3.6.0",
+  "python": ">=3.9",
+  "install": {
+    "command": "uv",
+    "args": ["tool", "install", "mempalace==3.6.0"],
+    "effects": [
+      "network package retrieval",
+      "uv-managed user-level tool state"
+    ]
+  },
+  "compatibility": {
+    "policy": "exact-version",
+    "mismatch": "report-only-no-silent-replacement",
+    "upgrade": "requires-manifest-change-refreshed-official-evidence-and-compatibility-tests"
+  },
+  "capabilityDetection": {
+    "version": ["--version"],
+    "mcp": ["mcp", "--help"],
+    "toolCount": "runtime-detected"
+  },
+  "canonicalPalace": {
+    "defaultRelativePath": ".mempalace/aili-palace",
+    "overrideEnvironment": "AILI_MEMPALACE_PALACE_PATH"
+  },
+  "operations": [
+    "install",
+    "initialize",
+    "mcp-configure",
+    "model-download",
+    "mining",
+    "hooks",
+    "read",
+    "write",
+    "coordination-write",
+    "logstream-write",
+    "delete"
+  ]
+}

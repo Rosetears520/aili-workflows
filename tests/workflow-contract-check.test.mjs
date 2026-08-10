@@ -47,7 +47,7 @@ function runWorkflowFinalClosure(root, taskAudit, fixture = workflowFixture) {
 
 async function writePassingTaskAudit(root, relative = "task-audit.json") {
   const scaffold = runWorkflow(root, "scaffold");
-  assert.equal(scaffold.status, 0, scaffold.stderr || scaffold.stdout);
+  assert.equal(scaffold.status, 0, scaffold.payload?.errors?.join("\n") || scaffold.stderr || scaffold.stdout);
   const audit = {
     schema_version: "1.0",
     owner: "ROSE",
@@ -171,7 +171,7 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
 
   await t.test("emits stable JSON and exit contracts for all three profiles", () => {
     const scaffold = runWorkflow(root, "scaffold");
-    assert.equal(scaffold.status, 0, scaffold.stderr || scaffold.stdout);
+    assert.equal(scaffold.status, 0, scaffold.payload?.errors?.join("\n") || scaffold.stderr || scaffold.stdout);
     assert.equal(scaffold.payload.status, "pass");
     assert.equal(scaffold.payload.traceability.requirements, 77);
     assert.equal(scaffold.payload.traceability.authoritative_sources, 27);
@@ -182,8 +182,8 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => row.disposition === "ROSE-owned: unresolved"));
     assert.equal(scaffold.payload.formal_agent_orchestration.protocols.selection, "aili-agent-selection/v1");
     assert.equal(scaffold.payload.formal_agent_orchestration.protocols.board, "aili-task-board/v1");
-    assert.equal(scaffold.payload.formal_agent_orchestration.canonical_roles.length, 19);
-    assert.equal(scaffold.payload.formal_agent_orchestration.cases.length, 21);
+    assert.equal(scaffold.payload.formal_agent_orchestration.canonical_roles.length, 20);
+    assert.equal(scaffold.payload.formal_agent_orchestration.cases.length, 26);
 
     const generated = runWorkflow(root, "generated-adapter-boundary", generatedFixture);
     assert.equal(generated.status, 0, generated.stderr || generated.stdout);
@@ -296,6 +296,65 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     const result = runWorkflow(root, "scaffold");
     assert.equal(result.status, 5);
     assert.match(result.payload.errors.join("\n"), /canonical cross-root inventory/);
+  });
+
+  await t.test("keeps active aggregate ownership and upstream evidence on current sources", async () => {
+    const fixture = await loadJson(root, workflowFixture);
+    const byRequirement = new Map(
+      fixture.aggregate_traceability.requirements.map((row) => [row.id, row])
+    );
+    const dcpSources = fixture.sources.find((row) => row.id === "dcp-docs-manifest-tests");
+    const p3 = fixture.package_file_ownership.find((row) => row.package === "P3");
+    const p10 = fixture.package_file_ownership.find((row) => row.package === "P10");
+    const serializationOrder = ["P2", "P5", "P3", "P4", "P6", "P7", "P8", "P9", "P10", "P11"];
+    const derivedOverlaps = {};
+    for (const packageId of serializationOrder) {
+      const owned = fixture.package_file_ownership.find((row) => row.package === packageId);
+      for (const ownedPath of owned.files) {
+        (derivedOverlaps[ownedPath] ??= []).push(packageId);
+      }
+    }
+    for (const [ownedPath, owners] of Object.entries(derivedOverlaps)) {
+      if (owners.length < 2) delete derivedOverlaps[ownedPath];
+    }
+    const declaredOverlaps = Object.fromEntries(
+      fixture.serial_overlaps.map((row) => [row.path, row.packages])
+    );
+
+    assert.deepEqual(dcpSources.paths, [
+      "README.md",
+      "docs/opencode-setup.md",
+      "templates/opencode-global-AGENTS.md",
+      "manifests/rose-aili.components.json",
+      "tests/rose-aili.test.mjs",
+      "agents/rose.md",
+    ]);
+    assert.ok(p3.files.includes("core/governance/mempalace.md"));
+    assert.ok(p10.files.includes("core/commands/agents-md.md"));
+    assert.equal(
+      fixture.serial_overlaps.some((row) => row.path === "core/commands/handoff.md"),
+      false
+    );
+    assert.deepEqual(declaredOverlaps, derivedOverlaps);
+    assert.equal(byRequirement.get("CG-002").first_owner, "P10");
+    assert.equal(byRequirement.get("HAND-001").first_owner, "P3");
+    assert.deepEqual(byRequirement.get("MEM-001").owned_surfaces, ["core/governance/mempalace.md"]);
+    assert.deepEqual(byRequirement.get("MEM-005").owned_surfaces, ["core/governance/mempalace.md"]);
+    assert.deepEqual(byRequirement.get("SKILL-001").tests, {
+      positive: ["writing-positive"],
+      negative: ["writing-negative"],
+      recovery: ["writing-near"],
+    });
+    assert.deepEqual(byRequirement.get("SKILL-002").tests, {
+      positive: ["idea-positive"],
+      negative: ["idea-negative"],
+      recovery: ["idea-near"],
+    });
+    assert.deepEqual(byRequirement.get("SKILL-004").tests, {
+      positive: ["spec-positive"],
+      negative: ["spec-negative"],
+      recovery: ["spec-near"],
+    });
   });
 
   await t.test("accepts only the exact inspection-only source path, state, and reason", async () => {
@@ -599,7 +658,7 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     ["continuity-memory-handoff-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => row.id !== "handoff-trigger"); }],
     ["dcp-removal-fixtures.yaml", (data) => { data.owner_package = "P5"; }],
     ["review-convergence-fixtures.yaml", (data) => { data.task_ids = data.task_ids.slice(1); }],
-    ["upstream-reference-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => !(row.mapping === "matt-handoff" && row.kind === "negative")); }],
+    ["upstream-reference-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => !(row.mapping === "matt-writing-great-skills" && row.kind === "negative")); }],
     ["graphify-local-review-fixtures.yaml", (data) => { data.cases = data.cases.filter((row) => row.category !== "architecture-routing"); }],
     ["generated-openspec-adapter-fixtures.yaml", (data) => { data.package_2_cases = data.package_2_cases.filter((row) => row.id !== "automation-modify-reject"); }],
   ];

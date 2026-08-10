@@ -2,6 +2,10 @@
 
 This repository's global Agent contract contains selected, modified excerpts from the following projects. The executable behavior remains centralized in `templates/opencode-global-AGENTS.md`; this file records attribution and license terms only.
 
+## Solution-architect contract
+
+The `solution-architect` role contract in `core/roles/roles.json` is original AILI prose derived from the accepted local design for `aili-runtime-profiles-memory-agent-redesign`. It contains no copied or materially adapted text from GitHub Docs or the architecture-agent repositories considered during DEFINE, so no additional third-party notice is required. No BMAD terminology, personas, branding, or endorsement claims are used.
+
 ## aarnphm/aarnphm.github.io
 
 - Source: `AGENTS.md`

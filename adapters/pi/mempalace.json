@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "adapter": "pi",
+  "provider": "mempalace",
+  "mcp": {
+    "supported": false,
+    "reason": "The separately owned Pi runtime has no current MemPalace MCP configuration evidence.",
+    "toolCount": "runtime-detected"
+  }
+}

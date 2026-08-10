@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "adapter": "opencode",
+  "provider": "mempalace",
+  "mcp": {
+    "supported": true,
+    "serverName": "mempalace",
+    "command": ["mempalace", "mcp"],
+    "configuration": "planning-only",
+    "capabilityDetection": "mempalace mcp --help",
+    "toolCount": "runtime-detected"
+  }
+}

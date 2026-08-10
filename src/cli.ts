@@ -25,12 +25,12 @@ async function main(argv: string[]): Promise<void> {
     printHelp();
     return;
   }
-  if (((command === "install" || command === "update") && options.opencode) || command === "doctor") {
+  if (((command === "install" || command === "update" || command === "doctor") && selectedProfile(options) === "opencode")) {
     validateOpenCodeHome(options.opencodeHome);
   }
   if (command === "install" || command === "update") {
-    if (options.opencode && options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
-    const includeOpenCode = Boolean(options.opencode);
+    if (selectedProfile(options) === "opencode" && options.projectRoot) options.projectRoot = validateExactProjectRoot(options.projectRoot);
+    const includeOpenCode = selectedProfile(options) === "opencode";
     await applyInteractivePrompts(options, command === "install"
       ? { includeCoreConfig: includeOpenCode, includePlaywright: includeOpenCode, includeCodegraph: includeOpenCode, includeGraphify: includeOpenCode, includeOpenspec: includeOpenCode }
       : { includeCoreConfig: false, includePlaywright: false, includeCodegraph: includeOpenCode, includeGraphify: includeOpenCode, includeOpenspec: false });
@@ -39,13 +39,19 @@ async function main(argv: string[]): Promise<void> {
     }
     const summary = await runInstall(command, options);
     print(summary, options.json);
-    if (summary.officecli.status === "failed" || (options.enableOpenspec && !options.skipOpenspec && summary.openspec.status === "failed")) {
+    if (summary.officecli.status === "failed" || summary.mempalace.status === "failed" || (options.enableOpenspec && !options.skipOpenspec && summary.openspec.status === "failed")) {
       process.exitCode = 1;
     }
     return;
   }
   if (command === "doctor") {
-    const summary = await runDoctor({ opencodeHome: options.opencodeHome, ailiHome: options.ailiHome });
+    const summary = await runDoctor({
+      opencodeHome: options.opencodeHome,
+      ailiHome: options.ailiHome,
+      profile: selectedProfile(options),
+      skills: options.skills,
+      skillGroups: options.skillGroups
+    });
     print(summary, options.json);
     if (!summary.ok) process.exitCode = 1;
     return;
@@ -133,6 +139,15 @@ function parseOptions(argv: string[]): CliOptions {
       case "--opencode":
         options.opencode = true;
         break;
+      case "--profile":
+        options.profile = requireValue(argv, ++index, arg) as InstallOptions["profile"];
+        break;
+      case "--skill":
+        (options.skills ??= []).push(requireValue(argv, ++index, arg));
+        break;
+      case "--skill-group":
+        (options.skillGroups ??= []).push(requireValue(argv, ++index, arg));
+        break;
       case "--aili-home":
         options.ailiHome = requireValue(argv, ++index, arg);
         break;
@@ -184,6 +199,18 @@ function parseOptions(argv: string[]): CliOptions {
       case "--skip-officecli":
         options.skipOfficecli = true;
         break;
+      case "--enable-officecli":
+        options.enableOfficecli = true;
+        break;
+      case "--skip-mempalace":
+        options.skipMempalace = true;
+        break;
+      case "--enable-mempalace":
+        options.enableMempalace = true;
+        break;
+      case "--reconcile-retired-skills":
+        options.reconcileRetiredSkills = true;
+        break;
       case "--project-root":
         options.projectRoot = requireValue(argv, ++index, arg);
         break;
@@ -202,6 +229,12 @@ function parseOptions(argv: string[]): CliOptions {
     }
   }
   return options;
+}
+
+function selectedProfile(options: CliOptions): "default" | "pi" | "opencode" {
+  if (options.profile && !["default", "pi", "opencode"].includes(options.profile)) return options.profile as never;
+  if (options.opencode && options.profile && options.profile !== "opencode") return options.profile as never;
+  return options.profile ?? (options.opencode ? "opencode" : "default");
 }
 
 function requireValue(argv: string[], index: number, flag: string): string {
@@ -223,7 +256,10 @@ function printHelp(): void {
 
 Options:
   --dry-run
-  --opencode (also install OpenCode AGENTS.md, agents, commands, config, and OpenCode-only skills)
+  --profile <default|pi|opencode>
+  --opencode (legacy alias for --profile opencode)
+  --skill <skill-name> (repeatable)
+  --skill-group <research|specialized-dev> (repeatable)
   --opencode-home <path>
   --aili-home <path>
   --yes
@@ -237,7 +273,9 @@ Options:
   --enable-graphify | --skip-graphify (CLI install only; existing uv required)
   --register-graphify-skill (separate global ~/.agents/skills/graphify registration)
   --enable-openspec | --skip-openspec (OpenSpec installs only when explicitly enabled)
-  --skip-officecli (skip default managed OfficeCLI detect-or-install)
+  --enable-officecli | --skip-officecli (OfficeCLI is default-selected but separately approval-gated)
+  --enable-mempalace | --skip-mempalace (MemPalace is default-selected; installation and MCP configuration stay separate)
+  --reconcile-retired-skills (explicitly reconcile proven installer-owned retired entries)
   --project-root <absolute-canonical-path> (required with --enable-openspec)
   --plugin <name>
   --json`);

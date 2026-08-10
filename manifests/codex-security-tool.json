@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "codex-security",
+  "package": "@openai/codex-security",
+  "version": "0.1.8",
+  "packageSpec": "@openai/codex-security@0.1.8",
+  "launcher": {
+    "command": "npx",
+    "args": ["--no-install", "@openai/codex-security@0.1.8"]
+  },
+  "preflight": {
+    "version": ["--version"],
+    "node": "22.13.0+ on 22.x, 24.x, or 26.x",
+    "python": ">=3.10"
+  },
+  "scan": {
+    "command": "scan",
+    "outputDirectoryFlag": "--output-dir",
+    "dryRunFlag": "--dry-run",
+    "targets": {
+      "workingTree": ["--working-tree", "--base", "{base}"],
+      "path": ["--path", "{path}"],
+      "diff": ["--diff", "{base}", "--head", "{head}"],
+      "wholeRepository": []
+    }
+  },
+  "safety": {
+    "credentialHandling": "adapter-never-reads-or-infers-credentials",
+    "execution": "injected-runner-only",
+    "output": "caller-declared-private-location-outside-repository-and-enclosing-worktree",
+    "storedResults": ["manifest", "findings", "coverage", "report", "artifact"],
+    "sourceBearingOutput": "reference-only-never-copy-into-repository-by-default",
+    "acquisition": "separate-dependency-network-cache-write-approval-when-exact-cli-is-unavailable",
+    "unverifiedSourceTransmission": [
+      "exact-transmitted-source-scope",
+      "provider-endpoints",
+      "provider-retention",
+      "provider-encryption",
+      "provider-telemetry",
+      "proxy-behavior",
+      "backend-untracked-file-inclusion"
+    ]
+  }
+}

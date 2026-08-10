@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "adapter": "opencode",
+  "authorityBoundary": {
+    "mayNarrow": ["runtime path", "frontmatter syntax", "child loadability", "effective capability envelope", "workspace guard", "task-specific scope"],
+    "mayNotRedefine": ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]
+  },
+  "command": {
+    "agent": "rose",
+    "subtask": false
+  },
+  "globalProjection": {
+    "compatibilityPath": "templates/opencode-global-AGENTS.md",
+    "preamble": [
+      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_VERSION: 2 -->",
+      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates/opencode-global-AGENTS.md -->",
+      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_MODE: installer-owned-global-file -->",
+      "<!-- Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md. -->"
+    ]
+  },
+  "roleProfiles": {
+    "primary": {
+      "mode": "primary",
+      "permission": {
+        "*": "allow",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "*.env.example": "allow", "*.pem": "deny", "*.key": "deny", "*.p12": "deny", "*.pfx": "deny", "id_rsa": "deny", "id_ed25519": "deny" },
+        "edit": { "*": "ask", "*.md": "allow", "*.mdx": "allow", "*.json": "allow", "*.jsonc": "allow", "*.yaml": "allow", "*.yml": "allow", "*.py": "allow", "*.sh": "allow", "*.mjs": "allow", "*.cjs": "allow", "*.ts": "allow", "*.tsx": "allow", "*.js": "allow", "*.jsx": "allow", "*.css": "allow", "*.html": "allow", "package.json": "ask", "**/package.json": "ask", "package-lock.json": "ask", "**/package-lock.json": "ask", "pnpm-lock.yaml": "ask", "**/pnpm-lock.yaml": "ask", "yarn.lock": "ask", "**/yarn.lock": "ask", "memory/**": "deny" },
+        "bash": { "*": "ask", "git status*": "allow", "git diff*": "allow", "git log*": "allow", "git branch --show-current*": "allow", "git rev-parse*": "allow", "git worktree list*": "allow", "git check-ignore*": "allow", "ls*": "allow", "npm test*": "allow", "npm run test*": "allow", "npm run build*": "allow", "npm run lint*": "allow", "npm run typecheck*": "allow", "python -m pytest*": "allow", "python3 -m pytest*": "allow", "pytest*": "allow", "python -m py_compile*": "allow", "python3 -m py_compile*": "allow", "bash -n*": "allow", "openspec status*": "allow", "openspec instructions*": "allow", "openspec validate*": "allow" },
+        "task": { "*": "deny", "code-scout": "allow", "convergence-reviewer": "allow", "doc-researcher": "allow", "web-researcher": "allow", "plan-auditor": "allow", "solution-architect": "allow", "implementer": "allow", "code-reviewer": "allow", "test-coverage-reviewer": "allow", "pr-test-analyzer": "allow", "ai-regression-scout": "allow", "silent-failure-reviewer": "allow", "browser-qa-runner": "allow", "e2e-artifact-runner": "allow", "spec-miner": "allow", "agent-evaluator": "allow", "opensource-sanitizer": "allow", "test-engineer": "allow", "security-auditor": "allow", "explore": "allow", "general": "ask" },
+        "external_directory": "ask",
+        "doom_loop": "ask"
+      }
+    },
+    "implementer": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": {
+        "skill": "allow",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "*.env.example": "allow", ".git/**": "deny", "**/.git/**": "deny" },
+        "edit": { "*": "allow", "memory/**": "deny", "memory/*": "deny", "*.env": "deny", "*.env.*": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "bash": { "*": "deny", "git status*": "allow", "git diff*": "allow", "git log*": "allow", "git show*": "allow", "git branch --show-current*": "allow", "git ls-files*": "allow", "git grep*": "allow", "ls*": "allow", "find*": "allow", "rg*": "allow", "grep*": "allow", "cat package.json": "allow", "npm test*": "allow", "npm run test*": "allow", "npm run lint*": "allow", "npm run typecheck*": "allow", "pnpm test*": "allow", "pnpm run test*": "allow", "pnpm run lint*": "allow", "pnpm run typecheck*": "allow", "yarn test*": "allow", "yarn run test*": "allow", "yarn lint*": "allow", "bun test*": "allow", "pytest*": "allow", "python -m pytest*": "allow", "go test*": "allow", "cargo test*": "allow", "git commit*": "ask", "git push*": "deny", "git merge*": "deny", "git rebase*": "ask", "rm -rf*": "deny" },
+        "task": "deny",
+        "external_directory": "deny"
+      }
+    },
+    "readonly": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": {
+        "*": "deny",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "*.env.example": "allow", "**/*.env": "deny", "**/*.env.*": "deny", "**/*.env.example": "allow", "*.pem": "deny", "*.key": "deny", "*.p12": "deny", "*.pfx": "deny", "**/*.pem": "deny", "**/*.key": "deny", "**/*.p12": "deny", "**/*.pfx": "deny", "id_rsa": "deny", "id_ed25519": "deny", "**/id_rsa": "deny", "**/id_ed25519": "deny", ".npmrc": "deny", ".pypirc": "deny", ".netrc": "deny", "**/.npmrc": "deny", "**/.pypirc": "deny", "**/.netrc": "deny", "credentials.json": "deny", "**/credentials.json": "deny", "secrets.*": "deny", "**/secrets.*": "deny", ".git/**": "deny", "**/.git/**": "deny", ".git-credentials": "deny", "**/.git-credentials": "deny", ".docker/config.json": "deny", "**/.docker/config.json": "deny", ".config/gh/**": "deny", "**/.config/gh/**": "deny", ".kube/**": "deny", "**/.kube/**": "deny", "kubeconfig": "deny", "**/kubeconfig": "deny", "config/gcloud/*": "deny", "**/config/gcloud/*": "deny", ".aws/*": "deny", "**/.aws/*": "deny", ".azure/*": "deny", "**/.azure/*": "deny" },
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "external_directory": "deny",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "lsp": "deny",
+        "skill": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "apply_patch": "deny",
+        "doom_loop": "deny"
+      }
+    },
+    "test-executor": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": {
+        "skill": "allow",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "*.env.example": "allow", "**/*.env": "deny", "**/*.env.*": "deny", "**/*.env.example": "allow", "*.pem": "deny", "*.key": "deny", "*.p12": "deny", "*.pfx": "deny", "**/*.pem": "deny", "**/*.key": "deny", "**/*.p12": "deny", "**/*.pfx": "deny", "id_rsa": "deny", "id_ed25519": "deny", "**/id_rsa": "deny", "**/id_ed25519": "deny", ".npmrc": "deny", "**/.npmrc": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "edit": { "*": "ask", "*.env": "deny", "*.env.*": "deny", "**/*.env": "deny", "**/*.env.*": "deny", ".git/**": "deny", "**/.git/**": "deny", "openspec/changes/**/test-plan.md": "allow", "**/tests/**": "allow", "**/test/**": "allow", "**/__tests__/**": "allow", "**/*.test.*": "allow", "**/*.spec.*": "allow", "**/fixtures/**": "ask", "**/testdata/**": "ask", "**/tests/**/fixtures/**": "allow", "**/tests/**/testdata/**": "allow", "**/test/**/fixtures/**": "allow", "**/test/**/testdata/**": "allow", "**/__tests__/**/fixtures/**": "allow", "**/__tests__/**/testdata/**": "allow", "**/snapshots/**": "ask", "playwright.config.*": "ask", "package.json": "ask", "pyproject.toml": "ask", "uv.lock": "deny", "package-lock.json": "deny", "pnpm-lock.yaml": "deny", "yarn.lock": "deny" },
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "bash": { "*": "deny", "git status --short --branch": "allow", "git status --porcelain=v1": "allow", "git branch --show-current": "allow", "git rev-parse --show-toplevel": "allow", "git rev-parse --git-common-dir": "allow", "git rev-parse --verify HEAD": "allow", "git symbolic-ref --short -q HEAD": "allow", "git worktree list --porcelain": "allow", "node --test*": "allow", "node --check*": "allow", "npm test*": "allow", "npm run test*": "allow", "npm run lint*": "allow", "npm run typecheck*": "allow", "npm run build*": "allow", "pnpm test*": "allow", "pnpm run test*": "allow", "pnpm run lint*": "allow", "pnpm run typecheck*": "allow", "pnpm run build*": "allow", "yarn test*": "allow", "yarn run test*": "allow", "yarn lint*": "allow", "yarn run build*": "allow", "bun test*": "allow", "pytest*": "allow", "python -m pytest*": "allow", "python3 -m pytest*": "allow", "python -m unittest*": "allow", "python3 -m unittest*": "allow", "python -m py_compile*": "allow", "python3 -m py_compile*": "allow", "npx playwright test*": "ask", "npm exec playwright test*": "ask" },
+        "external_directory": "deny"
+      }
+    },
+    "browser-qa": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": {
+        "skill": "allow",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "**/*.env": "deny", "**/*.env.*": "deny", "*.pem": "deny", "*.key": "deny", "*.p12": "deny", "*.pfx": "deny", "**/*.pem": "deny", "**/*.key": "deny", "**/*.p12": "deny", "**/*.pfx": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "edit": { "*": "ask", "*.env": "deny", "*.env.*": "deny", "**/*.env": "deny", "**/*.env.*": "deny", "memory/**": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "bash": { "*": "deny", "git status --short --branch": "allow", "git status --porcelain=v1": "allow", "git branch --show-current": "allow", "git rev-parse --show-toplevel": "allow", "git rev-parse --git-common-dir": "allow", "git rev-parse --verify HEAD": "allow", "git symbolic-ref --short -q HEAD": "allow", "git worktree list --porcelain": "allow", "npm test*": "allow", "npm run test*": "allow", "npm run typecheck*": "allow", "npx playwright test*": "ask", "npm exec playwright test*": "ask" },
+        "external_directory": "deny"
+      }
+    },
+    "e2e-artifact": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": {
+        "skill": "allow",
+        "read": { "*": "allow", "*.env": "deny", "*.env.*": "deny", "**/*.env": "deny", "**/*.env.*": "deny", "*.pem": "deny", "*.key": "deny", "*.p12": "deny", "*.pfx": "deny", "**/*.pem": "deny", "**/*.key": "deny", "**/*.p12": "deny", "**/*.pfx": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "edit": { "*": "ask", "*.env": "deny", "*.env.*": "deny", "**/*.env": "deny", "**/*.env.*": "deny", "memory/**": "deny", ".git/**": "deny", "**/.git/**": "deny" },
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "bash": { "*": "deny", "git status --short --branch": "allow", "git status --porcelain=v1": "allow", "git branch --show-current": "allow", "git rev-parse --show-toplevel": "allow", "git rev-parse --git-common-dir": "allow", "git rev-parse --verify HEAD": "allow", "git symbolic-ref --short -q HEAD": "allow", "git worktree list --porcelain": "allow", "npm test*": "allow", "npm run test*": "allow", "npm run typecheck*": "allow", "npx playwright test*": "ask", "npm exec playwright test*": "ask", "pnpm exec playwright test*": "ask", "yarn playwright test*": "ask" },
+        "external_directory": "deny"
+      }
+    },
+    "web-research": {
+      "mode": "subagent",
+      "hidden": true,
+      "permission": { "*": "deny", "read": "deny", "list": "deny", "glob": "deny", "grep": "deny", "external_directory": "deny", "edit": "deny", "bash": "deny", "task": "deny", "lsp": "deny", "skill": "deny", "webfetch": "ask", "websearch": "ask", "apply_patch": "deny", "doom_loop": "deny" }
+    }
+  },
+  "roles": {
+    "rose": "primary",
+    "implementer": "implementer",
+    "test-engineer": "test-executor",
+    "browser-qa-runner": "browser-qa",
+    "e2e-artifact-runner": "e2e-artifact",
+    "web-researcher": "web-research",
+    "agent-evaluator": "readonly",
+    "ai-regression-scout": "readonly",
+    "code-reviewer": "readonly",
+    "code-scout": "readonly",
+    "convergence-reviewer": "readonly",
+    "doc-researcher": "readonly",
+    "opensource-sanitizer": "readonly",
+    "plan-auditor": "readonly",
+    "pr-test-analyzer": "readonly",
+    "security-auditor": "readonly",
+    "silent-failure-reviewer": "readonly",
+    "solution-architect": "readonly",
+    "spec-miner": "readonly",
+    "test-coverage-reviewer": "readonly",
+    "web-performance-auditor": "readonly"
+  },
+  "frontmatterOverrides": {
+    "web-performance-auditor": { "name": "web-performance-auditor" }
+  }
+}

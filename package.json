@@ -1,6 +1,6 @@
 {
   "name": "rose-aili",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "AILI shared skills installer with opt-in OpenCode integration",
   "license": "MIT",
   "repository": {
@@ -15,13 +15,17 @@
     "dist/",
     "agents/",
     ".agents/",
+    "core/",
+    "adapters/",
     "commands/",
+    "generated/",
     "manifests/",
     "templates/AGENTS.md",
     "templates/opencode-global-AGENTS.md",
     "scripts/agents_md.py",
     "scripts/skill_capability_check.py",
     "scripts/upstream_reference_check.py",
+    "scripts/generate-runtime-projections.mjs",
     "scripts/install_opencode.sh",
     "docs/harness/fixtures/graphify-local-review-fixtures.yaml",
     "docs/harness/fixtures/upstream-reference-fixtures.yaml",
@@ -36,6 +40,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/make-cli-executable.mjs",
     "prepare": "npm run build",
+    "generate": "node scripts/generate-runtime-projections.mjs",
+    "generate:check": "node scripts/generate-runtime-projections.mjs --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test tests/*.test.mjs && python -m unittest discover -s tests -p '*.py'"
   },

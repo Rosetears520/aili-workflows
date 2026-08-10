@@ -64,6 +64,7 @@ export interface OfficeCliInstallOptions {
   ailiHome: string;
   opencodeHome: string;
   dryRun: boolean;
+  enabled?: boolean;
   skip?: boolean;
 }
 
@@ -156,6 +157,7 @@ export async function runOfficeCliInstall(options: OfficeCliInstallOptions): Pro
   };
 
   if (options.skip) return { status: "skipped", ...base, reason: "OfficeCLI explicitly skipped; no probe or install command ran." };
+  if (!options.enabled) return { status: "planned", ...base, reason: "OfficeCLI is default-selected but requires a separate exact install approval; no probe or install command ran." };
   if (options.dryRun) return { status: "planned", ...base, reason: "Would detect the managed exact version and install only if missing or drifted; dry-run performed no probe, directory creation, or command execution." };
 
   const protectedPaths = officeCliProtectedPaths(options.opencodeHome);

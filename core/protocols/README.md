@@ -1,0 +1,9 @@
+# Portable task, result, and Board protocols
+
+These files are the canonical semantic owner for the shared package envelope and the preserved `aili-agent-selection/v1` and `aili-task-board/v1` identities. They do not create a second lifecycle, Board, or result authority. Markdown packet, result, selection-matrix, and Board references may render these fields for a human or adapter, but cannot redefine their authority.
+
+- `package-envelope.schema.json` defines the ordinary/base package task envelope: stable package identity, role, assignment, scope, forbidden scope, permission and acceptance boundaries, write scope, expected result/evidence, Worker result, verification evidence, and convergence linkage. A result keeps decision, authorization, execution, verification, and confidence separate; none grants a Worker final disposition authority.
+- `aili-agent-selection.v1.schema.json` preserves the stable selection identity and uses the shared base for ordinary specialist selection.
+- `aili-task-board.v1.schema.json` preserves the stable formal Board identity and extends the shared base only with accepted-task IDs, Board identity, dependencies, join, lifecycle gate, and typed Source references.
+
+Adapters may serialize these schemas or map private runtime IDs, but runtime IDs cannot be sole completion evidence and adapter mappings cannot redefine the fields' authority. OpenCode dispatches each package through a fresh one-shot context. A persistent adapter may continue only when every base package field is unchanged; changed role, assignment, scope, forbidden scope, permission boundary, acceptance boundary, write scope, expected result, or expected evidence requires a new package. Empty, partial, failed, or blocked results never authorize automatic retry, nested dispatch, permission expansion, Worker integration, or a Worker final verdict.

@@ -17,12 +17,16 @@ import {
   treeContainsSymlink,
   verifyGraphifyCatalog
 } from "./graphify.js";
-import { ComponentManifest, findMcp, findPlugin, loadManifest, validateManifestAllowlist } from "./manifest.js";
+import { ComponentManifest, findMcp, findPlugin, loadManifest, resolveSkillSelection, validateManifestAllowlist } from "./manifest.js";
+import { MemPalaceInstallSummary, MemPalaceMcpPlan, planMemPalaceMcpConfiguration, runMemPalaceInstall } from "./mempalace.js";
 import { OfficeCliInstallSummary, runOfficeCliInstall } from "./officecli.js";
 
 export interface InstallOptions {
   dryRun: boolean;
   opencode?: boolean;
+  profile?: InstallProfile;
+  skills?: string[];
+  skillGroups?: string[];
   opencodeHome: string;
   ailiHome: string;
   yes?: boolean;
@@ -41,10 +45,16 @@ export interface InstallOptions {
   enableOpenspec?: boolean;
   skipOpenspec?: boolean;
   skipOfficecli?: boolean;
+  enableOfficecli?: boolean;
+  skipMempalace?: boolean;
+  enableMempalace?: boolean;
+  reconcileRetiredSkills?: boolean;
   projectRoot?: string;
   plugins: string[];
   json?: boolean;
 }
+
+export type InstallProfile = "default" | "pi" | "opencode";
 
 type OptionalStatus = "configured" | "planned" | "skipped" | "failed" | "unverified";
 
@@ -100,11 +110,13 @@ interface GraphifySummary {
 export interface InstallSummary {
   command: "install" | "update";
   dryRun: boolean;
+  profile: InstallProfile;
+  selectedSkills: string[];
   ailiHome: string;
   opencodeHome: string;
   componentInstall: {
     status: "planned" | "completed";
-    scope: "skills" | "opencode";
+    scope: "skills" | "pi" | "opencode";
     code: number | null;
     retiredSkillReconciliation: Array<{
       name: string;
@@ -114,12 +126,22 @@ export interface InstallSummary {
     }>;
   };
   officecli: OfficeCliInstallSummary;
+  mempalace: MemPalaceInstallSummary;
+  mempalaceMcp: MemPalaceMcpPlan;
   config: Awaited<ReturnType<typeof mergeOpenCodeConfig>>;
   mcp: { playwright: "configured" | "planned" | "skipped" };
   optionalDecisions: Array<{ name: string; status: "configured" | "planned" | "skipped"; nextStep?: string; reason?: string }>;
   codegraph: OptionalSummary;
   graphify: GraphifySummary;
   openspec: OptionalSummary;
+  externalToolOperations: Array<{
+    name: "OfficeCLI" | "Playwright" | "CodeGraph" | "Graphify" | "OpenSpec" | "MemPalace";
+    status: "planned" | "skipped" | "unavailable";
+    approval: "fresh-exact-separate";
+    command?: string;
+    reason: string;
+    refusalResult: string;
+  }>;
   plugins: Array<{ name: string; status: "skipped" | "unverified"; reason: string; source?: string }>;
 }
 
@@ -138,12 +160,18 @@ export function defaultAiliHome(): string {
 
 export async function runInstall(command: "install" | "update", rawOptions: InstallOptions): Promise<InstallSummary> {
   validateOpenCodeScope(rawOptions);
+  const profile = resolveProfile(rawOptions);
   const options = {
     ...rawOptions,
-    opencodeHome: rawOptions.opencode ? validateOpenCodeHome(rawOptions.opencodeHome) : rawOptions.opencodeHome
+    profile,
+    opencode: profile === "opencode",
+    opencodeHome: profile === "opencode" ? validateOpenCodeHome(rawOptions.opencodeHome) : rawOptions.opencodeHome
   };
   if (options.skipGraphify && (options.enableGraphify || options.registerGraphifySkill)) {
     throw new Error("--skip-graphify cannot be combined with a Graphify install or registration flag.");
+  }
+  if (options.skipMempalace && options.enableMempalace) {
+    throw new Error("--skip-mempalace cannot be combined with --enable-mempalace.");
   }
   if (options.enableGraphify && options.registerGraphifySkill) {
     throw new Error("Graphify CLI installation and global skill registration require separate invocations and approvals.");
@@ -154,7 +182,9 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
   }
   const manifest = await loadManifest(options.ailiHome);
   await validateManifestAllowlist(options.ailiHome, manifest);
+  const selectedSkills = resolveSkillSelection(manifest, options.skills, options.skillGroups);
   if (options.opencode) await validateInstallerSources(options.ailiHome);
+  if (profile === "pi") await validatePiInstallerSources(options.ailiHome);
   const playwright = findMcp(manifest, "playwright");
   const shouldSyncOpenCodeConfig = Boolean(options.opencode && !options.skipOpenCodeConfig);
   const shouldConfigurePlaywright = Boolean(shouldSyncOpenCodeConfig && options.enablePlaywright && !options.skipPlaywright);
@@ -180,13 +210,29 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
     ? await mergeOpenCodeConfig({ ...configRequest, dryRun: true })
     : await mergeOpenCodeConfig(configRequest);
 
-  const componentInstall = await runCompatibilityInstaller(options);
+  const componentInstall = await runCompatibilityInstaller(
+    options,
+    selectedSkills.map((skill) => skill.name),
+    manifest.retiredSkills?.map((skill) => skill.name) ?? []
+  );
   const config = shouldMergeConfig && !options.dryRun ? await mergeOpenCodeConfig(configRequest) : preflightConfig;
   const officecli = await runOfficeCliInstall({
     ailiHome: options.ailiHome,
     opencodeHome: options.opencodeHome,
     dryRun: options.dryRun,
+    enabled: options.enableOfficecli,
     skip: options.skipOfficecli
+  });
+  const mempalace = await runMemPalaceInstall({
+    ailiHome: options.ailiHome,
+    dryRun: options.dryRun,
+    enabled: options.enableMempalace,
+    skip: options.skipMempalace
+  });
+  const mempalaceMcp = await planMemPalaceMcpConfiguration({
+    ailiHome: options.ailiHome,
+    adapter: profile,
+    readiness: mempalace.readiness
   });
   const codegraph = await runCodeGraphInstall(options);
   const graphify = await runGraphifyInstall(options);
@@ -195,18 +241,92 @@ export async function runInstall(command: "install" | "update", rawOptions: Inst
   return {
     command,
     dryRun: options.dryRun,
+    profile,
+    selectedSkills: selectedSkills.map((skill) => skill.name),
     ailiHome: options.ailiHome,
     opencodeHome: options.opencodeHome,
     componentInstall,
     officecli,
+    mempalace,
+    mempalaceMcp,
     config,
     mcp: { playwright: shouldConfigurePlaywright ? (options.dryRun ? "planned" : "configured") : "skipped" },
     optionalDecisions: buildOptionalDecisions(command, options, shouldConfigurePlaywright, shouldSyncOpenCodeConfig),
     codegraph,
     graphify,
     openspec,
+    externalToolOperations: externalToolOperations(profile, options),
     plugins: pluginStatuses
   };
+}
+
+function resolveProfile(options: InstallOptions): InstallProfile {
+  if (options.profile && !["default", "pi", "opencode"].includes(options.profile)) {
+    throw new Error(`Unknown profile: ${options.profile}`);
+  }
+  if (options.opencode && options.profile && options.profile !== "opencode") {
+    throw new Error("--opencode is a legacy alias for --profile opencode and cannot be combined with another profile.");
+  }
+  return options.profile ?? (options.opencode ? "opencode" : "default");
+}
+
+function externalToolOperations(profile: InstallProfile, options: InstallOptions): InstallSummary["externalToolOperations"] {
+  const refusal = "The tool remains unavailable or unchanged; Core Skill installation continues.";
+  const operations: InstallSummary["externalToolOperations"] = [
+    {
+      name: "OfficeCLI",
+      status: options.skipOfficecli ? "skipped" : "planned",
+      approval: "fresh-exact-separate",
+      command: "npm install --prefix ~/.agents/tools/officecli --no-save --no-package-lock @officecli/officecli@1.0.143",
+      reason: options.skipOfficecli ? "OfficeCLI explicitly skipped." : "Default-selected; requires a separate exact install approval.",
+      refusalResult: refusal
+    },
+    {
+      name: "MemPalace",
+      status: options.skipMempalace ? "skipped" : "planned",
+      approval: "fresh-exact-separate",
+      command: "uv tool install mempalace==3.6.0",
+      reason: options.skipMempalace ? "MemPalace explicitly skipped." : "Default-selected; exact-version installation and MCP configuration are separate approval-gated operations.",
+      refusalResult: "Durable-memory capabilities remain unavailable; Core Skill installation continues."
+    }
+  ];
+  if (profile === "opencode") {
+    operations.push(
+      {
+        name: "Playwright",
+        status: options.skipPlaywright ? "skipped" : "planned",
+        approval: "fresh-exact-separate",
+        command: "npx -y @playwright/mcp@0.0.75 --caps=testing,storage",
+        reason: options.skipPlaywright ? "Playwright explicitly skipped." : "Default-selected; MCP configuration requires a separate exact approval.",
+        refusalResult: refusal
+      },
+      {
+        name: "CodeGraph",
+        status: options.skipCodegraph ? "skipped" : "planned",
+        approval: "fresh-exact-separate",
+        command: `${CODEGRAPH_INSTALL_COMMAND.join(" ")} && ${CODEGRAPH_OPENCODE_COMMAND.join(" ")}`,
+        reason: options.skipCodegraph ? "CodeGraph explicitly skipped." : "Default-selected; installation and OpenCode setup require a separate exact approval.",
+        refusalResult: refusal
+      },
+      {
+        name: "Graphify",
+        status: options.skipGraphify ? "skipped" : "planned",
+        approval: "fresh-exact-separate",
+        command: GRAPHIFY_CLI_INSTALL_COMMAND.join(" "),
+        reason: options.skipGraphify ? "Graphify explicitly skipped." : "Default-selected; upstream CLI installation and global skill registration are separately approved operations.",
+        refusalResult: refusal
+      },
+      {
+        name: "OpenSpec",
+        status: options.skipOpenspec ? "skipped" : "planned",
+        approval: "fresh-exact-separate",
+        command: "npm install -g @fission-ai/openspec@latest && openspec init|update",
+        reason: options.skipOpenspec ? "OpenSpec explicitly skipped." : "Default-selected when an exact project root is supplied; installation and project initialization remain separate operations.",
+        refusalResult: refusal
+      }
+    );
+  }
+  return operations;
 }
 
 async function skippedOpenCodeConfig(options: InstallOptions): Promise<InstallSummary["config"]> {
@@ -691,20 +811,22 @@ function isPathOrDescendant(candidate: string, parent: string): boolean {
   return relative === "" || (relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
-async function runCompatibilityInstaller(options: InstallOptions): Promise<InstallSummary["componentInstall"]> {
+async function runCompatibilityInstaller(options: InstallOptions, selectedSkills: string[], retiredSkillNames: string[]): Promise<InstallSummary["componentInstall"]> {
   const script = path.join(options.ailiHome, "scripts", "install_opencode.sh");
   await access(script, constants.F_OK);
   const mode = await isGitRepository(options.ailiHome) ? "selective" : "copy";
   const args = [script, "--mode", mode, "--aili-home", options.ailiHome, "--opencode-home", options.opencodeHome];
-  if (options.opencode) args.push("--opencode");
+  args.push("--profile", options.profile ?? "default");
+  for (const skill of selectedSkills) args.push("--skill", skill);
+  if (options.reconcileRetiredSkills) args.push("--reconcile-retired-skills");
   args.push("--skip-officecli");
   if (options.dryRun) args.push("--dry-run");
   const result = await spawnInstaller(args, options);
   return {
     status: options.dryRun ? "planned" : "completed",
-    scope: options.opencode ? "opencode" : "skills",
+    scope: options.profile === "opencode" ? "opencode" : options.profile === "pi" ? "pi" : "skills",
     code: result.code,
-    retiredSkillReconciliation: parseRetiredSkillReconciliation(result.stdout)
+    retiredSkillReconciliation: parseRetiredSkillReconciliation(result.stdout, retiredSkillNames, options)
   };
 }
 
@@ -748,7 +870,11 @@ function spawnInstaller(args: string[], options: InstallOptions): Promise<{ code
   });
 }
 
-function parseRetiredSkillReconciliation(stdout: string): InstallSummary["componentInstall"]["retiredSkillReconciliation"] {
+function parseRetiredSkillReconciliation(
+  stdout: string,
+  retiredSkillNames: string[],
+  options: Pick<InstallOptions, "dryRun" | "reconcileRetiredSkills">
+): InstallSummary["componentInstall"]["retiredSkillReconciliation"] {
   const summaryLine = stdout.trim().split(/\r?\n/).at(-1);
   if (!summaryLine) throw new Error("Compatibility installer returned no summary.");
   let raw: unknown;
@@ -762,19 +888,32 @@ function parseRetiredSkillReconciliation(stdout: string): InstallSummary["compon
     : undefined;
   if (!Array.isArray(entries)) throw new Error("Compatibility installer summary omitted retired-skill reconciliation.");
   const actions = new Set(["absent", "planned-unlink", "unlinked", "preserved"] as const);
-  return entries.map((entry) => {
+  const parsed = entries.map((entry) => {
     if (typeof entry !== "object" || entry === null) throw new Error("Compatibility installer returned an invalid retired-skill reconciliation entry.");
     const candidate = entry as Record<string, unknown>;
     if (typeof candidate.name !== "string" || typeof candidate.target !== "string" || typeof candidate.reason !== "string" || typeof candidate.action !== "string" || !actions.has(candidate.action as "absent" | "planned-unlink" | "unlinked" | "preserved")) {
       throw new Error("Compatibility installer returned an invalid retired-skill reconciliation entry.");
     }
+    const action = candidate.action as "absent" | "planned-unlink" | "unlinked" | "preserved";
+    if (!options.reconcileRetiredSkills && (action === "planned-unlink" || action === "unlinked")) {
+      throw new Error("Compatibility installer attempted retired-skill reconciliation without explicit selection.");
+    }
+    if (options.dryRun && action === "unlinked") {
+      throw new Error("Compatibility installer reported a retired-skill unlink during dry-run.");
+    }
     return {
       name: candidate.name,
       target: candidate.target,
-      action: candidate.action as "absent" | "planned-unlink" | "unlinked" | "preserved",
+      action,
       reason: candidate.reason
     };
   });
+  const expected = new Set(retiredSkillNames);
+  const received = new Set(parsed.map((entry) => entry.name));
+  if (expected.size !== retiredSkillNames.length || parsed.length !== expected.size || received.size !== expected.size || [...expected].some((name) => !received.has(name))) {
+    throw new Error("Compatibility installer returned an incomplete or unexpected retired-skill reconciliation.");
+  }
+  return parsed;
 }
 
 async function isGitRepository(ailiHome: string): Promise<boolean> {
@@ -787,11 +926,21 @@ async function isGitRepository(ailiHome: string): Promise<boolean> {
 }
 
 async function validateInstallerSources(ailiHome: string): Promise<void> {
-  await access(path.join(ailiHome, "templates", "opencode-global-AGENTS.md"), constants.F_OK);
+  await Promise.all([
+    access(path.join(ailiHome, "generated", "opencode", "AGENTS.md"), constants.F_OK),
+    access(path.join(ailiHome, "generated", "opencode", "provenance.json"), constants.F_OK)
+  ]);
+}
+
+async function validatePiInstallerSources(ailiHome: string): Promise<void> {
+  await Promise.all([
+    access(path.join(ailiHome, "generated", "pi", "provenance.json"), constants.F_OK),
+    access(path.join(ailiHome, "generated", "pi", "installation-contract.json"), constants.F_OK)
+  ]);
 }
 
 function validateOpenCodeScope(options: InstallOptions): void {
-  if (options.opencode) return;
+  if (options.opencode || options.profile === "opencode") return;
   const requested = [
     [options.setDefaultRose, "--set-default-rose"],
     [options.model, "--model"],

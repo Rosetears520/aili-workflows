@@ -14,6 +14,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "docs" / "harness" / "fixtures"
+DELIVERY_COMMANDS = {"ideate.md", "define.md", "build.md", "ship.md"}
+UTILITY_COMMANDS = {
+    "local-review.md",
+    "handoff.md",
+    "agents-md.md",
+    "harness-audit.md",
+    "retro.md",
+    "security-review.md",
+}
+PUBLIC_COMMANDS = DELIVERY_COMMANDS | UTILITY_COMMANDS
+RETIRED_SKILLS = {
+    "agents-md-initialization",
+    "evidence-scoped-retrospective",
+    "harness-optimization-audit",
+    "local-review-gate",
+    "rose-memory",
+    "session-handoff",
+}
 
 REQUIRED = {
     "command-routing-fixtures.yaml": {
@@ -34,7 +52,11 @@ REQUIRED = {
             "IMPLEMENTED_TARGETED_VERIFIED",
             "release-readiness",
             "release-blocker-audit",
-            "local-review-gate",
+            "/handoff",
+            "/agents-md",
+            "/harness-audit",
+            "/retro",
+            "/security-review",
             "OpenCode-owned /review",
             "categorized report",
             "PASS_WITH_UNVERIFIED",
@@ -46,18 +68,11 @@ REQUIRED = {
             "re-review after fixes",
             "convergence-reviewer",
             "provenance boundaries",
-            "ecc-code-review-adaptation.md",
-            "review-repair-lane-adaptation.md",
-            "orchestration-adaptation.md",
-            "addyosmani-code-review-rubric.md",
-            "codex-github-compatibility.md",
             "five axes",
             "Critical/Important/Suggestion",
             "spec/task-first",
             "concrete fixes",
             "uncertainty/proof gates",
-            "Codex behavior-only",
-            "no official docs text copied",
             "parallelism analysis",
             "no-parallel reason",
             "package/lane preservation",
@@ -85,7 +100,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-eligible", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-specialist-preferred", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
         "case_key": "packet_cases",
         "min_cases": 3,
     },
@@ -123,7 +138,7 @@ REQUIRED = {
         "package": "P7",
     },
     "upstream-reference-fixtures.yaml": {
-        "markers": ["matt-handoff", "addy-idea-refine", "positive", "near-miss", "negative", "upstream_runnable"],
+        "markers": ["addy-idea-refine", "positive", "near-miss", "negative", "upstream_runnable"],
         "case_key": "cases",
         "min_cases": 15,
         "package": "P8",
@@ -375,7 +390,7 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
             "common-dir-unchanged", "no-real-user-state",
         ]
         static_mandatory = [
-            "a33-host-non-git-block", "a33-host-no-ranking", "a33-ignore-missing-block", "a33-ignore-reinclude-block", "a33-destination-tracked-block", "a33-key-valid", "a33-key-invalid-block", "a33-collision-no-guess-block", "a33-shared-trust-disclosure", "a33-hard-isolation-claim-reject", "a33-managed-19-external-deny", "a33-managed-external-ask-reject", "a33-builtins-excluded", "a33-web-profile-unchanged", "a33-install-equality", "a33-rules-narrow", "a33-rules-broaden-block", "a33-rules-conflict-block", "a33-lane-one-repository", "a33-no-recursive-host-scan", "a33-artifact-owning-repository", "a33-topology-submodule-block", "a33-path-ambiguity-block", "a33-result-null-representation", "a33-result-null-field-omission-rejected", "a33-result-not-applicable-string-misuse-rejected", "a33-result-null-wrong-type-rejected", "a33-join-static-row-null-shape", "a33-join-runtime-nonoperation-null-shape", "a33-join-runtime-operation-populated-shape", "a33-forbidden-git-block", "a33-rollback-preserves", "a33-codegraph-per-target", "a33-no-new-machinery", "a33-package-excludes-worktrees", "a33-acceptance-item43-only",
+            "a33-host-non-git-block", "a33-host-no-ranking", "a33-ignore-missing-block", "a33-ignore-reinclude-block", "a33-destination-tracked-block", "a33-key-valid", "a33-key-invalid-block", "a33-collision-no-guess-block", "a33-shared-trust-disclosure", "a33-hard-isolation-claim-reject", "a33-managed-20-external-deny", "a33-managed-external-ask-reject", "a33-builtins-excluded", "a33-web-profile-unchanged", "a33-install-equality", "a33-rules-narrow", "a33-rules-broaden-block", "a33-rules-conflict-block", "a33-lane-one-repository", "a33-no-recursive-host-scan", "a33-artifact-owning-repository", "a33-topology-submodule-block", "a33-path-ambiguity-block", "a33-result-null-representation", "a33-result-null-field-omission-rejected", "a33-result-not-applicable-string-misuse-rejected", "a33-result-null-wrong-type-rejected", "a33-join-static-row-null-shape", "a33-join-runtime-nonoperation-null-shape", "a33-join-runtime-operation-populated-shape", "a33-forbidden-git-block", "a33-rollback-preserves", "a33-codegraph-per-target", "a33-no-new-machinery", "a33-package-excludes-worktrees", "a33-acceptance-item43-only",
             "a33-operation-key-omission-rejected", "a33-operation-key-wrong-type-rejected", "a33-approval-key-omission-rejected", "a33-approval-key-wrong-type-rejected", "a33-identity-field-omission-rejected", "a33-identity-field-wrong-type-rejected", "a33-identity-string-sentinel-rejected", "a33-identity-populated-required-null-rejected", "a33-identity-absent-forbidden-nonnull-rejected", "a33-identity-detached-branch-mismatch-rejected", "a33-identity-file-array-invalid-rejected", "a33-identity-dirty-count-invalid-rejected",
         ]
         runtime_mandatory = [
@@ -705,12 +720,31 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         if target_mode not in local_modes:
             errors.append(f"{name}: missing /local-review target mode {target_mode!r}")
 
+    utility_cases = {
+        "handoff": "explicit-repository-handoff",
+        "agents-md": "project-agents-template",
+        "harness-audit": "report-first-harness-audit",
+        "retro": "approved-evidence-retrospective",
+        "security-review": "preview-first-security-review",
+    }
+    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
+    for command, expected_scope in utility_cases.items():
+        case = by_id.get(f"cmd-{command}")
+        if case is None:
+            errors.append(f"{name}: missing /{command} Utility Command case")
+        elif case.get("expected_mode") != "UTILITY" or case.get("expected_scope") != expected_scope or case.get("trigger") is not True:
+            errors.append(f"{name}: /{command} must be a triggered non-lifecycle Utility Command")
+
+    for command in ["/aili-doctor", "/simplify"]:
+        matching = [case for case in cases if isinstance(case, dict) and str(case.get("input", "")).startswith(command)]
+        if not matching or any(case.get("trigger") is not False for case in matching):
+            errors.append(f"{name}: {command} must be a covered non-trigger")
+
     for internal_command in ["/research", "/review", "/release-blocker-audit"]:
         matching = [case for case in cases if isinstance(case, dict) and str(case.get("input", "")).startswith(internal_command)]
         if not matching or any(case.get("trigger") is not False for case in matching):
             errors.append(f"{name}: {internal_command} must remain a covered non-trigger")
 
-    by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
     natural_routes = {
         "natural-ideate-zh": ("IDEATE", "/ideate", "先帮我想几种方案，暂时不要实现"),
         "natural-define-zh": ("DEFINE", "/define", "把这个需求定义成可实施方案和测试计划，先不要实现"),
@@ -881,17 +915,39 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
 
     by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
     proactive = by_id.get("packet-proactive-eligible", {})
-    if proactive.get("scan") != "proactive-delegation-scan" or proactive.get("expected") != "dispatch-when-eligible" or proactive.get("timing") != "before duplicate direct work":
-        errors.append(f"{name}: eligible work must dispatch from the proactive scan before duplicate direct work")
-    expected_trigger_cases = {
-        "packet-trigger-explicit-request": "explicit-user-request",
-        "packet-trigger-specialist": "required-specialist-capability",
-        "packet-trigger-noisy-context": "materially-noisy-context",
+    if proactive.get("scan") != "proactive-delegation-scan" or proactive.get("expected") != "dispatch-when-specialist-preferred" or proactive.get("timing") != "before duplicate direct work":
+        errors.append(f"{name}: specialist-preferred work must dispatch from the proactive scan before duplicate direct work")
+    preferred = by_id.get("packet-proactive-eligible", {})
+    if (
+        preferred.get("clear_bounded_package") is not True
+        or preferred.get("non_trivial") is not True
+        or preferred.get("matching_specialist") != "code-scout"
+        or preferred.get("effective_capabilities") is not True
+        or preferred.get("effective_permissions") is not True
+        or preferred.get("ownership_overlap") is not False
+        or preferred.get("expected") != "dispatch-when-specialist-preferred"
+    ):
+        errors.append(f"{name}: packet-proactive-eligible must cover every specialist-preferred dispatch condition")
+    direct_exceptions = {
+        "packet-direct-trivial": "trivial",
+        "packet-direct-clarification": "contract-clarification-or-splitting",
+        "packet-direct-no-specialist": "no-matching-specialist",
+        "packet-direct-capability": "permission-or-capability-failure",
+        "packet-direct-overlap": "overlapping-ownership",
+        "packet-direct-negative-benefit": "concrete-negative-benefit",
     }
-    for case_id, trigger in expected_trigger_cases.items():
+    for case_id, exception in direct_exceptions.items():
         case = by_id.get(case_id, {})
-        if case.get("existing_trigger") != trigger or case.get("expected") != "dispatch-when-eligible":
-            errors.append(f"{name}: {case_id} must cover the exact {trigger} dispatch trigger")
+        if case.get("direct_exception") != exception or case.get("expected") != "ROSE-direct-with-named-exception":
+            errors.append(f"{name}: {case_id} must preserve the {exception} direct-work exception")
+    solution_architect = by_id.get("packet-solution-architect", {})
+    if (
+        solution_architect.get("agent") != "solution-architect"
+        or solution_architect.get("expected") != "proposal-evidence-returned-to-ROSE"
+        or not isinstance(solution_architect.get("forbidden_scope"), list)
+        or any(item not in solution_architect["forbidden_scope"] for item in ["implementation", "nested delegation", "architecture acceptance", "product decision", "ADR approval", "final verdict"])
+    ):
+        errors.append(f"{name}: solution-architect must remain a bounded non-implementing, non-delegating proposal Worker")
     fanout = by_id.get("packet-model-selected-fanout", {})
     if fanout.get("default_policy") != "default-two-not-hard-cap" or fanout.get("hard_cap", "missing") is not None:
         errors.append(f"{name}: concurrency must default to two without a hard cap")
@@ -953,7 +1009,7 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
     if preference.get("expected") != "re-evaluate-and-dispatch-each-eligible-stage" or preference.get("permission_gates_preserved") is not True:
         errors.append(f"{name}: aggressive user preference must increase eligible dispatch without weakening permission gates")
     direct = by_id.get("packet-ineligible-direct", {})
-    if direct.get("eligible_trigger") is not False or direct.get("reason_required") is not True or direct.get("reason") not in {"no-existing-task-trigger", "overlap", "unresolved-dependency", "permission-or-ownership-block", "negative-benefit"}:
+    if direct.get("eligible_trigger") is not False or direct.get("reason_required") is not True or direct.get("reason") not in {"trivial", "contract-clarification-or-splitting", "no-matching-specialist", "permission-or-capability-failure", "overlapping-ownership", "concrete-negative-benefit"}:
         errors.append(f"{name}: ineligible direct work must retain a concrete no-dispatch reason")
     for relative in ["agents/rose.md", ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md", ".agents/skills/parallel-subagent-dispatch/SKILL.md"]:
         errors.extend(require_text_markers(relative, ["proactive delegation scan", "not a hard cap", "join plan"], "proactive delegation"))
@@ -999,8 +1055,8 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
 def validate_agent_permissions() -> list[str]:
     errors: list[str] = []
     paths = sorted((ROOT / "agents").glob("*.md"))
-    if len(paths) != 20:
-        errors.append(f"agent inventory: expected 20 files, found {len(paths)}")
+    if len(paths) != 21:
+        errors.append(f"agent inventory: expected 21 files, found {len(paths)}")
     headings = ["## Role", "## Goal", "## Success criteria", "## Constraints", "## Tools", "## Output", "## Stop"]
     for path in paths:
         text = path.read_text(encoding="utf-8")
@@ -1039,9 +1095,9 @@ def read_repo_text(relative_path: str) -> str:
 def validate_command_contracts() -> list[str]:
     errors: list[str] = []
     command_dir = ROOT / "commands"
-    allowed_delivery_commands = {"ideate.md", "define.md", "build.md", "ship.md"}
-    allowed_non_delivery_commands = {"local-review.md"}
-    allowed_public_commands = allowed_delivery_commands | allowed_non_delivery_commands
+    allowed_delivery_commands = DELIVERY_COMMANDS
+    allowed_non_delivery_commands = UTILITY_COMMANDS
+    allowed_public_commands = PUBLIC_COMMANDS
     internal_delivery_commands = {
         "questionnaire.md",
         "test-plan.md",
@@ -1056,7 +1112,7 @@ def validate_command_contracts() -> list[str]:
     existing_commands = {path.name for path in command_dir.glob("*.md")}
     unexpected_commands = sorted(existing_commands - allowed_public_commands)
     for name in unexpected_commands:
-        errors.append(f"commands/{name}: unexpected top-level command; only ideate, define, build, ship, and local-review are allowed")
+        errors.append(f"commands/{name}: unexpected top-level command; the ten canonical delivery and Utility Commands are the only public commands")
 
     unexpected_internal = sorted(existing_commands & internal_delivery_commands)
     for name in unexpected_internal:
@@ -1064,10 +1120,10 @@ def validate_command_contracts() -> list[str]:
 
     missing = sorted(allowed_delivery_commands - existing_commands)
     for name in missing:
-        errors.append(f"commands/{name}: missing public delivery command")
+        errors.append(f"commands/{name}: missing public Delivery Command")
 
     for name in sorted(allowed_non_delivery_commands - existing_commands):
-        errors.append(f"commands/{name}: missing public local audit command")
+        errors.append(f"commands/{name}: missing public Utility Command")
 
     for name in sorted(allowed_public_commands & existing_commands):
         relative = f"commands/{name}"
@@ -1095,8 +1151,8 @@ def validate_command_contracts() -> list[str]:
 
     local_review_text = read_repo_text("commands/local-review.md") if (command_dir / "local-review.md").exists() else ""
     for marker in [
-        "local review gate workflow",
-        "local-review-gate",
+        "canonical report-first local-review utility",
+        "standalone non-delivery audit",
         "--base <branch>",
         "--commit <sha>",
         "--pr <url|number>",
@@ -1119,6 +1175,50 @@ def validate_command_contracts() -> list[str]:
     ]:
         if marker not in local_review_text:
             errors.append(f"commands/local-review.md: missing local-review contract marker {marker!r}")
+
+    canonical_dir = ROOT / "core" / "commands"
+    canonical_commands = {path.name for path in canonical_dir.glob("*.md")}
+    if canonical_commands != allowed_public_commands:
+        errors.append(
+            "core/commands: canonical command inventory differs from the exact four Delivery Commands and six Utility Commands"
+        )
+    canonical_utility_markers = {
+        "handoff.md": ["Required behavior:", "Hard stops:", "Output contract:", "explicit CREATE, LIST, or RESUME", "repository-local handoff"],
+        "agents-md.md": ["Required behavior:", "Hard stops:", "Output contract:", "scripts/agents_md.py", "managed-block or backup-overwrite strategy"],
+        "harness-audit.md": ["Required behavior:", "Hard stops:", "Output contract:", "report-first audit", "Do not edit harness controls"],
+        "retro.md": ["Required behavior:", "Hard stops:", "Output contract:", "explicitly supplied or approved sanitized evidence", "Do not claim access to global history"],
+        "security-review.md": ["Required behavior:", "Hard stops:", "Output contract:", "independent `security-auditor` role", "exact approval before an external backend receives source"],
+    }
+    for name, markers in canonical_utility_markers.items():
+        relative = f"core/commands/{name}"
+        if not (canonical_dir / name).exists():
+            errors.append(f"{relative}: missing canonical Utility Command")
+            continue
+        errors.extend(require_text_markers(relative, markers, "canonical Utility Command"))
+
+    try:
+        manifest = json.loads(read_repo_text("manifests/rose-aili.components.json"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"manifests/rose-aili.components.json: unreadable command/Skill inventory: {exc}")
+    else:
+        components = manifest.get("components", {}) if isinstance(manifest, dict) else {}
+        command_rows = components.get("commands", []) if isinstance(components, dict) else []
+        skill_rows = components.get("skills", []) if isinstance(components, dict) else []
+        command_names = {row.get("name") for row in command_rows if isinstance(row, dict)}
+        skill_names = {row.get("name") for row in skill_rows if isinstance(row, dict)}
+        retired_names = {row.get("name") for row in manifest.get("retiredSkills", []) if isinstance(row, dict)} if isinstance(manifest, dict) else set()
+        if command_names != {name.removesuffix(".md") for name in allowed_public_commands}:
+            errors.append("component manifest must expose exactly ten Commands")
+        if len(skill_names) != 58:
+            errors.append(f"component manifest must expose exactly 58 retained Skills; found {len(skill_names)}")
+        if retired_names != RETIRED_SKILLS:
+            errors.append("component manifest retired Skill inventory is incomplete or unexpected")
+        if skill_names & RETIRED_SKILLS:
+            errors.append("component manifest must not package a retired Skill")
+
+    for skill in RETIRED_SKILLS:
+        if (ROOT / ".agents" / "skills" / skill / "SKILL.md").exists():
+            errors.append(f".agents/skills/{skill}/SKILL.md: retired Skill remains runnable")
 
     thin_commands = {
         "commands/define.md": {
@@ -1805,14 +1905,12 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         "## Local Overrides",
     ]
     errors.extend(require_text_markers("scripts/agents_md.py", agents_checker_markers, "AGENTS checker"))
-    errors.extend(require_text_markers(".agents/skills/agents-md-initialization/references/agents_md.py", agents_checker_markers, "bundled AGENTS checker"))
 
     agents_template_markers = [
         "## Project-Specific Testing and Artifact Placement",
         "## Local Overrides",
     ]
     errors.extend(require_text_markers("templates/AGENTS.md", agents_template_markers, "project AGENTS template"))
-    errors.extend(require_text_markers(".agents/skills/agents-md-initialization/references/agents-template.md", agents_template_markers, "bundled project AGENTS template"))
 
     git_workflow_markers = [
         "task-scoped savepoint commits only when current task/project rules explicitly allow verified commits",
@@ -1896,7 +1994,6 @@ def main() -> int:
         errors.extend(validate_fixture(name, spec))
     errors.extend(validate_agent_permissions())
     errors.extend(validate_command_contracts())
-    errors.extend(validate_local_review_gate_contracts())
     errors.extend(validate_define_artifact_contracts())
     errors.extend(validate_neutral_build_contracts())
     errors.extend(validate_package5_loop_fixtures())

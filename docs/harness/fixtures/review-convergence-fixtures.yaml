@@ -500,12 +500,12 @@
       "expected": "reject-as-historical"
     },
     {
-      "id": "a33-managed-19-external-deny",
-      "input": {"managed_agents": 19, "external_directory_deny": 19, "external_ask_or_allow": 0},
+      "id": "a33-managed-20-external-deny",
+      "input": {"managed_agents": 20, "external_directory_deny": 20, "external_ask_or_allow": 0},
       "expected": "pass"
     },
     {"id":"a33-managed-external-ask-reject","input":{"managed_agents_with_external_ask_or_allow":1},"expected":"block"},
-    {"id":"a33-install-equality","input":{"source_and_installed_managed_agent_files_equal":true,"managed_agents":19},"expected":"pass"},
+    {"id":"a33-install-equality","input":{"source_and_installed_managed_agent_files_equal":true,"managed_agents":20},"expected":"pass"},
     {
       "id": "a33-builtins-excluded",
       "input": {"builtins": ["explore", "general"], "claimed_covered": false},
@@ -513,7 +513,7 @@
     },
     {
       "id": "a33-rollback-preserves",
-      "input": {"routing_disabled": true, "worktrees_preserved": true, "evidence_preserved": true, "managed_external_denials_preserved": 19, "automatic_removal": false},
+      "input": {"routing_disabled": true, "worktrees_preserved": true, "evidence_preserved": true, "managed_external_denials_preserved": 20, "automatic_removal": false},
       "expected": "pass"
     },
     {"id":"a33-forbidden-git-block","input":{"operation":"prune/move/repair/lock/force/clean/reset/merge/rebase/commit/push/branch-delete"},"expected":"block-before-effect"},

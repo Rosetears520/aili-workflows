@@ -23,7 +23,7 @@ as compatible merely because another backend exposes a similarly named tool.
    approvals, integration, or the final verdict; it cannot recursively invoke
    process Skills or delegate work.
 3. Describe required behavior as capability IDs (for example `repo.read`,
-   `subagent.dispatch`, `browser.qa`, `web.fetch`, `memory.project`, or
+    `subagent.dispatch`, `browser.qa`, `web.fetch`, `memory.provider.mempalace`, or
    `artifact.store`), not as a backend tool, home directory, or provider by
    default. Name a concrete tool only when it is a stable public contract for
    every supported adapter.

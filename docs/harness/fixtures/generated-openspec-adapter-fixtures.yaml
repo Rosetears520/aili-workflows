@@ -172,7 +172,7 @@
     {"id":"thin-command-exact-arguments","input":"Invoke each delivery command with punctuation and multiline arguments.","expected":"the command body contains exact $ARGUMENTS passthrough with no rewriting"},
     {"id":"thin-command-essential-shape","input":"Inspect each of ideate, define, build, and ship command bodies.","expected":"frontmatter, exact passthrough, mode/purpose, one essential hard stop, and concise output remain"},
     {"id":"thin-command-no-detailed-policy","input":"A command body repeats classifier, research, continuation, loop, automation, or review algorithms.","expected":"owner-drift failure; detailed policy belongs in canonical delivery references"},
-    {"id":"thin-command-owner-map","input":"Resolve prompt ownership after command thinning.","expected":"claim policy stays in global AGENTS; memory in rose-memory; lifecycle in delivery references; delegation in direct/protocol references; ROSE/commands stay compact"},
+    {"id":"thin-command-owner-map","input":"Resolve prompt ownership after command thinning.","expected":"claim policy stays in global AGENTS; memory in core/governance/mempalace.md; lifecycle in delivery references; delegation in direct/protocol references; ROSE/commands stay compact"},
     {"id":"product-repository-automation-formal-gated","input":"Implement an explicit repository webhook or CI automation outcome.","expected":"eligible through normal formal/high-risk dependency, permission, ownership, and verification gates; no hidden AILI LP substitution"},
     {"id":"top-level-delivery-command-set","input":"List AILI top-level delivery commands.","expected":"exactly ideate, define, build, and ship; local-review remains standalone non-delivery"}
   ]

@@ -7,11 +7,11 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Roles
 
 - **ROSE runtime charter**: final responsibility, instruction precedence, safety, git, memory, subagent, and completion-claim gates.
-- **Commands**: optional thin shortcut entrypoints for `/ideate`, `/define`, `/build`, and `/ship` delivery modes, plus `/local-review` as a standalone local audit command that does not replace SHIP or OpenCode's `/review`.
+- **Commands**: four Delivery Commands (`/ideate`, `/define`, `/build`, `/ship`) and six Utility Commands (`/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, `/security-review`). Utilities are explicit non-lifecycle operations and do not own acceptance or final verdicts.
 - **Delivery flow skill**: one semantic router/control plane for first-class natural-language and shortcut lifecycle/ordinary loops, approvals, directed hydration, proactive delegation scans, and verification ownership.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
-- **Protocols**: reusable lifecycle, formal Board, artifact, and subagent evidence contracts under `.agents/skills/aili-delivery-flow/references/`, plus canonical Agent selection under `.agents/skills/parallel-subagent-dispatch/references/`.
+- **Protocols**: versioned package, Agent-selection, and formal-Board schemas under `core/protocols/`; lifecycle, artifact, and human-readable subagent guidance under `.agents/skills/aili-delivery-flow/references/`, with practical selection guidance under `.agents/skills/parallel-subagent-dispatch/references/`.
 - **Fixtures and runner**: static smoke coverage for routing and evidence claims.
 - **Source classes**: canonical AILI source is distinct from generated/installed adapters, inert upstream references, and upstream runtime behavior.
 - **Managed role inventory**: exactly primary ROSE plus 19 repository-managed subagents. All 19 managed profiles retain `external_directory: deny`; ROSE alone retains per-operation ask. `web-researcher` remains the web-only external-research role and gains no external local-directory, mutation, or delegation authority.
@@ -32,24 +32,25 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 | BUILD | Derive the accepted queue from the active contract, execute each implementation package with progress-ledger savepoints, then run one minimal changed-scope completion check | No automatic package test/commit/approval; success records `IMPLEMENTED_TARGETED_VERIFIED` and stops before SHIP. This umbrella alone names Packages 1–11 plus Package 12. |
 | SHIP | Reuse still-covering BUILD evidence, run the delegation scan, and refresh only evidence required by the affected closeout claim | Fresh explicit SHIP intent is required; direct inspection is the no-trigger/blocked fallback, no broad matrix/lane fanout exists without a concrete gap, and CI failure returns without automatic repair/Git action. |
 | LOCAL_REVIEW | Resolve local changes, base branch, commit, PR, or OpenSpec change target and produce a categorized local review report before optional repair | Do not override OpenCode's `/review`, do not mutate remote state, do not repair before a categorized report and explicit approval, and do not claim release or archive readiness. |
+| Utility Commands | Run the explicitly requested local-review, handoff, AGENTS, harness-audit, retrospective, or security-review operation | Do not create a lifecycle phase, grant acceptance/verification authority, or bypass the action-specific placement, external-operation, destructive-operation, or privacy gate. |
 
 ## Artifact Authority
 
 - Lifecycle: `.agents/skills/aili-delivery-flow/references/lifecycle.md`.
-- Canonical Agent selection: `.agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md` (`aili-agent-selection/v1`).
-- Formal package/evidence Board: `.agents/skills/aili-delivery-flow/references/formal-task-board.md` (`aili-task-board/v1`).
+- Canonical Agent selection schema: `core/protocols/aili-agent-selection.v1.schema.json` (`aili-agent-selection/v1`); practical role matrix: `.agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md`.
+- Formal package/evidence Board schema: `core/protocols/aili-task-board.v1.schema.json` (`aili-task-board/v1`); human-readable Board guidance: `.agents/skills/aili-delivery-flow/references/formal-task-board.md`.
 - Neutral BUILD execution, loop profiles, and canonical budgets: `.agents/skills/aili-delivery-flow/references/build-execution-loop.md`, `.agents/skills/aili-delivery-flow/references/implementation-packages.md`, and `.agents/skills/aili-delivery-flow/references/artifact-contracts.md`.
 - Planning evidence shape: `.agents/skills/aili-delivery-flow/references/protocols/research-evidence-pack.md`, plus official-doc and prior-art skills where they are the lighter source.
 - Backend adapters: `docs/harness/backend-adapters.md` and `.agents/skills/aili-delivery-flow/references/backend-routing.md`.
 - DEFINE interview/test artifacts: `.agents/skills/requirements-grilling/SKILL.md`, `.agents/skills/test-document-generator/SKILL.md`, and `.agents/skills/aili-delivery-flow/references/artifact-contracts.md`.
 - Harness issue localization: `.agents/skills/harness-issue-triage/SKILL.md` and `.agents/skills/harness-issue-triage/references/*`.
 - Harness governance: `docs/harness/harness-change-report-template.md` and `.agents/skills/harness-evolution/references/*`.
-- Subagent packet/result: `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`, `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`.
+- Subagent packet/result: `core/protocols/package-envelope.schema.json`, `.agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md`, and `.agents/skills/aili-delivery-flow/references/protocols/subagent-result.md`.
 - Verification closeout: `.agents/skills/aili-delivery-flow/references/protocols/closeout-report.md`, `docs/harness/fixtures/verification-claim-fixtures.yaml`.
 
 ## Source and Runtime Boundary
 
-- Canonical AILI behavior lives in the four delivery commands, top-level canonical skills and protocols, agents, templates/generators, manifests, TypeScript, and installer sources.
+- Canonical AILI behavior lives in `core/commands/` for all ten Commands, `core/protocols/` for versioned shared schemas, top-level canonical skills, agents, templates/generators, manifests, TypeScript, and installer sources. Root `commands/` are generated compatibility projections, not independent semantic owners.
 - Root `AGENTS.md`, `dist/`, installed OpenCode/shared-skill copies, and current generated `.opencode` OpenSpec direct adapters are downstream generated/installed surfaces. Current direct adapters stay unchanged and callable outside AILI guarantees; AILI does not route to, recommend, wrap, suppress, prevent, or control them, and their output is not AILI evidence.
 - Pinned `references/upstream/` closures are licensed inert data. `SKILL.upstream.md` and non-executable upstream scripts never become component-manifest entries, public commands, runnable skills, hooks, or runtime authority.
 - External OpenCode, OpenSpec, CodeGraph, and Graphify behavior is upstream runtime behavior. An AILI claim requires an AILI-owned route to apply and freshly record its own gates.
@@ -86,7 +87,7 @@ Cross-root execution is fail-closed against exact OpenCode `1.17.18` behavior. C
 ## Stop Rules
 
 - Do not rename the OpenSpec change directory without separate approval.
-- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, `/review`, release-blocker audit, or evolve; `/local-review` is the only AILI-owned public review command allowed by the local review gate contract.
+- Do not add internal top-level commands for research, questionnaire, test-plan, implement, fix, debug, `/review`, release-blocker audit, or evolve; `/local-review` is the only AILI-owned public review command. Do not add `/aili-doctor` or `/simplify`.
 - Do not add proactive parallelism/research/review ceremony to thin command surfaces; expose only the current material decision or exact risky-operation stop condition.
 - Do not modify SQLite schema, lockfiles, dependency manifests, or memory DBs in this phase.
 - Do not apply core harness edits without approved scope and verification trigger.

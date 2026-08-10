@@ -1,6 +1,6 @@
 # Command Lifecycle
 
-Exactly four top-level delivery shortcuts are provided by this harness. Equivalent natural-language IDEATE, DEFINE, BUILD, and SHIP intent uses the same classifier, gates, permissions, and evidence contract; a shortcut grants no extra authority. `/local-review` is additionally allowed as a standalone local audit command, not as a delivery lifecycle mode.
+Exactly four Delivery Commands and six Utility Commands are provided by this harness. Equivalent natural-language IDEATE, DEFINE, BUILD, and SHIP intent uses the same classifier, gates, permissions, and evidence contract; a shortcut grants no extra authority. Utility Commands are explicit operations, not lifecycle modes or independent acceptance/verdict owners.
 
 Treat natural language as a first-class lifecycle entry, not as a hint that the user must type a shortcut. When the requested outcome is unambiguous, enter the same canonical loop without asking the user to restate `/ideate`, `/define`, `/build`, or `/ship`. Classify “先帮我想几种方案，暂时不要实现” as IDEATE, “把这个需求定义成可实施方案和测试计划” as DEFINE, “按已经接受的方案开始实现” as BUILD, and “把已实现的改动收尾并准备交付” as SHIP. Explanation, comparison, translation, and status questions about those names remain ordinary near misses; genuine mode/target ambiguity asks one focused question.
 
@@ -11,10 +11,15 @@ Treat natural language as a first-class lifecycle entry, not as a hint that the 
 | `/build` | BUILD | Derive the accepted queue from the active contract, record progress-ledger savepoints with no automatic tests/commits/approvals, run one minimal changed-scope completion check, record `IMPLEMENTED_TARGETED_VERIFIED`, and stop. This umbrella alone names Package 12 as that direct final inspection. |
 | `/ship` | SHIP | After fresh explicit intent, reuse still-covering BUILD evidence, run the delegation scan, and refresh only checks required by the exact affected closeout claim. Direct inspection is the no-trigger/blocked fallback. |
 | `/local-review` | LOCAL_REVIEW | Run a report-first local audit over local changes, a base branch, a commit, a PR, or an OpenSpec change. It leaves OpenCode's `/review` untouched, reports skipped or `Unverified` lanes, and does not replace `/ship`. |
+| `/handoff` | Utility | Create, list, or resume an explicit redacted repository-local handoff. Resume revalidates current state; the snapshot is not lifecycle, acceptance, or verification authority. |
+| `/agents-md` | Utility | Create, update, or validate a project-local `AGENTS.md` through the shared template/script flow without silently overwriting project facts or user content. |
+| `/harness-audit` | Utility | Return a bounded report-first audit of a named harness concern and candidate follow-up; it does not edit harness controls or select a lifecycle state. |
+| `/retro` | Utility | Analyze explicitly supplied or approved sanitized evidence and return a bounded retrospective; it does not claim global history or authorize changes. |
+| `/security-review` | Utility | Preview a report-only independent security review with exact source-transmission/scan gates; it does not repair, accept risk, or claim completion. |
 
 ## Non-Commands
 
-Research, questionnaire, test-plan, implementation, fix, debug, release-blocker audit, repair loop, and harness evolution are internal stages. They are not top-level commands unless a later approved change adds them. `/review` remains OpenCode-owned and is not an AILI trigger; AILI-owned standalone review uses `/local-review`.
+Research, questionnaire, test-plan, implementation, fix, debug, release-blocker audit, repair loop, and harness evolution are internal stages. They are not top-level commands unless a later approved change adds them. `/review` remains OpenCode-owned and is not an AILI trigger; AILI-owned standalone review uses `/local-review`. `/aili-doctor` and `/simplify` are not AILI commands.
 
 AILI does not provide `/loop`, `/schedule`, `/goal`, `/proactive`, `/cycle`, `/watch`, `/objective`, a worktree-maintenance command, or a Graphify command. It adds no hidden/unrequested AILI cron, scheduler, watcher, webhook, listener, daemon, persistent queue, hook, dependency, auto-retry, or other background runtime. Explicit product/repository automation remains eligible only through normal formal/high-risk gates; vocabulary-only comparison remains ordinary.
 

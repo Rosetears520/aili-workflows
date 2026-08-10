@@ -2,33 +2,33 @@
 
 This document is for an AI agent installing `Rosetears520/aili-workflows` into OpenCode.
 
-[FRAME] Default scope installs reusable skills into `$HOME/.agents/skills` and runs the installer-owned OfficeCLI detect-or-install step at `$HOME/.agents/tools/officecli`. Pass `--skip-officecli` to skip that tool step. Add `--opencode` only when the user also wants OpenCode global rules, agents, commands, config integration, or OpenCode-only skills.
+[FRAME] The omitted profile is `default`: it installs 49 Core Skills into `$HOME/.agents/skills`. `pi` adds generated Pi prompts; `opencode` adds generated OpenCode global rules, agents, Commands, and optional config integration. Pass `--profile <default|pi|opencode>`; `--opencode` is the legacy alias for `--profile opencode`.
 
 If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows native, clone and link inside Windows. Do not mix WSL and Windows paths by default. Do not clone into the user home root.
 
-[FRAME] Default installation mode is selective shared-skill setup plus installer-managed OfficeCLI; OfficeCLI remains a non-routable tool rather than another Skill.
+[FRAME] OfficeCLI and MemPalace are default-selected external operations, not Skills. Install/update reports each plan, but no external command runs until its separate exact approval is represented by `--enable-officecli` or `--enable-mempalace`. `--skip-officecli` and `--skip-mempalace` decline their respective operations.
 
 Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. The installation scopes are:
 
-- default: `$HOME/.agents/skills/<skill> -> <repo>/.agents/skills/<skill>`;
-- default unless `--skip-officecli`: fixed OfficeCLI target `$HOME/.agents/tools/officecli`, with no Skill/MCP/PATH/shell integration;
-- `--opencode`: `~/.config/opencode/AGENTS.md -> <repo>/templates/opencode-global-AGENTS.md`;
-- `--opencode`: `~/.config/opencode/agents/<agent>.md -> <repo>/agents/<agent>.md`;
-- `--opencode`: `~/.config/opencode/commands/<command>.md -> <repo>/commands/<command>.md`;
-- `--opencode`, when manifest entries exist: `~/.config/opencode/skills/<skill> -> <repo>/.opencode/skills/<skill>`.
+- every profile: `$HOME/.agents/skills/<selected-skill> -> <repo>/.agents/skills/<selected-skill>`;
+- `pi`: `~/.pi/agent/prompts/<command>.md -> <repo>/generated/pi/prompts/<command>.md`; installation is non-recursive and excludes Pi system/runtime metadata;
+- `opencode`: `~/.config/opencode/AGENTS.md -> <repo>/generated/opencode/AGENTS.md`;
+- `opencode`: `~/.config/opencode/agents/<agent>.md -> <repo>/generated/opencode/agents/<agent>.md`;
+- `opencode`: `~/.config/opencode/commands/<command>.md -> <repo>/generated/opencode/commands/<command>.md`;
+- separately approval-gated OfficeCLI: fixed target `$HOME/.agents/tools/officecli`, with no Skill/MCP/PATH/shell integration.
 
 Managed directory symlink mode is only allowed when the user explicitly asks to let `aili-workflows` own the entire global `agents/` and `commands/` directories.
 
 ## Goal
 
-Install reusable skills and the shared non-routable OfficeCLI tool by default, and opt into ROSE/OpenCode integration only when requested, while keeping:
+Install selected reusable Skills and opt into Pi/OpenCode integration only when requested, while keeping:
 
 - workflow source synced with this repository
 - existing OpenCode global agents preserved and shared skills kept outside OpenCode home
 - OpenCode global config lightweight
 - reusable global AGENTS rules installed in OpenCode home
 - DOCX, XLSX, and PPTX routing owned by their existing artifact Skills rather than OfficeCLI
-- project memory local to each project
+- one user-level MemPalace mapping with distinct project Wings when memory is separately available and approved
 - project `AGENTS.md` self-contained and project-specific
 
 Never store project memory inside the global OpenCode config directory.
@@ -108,9 +108,9 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | default: `/home/<user>/.agents/skills` and `/home/<user>/.agents/tools/officecli`; `--opencode`: also `/home/<user>/.config/opencode` | shared skill links plus OfficeCLI tool step by default; OpenCode entries only with `--opencode` |
-| Linux/macOS | `$AILI_HOME` | default: `$HOME/.agents/skills` and `$HOME/.agents/tools/officecli`; `--opencode`: also `$HOME/.config/opencode` | shared skill links plus OfficeCLI tool step by default; OpenCode entries only with `--opencode` |
-| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | default: `%USERPROFILE%\.agents\skills` and managed OfficeCLI target; OpenCode integration is explicit | shared skill links plus OfficeCLI tool step by default; platform-specific entries remain opt-in |
+| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | every profile: `/home/<user>/.agents/skills`; `pi`: also `/home/<user>/.pi/agent/prompts`; `opencode`: also `/home/<user>/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
+| Linux/macOS | `$AILI_HOME` | every profile: `$HOME/.agents/skills`; `pi`: also `$HOME/.pi/agent/prompts`; `opencode`: also `$HOME/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
+| Windows native | `%USERPROFILE%\code\ai\aili-workflows` | every profile: `%USERPROFILE%\.agents\skills`; Pi/OpenCode integration is explicit | selected shared-skill links; platform-specific entries remain opt-in |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
 
@@ -132,28 +132,43 @@ Do not link WSL OpenCode config to a Windows repository under `/mnt/c` by defaul
 - `agents/browser-qa-runner.md` and `agents/e2e-artifact-runner.md` - relevant-triggered browser/E2E test subagents that require repository-local placement before durable screenshots, traces, videos, reports, or bundles and avoid production data mutation.
 - `agents/web-performance-auditor.md` - read-only Web performance audit subagent.
 - `agents/spec-miner.md`, `agents/agent-evaluator.md`, and `agents/opensource-sanitizer.md` - relevant-triggered read-only spec-mining, agent-output evaluation, and OSS/public exposure review subagents.
-- `.agents/skills/*/SKILL.md` - reusable shared skill sources installed by default.
+- `.agents/skills/*/SKILL.md` - 58 reusable shared Skill sources; `default` installs the 49 Core Skills and explicit selectors add Optional Skills.
 - `.opencode/skills/*/SKILL.md` - reserved source location for manifest-declared OpenCode-only skills; these install only with `--opencode`.
-- `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - optional OpenCode delivery slash command entrypoints `/ideate`, `/define`, `/build`, and `/ship`.
-- `commands/local-review.md` - optional OpenCode slash command entrypoint `/local-review` for report-first local review; it does not override OpenCode's `/review` or replace `/ship`.
-- `.agents/skills/rose-memory/` - ROSE project-local SQLite memory skill and CLI.
-- `.agents/skills/agents-md-initialization/` - project `AGENTS.md` initialization workflow.
+- `core/commands/*.md` - canonical Command bodies. `commands/*.md` are generated OpenCode compatibility projections.
+- `commands/ideate.md`, `commands/define.md`, `commands/build.md`, and `commands/ship.md` - Delivery Commands `/ideate`, `/define`, `/build`, and `/ship`.
+- `commands/local-review.md`, `commands/handoff.md`, `commands/agents-md.md`, `commands/harness-audit.md`, `commands/retro.md`, and `commands/security-review.md` - Utility Commands; they do not create lifecycle phases or independent acceptance/verdict authority.
+- `core/governance/mempalace.md`, `manifests/mempalace-tool.json`, and `src/mempalace.ts` - the external MemPalace provider contract, capability planning, and fail-closed resolver.
 - `templates/AGENTS.md` - single source template for project-local `AGENTS.md` files.
 - `templates/opencode-global-AGENTS.md` - installer-owned source for reusable global OpenCode `AGENTS.md` rules.
 - `scripts/agents_md.py` - `init`, `update`, and `check` tool for generated project `AGENTS.md` files.
-- `scripts/install_opencode.sh` - safe WSL/Linux fallback installer: shared skills plus OfficeCLI by default, `--skip-officecli` to omit the tool, and OpenCode integration with `--opencode`.
+- `scripts/install_opencode.sh` - safe WSL/Linux fallback installer with `--profile default|pi|opencode`, repeatable Skill selectors, generated adapter installation, and separately approval-gated OfficeCLI.
 
-Slash commands are optional entrypoints. This repository ships `/ideate`, `/define`, `/build`, and `/ship` as delivery commands mapped to `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`; it also ships `/local-review` as a standalone local audit command. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned.
+Slash commands are optional entrypoints. This repository ships four Delivery Commands—`/ideate`, `/define`, `/build`, and `/ship`—mapped to generated `commands/{ideate,define,build,ship}.md` and backed by `.agents/skills/aili-delivery-flow`. It also ships six Utility Commands: `/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, and `/security-review`. Utilities retain their action-specific gates but are not lifecycle phases or independent acceptance/verdict owners. Internal stages such as research, questionnaire, test-plan, implement, fix, debug, `/review`, and evolve are not shipped as AILI top-level commands; `/review` remains OpenCode-owned. `/aili-doctor` and `/simplify` are not AILI commands.
 
-The canonical role inventory is primary ROSE plus 19 repository-managed subagents. ROSE runs a proactive Task-trigger scan at each non-trivial intent and changed-evidence work split; an eligible trigger dispatches promptly, while direct work is the no-trigger/blocked fallback. Default concurrency starts at two but is not a hard cap; larger model-selected fan-out requires independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan. Every concrete Task context is single-use: one bounded assignment, one terminal result or failure, and no old-`task_id` follow-up, repair, recheck, clarification, continuation, or automatic retry. A later same-type Task must start fresh and independently pass a fresh trigger-and-benefit decision. All 19 managed profiles remain non-delegating and retain `external_directory: deny`; only ROSE has per-operation external-directory ask and lifecycle/integration/final-verdict authority. `web-researcher` remains the web-only research role: its web capability does not grant external local-directory, mutation, or delegation access. Built-in `explore` and `general` are outside this managed inventory.
+The canonical role inventory is primary ROSE plus 19 repository-managed subagents. ROSE runs a proactive Task-trigger scan at each non-trivial intent and changed-evidence work split; an eligible trigger dispatches promptly, while direct work is the no-trigger/blocked fallback. Default concurrency starts at two but is not a hard cap; larger model-selected fan-out requires independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan. OpenCode dispatches every Task as a fresh terminal context with no old-`task_id` resumption. A persistent adapter may continue only unchanged same-package work; changed role, scope, permissions, acceptance, write scope, expected result, or evidence requires a new package. Empty, partial, failed, or blocked results never authorize automatic retry. All 19 managed profiles remain non-delegating and retain `external_directory: deny`; only ROSE has per-operation external-directory ask and lifecycle/integration/final-verdict authority. `web-researcher` remains the web-only research role: its web capability does not grant external local-directory, mutation, or delegation access. Built-in `explore` and `general` are outside this managed inventory.
+
+## Profile and Skill Selection
+
+`default`, `pi`, and `opencode` are additive over the same 49 Core Skills. The nine Optional Skills are `academic-paper-review`, `systematic-literature-review`, `newsletter-generation`, `consulting-analysis`, `android-native-dev`, `ios-application-dev`, `flutter-dev`, `react-native-dev`, and `shader-dev`. `research` and `specialized-dev` are convenience aliases for Optional Skill groups.
+
+`--skill <name>` and `--skill-group <research|specialized-dev>` are repeatable. Repeated selectors compose and deduplicate; a single Skill never expands to its group. Unknown values fail closed before mutation. `doctor` accepts the same profile and selector flags and reports the matching installation requirements, generated drift, unavailable capabilities, and external-tool status without repairing anything.
+
+```bash
+npx -y rose-aili install --profile default
+npx -y rose-aili install --profile pi
+npx -y rose-aili install --profile opencode
+npx -y rose-aili install --profile default --skill academic-paper-review --skill-group specialized-dev
+npx -y rose-aili doctor --profile pi --skill systematic-literature-review
+```
 
 ## Installation Decision Rule
 
-[FRAME] Use `rose-aili install` for shared skills plus default OfficeCLI detect-or-install. Use `--skip-officecli` when the user explicitly declines that tool step. Use `rose-aili install --opencode` for repository-managed global AGENTS rules, agents, commands, OpenCode-only skills, and optional OpenCode JSON/JSONC config. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
+[FRAME] Use `rose-aili install` for the default 49 Core Skills. Use `--profile pi` for generated Pi prompts or `--profile opencode` for repository-managed global AGENTS rules, agents, Commands, and optional OpenCode JSON/JSONC config. External OfficeCLI/MemPalace planning is reported separately; only a separately approved `--enable-officecli` or `--enable-mempalace` runs that external operation. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
 
 ```bash
 npx -y rose-aili install
-npx -y rose-aili install --opencode
+npx -y rose-aili install --profile pi
+npx -y rose-aili install --profile opencode
 ```
 
 Before npm publishing, use the GitHub package-spec form from the repository URL:
@@ -167,25 +182,29 @@ Use these non-interactive flags for AI-agent or scripted setup:
 ```bash
 npx -y rose-aili install --yes
 npx -y rose-aili install --dry-run
+npx -y rose-aili install --profile pi
+npx -y rose-aili install --profile default --skill academic-paper-review --skill-group research
+npx -y rose-aili install --enable-officecli
+npx -y rose-aili install --enable-mempalace
 npx -y rose-aili install --skip-officecli
-npx -y rose-aili install --opencode --yes --model anthropic/claude-sonnet-4-5
-npx -y rose-aili install --opencode --set-default-rose
-npx -y rose-aili install --opencode --skip-opencode-config
-npx -y rose-aili install --opencode --enable-playwright
-npx -y rose-aili install --opencode --enable-codegraph
-npx -y rose-aili install --opencode --enable-openspec --project-root <absolute-canonical-path>
-npx -y rose-aili install --opencode --skip-openspec
-npx -y rose-aili update --opencode --skip-openspec
+npx -y rose-aili install --profile opencode --yes --model anthropic/claude-sonnet-4-5
+npx -y rose-aili install --profile opencode --set-default-rose
+npx -y rose-aili install --profile opencode --skip-opencode-config
+npx -y rose-aili install --profile opencode --enable-playwright
+npx -y rose-aili install --profile opencode --enable-codegraph
+npx -y rose-aili install --profile opencode --enable-openspec --project-root <absolute-canonical-path>
+npx -y rose-aili install --profile opencode --skip-openspec
+npx -y rose-aili update --profile opencode --skip-openspec
 npx -y rose-aili update --skip-officecli
 npx -y rose-aili doctor
 npx -y rose-aili update
 ```
 
-[FRAME] OfficeCLI default-on/skip/dry-run behavior is independent of `--opencode`. OpenCode config sync remains disabled outside `--opencode` scope. Within `--opencode`, the existing preserve/conflict behavior remains, and Playwright, CodeGraph, Graphify, and OpenSpec retain their separate explicit flags. OpenCode-specific flags fail closed when `--opencode` is absent.
+[FRAME] OfficeCLI and MemPalace are default-selected plans, but their external execution is opt-in and separately approved. OpenCode config sync remains disabled outside the `opencode` profile. Within that profile, the existing preserve/conflict behavior remains, and Playwright, CodeGraph, Graphify, and OpenSpec retain their separate explicit flags. OpenCode-specific flags fail closed outside the `opencode` profile.
 
 ### Managed OfficeCLI Tool
 
-[FRAME] `install` and `update` detect the fixed managed shim first. An exact current version is preserved without npm; a missing or drifted version uses the fixed local-prefix package contract from `manifests/officecli-tool.json`. The summary reports component installation and OfficeCLI separately; OfficeCLI failure returns nonzero without rolling back already-synced Skills.
+[FRAME] OfficeCLI is an installer-managed, non-routable external tool, not a Skill, MCP, public command, PATH entry, or shell integration. An enabled OfficeCLI operation detects the fixed managed shim first. An exact current version is preserved without npm; a missing or drifted version uses the fixed local-prefix package contract from `manifests/officecli-tool.json`. Without `--enable-officecli`, the summary records the planned operation and no probe or install command runs. OfficeCLI failure returns nonzero without rolling back already-synced Skills.
 
 [FRAME] `--skip-officecli` performs no OfficeCLI probe, target creation, or npm command. `--dry-run` reports the exact target, package, argv, and network/dependency effects without creating the target or running an executable. Neither flag installs an OfficeCLI Skill, MCP, public command, PATH entry, shell integration, or package full installer.
 
@@ -197,9 +216,9 @@ AILI has no active DCP integration. `install`, `update`, and `doctor` do not ins
 
 ### Retired Skill Reconciliation
 
-`using-agent-skills`, `repo-evidence-first`, and `verification-before-completion` are no longer runnable or default-installed skills. Fresh install and doctor requirements come from the current component manifest and omit them.
+`local-review-gate`, `session-handoff`, `agents-md-initialization`, `harness-optimization-audit`, `evidence-scoped-retrospective`, and `rose-memory` are no longer runnable, catalogued, capability-assigned, or default-installed Skills. Fresh install and doctor requirements come from the current component manifest and omit them.
 
-An explicit `install` or `update`, including `--dry-run`, checks only those three exact destinations under `$HOME/.agents/skills`. The installer proves managed ownership only when the destination is a symlink whose resolved target exactly equals `<AILI_HOME>/.agents/skills/<retired-name>`. A proven link is reported and unlinked (or reported as a planned unlink in dry-run). A copied directory, ordinary file, unreadable/modified symlink, different target, or any other ambiguous entry is preserved and reported; the installer never removes a sibling, parent directory, backup, or user file. The CLI exposes the per-name result under `componentInstall.retiredSkillReconciliation`. Doctor adds no stale-copy result field.
+An explicit `install` or `update --reconcile-retired-skills`, including `--dry-run`, checks only those six exact destinations under `$HOME/.agents/skills`. The installer proves managed ownership only when the destination is a symlink whose resolved target exactly equals `<AILI_HOME>/.agents/skills/<retired-name>`. A proven link is reported and unlinked (or reported as a planned unlink in dry-run). A copied directory, ordinary file, unreadable/modified symlink, different target, or any other ambiguous entry is preserved and reported; the installer never removes a sibling, parent directory, backup, legacy memory data, or user file. The CLI exposes the per-name result under `componentInstall.retiredSkillReconciliation`. Doctor adds no stale-copy result field.
 
 Do not manually delete an ambiguous retired-name entry. Review it separately and decide whether it is user content. Rolling back to a prior repository/package version may reinstall that version's managed catalog through the normal installer, but cannot reconstruct user-owned content from guesses.
 
@@ -261,7 +280,6 @@ Back up individual conflicting entries only.
 Allowed by default:
 
 - back up `~/.config/opencode/agents/rose.md` if it is a real file and conflicts with the new symlink
-- back up `$HOME/.agents/skills/rose-memory` if it is a real directory and conflicts with the new symlink
 - back up `~/.config/opencode/commands/ideate.md` if it is a real file and conflicts with the new symlink
 - back up `~/.config/opencode/AGENTS.md` if it is a real file and conflicts with the installer-owned global AGENTS file
 
@@ -278,7 +296,7 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. Without `--opencode`, it links shared skills into `$HOME/.agents/skills`, runs the OfficeCLI tool step unless skipped, and leaves OpenCode home untouched. With `--opencode`, it also preserves OpenCode's existing global directories and links individual managed entries.
+Use this by default. The `default` profile links selected shared Skills into `$HOME/.agents/skills` and leaves OpenCode home untouched. `--profile pi` additionally installs generated top-level Pi prompts; `--profile opencode` additionally preserves OpenCode's existing global directories and links individual managed entries. OfficeCLI runs only with its separately approved `--enable-officecli` flag.
 
 WSL/Linux recommended command:
 
@@ -288,7 +306,7 @@ scripts/install_opencode.sh --mode selective --skip-officecli
 scripts/install_opencode.sh --mode selective --opencode
 ```
 
-The full OpenCode entry-linking logic below corresponds only to the component portion of the `--opencode` scope. It does not implement OfficeCLI, exact retired-skill ownership reconciliation, or structured failure reporting; use the CLI or installer script rather than hand-rolling those steps.
+The full OpenCode entry-linking logic below corresponds only to the component portion of the `opencode` profile. It does not implement OfficeCLI, MemPalace, exact retired-skill ownership reconciliation, or structured failure reporting; use the CLI or installer script rather than hand-rolling those steps.
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"
@@ -352,7 +370,7 @@ Result examples:
 ~/.config/opencode/AGENTS.md -> $AILI_HOME/templates/opencode-global-AGENTS.md
 
 $HOME/.agents/skills/
-  rose-memory -> $AILI_HOME/.agents/skills/rose-memory
+  <selected shared Skills only>
 
 ~/.config/opencode/commands/
   ideate.md -> $AILI_HOME/commands/ideate.md
@@ -598,7 +616,7 @@ The project template is intentionally small. Reusable safety, git, verification,
 
 Use symlinks for reusable global ROSE agents and skills. Use project-local generated files for project-specific instructions.
 
-Use the `agents-md-initialization` skill for this flow. The skill should call the script instead of writing `AGENTS.md` by hand:
+Use the `/agents-md` Utility Command for this flow. It should call the script instead of writing `AGENTS.md` by hand:
 
 ```bash
 AILI_HOME="/absolute/path/to/aili-workflows"
@@ -700,11 +718,11 @@ AILI provides no cron, scheduler, watcher, webhook, listener, daemon, persistent
 
 ## Source, Adapter, and Distribution Boundaries
 
-- Canonical AILI source is this repository's four command files, shared `.agents/skills`, any explicitly manifest-declared `.opencode/skills`, agents, templates, manifests, TypeScript, and installer sources.
-- Root `AGENTS.md`, `dist/`, installed OpenCode files, and installed shared skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
+- Canonical AILI source is `core/commands/` for four Delivery and six Utility Commands, `core/protocols/` for versioned shared schemas, shared `.agents/skills`, canonical governance/roles, adapters, manifests, TypeScript, and installer sources. Root `agents/`, `commands/`, and `templates/opencode-global-AGENTS.md` are generated compatibility projections, not independent semantic owners.
+- Root `AGENTS.md`, `dist/`, `generated/`, installed Pi/OpenCode files, and installed shared Skills are generated or installed downstream outputs. Change their canonical source/generator instead of hand-editing them.
 - Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` direct adapters are OpenSpec-owned ignored outputs, not repository-managed OpenCode-only skills. They remain outside AILI guarantees and are not installed by `--opencode` unless a future accepted manifest change explicitly promotes a distinct canonical component.
 - Pinned upstream files under canonical skill `references/upstream/` are inert licensed data, not another installed skill or runtime. They use `SKILL.upstream.md`; upstream scripts must remain non-executable data and must never become commands, hooks, or routing targets.
-- `package.json#files` ships canonical agents, `.agents/`, commands, manifests, both AGENTS templates, required helpers/fixtures, README/setup docs, and built CLI. A future manifest-declared `.opencode/skills/<name>` component must add that exact canonical source to the package allowlist; the package must not broadly include ignored/generated `.opencode` state.
+- `package.json#files` ships built CLI, `core/`, `adapters/`, `generated/`, compatibility projections, `.agents/`, manifests, both AGENTS templates, required helpers/fixtures, and README/setup docs. A future manifest-declared `.opencode/skills/<name>` component must add that exact canonical source to the package allowlist; the package must not broadly include ignored/generated `.opencode` state.
 
 The upstream distribution path is currently fail-closed. OpenCode `1.17.18` installed-catalog recursion remains `UV-005`, and filesystem mode evidence may not prove required upstream `0644` modes; until both are resolved, do not claim distribution/registration/enablement or release readiness. `npm pack --dry-run` is content evidence only and does not publish or resolve runtime catalog/mode behavior.
 
@@ -731,11 +749,11 @@ The registration target is the upstream-owned `$HOME/.agents/skills/graphify/`. 
 
 Use an already installed official Graphify skill only for one scoped architecture-orientation result when a usable upstream graph exists. Use CodeGraph or current files for exact symbols, source, call paths, tests, and current impact. Treat upgrade, reinstall, unregistration, removal, and every project graph operation as new exact operations.
 
-### Versioned Session Handoffs
+### Repository-Local Handoffs
 
-The `session-handoff` skill supports explicit CREATE, LIST, and RESUME. OpenSpec changes use `openspec/changes/<change-id>/handoffs/`; ordinary tasks use one confirmed repository-local `<task-root>/handoffs/`. Legacy `<task-root>/handoff.md` remains an explicitly selected read-only input.
+The `/handoff` Utility Command supports explicit CREATE, LIST, and RESUME. OpenSpec changes use `openspec/changes/<change-id>/handoffs/`; ordinary tasks use one confirmed repository-local `<task-root>/handoffs/`. Legacy `<task-root>/handoff.md` remains an explicitly selected read-only input.
 
-The skill-local `scripts/session_handoff.py` is a deterministic filesystem helper, not another workflow or public command. It enforces exclusive UTC snapshot names, containment and symlink rejection, validated draft/finalize transitions, SHA-256 checks, atomic regular-file `LATEST.md`, bounded-frontmatter LIST, exact-first RESOLVE, legacy preservation, and localized exact-path resume output. Finalized snapshots are not automatically edited, migrated, archived, or pruned; a correction creates a new `continues_from` snapshot.
+The Utility Command preserves a redacted, immutable, reference-first snapshot rather than creating a new workflow. Finalized snapshots are not automatically edited, migrated, archived, or pruned; a correction creates a new `continues_from` snapshot.
 
 Do not create a handoff because of context pressure, compression, phase completion, a timer, or a hook. Do not promote it into memory. On RESUME, revalidate the current root, worktree, branch/HEAD, dirty state, permissions, contracts, attachments, and affected evidence before continuing.
 
@@ -747,28 +765,23 @@ Typical intent mapping selects one primary loop rather than a default skill chai
 - One concrete build, typecheck, lint, test, packaging, or CI failure: `build-failure-repair`.
 - Explicit bounded review: `code-review-and-quality`.
 - App UI as the primary deliverable: `frontend-ui-engineering`.
-- Explicit project-local memory continuity: `rose-memory`.
+- Durable-memory request: MemPalace provider planning; no local memory Skill is routed.
 
-## Memory Setup
+## MemPalace Planning
 
-Project memory is always project-local.
+MemPalace is an external provider, not a project-local SQLite store or installed Skill. `rose-aili install` reports the exact default-selected install plan `uv tool install mempalace==3.6.0`; installation, MCP configuration, initialization, model download, mining, hooks, reads, writes, coordination/logstream writes, and deletion require independent exact approvals.
 
-Do not symlink `memory/memory.db` into global OpenCode config.
+The canonical Palace path resolves to `$AILI_MEMPALACE_PALACE_PATH` when set, otherwise `$HOME/.mempalace/aili-palace`. Resolution and planning do not create either path or a repository-local Palace. Project Wings, the `shared` Wing, and stable-Agent diaries are deterministic mappings inside that one Palace.
 
-When a project needs ROSE memory:
+Required memory work fails closed if MemPalace is absent, Python or exact provider version is incompatible, supported MCP configuration is absent, or another supported client may write concurrently. Concurrent-write safety remains `Unverified`; there is no SQLite or `rose-memory` fallback. Legacy user data remains untouched. A one-time repository-scoped migration prompt may be presented, but no data is read, migrated, rewritten, or deleted automatically.
 
-```bash
-mkdir -p memory
-python ~/.agents/skills/rose-memory/references/memory_cli.py init --db memory/memory.db
-python ~/.agents/skills/rose-memory/references/memory_cli.py doctor --db memory/memory.db --record
-```
+## Security Review Planning
 
-Rules:
+`/security-review` is a report-only Utility Command, not a scan authorization or code-repair route. It resolves whole-repository, path, diff/ref/commit, or default working-tree input into scan units and presents each unit's target, coverage, backend, output location, and source-transmission boundary before any scan. Default working-tree planning keeps staged/unstaged tracked changes in one `--working-tree` unit and each explicitly inventoried untracked path in a separate `--path` unit. Refused, failed, uncovered, or unsupported units remain incomplete.
 
-- Do not create `memory.md` or JSON sidecars.
-- Do not edit `memory/memory.db` manually.
-- Do not copy or symlink `memory/memory.db` into global config.
-- If the `rose-memory` skill is symlinked, the CLI updates automatically when this repository updates.
+The standalone adapter is pinned to `@openai/codex-security@0.1.8`. Its injected-runner preflight and dry-run planning do not read, infer, copy, or persist credentials. If the exact CLI is unavailable, package acquisition needs a separate dependency/network/cache-write approval; each actual source-transmission scan unit needs its own approval. Findings never authorize edits, accepted risk, or a final verdict.
+
+Any potentially source-bearing scan manifest, findings, coverage, report, or artifact must use a caller-declared private location outside both the scanned repository and its enclosing Git worktree. By default AILI retains references rather than copying source-bearing output into the repository. The provider's exact transmitted source scope, endpoints, retention, encryption, telemetry, proxy behavior, backend untracked-file inclusion, and private-output filesystem/symlink privacy remain `Unverified`.
 
 ## Verification
 
@@ -788,23 +801,19 @@ test ! -L "$HOME/.config/opencode/commands"
 test -L "$HOME/.config/opencode/AGENTS.md"
 test -L "$HOME/.config/opencode/agents/rose.md"
 test -L "$HOME/.config/opencode/agents/implementer.md"
-test -L "$HOME/.agents/skills/rose-memory"
 test -L "$HOME/.config/opencode/commands/ideate.md"
 test -L "$HOME/.config/opencode/commands/define.md"
 test -L "$HOME/.config/opencode/commands/build.md"
 test -L "$HOME/.config/opencode/commands/ship.md"
 test -L "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/agents/rose.md"
-test -f "$HOME/.agents/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
 test -f "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/AGENTS.md"
 readlink "$HOME/.config/opencode/AGENTS.md"
 readlink "$HOME/.config/opencode/agents/rose.md"
-readlink "$HOME/.agents/skills/rose-memory"
 readlink "$HOME/.config/opencode/commands/ideate.md"
 readlink "$HOME/.config/opencode/commands/local-review.md"
-python "$HOME/.agents/skills/rose-memory/references/memory_cli.py" --help
 ```
 
 Windows native selective symlink setup:
@@ -816,7 +825,6 @@ Test-Path "$env:USERPROFILE\.config\opencode\commands"
 Test-Path "$env:USERPROFILE\.agents\skills"
 Get-Item "$env:USERPROFILE\.config\opencode\AGENTS.md"
 Get-Item "$env:USERPROFILE\.config\opencode\agents\rose.md"
-Get-Item "$env:USERPROFILE\.agents\skills\rose-memory"
 Get-Item "$env:USERPROFILE\.config\opencode\commands\ideate.md"
 Get-Item "$env:USERPROFILE\.config\opencode\commands\local-review.md"
 ```
@@ -825,11 +833,9 @@ Copy fallback:
 
 ```bash
 test -f "$HOME/.config/opencode/agents/rose.md"
-test -f "$HOME/.agents/skills/rose-memory/SKILL.md"
 test -f "$HOME/.config/opencode/commands/ideate.md"
 test -f "$HOME/.config/opencode/commands/local-review.md"
 test -f "$HOME/.config/opencode/AGENTS.md"
-python "$HOME/.agents/skills/rose-memory/references/memory_cli.py" --help
 ```
 
 Required checks for selected runtime add-on setup:
@@ -847,7 +853,7 @@ npx -y rose-aili update
 npx -y rose-aili doctor
 ```
 
-For symlink setup, `rose-aili update` refreshes components and performs OfficeCLI detect-or-install unless `--skip-officecli` is passed. Updating only the cloned repository makes symlinked content current but does not run the OfficeCLI tool step; the global `AGENTS.md` symlink will read the updated template after OpenCode restart:
+For symlink setup, `rose-aili update` refreshes the selected profile's components and reports external-tool plans. It runs OfficeCLI only when separately approved with `--enable-officecli`. Updating only the cloned repository makes symlinked content current but does not run any external tool; the global `AGENTS.md` symlink will read the updated template after OpenCode restart:
 
 ```bash
 : "${AILI_HOME:?Set AILI_HOME to the runtime-local aili-workflows clone}"

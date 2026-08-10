@@ -9,6 +9,7 @@ grant a runtime capability or operation permission.
 | Adapter | Used for | Must preserve |
 |---|---|---|
 | OpenSpec | proposal, design, specs, tasks, `interview.md`, `test-plan.md`, change-local `formal-task-board.md`, validation | approved scope in `tasks.md`, one `aili-task-board/v1` current-state projection across formal phases, strict validation, `requirements-grilling` interview generation, `test-document-generator` test-plan generation |
+| Pi profile | generated top-level prompts under `generated/pi/prompts/` | Core Skill selection, non-recursive prompt installation, and package-only Pi system/role/selection/protocol artifacts; it does not implement or prove Pi runtime/session behavior |
 | Custom files | repo-local plans, tickets, docs, adapter-mapped formal Board | source evidence, acceptance criteria, and one repository-local Board path when formal packages exist |
 | Auto detection | inferring available backend from repo | conservative fallback and clarification when ambiguous |
 
@@ -23,8 +24,10 @@ grant a runtime capability or operation permission.
 
 ## OpenSpec Direct-Adapter Boundary
 
-AILI canonical source is the four delivery command documents plus `.agents/skills/aili-delivery-flow` and its referenced protocols. Installed copies are downstream adapters. Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` files are OpenSpec-owned direct adapters and remain unchanged.
+AILI canonical command source is `core/commands/` for four Delivery Commands and six Utility Commands. Versioned package/selection/Board schemas live in `core/protocols/`; lifecycle prose remains with `.agents/skills/aili-delivery-flow` and its references. Root `commands/` are downstream generated compatibility projections. Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` files are OpenSpec-owned direct adapters and remain unchanged.
 
 Direct OpenSpec adapters may be callable outside AILI. AILI does not route to, recommend, wrap, suppress, prevent, or control those adapters, and direct output is not AILI acceptance, readiness, verification, completion, or Graphify-selection evidence. The four AILI routes must establish their own classifier, lifecycle gates, permissions, artifact freshness, and evidence even when OpenSpec is the selected storage backend.
 
 Pinned files under canonical skill `references/upstream/` are upstream reference data, not backend adapters or runnable skills. External OpenSpec and OpenCode behavior remains upstream runtime behavior; generated adapter integration/control is outside this phase.
+
+`--profile pi` installs only the generated prompt projection at the supported global Pi prompt path. `generated/pi/system.md`, role metadata, selection map, and schemas are package artifacts for the separately owned Pi runtime; they are not installed or runtime-equivalence evidence.

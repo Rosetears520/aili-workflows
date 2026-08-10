@@ -106,14 +106,13 @@ class GraphifyOfficialIntegrationTests(unittest.TestCase):
         self.assertFalse(any("graphify" in f"{name} {command}".lower() for name, command in package.get("scripts", {}).items()))
 
     def test_local_review_consumes_existing_output_without_launch_ownership(self):
-        skill = (ROOT / ".agents" / "skills" / "local-review-gate" / "SKILL.md").read_text(encoding="utf-8")
-        reference = (ROOT / ".agents" / "skills" / "local-review-gate" / "references" / "graphify-local-review.md").read_text(encoding="utf-8")
-        self.assertIn("existing-output-only adapter", skill)
-        self.assertIn("does not install, register, configure, launch, update, or remove Graphify", reference)
-        self.assertIn("Never invoke `graphify`, `/graphify`, `uv`", reference)
-        self.assertNotIn("sole guarded launcher", reference)
-        self.assertNotIn("graphifyy==0.9.12", reference)
-        self.assertNotIn("scripts/graphify_baseline_check.py", reference)
+        command = (ROOT / "core" / "commands" / "local-review.md").read_text(encoding="utf-8")
+        fixture = FIXTURE.read_text(encoding="utf-8")
+        self.assertIn("standalone non-delivery audit", command)
+        self.assertIn("not lifecycle acceptance or SHIP", command)
+        self.assertNotIn("Graphify", command)
+        self.assertIn("local-review-existing-output-only", fixture)
+        self.assertIn("local-review-no-output", fixture)
 
     def test_global_routing_separates_architecture_from_exact_locality(self):
         surfaces = [
@@ -124,7 +123,6 @@ class GraphifyOfficialIntegrationTests(unittest.TestCase):
         text = "\n".join(path.read_text(encoding="utf-8") for path in surfaces)
         self.assertIn("architecture-orientation", text)
         self.assertIn("CodeGraph or current files", text)
-        self.assertIn("never run automatically", text)
         self.assertIn("no lifecycle phase installs, registers, or runs Graphify automatically", text)
 
     def test_runtime_source_uses_only_official_install_and_registration_commands(self):

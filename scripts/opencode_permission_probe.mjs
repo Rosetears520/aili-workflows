@@ -400,7 +400,7 @@ const A33_MANAGED_AGENT_PATHS = Object.freeze([
   "agents/rose.md", "agents/agent-evaluator.md", "agents/ai-regression-scout.md", "agents/browser-qa-runner.md",
   "agents/code-reviewer.md", "agents/code-scout.md", "agents/convergence-reviewer.md", "agents/doc-researcher.md",
   "agents/e2e-artifact-runner.md", "agents/implementer.md", "agents/opensource-sanitizer.md", "agents/plan-auditor.md",
-  "agents/pr-test-analyzer.md", "agents/security-auditor.md", "agents/silent-failure-reviewer.md", "agents/spec-miner.md",
+  "agents/pr-test-analyzer.md", "agents/security-auditor.md", "agents/silent-failure-reviewer.md", "agents/solution-architect.md", "agents/spec-miner.md",
   "agents/test-coverage-reviewer.md", "agents/test-engineer.md", "agents/web-performance-auditor.md", "agents/web-researcher.md",
 ]);
 const A33_INSTALL_ENV_CONTROLS = Object.freeze({ OPENCODE_ALLOW_CUSTOM_HOME: "yes", AILI_ALLOW_CROSS_ENV: "yes" });
@@ -1566,11 +1566,12 @@ function managedAgentSources(project) {
   if (realpathSync(manifestPath) !== manifestPath || lstatSync(manifestPath).isSymbolicLink() || !statSync(manifestPath).isFile()) throw new Error("managed manifest path mismatch");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const entries = manifest?.components?.agents;
-  const fields = ["name", "path", "required", "defaultInstalled", "repositoryManaged"];
-  if (manifest?.name !== "rose-aili" || manifest?.schemaVersion !== 1 || !Array.isArray(entries) || entries.length !== 20) throw new Error("managed manifest malformed");
+  const fields = ["name", "path", "sourcePath", "projection", "required", "defaultInstalled", "repositoryManaged"];
+  if (manifest?.name !== "rose-aili" || manifest?.schemaVersion !== 1 || !Array.isArray(entries) || entries.length !== 21) throw new Error("managed manifest malformed");
   const byPath = new Map();
   for (const entry of entries) {
     if (!exactKeys(entry, fields) || typeof entry.name !== "string" || entry.path !== `agents/${entry.name}.md`
+      || entry.sourcePath !== `generated/opencode/agents/${entry.name}.md` || entry.projection !== "generated-compatibility"
       || entry.required !== true || entry.defaultInstalled !== false || entry.repositoryManaged !== true || byPath.has(entry.path)) throw new Error("managed manifest malformed");
     byPath.set(entry.path, entry);
   }
@@ -1645,7 +1646,7 @@ function observeManagedProfile(project, runRoot, opencodeHome, command, summary)
     manifest_agent_paths: canonical.manifest_agent_paths, canonical_agent_paths: canonical.canonical_agent_paths,
     aili_home: project, opencode_home: opencodeHome, canonical_agent_names: expectedNames, installed_agent_names: installedNames,
     agents, no_additional_override_layer: true, isolated_config_entries: configEntries,
-    managed_subagents_restricted: agents.filter(({ name }) => name !== "rose").length === 19,
+    managed_subagents_restricted: agents.filter(({ name }) => name !== "rose").length === 20,
     rose_distinction: agents.find(({ name }) => name === "rose"), builtins_inferred: false, uv006_resolved: false,
   };
 }

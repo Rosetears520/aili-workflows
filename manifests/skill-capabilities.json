@@ -35,10 +35,10 @@
       "missingBehavior": "direct work or blocked, according to the owning router"
     },
     "memory": {
-      "requiredCapabilities": ["memory.project"],
+      "requiredCapabilities": ["memory.provider.mempalace"],
       "optionalCapabilities": ["repo.read"],
-      "sideEffectClass": "project-local-state",
-      "missingBehavior": "BLOCKED; do not create an alternate store"
+      "sideEffectClass": "external-provider-state",
+      "missingBehavior": "BLOCKED; do not create an alternate store, SQLite fallback, or rose-memory route"
     },
     "artifact-runtime": {
       "requiredCapabilities": ["artifact.transform"],
@@ -58,11 +58,11 @@
     },
     {
       "profile": "subagent-dispatch",
-      "skills": ["aili-delivery-flow", "local-review-gate", "parallel-subagent-dispatch", "review-pipeline"]
+      "skills": ["aili-delivery-flow", "parallel-subagent-dispatch", "review-pipeline"]
     },
     {
       "profile": "memory",
-      "skills": ["rose-memory"]
+      "skills": []
     },
     {
       "profile": "artifact-runtime",
@@ -70,7 +70,7 @@
     },
     {
       "profile": "repo-workflow",
-      "skills": ["agents-md-initialization", "ai-regression-scout", "api-and-interface-design", "build-failure-repair", "chart-visualization", "ci-cd-and-automation", "code-review-and-quality", "code-review-quality-gates", "code-simplification", "comment-accuracy-review", "consulting-analysis", "context-engineering", "coverage-review", "data-analysis", "deprecation-and-migration", "documentation-and-adrs", "e2e-artifact-handling", "evidence-scoped-retrospective", "explain-by-allegory", "frontend-ui-engineering", "fullstack-dev", "git-workflow-and-versioning", "harness-evolution", "harness-issue-triage", "harness-optimization-audit", "idea-refine", "incremental-implementation", "oss-release-readiness", "performance-optimization", "planning-and-task-breakdown", "pr-test-analysis", "requirements-grilling", "security-and-hardening", "session-handoff", "shipping-and-launch", "silent-failure-hunting", "spec-driven-development", "strategy-stress-test", "test-document-generator", "test-driven-development", "write-skills"]
+      "skills": ["ai-regression-scout", "api-and-interface-design", "build-failure-repair", "chart-visualization", "ci-cd-and-automation", "code-review-and-quality", "code-review-quality-gates", "code-simplification", "comment-accuracy-review", "consulting-analysis", "context-engineering", "coverage-review", "data-analysis", "deprecation-and-migration", "documentation-and-adrs", "e2e-artifact-handling", "explain-by-allegory", "frontend-ui-engineering", "fullstack-dev", "git-workflow-and-versioning", "harness-evolution", "harness-issue-triage", "idea-refine", "incremental-implementation", "oss-release-readiness", "performance-optimization", "planning-and-task-breakdown", "pr-test-analysis", "requirements-grilling", "security-and-hardening", "shipping-and-launch", "silent-failure-hunting", "spec-driven-development", "strategy-stress-test", "test-document-generator", "test-driven-development", "write-skills"]
     }
   ],
   "unverified": [

@@ -5,10 +5,10 @@ Use this map to classify failures before proposing a harness change. Do not modi
 | Category | Owns | Examples | First evidence to check |
 |---|---|---|---|
 | system-rules | Runtime authority and safety boundaries | ROSE charter, AGENTS template | `agents/rose.md`, `templates/AGENTS.md` |
-| command | User entrypoints | Exactly four delivery shortcuts `/ideate`, `/define`, `/build`, `/ship`; standalone non-delivery `/local-review` | `commands/*.md` |
+| command | User entrypoints | Four Delivery Commands `/ideate`, `/define`, `/build`, `/ship`; six Utility Commands `/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, `/security-review` | `core/commands/*.md`, generated `commands/*.md` |
 | skill | Workflow implementation | delivery flow, harness evolution, review gates | `.agents/skills/*/SKILL.md`, references |
 | subagent-config | Delegation contracts | task packets, result reports, specialist boundaries | `agents/*.md`, `.agents/skills/aili-delivery-flow/references/protocols/subagent-*.md` |
-| memory | Provenance and receipts | memory writeback, retrieval packs | `.agents/skills/rose-memory/SKILL.md` |
+| memory | External provider planning and fail-closed use | MemPalace compatibility, scoped Wing/diary mapping, operation gates | `core/governance/mempalace.md`, `manifests/mempalace-tool.json`, `src/mempalace.ts` |
 | tool-policy | Tool use and trust boundaries | git, browser, bash, file edits | `docs/harness/tool-policies.md` |
 | middleware/hooks | Runtime interception | OpenCode hooks, future middleware | `.opencode/`, setup docs |
 | environment | Host constraints | WSL/Linux paths, network, dependencies | setup docs, test-plan |
