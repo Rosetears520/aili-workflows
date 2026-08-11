@@ -18,6 +18,7 @@
     "core/commands/security-review.md",
     "core/commands/ship.md",
     "core/governance/decision-core.md",
+    "core/governance/hero-scope-limits.md",
     "core/governance/mempalace.md",
     "core/governance/operating-discipline.md",
     "core/protocols/README.md",
@@ -27,7 +28,7 @@
     "core/roles/roles.json",
     "manifests/runtime-projections.json"
   ],
-  "inputSha256": "429d2a1df0d5125031ae0b1b6e30d8d082f37a96b4289ad510ce0b7ef042e8f3",
+  "inputSha256": "911d5d0f1390f2edb80d97321d4d59aab6dc1cbebe4c7389d5bdaa11b79052ea",
   "outputs": [
     {
       "path": "agents/agent-evaluator.md",
@@ -447,11 +448,12 @@
       "canonicalInputs": [
         "adapters/opencode/adapter.json",
         "core/governance/decision-core.md",
+        "core/governance/hero-scope-limits.md",
         "core/governance/operating-discipline.md",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "278e7384c02d36cb6735a82e5f041e9437b9f48b1074a3a3e80773f51b4052a1",
-      "outputSha256": "72f910289992b95ceedd8334f3310bdf6e1d4f8bb516e899a5bf6c4be30a0a98"
+      "inputSha256": "7b8e71bd49553cc6e9f6c6dd0996499c49e390e880d8cef44d80c01d3ff20452",
+      "outputSha256": "1bf29f8ecc7c682f1f25ae82ab96e43f61805e8f3d49a7241aa95c1a03a638c8"
     },
     {
       "path": "generated/opencode/agents/agent-evaluator.md",
@@ -871,11 +873,12 @@
       "canonicalInputs": [
         "adapters/opencode/adapter.json",
         "core/governance/decision-core.md",
+        "core/governance/hero-scope-limits.md",
         "core/governance/operating-discipline.md",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "278e7384c02d36cb6735a82e5f041e9437b9f48b1074a3a3e80773f51b4052a1",
-      "outputSha256": "72f910289992b95ceedd8334f3310bdf6e1d4f8bb516e899a5bf6c4be30a0a98"
+      "inputSha256": "7b8e71bd49553cc6e9f6c6dd0996499c49e390e880d8cef44d80c01d3ff20452",
+      "outputSha256": "1bf29f8ecc7c682f1f25ae82ab96e43f61805e8f3d49a7241aa95c1a03a638c8"
     }
   ]
 }

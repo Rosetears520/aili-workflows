@@ -49,13 +49,16 @@ async function buildExpected(projectRoot) {
     throw new Error("Unsupported runtime projection manifest.");
   }
   const governanceInputs = ["core/governance/decision-core.md", "core/governance/operating-discipline.md"];
-  const [rolesDocument, openCodeAdapter, piAdapter, governanceParts] = await Promise.all([
+  const openCodeGlobalOnlyInputs = ["core/governance/hero-scope-limits.md"];
+  const [rolesDocument, openCodeAdapter, piAdapter, governanceParts, openCodeGlobalParts] = await Promise.all([
     readJson(projectRoot, "core/roles/roles.json"),
     readJson(projectRoot, "adapters/opencode/adapter.json"),
     readJson(projectRoot, "adapters/pi/adapter.json"),
-    Promise.all(governanceInputs.map((relativePath) => readText(projectRoot, relativePath)))
+    Promise.all(governanceInputs.map((relativePath) => readText(projectRoot, relativePath))),
+    Promise.all(openCodeGlobalOnlyInputs.map((relativePath) => readText(projectRoot, relativePath)))
   ]);
   const governance = governanceParts.join("\n\n");
+  const openCodeGlobalContent = openCodeGlobalParts.join("\n\n");
   validateProjectionInputs(projection, rolesDocument, openCodeAdapter, piAdapter, projectRoot);
 
   const commands = new Map();
@@ -91,8 +94,8 @@ async function buildExpected(projectRoot) {
     addOutput(compatibility, `agents/${role.id}.md`, openCode, roleInputs, opencodeOutputRecords, projectRoot);
   }
 
-  const globalInputs = ["manifests/runtime-projections.json", ...governanceInputs, "adapters/opencode/adapter.json"];
-  const globalProjection = renderOpenCodeGlobal(governance, openCodeAdapter, globalInputs, projectRoot);
+  const globalInputs = ["manifests/runtime-projections.json", ...governanceInputs, ...openCodeGlobalOnlyInputs, "adapters/opencode/adapter.json"];
+  const globalProjection = renderOpenCodeGlobal(governance, openCodeGlobalContent, openCodeAdapter, globalInputs, projectRoot);
   addOutput(generated, "generated/opencode/AGENTS.md", globalProjection, globalInputs, opencodeOutputRecords, projectRoot);
   addOutput(compatibility, openCodeAdapter.globalProjection.compatibilityPath, globalProjection, globalInputs, opencodeOutputRecords, projectRoot);
 
@@ -130,8 +133,9 @@ async function buildExpected(projectRoot) {
     ...await listFiles(projectRoot, "adapters"),
     "manifests/runtime-projections.json"
   ].sort();
+  const piProvenanceInputs = allInputs.filter((relativePath) => !openCodeGlobalOnlyInputs.includes(relativePath));
   generated.set("generated/opencode/provenance.json", renderProvenance("opencode", opencodeOutputRecords, allInputs, projectRoot));
-  generated.set("generated/pi/provenance.json", renderProvenance("pi", piOutputRecords, allInputs, projectRoot));
+  generated.set("generated/pi/provenance.json", renderProvenance("pi", piOutputRecords, piProvenanceInputs, projectRoot));
   return { generated, compatibility };
 }
 
@@ -186,8 +190,8 @@ function renderOpenCodeAgent(role, sharedWorkerBoundary, adapter, inputs, projec
   return `---\n${yamlObject(frontmatter)}---\n\n${provenanceComment(inputs, projectRoot)}\n\n# ${role.title}\n\n## Role\n\n${role.description}\n\n## Goal\n\n${role.goal}\n\n## Success criteria\n\n${markdownList(role.successCriteria)}\n\n## Constraints\n\n${markdownList([...(role.constraints ?? []), ...sharedBoundary])}\n\n## Tools\n\nUse only the capabilities exposed by the active runtime and only when needed for the assigned result. A task packet may narrow but never broaden them.\n\n## Output\n\n${role.output}\n\n## Stop\n\n${role.stop}\n`;
 }
 
-function renderOpenCodeGlobal(governance, adapter, inputs, projectRoot) {
-  return `${adapter.globalProjection.preamble.join("\n")}\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n`;
+function renderOpenCodeGlobal(governance, openCodeGlobalContent, adapter, inputs, projectRoot) {
+  return `${adapter.globalProjection.preamble.join("\n")}\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n\n${openCodeGlobalContent.trimEnd()}\n`;
 }
 
 function renderPiSystem(governance, roles, inputs, projectRoot) {

@@ -8,6 +8,34 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const generator = path.join(repositoryRoot, "scripts", "generate-runtime-projections.mjs");
+const heroScopeLimits = `=== SCOPE LIMITS (these bound what you PROPOSE, never what you look for) ===
+Report anything that is actually wrong here — including a rare-looking case, if
+this project actually produces it. Then keep the fix in scope:
+1. This is not a security paper. Verification is welcome; over-defense is not.
+   Unless this project states otherwise, assume a cooperating operator on their
+   own machine; if it has a real adversary, it will say so and that scope wins.
+2. Do not add hashes, checksums or fingerprints unless the hash replaces a
+   materially more expensive operation AND its result changes what happens next.
+3. No defensive scaffolding: no feature flags, migration frameworks, compat
+   layers or wrappers for cases that do not occur here.
+4. No corner-case obsession: exotic encodings, symlink races, RTL text and
+   millisecond races are out of scope unless the case is reachable through this
+   project's supported use — its documented inputs, its published interface, its
+   real data. Reachable is enough; you do not need a reproduction. Constructible
+   in principle is not enough.
+5. Where judgement is needed, judge. Do not replace it with a scoring table, a
+   checklist, or a re-verification loop over something already settled.
+Shapes already seen, for calibration. Examples, not a checklist — a real finding
+is not dismissed by resembling one:
+  H  hashing every row of two spreadsheets to answer what comparing cells answers
+  H  writing checksum files that nothing ever reads
+  E  hardening the accounts of an app that has no users and no deployment
+  R  auditing your own patch all night while the feature stays unwritten
+  R  a reviewer that returns a failing verdict on everything
+  O  guards whose justification is the previous guard, not the requirement
+Before running any check, answer: what specific failure would this detect, and
+what would I do differently if it occurred? No answer means do not run it.
+Say plainly when something is correct. Do not manufacture findings.`;
 
 test("runtime projections are provenanced, byte-stable, and reject generated or compatibility drift", async (t) => {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "aili-runtime-projections-"));
@@ -26,6 +54,20 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.match(await readFile(path.join(workspace, "generated/pi/system.md"), "utf8"), /does not install or run Pi sessions/);
   assert.match(await readFile(path.join(workspace, "generated/pi/installation-contract.json"), "utf8"), /generated\/pi\/prompts\/\*\.md/);
   assert.equal(await hasNestedPrompt(workspace), false);
+
+  for (const relativePath of ["generated/opencode/AGENTS.md", "templates/opencode-global-AGENTS.md"]) {
+    const output = await readFile(path.join(workspace, relativePath), "utf8");
+    assert.equal(output.split(heroScopeLimits).length - 1, 1, `${relativePath} must contain the exact HERO block once`);
+  }
+  for (const relativePath of [
+    "generated/opencode/agents/implementer.md",
+    "generated/opencode/commands/build.md",
+    "generated/pi/system.md",
+    "generated/pi/prompts/build.md",
+    "generated/pi/provenance.json"
+  ]) {
+    assert.doesNotMatch(await readFile(path.join(workspace, relativePath), "utf8"), /SCOPE LIMITS|hero-scope-limits/);
+  }
 
   assert.equal(runGenerator(workspace).status, 0);
   assert.deepEqual(await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]), firstSnapshot);

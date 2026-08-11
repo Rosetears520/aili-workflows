@@ -6,6 +6,37 @@ This repository's global Agent contract contains selected, modified excerpts fro
 
 The `solution-architect` role contract in `core/roles/roles.json` is original AILI prose derived from the accepted local design for `aili-runtime-profiles-memory-agent-redesign`. It contains no copied or materially adapted text from GitHub Docs or the architecture-agent repositories considered during DEFINE, so no additional third-party notice is required. No BMAD terminology, personas, branding, or endorsement claims are used.
 
+## wanshuiyin/HERO-Anti-OverDefense
+
+- Source: `RULES.md` English SCOPE LIMITS block
+- Repository: https://github.com/wanshuiyin/HERO-Anti-OverDefense
+- Revision consulted: `536c85f480c4b3912240d58d3f207af86cc97aa5`
+- Copyright (c) 2026 Ruofeng Yang
+- License: MIT License
+- Changes: the English SCOPE LIMITS configuration block was incorporated verbatim into the OpenCode global AGENTS projections only; all other upstream content was omitted.
+
+### MIT License
+
+Copyright (c) 2026 Ruofeng Yang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 ## aarnphm/aarnphm.github.io
 
 - Source: `AGENTS.md`

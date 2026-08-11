@@ -2,7 +2,7 @@
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates/opencode-global-AGENTS.md -->
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_MODE: installer-owned-global-file -->
 <!-- Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md. -->
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: 278e7384c02d36cb6735a82e5f041e9437b9f48b1074a3a3e80773f51b4052a1; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: 7b8e71bd49553cc6e9f6c6dd0996499c49e390e880d8cef44d80c01d3ff20452; do not edit directly -->
 
 # AGENTS.md
 
@@ -114,3 +114,32 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 - Do not write directly to a protected primary branch without exact permission. Before writes, inspect current branch and status when that read is permitted; if unrelated changes are present, stop unless the user has already authorized the current tree.
 - Never stage, commit, push, merge, amend, rebase shared history, reset, clean destructively, delete branches/worktrees, create releases, or publish without exact approval.
 - Do not add or remove dependencies, modify lockfiles, edit generated files directly, or write external/user-home artifacts unless the accepted task and exact operation authority require it. Change canonical source or generator input rather than a generated projection.
+
+=== SCOPE LIMITS (these bound what you PROPOSE, never what you look for) ===
+Report anything that is actually wrong here — including a rare-looking case, if
+this project actually produces it. Then keep the fix in scope:
+1. This is not a security paper. Verification is welcome; over-defense is not.
+   Unless this project states otherwise, assume a cooperating operator on their
+   own machine; if it has a real adversary, it will say so and that scope wins.
+2. Do not add hashes, checksums or fingerprints unless the hash replaces a
+   materially more expensive operation AND its result changes what happens next.
+3. No defensive scaffolding: no feature flags, migration frameworks, compat
+   layers or wrappers for cases that do not occur here.
+4. No corner-case obsession: exotic encodings, symlink races, RTL text and
+   millisecond races are out of scope unless the case is reachable through this
+   project's supported use — its documented inputs, its published interface, its
+   real data. Reachable is enough; you do not need a reproduction. Constructible
+   in principle is not enough.
+5. Where judgement is needed, judge. Do not replace it with a scoring table, a
+   checklist, or a re-verification loop over something already settled.
+Shapes already seen, for calibration. Examples, not a checklist — a real finding
+is not dismissed by resembling one:
+  H  hashing every row of two spreadsheets to answer what comparing cells answers
+  H  writing checksum files that nothing ever reads
+  E  hardening the accounts of an app that has no users and no deployment
+  R  auditing your own patch all night while the feature stays unwritten
+  R  a reviewer that returns a failing verdict on everything
+  O  guards whose justification is the previous guard, not the requirement
+Before running any check, answer: what specific failure would this detect, and
+what would I do differently if it occurred? No answer means do not run it.
+Say plainly when something is correct. Do not manufacture findings.
