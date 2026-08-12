@@ -49,16 +49,16 @@ async function buildExpected(projectRoot) {
     throw new Error("Unsupported runtime projection manifest.");
   }
   const governanceInputs = ["core/governance/decision-core.md", "core/governance/operating-discipline.md"];
-  const openCodeGlobalOnlyInputs = ["core/governance/hero-scope-limits.md"];
-  const [rolesDocument, openCodeAdapter, piAdapter, governanceParts, openCodeGlobalParts] = await Promise.all([
+  const globalGovernanceInputs = ["core/governance/hero-scope-limits.md"];
+  const [rolesDocument, openCodeAdapter, piAdapter, governanceParts, globalGovernanceParts] = await Promise.all([
     readJson(projectRoot, "core/roles/roles.json"),
     readJson(projectRoot, "adapters/opencode/adapter.json"),
     readJson(projectRoot, "adapters/pi/adapter.json"),
     Promise.all(governanceInputs.map((relativePath) => readText(projectRoot, relativePath))),
-    Promise.all(openCodeGlobalOnlyInputs.map((relativePath) => readText(projectRoot, relativePath)))
+    Promise.all(globalGovernanceInputs.map((relativePath) => readText(projectRoot, relativePath)))
   ]);
   const governance = governanceParts.join("\n\n");
-  const openCodeGlobalContent = openCodeGlobalParts.join("\n\n");
+  const globalGovernanceContent = globalGovernanceParts.join("\n\n");
   validateProjectionInputs(projection, rolesDocument, openCodeAdapter, piAdapter, projectRoot);
 
   const commands = new Map();
@@ -94,10 +94,14 @@ async function buildExpected(projectRoot) {
     addOutput(compatibility, `agents/${role.id}.md`, openCode, roleInputs, opencodeOutputRecords, projectRoot);
   }
 
-  const globalInputs = ["manifests/runtime-projections.json", ...governanceInputs, ...openCodeGlobalOnlyInputs, "adapters/opencode/adapter.json"];
-  const globalProjection = renderOpenCodeGlobal(governance, openCodeGlobalContent, openCodeAdapter, globalInputs, projectRoot);
-  addOutput(generated, "generated/opencode/AGENTS.md", globalProjection, globalInputs, opencodeOutputRecords, projectRoot);
-  addOutput(compatibility, openCodeAdapter.globalProjection.compatibilityPath, globalProjection, globalInputs, opencodeOutputRecords, projectRoot);
+  const globalGovernance = `${governance.trimEnd()}\n\n${globalGovernanceContent.trimEnd()}`;
+  const openCodeGlobalInputs = ["manifests/runtime-projections.json", ...governanceInputs, ...globalGovernanceInputs, "adapters/opencode/adapter.json"];
+  const globalProjection = renderOpenCodeGlobal(globalGovernance, openCodeAdapter, openCodeGlobalInputs, projectRoot);
+  addOutput(generated, "generated/opencode/AGENTS.md", globalProjection, openCodeGlobalInputs, opencodeOutputRecords, projectRoot);
+  addOutput(compatibility, openCodeAdapter.globalProjection.compatibilityPath, globalProjection, openCodeGlobalInputs, opencodeOutputRecords, projectRoot);
+
+  const piGlobalInputs = ["manifests/runtime-projections.json", ...governanceInputs, ...globalGovernanceInputs, "adapters/pi/adapter.json"];
+  addOutput(generated, "generated/pi/AGENTS.md", renderPiGlobal(globalGovernance, piGlobalInputs, projectRoot), piGlobalInputs, piOutputRecords, projectRoot);
 
   const piSystemInputs = ["manifests/runtime-projections.json", ...governanceInputs, "core/roles/roles.json", "adapters/pi/adapter.json"];
   addOutput(generated, "generated/pi/system.md", renderPiSystem(governance, rolesDocument.roles, piSystemInputs, projectRoot), piSystemInputs, piOutputRecords, projectRoot);
@@ -120,7 +124,7 @@ async function buildExpected(projectRoot) {
     schemaVersion: 1,
     adapter: "pi",
     installation: piAdapter.installation,
-    contract: "Only generated/pi/prompts/*.md may be installed as Pi prompts. All runtime/session metadata is package-only."
+    contract: "generated/pi/AGENTS.md is installed as Pi global context and generated/pi/prompts/*.md as non-recursive Pi prompts. All runtime/session metadata is package-only."
   }, installationInputs, projectRoot), installationInputs, piOutputRecords, projectRoot);
 
   for (const [name, schema] of protocols) {
@@ -133,9 +137,8 @@ async function buildExpected(projectRoot) {
     ...await listFiles(projectRoot, "adapters"),
     "manifests/runtime-projections.json"
   ].sort();
-  const piProvenanceInputs = allInputs.filter((relativePath) => !openCodeGlobalOnlyInputs.includes(relativePath));
   generated.set("generated/opencode/provenance.json", renderProvenance("opencode", opencodeOutputRecords, allInputs, projectRoot));
-  generated.set("generated/pi/provenance.json", renderProvenance("pi", piOutputRecords, piProvenanceInputs, projectRoot));
+  generated.set("generated/pi/provenance.json", renderProvenance("pi", piOutputRecords, allInputs, projectRoot));
   return { generated, compatibility };
 }
 
@@ -147,8 +150,11 @@ function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, pi
   assertExactList("protocol projection inventory", projection.protocols, ["package-envelope.schema.json", "aili-agent-selection.v1.schema.json", "aili-task-board.v1.schema.json"]);
   assertExactList("OpenCode adapter authority boundary", openCodeAdapter.authorityBoundary?.mayNotRedefine, ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]);
   assertExactList("Pi adapter authority boundary", piAdapter.authorityBoundary?.mayNotRedefine, ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]);
+  if (piAdapter.installation?.globalContext?.source !== "generated/pi/AGENTS.md" || piAdapter.installation?.globalContext?.destination !== "~/.pi/agent/AGENTS.md") {
+    throw new Error("Pi adapter installation contract must map the generated global context to Pi's official AGENTS.md path.");
+  }
   if (piAdapter.installation?.allowedSourceGlob !== "generated/pi/prompts/*.md" || piAdapter.installation?.destinationGlob !== "~/.pi/agent/prompts/*.md" || piAdapter.installation?.discovery !== "non-recursive") {
-    throw new Error("Pi adapter installation contract must permit only non-recursive generated prompt files.");
+    throw new Error("Pi adapter installation contract must permit non-recursive generated prompt files.");
   }
   const requiredPiPackageOnly = ["generated/pi/system.md", "generated/pi/role-metadata.json", "generated/pi/selection-map.json", "generated/pi/installation-contract.json", "generated/pi/protocols/*.json"];
   if (!Array.isArray(piAdapter.installation?.packageOnly) || requiredPiPackageOnly.some((path) => !piAdapter.installation.packageOnly.includes(path))) {
@@ -190,8 +196,12 @@ function renderOpenCodeAgent(role, sharedWorkerBoundary, adapter, inputs, projec
   return `---\n${yamlObject(frontmatter)}---\n\n${provenanceComment(inputs, projectRoot)}\n\n# ${role.title}\n\n## Role\n\n${role.description}\n\n## Goal\n\n${role.goal}\n\n## Success criteria\n\n${markdownList(role.successCriteria)}\n\n## Constraints\n\n${markdownList([...(role.constraints ?? []), ...sharedBoundary])}\n\n## Tools\n\nUse only the capabilities exposed by the active runtime and only when needed for the assigned result. A task packet may narrow but never broaden them.\n\n## Output\n\n${role.output}\n\n## Stop\n\n${role.stop}\n`;
 }
 
-function renderOpenCodeGlobal(governance, openCodeGlobalContent, adapter, inputs, projectRoot) {
-  return `${adapter.globalProjection.preamble.join("\n")}\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n\n${openCodeGlobalContent.trimEnd()}\n`;
+function renderOpenCodeGlobal(governance, adapter, inputs, projectRoot) {
+  return `${adapter.globalProjection.preamble.join("\n")}\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n`;
+}
+
+function renderPiGlobal(governance, inputs, projectRoot) {
+  return `<!-- AILI_PI_GLOBAL_CONTEXT: ~/.pi/agent/AGENTS.md -->\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n`;
 }
 
 function renderPiSystem(governance, roles, inputs, projectRoot) {

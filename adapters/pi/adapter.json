@@ -11,6 +11,10 @@
     "argumentPlaceholder": "$ARGUMENTS"
   },
   "installation": {
+    "globalContext": {
+      "source": "generated/pi/AGENTS.md",
+      "destination": "~/.pi/agent/AGENTS.md"
+    },
     "allowedSourceGlob": "generated/pi/prompts/*.md",
     "destinationGlob": "~/.pi/agent/prompts/*.md",
     "discovery": "non-recursive",

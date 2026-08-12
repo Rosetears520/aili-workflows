@@ -70,7 +70,7 @@ permission:
 name: web-performance-auditor
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: d93ca13b3349d2bb8bcb1ca1329a521b01252091f727e31ce9dcfdc0676bb462; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: d83fd01b25220b9ec6a43a6cc006c926e142394a4ea96588f985ebf484a7226c; do not edit directly -->
 
 # Web Performance Auditor
 

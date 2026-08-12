@@ -3,7 +3,7 @@ description: "AILI command: /harness-audit"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/harness-audit.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 810ba35d199e9586339e133bf77cb34f428d6daf57b614fa332e7ee92079bf4a; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/harness-audit.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 34f30e9f467c48910659695b147674e748fa28a3a6d15a75f263d77bef9d965a; do not edit directly -->
 
 # /harness-audit
 

@@ -959,6 +959,7 @@ install_entries() {
   done < <(manifest_skill_entries shared)
 
   if [ "$PROFILE" = "pi" ]; then
+    install_pi_global_context "$action"
     install_pi_prompts "$action"
     return
   fi
@@ -996,6 +997,68 @@ install_entries() {
     [ -n "$source_path" ] || continue
     "$action" "$AILI_HOME/$source_path" "$OPENCODE_HOME/$target_path"
   done < <(manifest_component_entries commands)
+}
+
+install_pi_global_context() {
+  local action="$1"
+  local source="$AILI_HOME/generated/pi/AGENTS.md"
+  local target_root="$HOME/.pi/agent"
+  local target="$target_root/AGENTS.md"
+  local source_canonical target_link target_candidate backup suffix
+
+  if [ ! -f "$source" ]; then
+    log "Missing generated Pi global context source: $source"
+    exit 2
+  fi
+
+  if [ "$action" = "link_entry" ] && [ -L "$target" ]; then
+    target_link="$(readlink "$target")"
+    case "$target_link" in
+      /*) target_candidate="$target_link" ;;
+      *) target_candidate="$(dirname "$target")/$target_link" ;;
+    esac
+    source_canonical="$(canonicalize_path "$source")"
+    if [ "$(canonicalize_path "$target_candidate")" = "$source_canonical" ]; then
+      log "Preserving already-managed Pi global context: $target"
+      return
+    fi
+  elif [ "$action" = "copy_entry" ] && [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source" "$target"; then
+    log "Preserving already-managed Pi global context: $target"
+    return
+  fi
+
+  if [ "$DRY_RUN" = "true" ]; then
+    log "DRY RUN: would ensure Pi agent directory exists: $target_root"
+  else
+    mkdir -p "$target_root"
+  fi
+
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    backup="$target.backup.$(timestamp)"
+    suffix=0
+    while [ -e "$backup" ] || [ -L "$backup" ]; do
+      suffix=$((suffix + 1))
+      backup="$target.backup.$(timestamp).$suffix"
+    done
+    if [ "$DRY_RUN" = "true" ]; then
+      log "DRY RUN: would back up conflicting Pi global context: $target -> $backup"
+    else
+      log "Backing up conflicting Pi global context: $target -> $backup"
+      mv "$target" "$backup"
+    fi
+  fi
+
+  if [ "$DRY_RUN" = "true" ]; then
+    if [ "$action" = "link_entry" ]; then
+      log "DRY RUN: would link Pi global context: $target -> $source"
+    else
+      log "DRY RUN: would copy Pi global context: $source -> $target"
+    fi
+  elif [ "$action" = "link_entry" ]; then
+    ln -s "$source" "$target"
+  else
+    cp "$source" "$target"
+  fi
 }
 
 install_pi_prompts() {

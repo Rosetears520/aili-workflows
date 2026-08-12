@@ -291,11 +291,11 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ### 安装 profiles 与 OpenCode 设置
 
-推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 49 个 Core Skills；`pi` 在 Core Skills 上增加 `generated/pi/prompts/*.md` 的一层 Pi prompt 安装；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、10 个 Commands 和可选 OpenCode config integration。
+推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 49 个 Core Skills；`pi` 在 Core Skills 上增加生成的 Pi 全局 context 与 `generated/pi/prompts/*.md` 顶层 prompts；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、10 个 Commands 和可选 OpenCode config integration。
 
 58 个 retained Skills 由 49 个 Core 与 9 个 Optional 组成。`--skill <name>` 和 `--skill-group <research|specialized-dev>` 可重复使用、组合并去重；单个 Skill 不会展开所属 group，未知 profile、Skill 或 group 会在 mutation 前失败。`--opencode` 是 `--profile opencode` 的兼容别名，不能与另一 profile 组合。
 
-Pi profile 只安装顶层 prompt 文件。Pi system projection、role metadata、selection map 和 task/result/evidence schema 是 package artifacts，不安装也不运行 Pi session/runtime。OfficeCLI 和 MemPalace 是 default-selected 的独立外部操作：安装或更新先报告计划，只有各自的 fresh exact approval 和显式 `--enable-officecli` 或 `--enable-mempalace` 才会执行。拒绝、跳过或不可用不会撤销 Core Skill 安装。OpenCode profile 中的 Playwright、CodeGraph、Graphify 和 OpenSpec 同样保持独立 operation gate；AILI 不安装、检测、配置、迁移或删除 DCP。
+Pi profile 只安装生成的全局 context 与顶层 prompt 文件。Pi system projection、role metadata、selection map、installation contract 和 task/result/evidence schema 是 package artifacts，不安装也不运行 Pi session/runtime。AILI 向 official Pi persistent Agent runtime 的 package/session/result 交接边界见 `docs/harness/aili-pi-runtime-handoff.md`；persistent identity 不替代 formal Board、approval、fresh evidence 或 ROSE verdict。OfficeCLI 和 MemPalace 是 default-selected 的独立外部操作：安装或更新先报告计划，只有各自的 fresh exact approval 和显式 `--enable-officecli` 或 `--enable-mempalace` 才会执行。拒绝、跳过或不可用不会撤销 Core Skill 安装。OpenCode profile 中的 Playwright、CodeGraph、Graphify 和 OpenSpec 同样保持独立 operation gate；AILI 不安装、检测、配置、迁移或删除 DCP。
 
 ```bash
 npx -y rose-aili install
@@ -318,7 +318,7 @@ npx -y rose-aili update --profile opencode
 npx -y rose-aili doctor --profile pi
 ```
 
-`rose-aili install` 和 `update` 依 profile 同步 selected Skills。`opencode` profile 安装生成的全局 `AGENTS.md`、Agents 与 Commands；`pi` profile 只安装生成的顶层 prompt 文件。普通 git clone 使用 selective symlink，npm/npx packaged 非 git source 使用 copy，避免目标指向临时 package cache。显式 `install`/`update --reconcile-retired-skills` 只会清理由当前 canonical source 证明归属的六个 retired Skill symlink：`local-review-gate`、`session-handoff`、`agents-md-initialization`、`harness-optimization-audit`、`evidence-scoped-retrospective` 和 `rose-memory`。复制、修改、ambiguous 或 user-owned entry 一律保留并报告。OpenCode config 同步仅在 `opencode` profile 中启用，并保留冲突默认值和既有 model：
+`rose-aili install` 和 `update` 依 profile 同步 selected Skills。`opencode` profile 安装生成的全局 `AGENTS.md`、Agents 与 Commands；`pi` profile 只安装生成的全局 context 与顶层 prompt 文件。普通 git clone 使用 selective symlink，npm/npx packaged 非 git source 使用 copy，避免目标指向临时 package cache。替换非 managed 的 Pi 全局 context regular file、有效 symlink 或 broken symlink 前会创建带时间戳的可恢复备份；重复运行保持幂等，`--dry-run` 只报告计划而不修改。`doctor --profile pi` 分别报告 generated/installed context、prompts 和 package-only metadata 的缺失或漂移且不修复。安装或更新后重启 Pi 或开启新 session 以重新加载全局 context 与 prompts。显式 `install`/`update --reconcile-retired-skills` 只会清理由当前 canonical source 证明归属的六个 retired Skill symlink：`local-review-gate`、`session-handoff`、`agents-md-initialization`、`harness-optimization-audit`、`evidence-scoped-retrospective` 和 `rose-memory`。复制、修改、ambiguous 或 user-owned entry 一律保留并报告。OpenCode config 同步仅在 `opencode` profile 中启用，并保留冲突默认值和既有 model：
 
 只有交互式 `rose-aili install --profile opencode` 才询问 default agent、model override、Playwright MCP、CodeGraph、Graphify CLI 和 OpenSpec；`update --profile opencode` 询问 CodeGraph 与 Graphify CLI。`default` 和 `pi` profile 不读取 OpenCode config，也不提出 OpenCode integration 问题。
 
@@ -387,7 +387,7 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 [框架内] Direct Bash fallback 的 `scripts/install_opencode.sh --mode selective` 同样支持 `--profile default|pi|opencode`、repeatable `--skill` 和 `--skill-group`。OfficeCLI 只有在独立批准后传 `--enable-officecli` 才会运行；传 `--skip-officecli` 不计划也不运行该操作。OpenCode integration 使用 `--profile opencode`（或兼容别名 `--opencode`）。
 
-[框架内] Component 默认目标是 `$HOME/.agents/skills/`，OfficeCLI tool 默认目标另为 `$HOME/.agents/tools/officecli`。`opencode` profile 将生成的 agents/commands 安装到 OpenCode home，共享 Skills 仍安装到 `$HOME/.agents/skills/`；`pi` profile 只安装 `generated/pi/prompts/*.md` 到 Pi 的全局 prompt 目录，不安装 Pi system/runtime metadata。
+[框架内] Component 默认目标是 `$HOME/.agents/skills/`，OfficeCLI tool 默认目标另为 `$HOME/.agents/tools/officecli`。`opencode` profile 将生成的 agents/commands 安装到 OpenCode home，共享 Skills 仍安装到 `$HOME/.agents/skills/`；`pi` profile 安装 `generated/pi/AGENTS.md` 与 `generated/pi/prompts/*.md` 到对应 Pi 全局 context/prompt 路径，不安装 Pi system/runtime metadata。
 
 项目级 `AGENTS.md` 不走软链接。使用 `/agents-md` Utility Command 调用 `scripts/agents_md.py`，从 `templates/AGENTS.md` 生成到目标项目后再填写项目事实，并用 `check --project .` 放进 CI 或 pre-commit 验证。
 
@@ -396,12 +396,12 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
 2. 默认运行 `rose-aili install`，同步 49 个 Core Skills 并报告 OfficeCLI/MemPalace 的独立 operation plan；不需要它们时显式传对应 `--skip-*` flag。
-3. 需要 Pi prompt 时运行 `rose-aili install --profile pi`；需要 ROSE agents、Commands 或 OpenCode config integration 时运行 `rose-aili install --profile opencode`。
+3. 需要 Pi 全局 context 与 prompts 时运行 `rose-aili install --profile pi`；需要 ROSE agents、Commands 或 OpenCode config integration 时运行 `rose-aili install --profile opencode`。
 4. OpenCode 从共享 `$HOME/.agents/skills/` 发现 `.agents/skills/`，并从自己的 `skills/` 发现 manifest 声明的 `.opencode/skills/`。
 5. `opencode` profile 安装后可使用 ROSE primary agent、subagents 和 Delivery/Utility Commands。
 ```
 
-[框架内] 共享 Skill 变化后运行相应 profile 的安装。agent、Command 或 OpenCode-only asset 变化后运行 `--profile opencode`，Pi prompt 变化后运行 `--profile pi`，然后重启相应 runtime 或开启新 session。外部工具不会随 component sync 自动执行。
+[框架内] 共享 Skill 变化后运行相应 profile 的安装。agent、Command 或 OpenCode-only asset 变化后运行 `--profile opencode`，Pi 全局 context 或 prompt 变化后运行 `--profile pi`，然后重启相应 runtime 或开启新 session。外部工具不会随 component sync 自动执行。
 
 `docs/harness/**` 是本仓库维护和审查 harness 时读取的源文档，不是普通业务项目运行时必须存在的上下文。通过软链接安装时，OpenCode 会在共享 `$HOME/.agents/skills/<name>` 目标下发现并加载被链接的 `.agents/skills/<name>`；因此运行时必须依赖的 harness 定位规则应放在对应 skill 的 `references/` 中，例如 `.agents/skills/harness-issue-triage/references/`，而不是假设每个目标项目都有 `docs/harness/**`。
 

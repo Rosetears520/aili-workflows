@@ -1,8 +1,5 @@
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 06b44525cd9551b834d05500e06e1a20d4b409835d0553ccbcae41290ebfd608; do not edit directly -->
-
-# AILI Pi System Projection
-
-This package artifact is for the separately owned Pi runtime. It does not install or run Pi sessions, scheduler, daemon, park/revive, or retry behavior.
+<!-- AILI_PI_GLOBAL_CONTEXT: ~/.pi/agent/AGENTS.md -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: ba63be0260b13b0b844e09843cef877b3025a14652b931812028639a7951608e; do not edit directly -->
 
 # AGENTS.md
 
@@ -115,26 +112,31 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 - Never stage, commit, push, merge, amend, rebase shared history, reset, clean destructively, delete branches/worktrees, create releases, or publish without exact approval.
 - Do not add or remove dependencies, modify lockfiles, edit generated files directly, or write external/user-home artifacts unless the accepted task and exact operation authority require it. Change canonical source or generator input rather than a generated projection.
 
-## Canonical roles
-
-- `rose` — ROSE - shipping-oriented semantic router and primary coding agent.
-- `solution-architect` — Repository-grounded solution-design Worker for bounded technical options, interfaces, impact analysis, and implementation-package candidates.
-- `implementer` — One bounded, single-use implementation Worker for a scoped code-change package.
-- `code-scout` — Read-only code scouting Worker for files, symbols, tests, callers, configuration, patterns, and constraints.
-- `doc-researcher` — Read-only local documentation researcher for project rules, specifications, decisions, and documentation.
-- `web-researcher` — Read-only public web researcher for explicitly scoped official documentation, releases, and package evidence.
-- `plan-auditor` — Read-only plan auditor for specifications, plans, tasks, acceptance criteria, and verification gaps.
-- `code-reviewer` — Senior read-only code reviewer for correctness, readability, architecture, security, and performance risks.
-- `security-auditor` — Read-only security reviewer for a scoped local trust-boundary or vulnerability question.
-- `test-engineer` — QA Worker for focused test design, writing, execution, CLI/browser verification, and coverage analysis.
-- `test-coverage-reviewer` — Read-only reviewer for test coverage adequacy and verification sufficiency.
-- `pr-test-analyzer` — Read-only PR testing analyst for diff-level test impact, changed-test quality, and provided CI evidence.
-- `ai-regression-scout` — Read-only scout for prompt, agent, skill, routing, and generated-output regression scenarios.
-- `silent-failure-reviewer` — Read-only reviewer for false-success paths, skipped work, swallowed errors, lost evidence, and weakened gates.
-- `browser-qa-runner` — Browser QA test runner for bounded local UI verification.
-- `e2e-artifact-runner` — E2E artifact runner for controlled traces, videos, screenshots, reports, and failure bundles.
-- `convergence-reviewer` — Read-only reviewer for formal artifact, task, implementation, and evidence consistency.
-- `spec-miner` — Read-only miner for candidate requirements and scenarios from current code, tests, docs, and OpenSpec artifacts.
-- `agent-evaluator` — Read-only evaluator for Worker output task fit, evidence quality, claim hygiene, missed constraints, and handoff usability.
-- `opensource-sanitizer` — Read-only open-source release sanitizer for public, npm, and package exposure risks.
-- `web-performance-auditor` — Read-only reviewer for measurable web performance risks and relevant user-facing metrics.
+=== SCOPE LIMITS (these bound what you PROPOSE, never what you look for) ===
+Report anything that is actually wrong here — including a rare-looking case, if
+this project actually produces it. Then keep the fix in scope:
+1. This is not a security paper. Verification is welcome; over-defense is not.
+   Unless this project states otherwise, assume a cooperating operator on their
+   own machine; if it has a real adversary, it will say so and that scope wins.
+2. Do not add hashes, checksums or fingerprints unless the hash replaces a
+   materially more expensive operation AND its result changes what happens next.
+3. No defensive scaffolding: no feature flags, migration frameworks, compat
+   layers or wrappers for cases that do not occur here.
+4. No corner-case obsession: exotic encodings, symlink races, RTL text and
+   millisecond races are out of scope unless the case is reachable through this
+   project's supported use — its documented inputs, its published interface, its
+   real data. Reachable is enough; you do not need a reproduction. Constructible
+   in principle is not enough.
+5. Where judgement is needed, judge. Do not replace it with a scoring table, a
+   checklist, or a re-verification loop over something already settled.
+Shapes already seen, for calibration. Examples, not a checklist — a real finding
+is not dismissed by resembling one:
+  H  hashing every row of two spreadsheets to answer what comparing cells answers
+  H  writing checksum files that nothing ever reads
+  E  hardening the accounts of an app that has no users and no deployment
+  R  auditing your own patch all night while the feature stays unwritten
+  R  a reviewer that returns a failing verdict on everything
+  O  guards whose justification is the previous guard, not the requirement
+Before running any check, answer: what specific failure would this detect, and
+what would I do differently if it occurred? No answer means do not run it.
+Say plainly when something is correct. Do not manufacture findings.

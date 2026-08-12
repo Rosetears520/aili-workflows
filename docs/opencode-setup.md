@@ -2,7 +2,7 @@
 
 This document is for an AI agent installing `Rosetears520/aili-workflows` into OpenCode.
 
-[FRAME] The omitted profile is `default`: it installs 49 Core Skills into `$HOME/.agents/skills`. `pi` adds generated Pi prompts; `opencode` adds generated OpenCode global rules, agents, Commands, and optional config integration. Pass `--profile <default|pi|opencode>`; `--opencode` is the legacy alias for `--profile opencode`.
+[FRAME] The omitted profile is `default`: it installs 49 Core Skills into `$HOME/.agents/skills`. `pi` adds the generated Pi global `AGENTS.md` context and top-level prompts; `opencode` adds generated OpenCode global rules, agents, Commands, and optional config integration. Pass `--profile <default|pi|opencode>`; `--opencode` is the legacy alias for `--profile opencode`.
 
 If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows native, clone and link inside Windows. Do not mix WSL and Windows paths by default. Do not clone into the user home root.
 
@@ -11,7 +11,7 @@ If OpenCode runs in WSL, clone and link inside WSL. If OpenCode runs in Windows 
 Do not replace `~/.config/opencode/agents`, `~/.config/opencode/commands`, or `$HOME/.agents/skills` by default. The installation scopes are:
 
 - every profile: `$HOME/.agents/skills/<selected-skill> -> <repo>/.agents/skills/<selected-skill>`;
-- `pi`: `~/.pi/agent/prompts/<command>.md -> <repo>/generated/pi/prompts/<command>.md`; installation is non-recursive and excludes Pi system/runtime metadata;
+- `pi`: `~/.pi/agent/AGENTS.md -> <repo>/generated/pi/AGENTS.md` and `~/.pi/agent/prompts/<command>.md -> <repo>/generated/pi/prompts/<command>.md`; prompt installation is non-recursive and excludes Pi system/runtime metadata;
 - `opencode`: `~/.config/opencode/AGENTS.md -> <repo>/generated/opencode/AGENTS.md`;
 - `opencode`: `~/.config/opencode/agents/<agent>.md -> <repo>/generated/opencode/agents/<agent>.md`;
 - `opencode`: `~/.config/opencode/commands/<command>.md -> <repo>/generated/opencode/commands/<command>.md`;
@@ -108,8 +108,8 @@ Do not treat this as the Windows native install path.
 
 | OpenCode runtime | Repository clone path | OpenCode config path | Link style |
 |---|---|---|---|
-| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | every profile: `/home/<user>/.agents/skills`; `pi`: also `/home/<user>/.pi/agent/prompts`; `opencode`: also `/home/<user>/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
-| Linux/macOS | `$AILI_HOME` | every profile: `$HOME/.agents/skills`; `pi`: also `$HOME/.pi/agent/prompts`; `opencode`: also `$HOME/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
+| WSL Ubuntu | `/home/<user>/code/ai/aili-workflows` | every profile: `/home/<user>/.agents/skills`; `pi`: also `/home/<user>/.pi/agent/AGENTS.md` and `/home/<user>/.pi/agent/prompts`; `opencode`: also `/home/<user>/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
+| Linux/macOS | `$AILI_HOME` | every profile: `$HOME/.agents/skills`; `pi`: also `$HOME/.pi/agent/AGENTS.md` and `$HOME/.pi/agent/prompts`; `opencode`: also `$HOME/.config/opencode` | selected shared-skill links; Pi/OpenCode entries only under their profile; OfficeCLI is separately approval-gated |
 | Windows native | `%USERPROFILE%\code\ai\aili-workflows` | every profile: `%USERPROFILE%\.agents\skills`; Pi/OpenCode integration is explicit | selected shared-skill links; platform-specific entries remain opt-in |
 
 Do not link Windows native OpenCode config to a WSL repository by default.
@@ -163,13 +163,15 @@ npx -y rose-aili doctor --profile pi --skill systematic-literature-review
 
 ## Installation Decision Rule
 
-[FRAME] Use `rose-aili install` for the default 49 Core Skills. Use `--profile pi` for generated Pi prompts or `--profile opencode` for repository-managed global AGENTS rules, agents, Commands, and optional OpenCode JSON/JSONC config. External OfficeCLI/MemPalace planning is reported separately; only a separately approved `--enable-officecli` or `--enable-mempalace` runs that external operation. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
+[FRAME] Use `rose-aili install` for the default 49 Core Skills. Use `--profile pi` for the generated Pi global context and prompts or `--profile opencode` for repository-managed global AGENTS rules, agents, Commands, and optional OpenCode JSON/JSONC config. External OfficeCLI/MemPalace planning is reported separately; only a separately approved `--enable-officecli` or `--enable-mempalace` runs that external operation. A normal git clone uses selective symlinks; a packaged/non-git npm or npx source uses copied files so installed entries do not point at a transient package cache.
 
 ```bash
 npx -y rose-aili install
 npx -y rose-aili install --profile pi
 npx -y rose-aili install --profile opencode
 ```
+
+For `--profile pi`, a normal Git checkout installs managed links while a packaged npm/npx source installs copies so targets do not point into a transient cache. Before replacing a non-managed `~/.pi/agent/AGENTS.md` regular file, valid symlink, or broken symlink, install/update creates a timestamped recoverable backup; repeat runs are idempotent. `--dry-run` reports the planned backup/replacement without mutation. `rose-aili doctor --profile pi` reports missing or drifted generated context, installed context, prompts, and package-only runtime metadata without repairing them. After install or update, restart Pi or open a new Pi session so the global context and prompt inventory are reloaded.
 
 Before npm publishing, use the GitHub package-spec form from the repository URL:
 
@@ -296,7 +298,7 @@ Choose one mode after the Runtime Detection Gate.
 
 ### Mode A: Selective Symlink Setup (Default)
 
-Use this by default. The `default` profile links selected shared Skills into `$HOME/.agents/skills` and leaves OpenCode home untouched. `--profile pi` additionally installs generated top-level Pi prompts; `--profile opencode` additionally preserves OpenCode's existing global directories and links individual managed entries. OfficeCLI runs only with its separately approved `--enable-officecli` flag.
+Use this by default. The `default` profile links selected shared Skills into `$HOME/.agents/skills` and leaves OpenCode home untouched. `--profile pi` additionally installs the generated Pi global `AGENTS.md` context and top-level prompts; `--profile opencode` additionally preserves OpenCode's existing global directories and links individual managed entries. OfficeCLI runs only with its separately approved `--enable-officecli` flag.
 
 WSL/Linux recommended command:
 

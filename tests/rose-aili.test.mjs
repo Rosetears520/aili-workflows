@@ -100,6 +100,63 @@ test("profiles and repeatable Skill selectors resolve the accepted additive inve
   await fixture.cleanup();
 });
 
+test("Pi global context install, update, and dry-run preserve conflicts and remain scoped", async () => {
+  const fixture = await fixtureAiliHome();
+  const opencodeHome = path.join(fixture.root, "opencode");
+  const agentRoot = path.join(fixture.root, ".pi", "agent");
+  const target = path.join(agentRoot, "AGENTS.md");
+  const source = path.join(fixture.ailiHome, "generated", "pi", "AGENTS.md");
+  const sentinel = path.join(agentRoot, "unrelated.txt");
+  await mkdir(agentRoot, { recursive: true });
+  await writeFile(target, "user regular context\n", "utf8");
+  await writeFile(sentinel, "leave me alone\n", "utf8");
+
+  await runCli(["install", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  assert.equal(await readFile(target, "utf8"), await readFile(source, "utf8"));
+  let backups = (await readdir(agentRoot)).filter((name) => name.startsWith("AGENTS.md.backup."));
+  assert.equal(backups.length, 1);
+  assert.equal(await readFile(path.join(agentRoot, backups[0]), "utf8"), "user regular context\n");
+
+  await runCli(["update", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  assert.deepEqual((await readdir(agentRoot)).filter((name) => name.startsWith("AGENTS.md.backup.")), backups);
+
+  const validLinkTarget = path.join(fixture.root, "third-party-AGENTS.md");
+  await writeFile(validLinkTarget, "third party link target\n", "utf8");
+  await rm(target);
+  await symlink(validLinkTarget, target);
+  await runCli(["update", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  backups = (await readdir(agentRoot)).filter((name) => name.startsWith("AGENTS.md.backup."));
+  const validLinkBackup = await findSymlinkBackup(agentRoot, backups, validLinkTarget);
+  assert.ok(validLinkBackup);
+
+  const missingLinkTarget = path.join(fixture.root, "missing-third-party-AGENTS.md");
+  await rm(target);
+  await symlink(missingLinkTarget, target);
+  await runCli(["update", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
+  backups = (await readdir(agentRoot)).filter((name) => name.startsWith("AGENTS.md.backup."));
+  const brokenLinkBackup = await findSymlinkBackup(agentRoot, backups, missingLinkTarget);
+  assert.ok(brokenLinkBackup);
+
+  await rm(target);
+  await writeFile(target, "dry-run conflict\n", "utf8");
+  const beforeDryRun = (await readdir(agentRoot)).sort();
+  const dryRun = await runCli(["install", "--dry-run", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli"]);
+  assert.match(dryRun.stderr, /would back up conflicting Pi global context/);
+  assert.equal(await readFile(target, "utf8"), "dry-run conflict\n");
+  assert.deepEqual((await readdir(agentRoot)).sort(), beforeDryRun);
+  assert.equal(await readFile(sentinel, "utf8"), "leave me alone\n");
+  const doctor = await runCli(["doctor", "--profile", "pi", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"], { reject: false });
+  const doctorSummary = JSON.parse(doctor.stdout);
+  assert.equal(doctor.code, 1);
+  assert.ok(doctorSummary.required.some((entry) => entry.type === "pi-global-context" && entry.name === "AGENTS.md" && !entry.installed));
+  await assert.rejects(stat(path.join(agentRoot, "system.md")));
+  await assert.rejects(stat(path.join(agentRoot, "role-metadata.json")));
+  await assert.rejects(stat(path.join(agentRoot, "selection-map.json")));
+  await assert.rejects(stat(path.join(agentRoot, "installation-contract.json")));
+  await assert.rejects(stat(path.join(agentRoot, "protocols")));
+  await fixture.cleanup();
+});
+
 test("pi doctor requires generated prompts but not OpenCode assets", async () => {
   const fixture = await fixtureAiliHome();
   const stubs = await writeGraphifyStubs(fixture);
@@ -111,6 +168,8 @@ test("pi doctor requires generated prompts but not OpenCode assets", async () =>
   assert.equal(summary.profile, "pi");
   assert.equal(summary.ok, true);
   assert.ok(summary.required.some((entry) => entry.type === "pi-prompt" && entry.name === "ideate.md" && entry.installed));
+  assert.ok(summary.required.some((entry) => entry.type === "pi-global-context" && entry.name === "AGENTS.md" && entry.installed));
+  assert.ok(summary.source.generated.paths.includes("generated/pi/AGENTS.md"));
   assert.equal(summary.required.some((entry) => entry.type === "agent"), false);
   assert.equal(summary.defaultAgent, null);
   await fixture.cleanup();
@@ -2538,6 +2597,14 @@ function capturedMetadata(stats) {
 
 async function readFileNames(directory) {
   return readdir(directory);
+}
+
+async function findSymlinkBackup(directory, names, expectedTarget) {
+  for (const name of names) {
+    const candidate = path.join(directory, name);
+    if ((await lstat(candidate)).isSymbolicLink() && await readlink(candidate) === expectedTarget) return candidate;
+  }
+  return undefined;
 }
 
 async function writeStub(binDir, name, logPath, options = {}) {

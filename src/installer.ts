@@ -934,6 +934,7 @@ async function validateInstallerSources(ailiHome: string): Promise<void> {
 
 async function validatePiInstallerSources(ailiHome: string): Promise<void> {
   await Promise.all([
+    access(path.join(ailiHome, "generated", "pi", "AGENTS.md"), constants.F_OK),
     access(path.join(ailiHome, "generated", "pi", "provenance.json"), constants.F_OK),
     access(path.join(ailiHome, "generated", "pi", "installation-contract.json"), constants.F_OK)
   ]);

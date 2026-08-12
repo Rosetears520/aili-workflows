@@ -92,7 +92,7 @@ export async function runDoctor(options: DoctorOptions): Promise<DoctorSummary> 
       ...(await Promise.all(manifest.components.agents.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "agent", entry, `agents/${entry.name}.md`)))),
       ...(await Promise.all(manifest.components.commands.filter((entry) => entry.required).map((entry) => requiredInstallTarget(installRoots, "command", entry, `commands/${entry.name}.md`))))
     ] : []),
-    ...(profile === "pi" ? await piPromptRequirements(options.ailiHome) : [])
+    ...(profile === "pi" ? await piInstallRequirements(options.ailiHome) : [])
   ];
   const config = profile === "opencode" ? await readOpenCodeConfig(options.opencodeHome) : { value: undefined };
   const defaultAgent = typeof config.value?.default_agent === "string" ? config.value.default_agent : null;
@@ -300,6 +300,7 @@ async function runtimeProjectionInventory(ailiHome: string, manifest: Awaited<Re
     ...agents.map((name) => `agents/${name}.md`)
   ].sort();
   const pi = [
+    "generated/pi/AGENTS.md",
     "generated/pi/system.md",
     "generated/pi/role-metadata.json",
     "generated/pi/selection-map.json",
@@ -339,15 +340,29 @@ async function listRelativeFiles(ailiHome: string, relativeRoot: string): Promis
   return files.sort();
 }
 
-async function piPromptRequirements(ailiHome: string): Promise<Array<{ type: string; name: string; installed: boolean }>> {
-  const promptRoot = path.join(sharedInstallHome(), ".pi", "agent", "prompts");
+async function piInstallRequirements(ailiHome: string): Promise<Array<{ type: string; name: string; installed: boolean }>> {
+  const agentRoot = path.join(sharedInstallHome(), ".pi", "agent");
+  const globalSource = path.join(ailiHome, "generated", "pi", "AGENTS.md");
+  const globalTarget = path.join(agentRoot, "AGENTS.md");
+  const promptRoot = path.join(agentRoot, "prompts");
   let entries: string[];
   try {
     entries = (await readdir(path.join(ailiHome, "generated", "pi", "prompts"))).filter((entry) => entry.endsWith(".md"));
   } catch {
     entries = [];
   }
-  return Promise.all(entries.sort().map(async (name) => ({ type: "pi-prompt", name, installed: await exists(path.join(promptRoot, name)) })));
+  return [
+    { type: "pi-global-context", name: "AGENTS.md", installed: await sameFileContents(globalSource, globalTarget) },
+    ...(await Promise.all(entries.sort().map(async (name) => ({ type: "pi-prompt", name, installed: await exists(path.join(promptRoot, name)) }))))
+  ];
+}
+
+async function sameFileContents(left: string, right: string): Promise<boolean> {
+  try {
+    return (await readFile(left)).equals(await readFile(right));
+  } catch {
+    return false;
+  }
 }
 
 async function manifestDriftStatus(ailiHome: string, manifest: Awaited<ReturnType<typeof loadManifest>>): Promise<DoctorSummary["source"]["manifestDrift"]> {

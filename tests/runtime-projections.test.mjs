@@ -52,25 +52,45 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.equal(check.status, 0, check.stderr);
   assert.match(await readFile(path.join(workspace, "generated/opencode/provenance.json"), "utf8"), /core\/commands\/build\.md/);
   assert.match(await readFile(path.join(workspace, "generated/pi/system.md"), "utf8"), /does not install or run Pi sessions/);
-  assert.match(await readFile(path.join(workspace, "generated/pi/installation-contract.json"), "utf8"), /generated\/pi\/prompts\/\*\.md/);
+  const piInstallationContract = JSON.parse(await readFile(path.join(workspace, "generated/pi/installation-contract.json"), "utf8"));
+  assert.deepEqual(piInstallationContract.installation.globalContext, {
+    source: "generated/pi/AGENTS.md",
+    destination: "~/.pi/agent/AGENTS.md"
+  });
+  assert.equal(piInstallationContract.installation.discovery, "non-recursive");
+  assert.match(piInstallationContract.contract, /global context.*non-recursive Pi prompts/);
   assert.equal(await hasNestedPrompt(workspace), false);
 
-  for (const relativePath of ["generated/opencode/AGENTS.md", "templates/opencode-global-AGENTS.md"]) {
+  for (const relativePath of ["generated/opencode/AGENTS.md", "templates/opencode-global-AGENTS.md", "generated/pi/AGENTS.md"]) {
     const output = await readFile(path.join(workspace, relativePath), "utf8");
     assert.equal(output.split(heroScopeLimits).length - 1, 1, `${relativePath} must contain the exact HERO block once`);
   }
+  const piGlobal = await readFile(path.join(workspace, "generated/pi/AGENTS.md"), "utf8");
+  assert.match(piGlobal, /AILI_PI_GLOBAL_CONTEXT: ~\/\.pi\/agent\/AGENTS\.md/);
+  assert.doesNotMatch(piGlobal, /AILI Pi System Projection|Canonical roles|AgentSession/);
+  const piProvenance = JSON.parse(await readFile(path.join(workspace, "generated/pi/provenance.json"), "utf8"));
+  assert.ok(piProvenance.outputs.some((output) => output.path === "generated/pi/AGENTS.md"));
+  assert.ok(piProvenance.canonicalInputs.includes("core/governance/hero-scope-limits.md"));
   for (const relativePath of [
     "generated/opencode/agents/implementer.md",
     "generated/opencode/commands/build.md",
     "generated/pi/system.md",
-    "generated/pi/prompts/build.md",
-    "generated/pi/provenance.json"
+    "generated/pi/prompts/build.md"
   ]) {
     assert.doesNotMatch(await readFile(path.join(workspace, relativePath), "utf8"), /SCOPE LIMITS|hero-scope-limits/);
   }
 
   assert.equal(runGenerator(workspace).status, 0);
   assert.deepEqual(await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]), firstSnapshot);
+
+  const piAdapterPath = path.join(workspace, "adapters/pi/adapter.json");
+  const validPiAdapter = await readFile(piAdapterPath, "utf8");
+  const invalidPiAdapter = JSON.parse(validPiAdapter);
+  invalidPiAdapter.installation.globalContext.destination = "~/.pi/agent/not-AGENTS.md";
+  await writeFile(piAdapterPath, `${JSON.stringify(invalidPiAdapter, null, 2)}\n`, "utf8");
+  assert.match(runGenerator(workspace, "--check").stderr, /official AGENTS\.md path/);
+  await writeFile(piAdapterPath, validPiAdapter, "utf8");
+  assert.equal(runGenerator(workspace, "--check").status, 0);
 
   const compatibilityBuild = path.join(workspace, "commands/build.md");
   await writeFile(compatibilityBuild, "tampered projection\n", "utf8");
@@ -80,6 +100,14 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
 
   await unlink(path.join(workspace, "commands/ideate.md"));
   assert.match(runGenerator(workspace, "--check").stderr, /missing: commands\/ideate\.md/);
+  assert.equal(runGenerator(workspace).status, 0);
+
+  await unlink(path.join(workspace, "generated/pi/AGENTS.md"));
+  assert.match(runGenerator(workspace, "--check").stderr, /missing: generated\/pi\/AGENTS\.md/);
+  assert.equal(runGenerator(workspace).status, 0);
+
+  await writeFile(path.join(workspace, "generated/pi/AGENTS.md"), "tampered projection\n", "utf8");
+  assert.match(runGenerator(workspace, "--check").stderr, /stale: generated\/pi\/AGENTS\.md/);
   assert.equal(runGenerator(workspace).status, 0);
 
   await unlink(path.join(workspace, "generated/pi/prompts/build.md"));

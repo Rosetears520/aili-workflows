@@ -2,6 +2,10 @@
   "schemaVersion": 1,
   "adapter": "pi",
   "installation": {
+    "globalContext": {
+      "source": "generated/pi/AGENTS.md",
+      "destination": "~/.pi/agent/AGENTS.md"
+    },
     "allowedSourceGlob": "generated/pi/prompts/*.md",
     "destinationGlob": "~/.pi/agent/prompts/*.md",
     "discovery": "non-recursive",
@@ -22,13 +26,13 @@
       "automatic retry"
     ]
   },
-  "contract": "Only generated/pi/prompts/*.md may be installed as Pi prompts. All runtime/session metadata is package-only.",
+  "contract": "generated/pi/AGENTS.md is installed as Pi global context and generated/pi/prompts/*.md as non-recursive Pi prompts. All runtime/session metadata is package-only.",
   "generated": {
     "generator": "aili-runtime-projections/v1",
     "canonicalInputs": [
       "adapters/pi/adapter.json",
       "manifests/runtime-projections.json"
     ],
-    "inputSha256": "b625aa38c63cb9d9825226b23ef3a68772b85f21c29a54bbd7c51811294541d5"
+    "inputSha256": "51e4cdba8def1c648e62e186dcb5f03ce93a4ae0d5e125bb7a51061e4d2a2513"
   }
 }
