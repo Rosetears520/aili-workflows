@@ -180,10 +180,17 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => row.status === "Partial"));
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => Object.keys(row).length === 9));
     assert.ok(scaffold.payload.traceability.task_matrix.every((row) => row.disposition === "ROSE-owned: unresolved"));
+    assert.equal(scaffold.payload.formal_agent_orchestration.protocols.package, "package-envelope/v1");
     assert.equal(scaffold.payload.formal_agent_orchestration.protocols.selection, "aili-agent-selection/v1");
-    assert.equal(scaffold.payload.formal_agent_orchestration.protocols.board, "aili-task-board/v1");
+    assert.equal(scaffold.payload.formal_agent_orchestration.continuity.progress_format, "free-form ordinary prose");
+    assert.equal(scaffold.payload.formal_agent_orchestration.continuity.progress_validation, "none");
+    assert.equal(scaffold.payload.formal_agent_orchestration.continuity.worker_progress_write, false);
+    assert.equal(scaffold.payload.formal_agent_orchestration.continuity.formal_task_board, "optional arbitrary unparsed notes");
+    assert.equal(scaffold.payload.formal_agent_orchestration.continuity.markdown_is_gate, false);
+    assert.equal(scaffold.payload.formal_agent_orchestration.openspec_validation.code_only, "skip");
+    assert.equal(scaffold.payload.formal_agent_orchestration.openspec_validation.invocations_per_targeted_gate, 1);
     assert.equal(scaffold.payload.formal_agent_orchestration.canonical_roles.length, 20);
-    assert.equal(scaffold.payload.formal_agent_orchestration.cases.length, 26);
+    assert.equal(scaffold.payload.formal_agent_orchestration.cases.length, 31);
 
     const generated = runWorkflow(root, "generated-adapter-boundary", generatedFixture);
     assert.equal(generated.status, 0, generated.stderr || generated.stdout);
@@ -206,7 +213,7 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     await saveJson(root, workflowFixture, fixture);
     const result = runWorkflow(root, "scaffold");
     assert.equal(result.status, 5);
-    assert.match(result.payload.errors.join("\n"), /formal_agent_orchestration.*exact shared selection\/Board contract/i);
+    assert.match(result.payload.errors.join("\n"), /formal_agent_orchestration.*exact shared package\/selection\/continuity contract/i);
   });
 
   await t.test("rejects canonical role matrix drift and general formal ownership", async () => {
@@ -221,15 +228,30 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
     assert.match(result.payload.errors.join("\n"), /role inventory|general role row|selection matrix/i);
   });
 
-  await t.test("rejects formal Board ownership and ordered package-field drift", async () => {
+  await t.test("rejects canonical continuity guidance drift", async () => {
     const relative = ".agents/skills/aili-delivery-flow/references/formal-task-board.md";
     const mutated = pristineFormalSources.get(relative)
-      .replace("Every accepted task ID belongs to exactly one current task-execution package.", "Accepted task ownership is flexible.")
-      .replace("  - Package kind:", "  - Package type:");
+      .replace("Missing or arbitrary content never blocks", "Missing notes block")
+      .replace("Never parse or format-validate it", "Validate it before dispatch");
     await writeFile(path.join(root, relative), mutated, "utf8");
     const result = runWorkflow(root, "scaffold");
     assert.equal(result.status, 5);
-    assert.match(result.payload.errors.join("\n"), /task Board reference|Board package fields/i);
+    assert.match(result.payload.errors.join("\n"), /formal continuity reference/i);
+  });
+
+  await t.test("ignores arbitrary optional Board notes and free-form progress text", async () => {
+    const changeRoot = path.join(root, "openspec/changes", change);
+    const boardPath = path.join(changeRoot, "formal-task-board.md");
+    const progressPath = path.join(changeRoot, "progress.txt");
+    await writeFile(boardPath, "anything a human finds useful\n- no schema\n", "utf8");
+    await writeFile(progressPath, "free form; no timestamp, event, or key/value grammar\n", "utf8");
+    try {
+      const result = runWorkflow(root, "scaffold");
+      assert.equal(result.status, 0, result.payload?.errors?.join("\n") || result.stderr || result.stdout);
+    } finally {
+      await rm(boardPath, { force: true });
+      await rm(progressPath, { force: true });
+    }
   });
 
   await t.test("rejects portable packet and result envelope field drift", async () => {

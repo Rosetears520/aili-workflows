@@ -122,6 +122,13 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.match(runGenerator(workspace, "--check").stderr, /unexpected-generated: generated\/pi\/prompts\/extra\.md/);
   await unlink(path.join(workspace, "generated/pi/prompts/extra.md"));
 
+  const retiredBoardProjection = path.join(workspace, "generated/pi/protocols/aili-task-board.v1.schema.json");
+  await writeFile(retiredBoardProjection, "retired\n", "utf8");
+  assert.match(runGenerator(workspace, "--check").stderr, /unexpected-generated: generated\/pi\/protocols\/aili-task-board\.v1\.schema\.json/);
+  assert.equal(runGenerator(workspace).status, 0);
+  await assert.rejects(readFile(retiredBoardProjection, "utf8"), /ENOENT/);
+  assert.equal(runGenerator(workspace, "--check").status, 0);
+
   const nestedPromptDirectory = path.join(workspace, "generated/pi/prompts/nested");
   await mkdir(nestedPromptDirectory);
   await writeFile(path.join(nestedPromptDirectory, "extra.md"), "extra\n", "utf8");

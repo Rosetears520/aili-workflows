@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -16,8 +16,12 @@ try {
     if (drift.length > 0) throw new Error(formatDrift(drift));
     console.log("Generated runtime projections are current.");
   } else {
-    const extra = drift.filter((entry) => entry.kind === "unexpected-generated" || entry.kind === "unexpected-compatibility");
+    const retired = new Set(expected.retiredGeneratedOutputs);
+    const extra = drift.filter((entry) =>
+      (entry.kind === "unexpected-generated" && !retired.has(entry.path)) || entry.kind === "unexpected-compatibility"
+    );
     if (extra.length > 0) throw new Error(formatDrift(extra));
+    await removeOutputs(root, expected.retiredGeneratedOutputs);
     await writeOutputs(root, expected.generated);
     await writeOutputs(root, expected.compatibility);
     console.log(`Generated ${expected.generated.size} runtime assets and ${expected.compatibility.size} compatibility projections.`);
@@ -139,7 +143,7 @@ async function buildExpected(projectRoot) {
   ].sort();
   generated.set("generated/opencode/provenance.json", renderProvenance("opencode", opencodeOutputRecords, allInputs, projectRoot));
   generated.set("generated/pi/provenance.json", renderProvenance("pi", piOutputRecords, allInputs, projectRoot));
-  return { generated, compatibility };
+  return { generated, compatibility, retiredGeneratedOutputs: projection.retiredGeneratedOutputs };
 }
 
 function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, piAdapter, projectRoot) {
@@ -147,7 +151,9 @@ function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, pi
   assertExactList("command projection inventory", projection.commands, expectedCommands);
   assertExactList("agent projection inventory", projection.agents, rolesDocument.roles.map((role) => role.id).sort());
   assertExactList("canonical role registry", rolesDocument.roles.map((role) => role.id).sort(), projection.agents);
-  assertExactList("protocol projection inventory", projection.protocols, ["package-envelope.schema.json", "aili-agent-selection.v1.schema.json", "aili-task-board.v1.schema.json"]);
+  assertExactList("protocol projection inventory", projection.protocols, ["package-envelope.schema.json", "aili-agent-selection.v1.schema.json"]);
+  assertExactList("retired generated output inventory", projection.retiredGeneratedOutputs, ["generated/pi/protocols/aili-task-board.v1.schema.json"]);
+  for (const relativePath of projection.retiredGeneratedOutputs) ensureFile(projectRoot, relativePath);
   assertExactList("OpenCode adapter authority boundary", openCodeAdapter.authorityBoundary?.mayNotRedefine, ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]);
   assertExactList("Pi adapter authority boundary", piAdapter.authorityBoundary?.mayNotRedefine, ["role authority", "package identity", "evidence semantics", "approval gates", "lifecycle gates", "ROSE decision ownership", "final verdict ownership"]);
   if (piAdapter.installation?.globalContext?.source !== "generated/pi/AGENTS.md" || piAdapter.installation?.globalContext?.destination !== "~/.pi/agent/AGENTS.md") {
@@ -297,6 +303,16 @@ async function findDrift(projectRoot, expected) {
     }
   }
   return result.sort((left, right) => `${left.kind}:${left.path}`.localeCompare(`${right.kind}:${right.path}`));
+}
+
+async function removeOutputs(projectRoot, relativePaths) {
+  for (const relativePath of relativePaths) {
+    try {
+      await unlink(path.join(projectRoot, relativePath));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
 }
 
 async function writeOutputs(projectRoot, outputs) {

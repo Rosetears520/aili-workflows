@@ -69,7 +69,7 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: d83fd01b25220b9ec6a43a6cc006c926e142394a4ea96588f985ebf484a7226c; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 3e7a8bde72ce9fe5d719f6af3ea69a665e77b19d59dda9039425b0421cda6a6d; do not edit directly -->
 
 # Silent-failure Reviewer
 

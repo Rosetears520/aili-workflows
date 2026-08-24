@@ -6,15 +6,15 @@ This document is the implementation contract for a separate change in `aili-pi`.
 
 Consume the released workflow bundle only after all immutable release fields are verified:
 
-- package: `rose-aili@0.4.7` (target; not yet released while this document is authored);
-- Git tag: `v0.4.7` (pending release);
+- package: `rose-aili@0.4.8` (target; not yet released while this document is authored);
+- Git tag: `v0.4.8` (pending release);
 - release commit: **Unverified until the tag exists**;
 - npm `gitHead`: **Unverified until publication**.
 
 Before downstream implementation, resolve the tag commit and run:
 
 ```bash
-npm view rose-aili@0.4.7 version gitHead dist.tarball --json
+npm view rose-aili@0.4.8 version gitHead dist.tarball --json
 ```
 
 The tag commit, npm `gitHead`, and downloaded package must agree. Do not substitute the current working tree, an archived chat, an unpinned branch, or an earlier package version.
@@ -28,7 +28,7 @@ The workflow repository currently defines the Pi projection in `adapters/pi/adap
 - `generated/pi/system.md` — package-only system projection;
 - `generated/pi/role-metadata.json` — package-only canonical role metadata;
 - `generated/pi/selection-map.json` — package-only selector mapping;
-- `generated/pi/protocols/*.json` — package-only package, selection, and Board schemas;
+- `generated/pi/protocols/*.json` — package-only package and Agent-selection schemas;
 - `generated/pi/installation-contract.json` and `generated/pi/provenance.json` — package-only installation/provenance evidence.
 
 `aili-pi` consumes the package-only runtime bundle; it must not maintain a competing copy of workflow semantics or reinstall/own `~/.pi/agent/AGENTS.md`. The DEFINE evidence used public `aili-pi` main commit `18242f7b2b26a18bd3a0c0ae2e83df8294b9d529` as its static baseline, especially its persistent-Agent runtime, Matrix extension, and Zentui thinking/tool rendering. Treat that commit as a historical navigation anchor, not the implementation target: before editing, resolve the current intended downstream commit and re-inspect exact files, APIs, dependencies, tests, and runtime behavior. Any difference that changes the accepted architecture or verification strategy returns to the downstream definition/approval owner rather than being guessed through.
@@ -37,10 +37,10 @@ The workflow repository currently defines the Pi projection in `adapters/pi/adap
 
 ### 1. Pin and load the generated bundle
 
-- Pin exactly `rose-aili@0.4.7` plus its verified tag commit/npm `gitHead`.
+- Pin exactly `rose-aili@0.4.8` plus its verified tag commit/npm `gitHead`.
 - Load system, roles, selector map, protocols, prompts, installation contract, and provenance from the package.
 - Validate required schema/provenance versions and fail closed on missing, stale, incompatible, or mixed-version artifacts.
-- Keep runtime-private Agent/job/session IDs adapter-owned; they never replace canonical package identity, the formal Board, accepted task IDs, repository evidence, approvals, or ROSE disposition.
+- Keep runtime-private Agent/job/session IDs adapter-owned in the runtime Journal; they never replace canonical package identity, accepted task IDs, repository evidence, approvals, or ROSE disposition. Optional `formal-task-board.md` notes and free-form `progress.txt` are not runtime-state or completion authority.
 
 Acceptance:
 

@@ -6,7 +6,7 @@ User input:
 Invoke `aili-delivery-flow` in BUILD mode.
 
 Required behavior:
-- Derive and execute the complete accepted scoped queue with progress-ledger savepoints, then let ROSE run one minimal changed-scope completion check and stop at `IMPLEMENTED_TARGETED_VERIFIED`.
+- Derive and execute the complete accepted scoped queue, keep concise free-form continuity in orchestrator-owned `progress.txt` without Markdown parsing or replay gates, then let ROSE run one minimal changed-scope completion check and stop at `IMPLEMENTED_TARGETED_VERIFIED`.
 
 Hard stops:
 - Do not edit without one accepted ready target and required gates; emit `BUILD_MATERIAL_DISCOVERY` and stop before work whose scope, architecture, dependency, public contract, permissions, acceptance, or verification strategy changed.

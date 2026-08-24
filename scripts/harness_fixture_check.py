@@ -100,7 +100,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "progress-ledger savepoint", "evidence_state", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-specialist-preferred", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "free-form progress continuity", "worker-progress-write-forbidden", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-specialist-preferred", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
         "case_key": "packet_cases",
         "min_cases": 3,
     },
@@ -869,8 +869,8 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
     errors.extend(require_checks(packet, "forbidden_scope", ["out-of-scope packages", "high-risk gates without approval", "package-local mandatory quality gate", "automatic test", "automatic commit", "package approval"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "parallelism_analysis", ["parallelism analysis", "no-parallel reason", "join completeness", "package/lane preservation"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "join_contract", ["join points", "blockers", "expected evidence"], name, "packet-build-neutral-package"))
-    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "changed_files", "scope_boundary", "progress-ledger savepoint"], name, "packet-build-neutral-package"))
-    errors.extend(require_checks(packet, "savepoint_fields", ["scope", "files_changed", "unresolved_items", "evidence_state", "next_package"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "required_evidence", ["evidence_anchors", "changed_files", "scope_boundary"], name, "packet-build-neutral-package"))
+    errors.extend(require_checks(packet, "progress_contract", ["free-form progress continuity", "no required fields or replay", "ROSE-only writer", "worker-progress-write-forbidden"], name, "packet-build-neutral-package"))
     errors.extend(require_checks(packet, "implementation_objective", ["complete, appropriately scoped, verified", "complete task-scoped", "not artificially tiny"], name, "packet-build-neutral-package"))
     if packet.get("review_repair", "missing") is not None:
         errors.append(f"{name}: packet-build-neutral-package review_repair must be null for implementation-only packages")
@@ -1603,17 +1603,17 @@ def validate_define_artifact_contracts() -> list[str]:
 def validate_neutral_build_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
-        "commands/build.md": ["neutral", "accepted scoped queue", "progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
+        "commands/build.md": ["neutral", "accepted scoped queue", "free-form continuity", "without Markdown parsing or replay gates", "IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
         ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "current acceptance, target, package, permission, and claim-verification path", "Derive a dependency-ordered queue from the accepted contract", "smallest fresh check supporting the exact claim"],
         ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md": ["Protocol: `aili-agent-selection/v1`", "Role namespace: `canonical`", "Selector mapping: `adapter-owned`", "Phase affinity is advisory", "`general` is not a canonical specialist role"],
-        ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["Protocol: `aili-task-board/v1`", "Package kind: `evidence | task-execution`", "Every accepted task ID belongs to exactly one current task-execution package", "returned → done", "waiver is recorded before execution", "Every async package declares a stable join ID"],
+        ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["optional human-readable notes file", "Missing or arbitrary content never blocks", "runtime Journal", "Do not parse, migrate, repair, replay, or validate it", "creates `progress.txt` once", "concise free-form prose", "Never parse or format-validate it", "Workers return package-bound evidence and must not edit"],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["neutral bounded package execution", "synthesize the ordered queue from the accepted contract", "IMPLEMENTED_TARGETED_VERIFIED"],
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["synthesize a queue from the active accepted contract", "user selects the A33 host", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "compact packet contract", "missing manual package text is not a stop condition", "Package 1–12 naming is historical", "Every accepted task ID belongs to exactly one current task-execution package", "One-shot and persistent adapters"],
+        ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["synthesize an ordered package queue", "compact packet contract", "missing manual package text is not a stop condition", "Package 1–12 naming is historical", "Map accepted task IDs to current execution packages", "One-shot and persistent adapters"],
         ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["Neutral BUILD Execution Loop", "active accepted contract", "bounded loop vocabulary, not an automatic sequence", "One current intent selects one primary loop", "Canonical `CONT-005` envelope and budgets", "Protocol-only automation boundary", "A33 admission and operation gates", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope/affected links", "selected only for a concrete gap or affected SHIP claim", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["concise free-form `progress.txt` prose", "ROSE directly inspects the changed scope/affected links", "selected only for a concrete gap or affected SHIP claim", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "IMPLEMENTED_TARGETED_VERIFIED", "fresh explicit intent", "exact commit/push/merge/release approvals"],
-        "docs/harness/command-lifecycle.md": ["progress-ledger savepoints", "IMPLEMENTED_TARGETED_VERIFIED", "bounded loop vocabulary, not an automatic sequence"],
+        "docs/harness/command-lifecycle.md": ["free-form continuity", "no Markdown parsing/replay gate", "IMPLEMENTED_TARGETED_VERIFIED", "bounded loop vocabulary, not an automatic sequence"],
         "docs/harness/aili-harness-contract.md": ["Neutral BUILD execution", "IMPLEMENTED_TARGETED_VERIFIED", "Active-contract completion package"],
     }
     for relative, markers in required_markers.items():
@@ -1698,8 +1698,8 @@ def validate_package5_loop_fixtures() -> list[str]:
             errors.append(f"command-routing-fixtures.yaml: automation risk gates missing {gate!r}")
 
     savepoint = by_id.get("T-BUILD-NO-AUTO-SAVEPOINT-ACTIONS", {})
-    if savepoint.get("savepoint_fields") != ["scope", "files_changed", "unresolved_items", "evidence_state", "next_package"] or any(savepoint.get(field) is not False for field in ("automatic_tests", "automatic_commit", "package_approval")):
-        errors.append("command-routing-fixtures.yaml: BUILD savepoint must use exact fields and trigger no test/commit/approval")
+    if savepoint.get("progress_format") != "free-form" or savepoint.get("required_fields") != [] or any(savepoint.get(field) is not False for field in ("markdown_validation", "worker_write", "automatic_tests", "automatic_commit", "package_approval")):
+        errors.append("command-routing-fixtures.yaml: BUILD progress must be free-form, ROSE-owned, and trigger no Markdown/test/commit/approval gate")
     completion = by_id.get("T-BUILD-MINIMUM-COMPLETION", {})
     if completion.get("expected") != "one-minimal-changed-scope-check" or completion.get("automatic_full_matrix") is not False or completion.get("automatic_review_test_security") is not False or completion.get("targeted_recheck_limit") != 1:
         errors.append("command-routing-fixtures.yaml: BUILD completion must be one minimal changed-scope check")
@@ -1842,7 +1842,8 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         ],
         "commands/build.md": [
             "complete accepted scoped queue",
-            "progress-ledger savepoints",
+            "free-form continuity",
+            "without Markdown parsing or replay gates",
             "one minimal changed-scope completion check",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
