@@ -94,16 +94,16 @@ CONTENT_CHECKS = {
     "agents/implementer.md": ["## Role", "bounded, single-use implementation Worker", "Implement one complete, scoped code-change assignment", "## Success criteria", "## Stop"],
     "agents/code-scout.md": ["## Role", "compact locality map", "Do not plan, review, edit, or implement", "## Output"],
     "templates/opencode-global-AGENTS.md": ["proactive delegation scan", "not a hard cap", "suitable owners", "first-class lifecycle entries", "do not ask the user to restate"],
-    ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "Formal work uses the separate `aili-task-board/v1` lane", "exact canonical owner", "`general` cannot own a formal package", "not a hard cap", "explicit join plan"],
+    ".agents/skills/aili-delivery-flow/SKILL.md": ["Natural language is a first-class lifecycle entry", "do not ask the user to restate", "### Proactive delegation scan", "runtime Journal owns Agent/job/turn/join/settlement state", "free-form `progress.txt` never determine readiness or completion", "exact canonical owner", "`general` cannot own a formal package", "not a hard cap", "explicit join plan"],
     ".agents/skills/parallel-subagent-dispatch/SKILL.md": ["Run this proactive delegation scan", "dispatch before duplicating", "references/agent-selection-matrix.md", "assignment shape", "ready formal Agent-owned package", "not a hard cap", "explicit join plan", "same Task message", "current OpenCode Task adapter", "old `task_id` is never resumed", "Do not automatically retry", "## Canonical packet protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md", "## Canonical result protocol", ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md", "Do not restate or maintain a local"],
     ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md": ["Protocol: `aili-agent-selection/v1`", "Role namespace: `canonical`", "Selector mapping: `adapter-owned`", "Phase affinity is advisory", "`general` is not a canonical specialist role"],
     ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": ["## Ordinary lane", "Specialist-preferred dispatch", "clear bounded non-trivial package", "## Formal lane", "requires dispatch to that exact role", "valid waiver recorded before work", "One current intent has at most one auxiliary capability", "not a hard cap", "launch them together", "Do not automatically add review"],
-    ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["Protocol: `aili-task-board/v1`", "Package kind: `evidence | task-execution`", "exactly one current task-execution package", "waiver is recorded before execution", "stable join ID", "returned → done", "Workers return package-bound evidence"],
-    ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["Every accepted task ID belongs to exactly one current task-execution package", "exact canonical owner", "One-shot and persistent adapters", "do not write the Board or `progress.txt`"],
+    ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["optional human-readable notes file", "Missing or arbitrary content never blocks", "runtime Journal", "Do not parse, migrate, repair, replay, or validate it", "creates `progress.txt` once", "concise free-form prose", "Never parse or format-validate it", "Workers return package-bound evidence and must not edit"],
+    ".agents/skills/aili-delivery-flow/references/implementation-packages.md": ["Map accepted task IDs to current execution packages", "exact canonical owner", "One-shot and persistent adapters", "do not write orchestrator `progress.txt` or optional `formal-task-board.md` notes"],
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md": ["Package ID:", "Role ID:", "Assignment:", "Scope:", "Forbidden scope:", "Allowed actions:", "Expected result:", "Expected evidence:", "Execution: sync | async", "Join:", "Continuation: same-package | new-package", "Stop when:", "current OpenCode Task adapter", "persistent Agent identity"],
     ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md": ["canonical terminal result", "package_id:", "role_id:", "status: completed | partial | blocked | unverified", "summary:", "evidence:", "changed_files:", "verification:", "risks:", "continuation_recommendation: same-package | new-package | none", "current OpenCode Task adapter", "persistent adapter"],
     ".agents/skills/review-pipeline/SKILL.md": ["Never creates an automatic review swarm", "at most one auxiliary specialist capability", "Default concurrency is at most two but is not a hard cap", "suitable owners", "explicit join plan", "one targeted recheck"],
-    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
+    ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["concise free-form `progress.txt` prose", "ROSE directly inspects the changed scope", "IMPLEMENTED_TARGETED_VERIFIED", "neither a waiver nor accepted-`Unverified` wording is a BUILD-readiness alternative"],
     ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["active accepted contract", "A33 admission and operation gates", "Hidden or unrequested AILI self-automation", "explicitly scoped product/repository CI", "IMPLEMENTED_TARGETED_VERIFIED"],
     ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "fresh explicit intent", "exact commit/push/merge/release approvals"],
 }
@@ -1898,16 +1898,19 @@ def formal_delegation_failures(project: Path) -> list[str]:
     failures.extend(
         f"FORMAL LANE SPLIT: missing {marker!r}" for marker in lane_requirements if marker not in lanes
     )
-    board_requirements = [
-        "Every accepted task ID belongs to exactly one current task-execution package",
-        "Owner: `ROSE | agent:<canonical-role-id>`",
-        "A post-hoc waiver is invalid",
-        "Every async package declares a stable join ID",
-        "returned → done",
-        "Dispatch without result consumption is incomplete work",
+    continuity_requirements = [
+        "optional human-readable notes file",
+        "Missing or arbitrary content never blocks",
+        "runtime Journal",
+        "Do not parse, migrate, repair, replay, or validate it",
+        "creates `progress.txt` once",
+        "concise free-form prose",
+        "Never parse or format-validate it",
+        "Only the orchestrator writes `progress.txt`",
+        "Workers return package-bound evidence and must not edit",
     ]
     failures.extend(
-        f"FORMAL BOARD DISPATCH: missing {marker!r}" for marker in board_requirements if marker not in board
+        f"FORMAL CONTINUITY: missing {marker!r}" for marker in continuity_requirements if marker not in board
     )
     packet_requirements = [
         "Package ID:", "Role ID:", "Forbidden scope:", "Expected evidence:",
@@ -1934,17 +1937,15 @@ def formal_delegation_failures(project: Path) -> list[str]:
     try:
         base = json.loads((core_protocols / "package-envelope.schema.json").read_text(encoding="utf-8"))
         selection = json.loads((core_protocols / "aili-agent-selection.v1.schema.json").read_text(encoding="utf-8"))
-        board_schema = json.loads((core_protocols / "aili-task-board.v1.schema.json").read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         failures.append(f"CORE PROTOCOLS: unavailable: {exc}")
     else:
         if base.get("$id") != "aili://protocols/package-envelope/v1" or "source_refs" in base.get("properties", {}):
-            failures.append("CORE PROTOCOLS: shared base identity or formal-only source boundary drifted")
+            failures.append("CORE PROTOCOLS: shared base identity drifted")
         if selection.get("$id") != "aili://protocols/aili-agent-selection/v1" or selection.get("properties", {}).get("package", {}).get("$ref") != "package-envelope.schema.json":
             failures.append("CORE PROTOCOLS: selection v1 must retain the shared base reference")
-        formal_fields = {"accepted_task_ids", "board_identity", "depends_on", "join", "lifecycle_gate", "source_refs"}
-        if board_schema.get("$id") != "aili://protocols/aili-task-board/v1" or not formal_fields.issubset(board_schema.get("properties", {})):
-            failures.append("CORE PROTOCOLS: Board v1 formal extension drifted")
+    if (core_protocols / "aili-task-board.v1.schema.json").exists():
+        failures.append("CORE PROTOCOLS: retired Board v1 schema must be absent")
     try:
         role_document = json.loads((project / "core" / "roles" / "roles.json").read_text(encoding="utf-8"))
         solution = next(role for role in role_document.get("roles", []) if role.get("id") == "solution-architect")
@@ -2391,9 +2392,9 @@ def main() -> int:
     p5_required_markers = {
         "commands/build.md": ["IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
         ".agents/skills/aili-delivery-flow/SKILL.md": ["Derive a dependency-ordered queue from the accepted contract", "fresh exact key/class-bound approval", "CI failure reports"],
-        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["A33 admission and operation gates", "through root `/.worktrees/`", "explicitly scoped product/repository CI", "progress-ledger savepoint"],
+        ".agents/skills/aili-delivery-flow/references/build-execution-loop.md": ["A33 admission and operation gates", "through root `/.worktrees/`", "explicitly scoped product/repository CI", "ordinary free-form prose"],
         ".agents/skills/aili-delivery-flow/references/backend-routing.md": ["synthesize a queue from the active accepted contract", "PREPARE has zero add/remove effect", "IMPLEMENTED_TARGETED_VERIFIED"],
-        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["evidence_state", "ROSE directly inspects the changed scope/affected links", "optional matrix evidence is not a broad BUILD or release gate"],
+        ".agents/skills/aili-delivery-flow/references/artifact-contracts.md": ["concise free-form `progress.txt` prose", "ROSE directly inspects the changed scope/affected links", "optional matrix evidence is not a broad BUILD or release gate"],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": ["An attachment is admitted only", "Admission is not operation authority", "build-readiness status: `READY` or `BLOCKED`"],
         ".agents/skills/aili-delivery-flow/references/test-document-policy.md": ["BUILD readiness is only `READY` or `BLOCKED`", "fresh explicit intent", "CI failure returns to the user"],
         "docs/harness/aili-harness-contract.md": ["A33 Static Admission and Approval Gates", "Active-contract completion package", "explicit product/repository CI"],

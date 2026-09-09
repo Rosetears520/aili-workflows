@@ -3,7 +3,7 @@ description: "AILI command: /retro"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/retro.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: aa315d677d1d719e32d614998ab6ec891781d5f45cab4d668719f1e6eccb7658; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/retro.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 126e9997f94153169f3bd2973d8f9d438b88795f1f50662b408856384698f018; do not edit directly -->
 
 # /retro
 
