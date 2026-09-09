@@ -33,8 +33,8 @@ Every accepted correction, requirement, artifact change, finding, or implementat
 
 - `covered`: already represented by the accepted contract and verification;
 - `material-question`: a decision-changing ambiguity that must be answered before affected work continues;
-- `material-delta`: changes scope, contract, task, acceptance, risk, or implemented behavior and returns to DEFINE writeback/revalidation;
-- `ordinary-steering`: in-scope execution guidance that does not change the accepted contract;
+- `material-delta`: changes scope, required behavior, contract, task, acceptance, risk, architecture, dependencies, security boundary, permissions, or required verification and returns to DEFINE writeback/revalidation; implementation change solely restoring established required behavior is not by itself a material delta;
+- `ordinary-steering`: in-scope execution guidance that does not change the accepted contract. An explicitly requested bounded restoration outside a selected or executing formal change may proceed as ordinary work with the smallest claim-matched verification when all ordinary-classifier boundaries remain unchanged; no new spec or final-test-plan acceptance is required merely for implementation change. Repairs belonging to a selected formal change retain its acceptance, implementation authorization, budgets, and verification gates, and risky operations retain exact approval;
 - `Unverified`: evidence is insufficient to classify safely.
 
 The record carries `delta_id`, `classification`, `evidence`, `affected_artifacts`, `writeback_required`, `acceptance_stale`, and `next_action`. It references existing artifacts rather than creating a delta ledger or competing formal authority.

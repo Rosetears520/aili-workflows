@@ -69,7 +69,7 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: d83fd01b25220b9ec6a43a6cc006c926e142394a4ea96588f985ebf484a7226c; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 8156c9bace5273d915261afdee66549bf0c5ce41bc2dc6fe74cd008f365f35d4; do not edit directly -->
 
 # Solution Architect
 
