@@ -21,7 +21,7 @@ class OutputSurfaceContractTests(unittest.TestCase):
             "Do not mark every sentence.",
             "Agent-internal packets keep `claim_status`, `source_kind`, `source_ref`, `decision_status`, `authorization_status`, `verification_status`, and confidence distinct.",
             "Human-facing artifacts use ordinary prose rather than opaque runtime metadata.",
-            "Acceptance of a specification or test plan is not BUILD authorization.",
+            "Acceptance of a specification or test plan is not BUILD authorization",
             "A command result is not acceptance.",
             "an accepted test plan is not BUILD authorization; passing a command is not user acceptance",
         )
@@ -71,9 +71,9 @@ class OutputSurfaceContractTests(unittest.TestCase):
 
     def test_contract_keeps_acceptance_and_authorization_independent(self) -> None:
         contract = read("templates/opencode-global-AGENTS.md")
-        self.assertIn(
-            "Acceptance of a specification or test plan is not BUILD authorization.",
+        self.assertRegex(
             contract,
+            r"Acceptance of a specification or test plan is not BUILD authorization[.;]",
         )
         self.assertIn(
             "an Agent judgment does not replace required user confirmation",
