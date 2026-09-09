@@ -20,6 +20,23 @@ assert SPEC.loader is not None
 SPEC.loader.exec_module(CHECKER)
 
 
+def catalog_result(command, output, **kwargs):
+    kwargs["stdout"].write(output.encode("utf-8"))
+    return CHECKER.subprocess.CompletedProcess(command, 0, None, "")
+
+
+def catalog_responses(outputs):
+    responses = iter(outputs)
+
+    def run(command, **kwargs):
+        response = next(responses)
+        if isinstance(response, BaseException):
+            raise response
+        return catalog_result(command, response.stdout, **kwargs)
+
+    return run
+
+
 class CatalogOutputTests(unittest.TestCase):
     def test_accepts_one_complete_catalog_document(self):
         payload = json.dumps(
@@ -58,6 +75,49 @@ class CatalogOutputTests(unittest.TestCase):
                     CHECKER.validate_catalog_routes(catalog, root, closures)
 
 
+class CatalogFileCaptureTests(unittest.TestCase):
+    def test_file_capture_rejects_malformed_and_oversized_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            for output in ("[]\n[]", "log\n[]", "[", " " * (1024 * 1024 + 1)):
+                with self.subTest(length=len(output)):
+                    def run(command, **kwargs):
+                        return catalog_result(command, output, **kwargs)
+                    with mock.patch.object(CHECKER.subprocess, "run", side_effect=run):
+                        with self.assertRaises(ValueError):
+                            CHECKER.collect_catalog(["catalog"], workspace, {}, workspace, workspace)
+                    self.assertEqual(list(workspace.iterdir()), [])
+
+    def test_file_capture_preserves_command_failure_and_timeout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            def failed(command, **kwargs):
+                kwargs["stdout"].write(b"[]")
+                return CHECKER.subprocess.CompletedProcess(command, 7, None, "catalog failed")
+            with mock.patch.object(CHECKER.subprocess, "run", side_effect=failed):
+                with self.assertRaisesRegex(ValueError, "catalog command unavailable: catalog failed"):
+                    CHECKER.collect_catalog(["catalog"], workspace, {}, workspace, workspace)
+            with mock.patch.object(CHECKER.subprocess, "run", side_effect=subprocess.TimeoutExpired("catalog", 120)):
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    CHECKER.collect_catalog(["catalog"], workspace, {}, workspace, workspace)
+            self.assertEqual(list(workspace.iterdir()), [])
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for immediate-exit stdout regression")
+    def test_collects_large_catalog_from_immediately_exiting_process(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp)
+            skills = workspace / "skills"
+            skills.mkdir()
+            command = [shutil.which("node"), "-e", (
+                "process.stdout.write(JSON.stringify([{name:'large-skill',"
+                "location:'/installed/large-skill/SKILL.md',content:'x'.repeat(200000)}]));"
+                "process.exit(0);"
+            )]
+            catalog = CHECKER.collect_catalog(command, workspace, os.environ.copy(), skills, workspace)
+            self.assertEqual(catalog, [{"name": "large-skill", "location": "/installed/large-skill/SKILL.md"}])
+            self.assertEqual(sorted(path.name for path in workspace.iterdir()), ["skills"])
+
+
 class CatalogTruncationWorkaroundTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -72,7 +132,7 @@ class CatalogTruncationWorkaroundTests(unittest.TestCase):
 
     @staticmethod
     def truncated(command, **kwargs):
-        return CHECKER.subprocess.CompletedProcess(command, 0, "[" + " " * 65535, "")
+        return catalog_result(command, "[" + " " * 65535, **kwargs)
 
     def test_retries_exact_truncation_in_batches_and_unions_results(self):
         calls = 0
@@ -81,10 +141,10 @@ class CatalogTruncationWorkaroundTests(unittest.TestCase):
             nonlocal calls
             calls += 1
             if calls == 1:
-                return self.truncated(command)
+                return self.truncated(command, **kwargs)
             visible = sorted(path.name for path in self.skill_root.iterdir())
             payload = [{"name": name, "location": str(self.skill_root / name / "SKILL.md")} for name in visible]
-            return CHECKER.subprocess.CompletedProcess(command, 0, json.dumps(payload), "")
+            return catalog_result(command, json.dumps(payload), **kwargs)
 
         with mock.patch.object(CHECKER.subprocess, "run", side_effect=run):
             catalog = CHECKER.collect_catalog(self.command, Path("/neutral"), {}, self.skill_root, self.workspace, batch_size=2)
@@ -100,8 +160,8 @@ class CatalogTruncationWorkaroundTests(unittest.TestCase):
         self.assertEqual(sorted(path.name for path in self.skill_root.iterdir()), ["alpha", "beta", "gamma"])
 
     def test_restores_directories_when_batch_command_raises(self):
-        responses = [self.truncated(self.command), CHECKER.subprocess.TimeoutExpired(self.command, 120)]
-        with mock.patch.object(CHECKER.subprocess, "run", side_effect=responses):
+        responses = [CHECKER.subprocess.CompletedProcess(self.command, 0, "[" + " " * 65535, ""), CHECKER.subprocess.TimeoutExpired(self.command, 120)]
+        with mock.patch.object(CHECKER.subprocess, "run", side_effect=catalog_responses(responses)):
             with self.assertRaises(CHECKER.subprocess.TimeoutExpired):
                 CHECKER.collect_catalog(self.command, Path("/neutral"), {}, self.skill_root, self.workspace, batch_size=2)
         self.assertEqual(sorted(path.name for path in self.skill_root.iterdir()), ["alpha", "beta", "gamma"])
@@ -114,8 +174,8 @@ class CatalogTruncationWorkaroundTests(unittest.TestCase):
             nonlocal calls
             calls += 1
             if calls == 1:
-                return self.truncated(command)
-            return CHECKER.subprocess.CompletedProcess(command, 0, "[]", "")
+                return self.truncated(command, **kwargs)
+            return catalog_result(command, "[]", **kwargs)
 
         def move(source, destination):
             if Path(source).parent.name == "catalog-hidden" and Path(source).name == "alpha":
@@ -129,25 +189,25 @@ class CatalogTruncationWorkaroundTests(unittest.TestCase):
 
     def test_rejects_conflicting_duplicate_routes(self):
         outputs = [
-            self.truncated(self.command),
+            CHECKER.subprocess.CompletedProcess(self.command, 0, "[" + " " * 65535, ""),
             CHECKER.subprocess.CompletedProcess(self.command, 0, json.dumps([{"name": "duplicate", "location": "/one"}]), ""),
             CHECKER.subprocess.CompletedProcess(self.command, 0, json.dumps([{"name": "duplicate", "location": "/two"}]), ""),
         ]
-        with mock.patch.object(CHECKER.subprocess, "run", side_effect=outputs):
+        with mock.patch.object(CHECKER.subprocess, "run", side_effect=catalog_responses(outputs)):
             with self.assertRaisesRegex(ValueError, "duplicate catalog route conflict"):
                 CHECKER.collect_catalog(self.command, Path("/neutral"), {}, self.skill_root, self.workspace, batch_size=2)
 
     def test_rejects_upstream_route_found_only_in_a_late_batch(self):
         canonical = str(self.skill_root / "alpha" / "SKILL.md")
         outputs = [
-            self.truncated(self.command),
+            CHECKER.subprocess.CompletedProcess(self.command, 0, "[" + " " * 65535, ""),
             CHECKER.subprocess.CompletedProcess(self.command, 0, json.dumps([{"name": "alpha", "location": canonical}]), ""),
             CHECKER.subprocess.CompletedProcess(self.command, 0, json.dumps([{
                 "name": "late-upstream",
                 "location": str(self.skill_root / "gamma" / "references" / "upstream" / "SKILL.md"),
             }]), ""),
         ]
-        with mock.patch.object(CHECKER.subprocess, "run", side_effect=outputs):
+        with mock.patch.object(CHECKER.subprocess, "run", side_effect=catalog_responses(outputs)):
             catalog = CHECKER.collect_catalog(self.command, Path("/neutral"), {}, self.skill_root, self.workspace, batch_size=2)
         with self.assertRaisesRegex(ValueError, "excluded references/upstream"):
             CHECKER.validate_catalog_routes(
@@ -268,7 +328,7 @@ class PackageInspectionTests(unittest.TestCase):
                 if command[-1] == "--version":
                     return CHECKER.subprocess.CompletedProcess(command, 0, "1.17.18\n", "")
                 skill = workspace / "home" / ".agents" / "skills" / "idea-refine" / "SKILL.md"
-                return CHECKER.subprocess.CompletedProcess(command, 0, json.dumps([{"name": "idea-refine", "location": str(skill)}]), "")
+                return catalog_result(command, json.dumps([{"name": "idea-refine", "location": str(skill)}]), **kwargs)
 
             with mock.patch.dict(os.environ, ambient_secrets), \
                  mock.patch.object(CHECKER.shutil, "which", return_value="/stub/npm"), \
