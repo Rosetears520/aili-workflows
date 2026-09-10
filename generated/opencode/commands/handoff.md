@@ -4,7 +4,7 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/handoff.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 44fbc17e9fda3bae7da638c2fb6c7ed5b762adab0b1392d027ed54d6fcdc6895; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/handoff.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 3702dff0ac871ab6e150afca1bf4b465632daad818070f12a6bdb6d3f99ab5cf; do not edit directly -->
 
 # /handoff
 

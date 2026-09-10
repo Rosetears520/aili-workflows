@@ -1,130 +1,63 @@
-# Formal Task Board
+# Lightweight TODO and Progress
 
-- Protocol: `aili-task-board/v1`
-- Scope: `formal lifecycle only`
-- Runtime mapping: `adapter-owned`
-
-The Board is the current package-state, ownership, dependency, join, evidence, inspection, and disposition projection for one formal change. `core/protocols/package-envelope.schema.json` owns the shared package/result/evidence semantics and `core/protocols/aili-task-board.v1.schema.json` owns this formal extension; this Markdown reference maps them into Board fields. It does not replace accepted scope, create a user decision, grant implementation or operation authority, or replace fresh verification.
+This shared guide covers ordinary and formal work without requiring OpenSpec. The retained reference filename is not an instruction to create a Board. Maintenance is model discipline, not a Markdown file/format gate: no parser/schema, dispatch hook, state-transition validator, or retry loop is required. Missing files or non-typical free text do not reject runtime work. File contents never prove acceptance, permission, completion, or publication.
 
 ## Creation and placement
 
-Create a Board only after one stable formal task identity exists and the change is decomposed into evidence-producing or executable packages. Pre-identity ordinary IDEATE work has no Board.
+The main model (ROSE) must create and maintain `todo.md` and `progress.txt` for multiple actions needing tracking, delegation, dependencies, blockers, cross-turn work, or an explicit user request. Once the task and allowed directory are resolved, list observable actions before substantive execution. Simple Q&A and a single step with no follow-up need neither file unless explicitly requested.
 
-- OpenSpec: persist one Board across applicable phases at `openspec/changes/<change-id>/formal-task-board.md`.
-- Non-OpenSpec: use an existing adapter-mapped repository-local Board path or obtain one explicit repository-local placement decision.
-- Keep accepted task definitions and scope in `tasks.md`.
-- Keep current package state in the Board.
-- Keep chronological bounded events in the append-only `progress.txt` ledger.
-- Keep runtime-private Agent, Job, Turn, Session, selector, or URI mappings in adapter-owned journals or sidecars. Such values cannot be the Board's only completion evidence.
+Choose the root in this order: explicit user target, existing project task convention, otherwise propose repository-local `tasks/<task-slug>/`. Obey project placement-approval rules. Keep both files in the same root, reuse that root on continuation, and never overwrite another task. A change directory's presence does not select that change. No `tasks.md` or OpenSpec is required.
 
-When the Board header advances phase, retained packages keep the phase in which they were created. Do not create a new Board per phase.
+When writing is forbidden or unavailable, use an in-conversation TODO and explicitly say it is not persisted. Do not switch directories to bypass restrictions or claim a save. Ordinary read-only requests gain no write authority from this discipline.
 
-## Board header
+## Current actions: todo.md
 
-```markdown
-- Protocol: `aili-task-board/v1`
-- Task kind: `formal`
-- Task identity: `<stable-change-id>`
-- Goal: `<bounded goal>`
-- Phase: `IDEATE | DEFINE | BUILD | SHIP`
-- Board status: `active | blocked | done | cancelled`
-- Accepted contract: `<portable refs | pending>`
-- Accepted verification: `<portable ref | pending>`
-- Decision owner: `ROSE`
-- Verification owner: `ROSE`
-```
+Update pending, current, blocked, done, and cancelled actions in place, not by appending a duplicate list each turn. Titles name deliverable outcomes, not objectless “look/change/test”; add one completion condition only when the title is insufficient. Normally highlight one main current action; show multiple genuinely independent parallel actions honestly.
 
-## Package contract
+Update on start, completion, blocking, scope change, and before pause or closeout. A failed or uninspected Worker return is not done. Blockers name the reason and next decision; cancellations name the reason. Keep unfinished items: no silent deletion, false checks, or cancellation of real remaining work merely to end a turn.
 
-Every package has all of these fields:
+`tasks.md` or another accepted plan owns scope. TODO references its task IDs and expands only current actions, never mirrors the complete task tree and status. TODO does not take over the portable package protocol.
+
+## Useful history: progress.txt
+
+Append briefly only for substantive progress, important trade-offs, verification results, blocker changes, or useful pause context. Record results, necessary reasons, evidence references, and unverified limits; optional TODO IDs link the story. Do not log each tool call, copy all TODO/tasks, or store raw logs or transcripts. No timestamps, event vocabulary, or fixed fields are mandatory.
+
+An unchanged read adds no entry. Before pause with no new information, inspect the TODO without mechanically appending “continuing”. Resume reads the selected task's TODO first, then recent or referenced Progress only as needed. Old evidence does not become fresh and historical authorization does not renew. Full-history rereads are unnecessary.
+
+Existing free-text progress remains valid. Do not automatically compress, delete, rewrite, or archive history; introduce no line/token thresholds. On legacy Board resume, extract only a few relevant current actions based on current evidence into `todo.md`; preserve the original `formal-task-board.md` as history without renaming or deleting it.
+
+## Illustrative example, not a format protocol
 
 ```markdown
-- [ ] <package-id> — <title>
-  - Phase: `IDEATE | DEFINE | BUILD | SHIP`
-  - Package kind: `evidence | task-execution`
-  - Source refs: `<typed portable refs>`
-  - Accepted task IDs: `<task-id[, task-id...]> | none`
-  - Status: `pending | ready | running | returned | done | blocked | cancelled`
-  - Owner: `ROSE | agent:<canonical-role-id>`
-  - Dispatch: `required | waived | forbidden`
-  - Dispatch reason: `<reason | N/A>`
-  - No-dispatch reason: `<reason | N/A>`
-  - Execution: `direct | sync | async`
-  - Join: `N/A | immediate | <stable-join-id>`
-  - Depends on: `<package-ids | none>`
-  - Decision gate: `<state | N/A>`
-  - Final test-plan gate: `<state | N/A>`
-  - Implementation authorization: `absent | granted | expired | revoked | N/A`
-  - Operation permissions: `<state | N/A>`
-  - Scope: `<bounded scope>`
-  - Forbidden scope: `<bounded exclusions>`
-  - Expected result: `<result>`
-  - Expected evidence: `<prospective portable evidence>`
-  - Acceptance: `<package-level completion criteria>`
-  - Dispatch evidence: `pending | <portable evidence id>`
-  - Result evidence: `pending | <portable evidence id>`
-  - Evidence: `pending | <portable anchors>`
-  - ROSE disposition: `pending | accepted | partially-accepted | rejected | superseded | needs-follow-up`
-  - Blocker: `none | <blocker>`
-  - Next action: `<next action>`
+# TODO: Correct cancelled-state display
+## Current
+- [ ] T2 Correct the cancellation display (tasks.md §2.1, if present)
+  Complete when cancellation no longer displays running.
+## Pending
+- [ ] T3 Add and run cancellation regression coverage
+## Blocked
+- [ ] T4 Verify the real CLI: await the user's test-session permission decision
+## Done
+- [x] T1 Locate the state update entry → src/.../runtime.ts
 ```
-
-`Acceptance` means package-level completion criteria only. It never means final-test-plan acceptance, acceptance of a user decision, implementation authorization, or operation approval. Record a non-applicable gate as `N/A`; never represent it as granted.
-
-The checkbox is checked if and only if `Status: done`.
-
-## Package kinds and source references
-
-`Source refs` use typed portable identifiers that the receiving workflow can resolve:
-
-- `requirement:<id>`
-- `decision:<id>`
-- `risk:<id>`
-- `artifact:<repository-local-path-or-stable-id>`
-- `verification:<id-or-command-record>`
-- `task:<accepted-task-id>`
-
-An `evidence` package references one or more stable requirement, decision, risk, artifact, or verification identifiers and sets `Accepted task IDs: none`. It may exist before accepted tasks are defined and may target one unresolved decision as its expected result. That target decision is not a readiness prerequisite; its input evidence and prerequisite decisions still are.
-
-A `task-execution` package references one or more accepted `tasks.md` task IDs. Every accepted task ID belongs to exactly one current task-execution package. One package may aggregate multiple task IDs only when one owner, dependency boundary, join, independently completable scope, and acceptance/evidence boundary fits them all. If different canonical owners, independent joins, or independently completable scopes are needed, split the task into separate accepted `tasks.md` rows during DEFINE before readiness. Missing or duplicate current task ownership blocks Board validity. A Board package cannot introduce or widen accepted scope.
-
-When accepted tasks become available after earlier evidence packages, create task-execution packages and connect them to the earlier portable Source refs. Do not rewrite earlier evidence packages as task execution.
-
-## Readiness
-
-Evaluate readiness by package kind, phase, and operation:
-
-- Every package requires valid identity and fields, ready dependencies, bounded scope, the exact owner, input evidence, prerequisite decisions, and all applicable permissions.
-- An evidence package may become ready while the decision it is intended to inform is unresolved. Record implementation authorization as `N/A` unless implementation is actually part of that package.
-- A BUILD task-execution package additionally requires an accepted contract, a current accepted final test plan, explicit implementation authorization for the exact scope, and all applicable operation permissions.
-- `Owner: agent:general` is invalid. Canonical phase affinities are recommendations, not permission allowlists; record the role-fit reason when the narrowest valid specialist is outside the common shortlist.
-
-## State machines
 
 ```text
-Agent-owned package:
-pending → ready → running → returned → done
-
-ROSE-owned direct package:
-pending → ready → running → done
+T1: Located the missing cancellation update in src/.../runtime.ts.
+T2: Adjusted the display path; regression not run, fix remains unverified.
+T4: Real CLI verification awaits permission; continuing authorized T3.
 ```
 
-- `pending → ready`: dependencies and every applicable decision, acceptance, authorization, and permission gate are satisfied.
-- `ready → running`: the exact owner starts, or a valid waiver for an Agent-owned package was recorded before direct execution.
-- `running → returned`: a readable worker result exists; this is not completion.
-- `returned → done`: ROSE read and inspected the result, recorded a disposition, integrated accepted portions, and completed the selected fresh claim-matched verification.
-- A task-execution package cannot become `done` until every owned task satisfies its accepted behavior and evidence requirements.
-- An evidence package cannot become `done` until its expected evidence and package Acceptance are satisfied and ROSE completes inspection, disposition, integration, and verification.
-- Worker PASS, task-call completion, runtime status, a progress event, or a checkbox cannot establish `done`.
-- Terminal `done` and `cancelled` packages never reopen. Changed or expanded scope uses a new package ID.
+## Formal package boundaries retained
 
-## Ownership, dispatch, and waiver
+`core/protocols/package-envelope.schema.json` and the portable packet/result references own package semantics, not TODO formatting. Formal packages retain stable identity, phase, evidence or task-execution kind, typed portable Source refs (requirement, decision, risk, artifact, verification, task), accepted task IDs or none, dependencies, exact owner, joins, applicable lifecycle gates, expected result/evidence, inspection, disposition, and verification links. Legacy Board schema assets are not a Markdown maintenance requirement.
 
-Ordinary delegation keeps its specialist-preferred decision and named direct-work exceptions. Formal ownership is different:
+Every accepted task ID belongs to exactly one current task-execution package. Aggregate only when owner, dependency, join, independently completable scope, acceptance, and evidence boundaries align; otherwise split the task into separate accepted `tasks.md` rows during DEFINE before readiness. Missing or duplicate ownership blocks the affected package, not TODO validity. Evidence packages may inform an unresolved decision and claim no accepted task ownership. Task-execution packages cannot widen accepted scope.
 
-- A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation. A later ordinary negative-benefit judgment cannot change its role or make it direct.
-- `Owner: ROSE` uses `Dispatch: forbidden` and `Execution: direct`.
-- Split a package that mixes a material decision owned by ROSE with bounded Agent execution.
+Readiness requires dependencies, bounded scope, input evidence, prerequisite decisions, the exact owner, and applicable permissions. BUILD task execution additionally requires accepted scope, current accepted final test plan, explicit implementation authorization, and operation permissions. Record a non-applicable gate as `N/A`; never represent it as granted. `Acceptance` means package-level completion criteria only, not user acceptance or authorization. `general` cannot own a formal package; phase affinities remain advisory.
+
+### Ownership, dispatch, and waiver
+
+Ordinary delegation keeps its specialist-preferred decision and named direct-work exceptions. A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation. A later ordinary negative-benefit judgment cannot change its role or make it direct. `Owner: ROSE` uses `Dispatch: forbidden` and `Execution: direct`. Split material ROSE decisions from bounded Agent execution.
 
 Direct ROSE execution of an Agent-owned package is legal only when a waiver is recorded before execution and names one of these reasons:
 
@@ -134,35 +67,12 @@ Direct ROSE execution of an Agent-owned package is legal only when a waiver is r
 
 Not-ready dependencies, scope overlap, changed scope, invalid role, missing specialist-only capability, cancellation, or supersession are not waivers. A post-hoc waiver is invalid.
 
-## Sync, async, and joins
+Use sync for an immediately needed result; async requires independent inputs and non-overlapping scope. Every async package declares a stable join ID. Required joined results must be terminal, read, inspected, dispositioned, and connected to portable evidence before dependent work or phase verdicts. Dispatch without result consumption is incomplete work.
 
-Use `sync` when a later decision or package depends on the result. Use `async` only for independent inputs, non-overlapping scope, and work whose result is not immediately required. Every async package declares a stable join ID.
+A readable return is not completion. The package's returned → done distinction requires ROSE inspection, explicit disposition, integration of accepted portions, and fresh claim-matched verification. Evidence packages satisfy expected evidence and package acceptance; task-execution packages satisfy every owned task's accepted behavior and evidence. Worker PASS, runtime status, progress, and checkboxes cannot establish completion. Terminal packages do not reopen; changed scope uses a new package identity. These are package obligations, not parsed TODO states.
 
-A dependent package or phase verdict waits until every required joined result is terminal, read, inspected, dispositioned, and connected to required portable evidence. Dispatch without result consumption is incomplete work.
+### Single writer and adapter boundary
 
-## Worker and adapter boundaries
+Workers return package-bound evidence. They do not edit `todo.md` or `progress.txt`, accept user decisions, widen permissions, integrate other packages, dispatch nested workers, or publish final verdicts. ROSE alone maintains the main task's two files and owns inspection, disposition, integration, verification selection, and lifecycle verdicts. Adapter Journal owns Agent/job/turn/settlement state; do not mirror it into Markdown.
 
-Workers return package-bound evidence. They do not edit the Board or `progress.txt`, accept user decisions, widen permissions, integrate other packages, dispatch nested workers, or publish the final verdict. ROSE owns Board and progress writes, result inspection, disposition, integration, verification selection, and lifecycle verdicts.
-
-Adapters may realize the same package with a fresh one-shot task or a persistent Agent identity. Persistent continuation is legal only while role, assignment, scope, forbidden scope, permissions, acceptance boundary, write scope, expected result, and expected evidence remain unchanged. A new requirement or package, expanded scope, material correction, different role or permissions, different write scope, changed acceptance boundary, or different verification claim requires a new dispatch or job.
-
-## Progress events
-
-`progress.txt` is an append-only bounded event ledger, not a second Board. Its portable event vocabulary is:
-
-```text
-BOARD_CREATED
-READY
-DISPATCHED
-WAIVED
-RETURNED
-INSPECTED
-JOINED
-DONE
-BLOCKED
-UNBLOCKED
-CANCELLED
-RECONCILED
-```
-
-An event records only package ID, state transition, portable evidence ID, disposition, blocker, and next action. Runtime-private identifiers remain adapter-owned. A progress entry that duplicates the complete package contract is invalid.
+Adapters may use one-shot execution or persistent identity. Persistent continuation remains unchanged-same-package only: role, assignment, scope, forbidden scope, permissions, acceptance boundary, write scope, expected result, and expected evidence must remain unchanged. Otherwise use a new dispatch or job; no automatic retry is inferred.

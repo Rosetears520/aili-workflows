@@ -23,7 +23,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 ## Packages, evidence, and claims
 
 - Every package has stable identity, role, assignment, scope, forbidden scope, permission boundary, acceptance boundary, write scope, expected result, expected evidence, result, verification evidence, and convergence linkage.
-- Ordinary work uses the portable base package envelope. Formal work extends that base with accepted task IDs, Board identity, dependencies, join, lifecycle gate, and typed Source references; it creates no parallel Board or result authority.
+- Ordinary work uses the portable base package envelope. Formal work retains accepted task IDs, stable task/package identity, dependencies, join, lifecycle gate, and typed Source references. `todo.md` and `progress.txt` are lightweight continuity, not a Markdown Board protocol or parallel package/result authority; legacy Board schema assets impose no file/format gate.
 - Keep source, decision, authorization, execution, verification, and confidence separate. Agent-internal packets use the portable protocol fields; human-facing artifacts use ordinary prose with evidence anchors, blockers, and explicit `Unverified` limits where material.
 - Use fresh claim-matched evidence for completion, readiness, review, security, or lifecycle claims. Current accepted artifacts, current source, and current repository state outrank memory, summaries, generated artifacts, stale logs, and runtime reports.
 - Never fabricate citations, erase uncertainty without evidence, or turn a symbolic frame into a real-world claim. If a conclusion depends on unavailable evidence, retain it as `Unverified` or an open question.

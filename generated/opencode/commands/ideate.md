@@ -4,7 +4,7 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ideate.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 3230eb641413262b23572e3eddfb9bd468357e2257dc3ba42aceeb92aeba75a5; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ideate.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 09c9da70cf173f2f4808b154dfd3d7644878867f640586c1e0d21bf98ddf5a68; do not edit directly -->
 
 # /ideate
 

@@ -1678,8 +1678,22 @@ def validate_formal_agent_orchestration(
     project: Path, fixture: dict[str, Any], errors: list[str]
 ) -> dict[str, Any]:
     declared = fixture.get("formal_agent_orchestration")
-    if declared != FORMAL_AGENT_ORCHESTRATION_CONTRACT:
-        errors.append("formal_agent_orchestration must equal the exact shared selection/Board contract")
+
+    def package_contract_only(value: Any) -> Any:
+        # Historical fixtures may retain Board metadata. It is not an active
+        # Markdown creation, placement, or Progress-format requirement.
+        if not isinstance(value, dict):
+            return value
+        result = dict(value)
+        for key in ("board_creation", "progress_events"):
+            result.pop(key, None)
+        for key, retired in (("protocols", ("board",)), ("paths", ("openspec_board",)), ("protocol_sources", ("board",))):
+            if isinstance(result.get(key), dict):
+                result[key] = {name: entry for name, entry in result[key].items() if name not in retired}
+        return result
+
+    if package_contract_only(declared) != package_contract_only(FORMAL_AGENT_ORCHESTRATION_CONTRACT):
+        errors.append("formal_agent_orchestration must preserve the shared selection/package contract")
 
     protocol_sources = FORMAL_AGENT_ORCHESTRATION_CONTRACT["protocol_sources"]
     try:
@@ -1752,33 +1766,51 @@ def validate_formal_agent_orchestration(
 
     board_text = source_text["board"]
     board_markers = [
-        "Protocol: `aili-task-board/v1`",
-        "Create a Board only after one stable formal task identity exists",
-        "openspec/changes/<change-id>/formal-task-board.md",
-        "adapter-mapped repository-local Board path",
-        "When the Board header advances phase, retained packages keep the phase",
-        "Package kind: `evidence | task-execution`",
+        "# Lightweight TODO and Progress",
+        "ordinary and formal work without requiring OpenSpec",
+        "Maintenance is model discipline, not a Markdown file/format gate",
+        "before substantive execution",
+        "in-conversation TODO",
+        "No timestamps, event vocabulary, or fixed fields are mandatory",
         "Every accepted task ID belongs to exactly one current task-execution package",
         "split the task into separate accepted `tasks.md` rows during DEFINE before readiness",
         "Record a non-applicable gate as `N/A`; never represent it as granted.",
         "`Acceptance` means package-level completion criteria only",
-        "pending → ready → running → returned → done",
+        "returned → done distinction requires ROSE inspection",
         "A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation",
         "waiver is recorded before execution",
         "Every async package declares a stable join ID",
-        "Workers return package-bound evidence. They do not edit the Board or `progress.txt`",
-        "BOARD_CREATED",
-        "RECONCILED",
+        "Workers return package-bound evidence. They do not edit `todo.md` or `progress.txt`",
+        "Old evidence does not become fresh and historical authorization does not renew",
+        "Existing free-text progress remains valid",
+        "preserve the original `formal-task-board.md` as history",
+        "An unchanged read adds no entry",
+        "no silent deletion, false checks",
+        "Journal owns Agent/job/turn/settlement state",
     ]
     for marker in board_markers:
         if marker not in board_text:
             errors.append(f"formal task Board reference missing marker: {marker}")
-    observed_board_fields = parse_named_text_block_fields(board_text, "Package kind")
-    if observed_board_fields != FORMAL_BOARD_PACKAGE_FIELDS:
-        errors.append(
-            "formal task Board package fields differ from the canonical ordered contract; "
-            f"observed={observed_board_fields!r}"
-        )
+    # Static prose regression only: TODO/Progress are not parsed or format-gated.
+    # These checks establish source/projection presence, never model behavior or installation.
+    for relative in (
+        "core/governance/operating-discipline.md",
+        "generated/opencode/AGENTS.md",
+        "generated/pi/AGENTS.md",
+        "generated/pi/system.md",
+        "templates/opencode-global-AGENTS.md",
+    ):
+        try:
+            continuity_text = (project / relative).read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            errors.append(f"shared continuity loading source unavailable: {relative}: {exc}")
+            continue
+        for marker in ("For ordinary and formal work", "`todo.md`", "`progress.txt`", "before substantive execution", "in-conversation TODO", "not a file/format gate", "Workers return evidence only"):
+            if marker not in continuity_text:
+                errors.append(f"shared continuity prose missing: {relative}: {marker}")
+    for marker in ("## Board header", "## State machines", "BOARD_CREATED", "The checkbox is checked if and only if"):
+        if marker in board_text:
+            errors.append(f"lightweight continuity guide restores a Markdown Board gate: {marker}")
 
     packet_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md"
     result_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-result.md"
@@ -1799,7 +1831,7 @@ def validate_formal_agent_orchestration(
 
     integration_markers = {
         ".agents/skills/aili-delivery-flow/SKILL.md": [
-            "Formal work uses the separate `aili-task-board/v1` lane",
+            "Formal work retains its separate exact-owner package lane without a Markdown Board gate",
             "`general` cannot own a formal package",
             "Phase role lists are advisory",
             "current final-test-plan gate",
@@ -1812,7 +1844,7 @@ def validate_formal_agent_orchestration(
         ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
             "Every accepted task ID belongs to exactly one current task-execution package",
             "One-shot and persistent adapters implement the same package identity",
-            "They do not write the Board or `progress.txt`",
+            "They do not write `todo.md` or `progress.txt`",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "`proposed`, `direction-recorded`, `conditional`, `awaiting-confirmation`, `accepted`, `rejected`, or `superseded`",

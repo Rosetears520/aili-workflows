@@ -1,5 +1,5 @@
 <!-- AILI_PI_GLOBAL_CONTEXT: ~/.pi/agent/AGENTS.md -->
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: 8aa25d71e351f36d79ec29759b8fbaf4dbe2d8fa3ca9dc29d8be3e7a4cf7ad50; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: ebed1b3d3e27ae190dec3851c7a47a2351b8884f987191d127b4275e3a3edd3a; do not edit directly -->
 
 # AGENTS.md
 
@@ -26,7 +26,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 ## Packages, evidence, and claims
 
 - Every package has stable identity, role, assignment, scope, forbidden scope, permission boundary, acceptance boundary, write scope, expected result, expected evidence, result, verification evidence, and convergence linkage.
-- Ordinary work uses the portable base package envelope. Formal work extends that base with accepted task IDs, Board identity, dependencies, join, lifecycle gate, and typed Source references; it creates no parallel Board or result authority.
+- Ordinary work uses the portable base package envelope. Formal work retains accepted task IDs, stable task/package identity, dependencies, join, lifecycle gate, and typed Source references. `todo.md` and `progress.txt` are lightweight continuity, not a Markdown Board protocol or parallel package/result authority; legacy Board schema assets impose no file/format gate.
 - Keep source, decision, authorization, execution, verification, and confidence separate. Agent-internal packets use the portable protocol fields; human-facing artifacts use ordinary prose with evidence anchors, blockers, and explicit `Unverified` limits where material.
 - Use fresh claim-matched evidence for completion, readiness, review, security, or lifecycle claims. Current accepted artifacts, current source, and current repository state outrank memory, summaries, generated artifacts, stale logs, and runtime reports.
 - Never fabricate citations, erase uncertainty without evidence, or turn a symbolic frame into a real-world claim. If a conclusion depends on unavailable evidence, retain it as `Unverified` or an open question.
@@ -97,7 +97,11 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 - Hydrate formal artifacts only when the active mode, dependency, resume point, write, correction, conflict, or freshness-sensitive event needs them. Current disk artifacts outrank chat summaries, stale logs, generated summaries, and memory.
 - Re-read each file written by the active agent before using it as durable evidence. Refresh only invalidated files and direct dependents.
 - Handoffs require an explicit accepted trigger, remain repository-local, redacted, reference-first, and non-authoritative, and never replace a new exact approval.
-- Progress ledgers record active formal progress only when the active contract requires them. Drift logs record deviations, trade-offs, open questions, and unverified assumptions, not chat history or approval authority.
+- For ordinary and formal work with multiple trackable actions, delegation, dependencies, blockers, cross-turn work, or an explicit user request, the main model must maintain same-root `todo.md` (current actions) and `progress.txt` (useful history). Resolve the task and allowed directory, then list observable actions before substantive execution; simple Q&A or one step without follow-up needs neither unless requested. Prefer the explicit user target, then project task conventions, otherwise propose repository-local `tasks/<task-slug>/`, respecting placement approval and reusing the selected root.
+- Update TODO in place on start, completion, blocking, scope change, and before pause/closeout; preserve unfinished work, explain blockers/next decisions and cancellations, and never count failed or uninspected Worker returns as done. Highlight one main action normally, or honest independent parallel actions. Reference accepted-plan task IDs without mirroring its full tree/status.
+- Append Progress only for substantive results, decisions/trade-offs, verification, blocker changes, or useful pause context, with evidence references and unverified limits. No per-tool-call logging, repeated TODO, fixed fields/events/timestamps, or no-change pause entries. Resume reads the selected TODO first, then recent/referenced Progress as needed; history neither refreshes evidence nor renews authorization. Preserve legacy free text and old Boards without automatic rewrite, compression, deletion, or archiving.
+- The main model is the sole TODO/Progress writer; Workers return evidence only. Journal owns Agent/job/turn/settlement state, not Markdown. If writes are forbidden or unavailable, use an in-conversation TODO and state it is not persisted; never bypass placement or gain write permission from a read-only request. Maintenance is model discipline, not a file/format gate, parser/schema, dispatch hook, retry loop, or proof of acceptance, authority, completion, or publication. Full guidance and examples: `aili-delivery-flow/references/formal-task-board.md`.
+- Drift logs record deviations, trade-offs, open questions, and unverified assumptions, not chat history or approval authority.
 - Do not persist raw logs, full transcripts, secrets, private data, or large dumps in continuity artifacts.
 
 ## Completion standard

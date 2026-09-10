@@ -19,8 +19,10 @@ For each implementation package defined by the active contract before its comple
 1. Read the current package/task rows, owning contract sections, target/Git/rules, and affected evidence. Read progress/drift only for resume, deviation, or conflict; do not blanket-hydrate unrelated artifacts.
 2. Implement its complete accepted behavior; scoped work is not a partial patch.
 3. Run a focused test/check only when the changed behavior, risk, package need, or bounded failure diagnosis triggers it; a package boundary alone triggers none.
-4. Record a progress-ledger savepoint with exactly the package identity plus `scope`, `files_changed`, `unresolved_items`, `evidence_state`, and `next_package`.
+4. Update `todo.md` on actual action start, completion, blocking, or scope change. Append a brief useful savepoint to `progress.txt` with results, necessary reasons, evidence references, unverified limits, and next action as relevant; package savepoint fields remain package metadata, not a required Progress format. Never log each tool call or duplicate TODO/tasks.
 5. Continue only when dependencies are ready and no material/safety/budget stop applies.
+
+Before pause/closeout inspect TODO and preserve unfinished or blocked work honestly; a failed or uninspected Worker return is not done. No new information means no mechanical Progress append. Resume reads the selected TODO first, then recent/referenced Progress as needed under `formal-task-board.md`; read-only restrictions prevent persistence.
 
 The savepoint is not a test, review, commit, package approval, closure verdict, or readiness evidence and triggers none automatically. Optional feedback is not a mandatory local code-review/test/security gate. Package 1–12 terminology is history specific to `complete-aili-workflow-orchestration`.
 

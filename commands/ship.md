@@ -4,7 +4,7 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ship.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 3aea14c300135d3499b5437c4c166188bb1d4cb6ec9c0a486c29a7d3fdad5b43; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ship.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 4371a3ded9826c329718b81006f9f747ced205ffe4413ed70e92deba0ec091e3; do not edit directly -->
 
 # /ship
 
