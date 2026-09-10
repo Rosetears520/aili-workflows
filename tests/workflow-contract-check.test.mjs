@@ -230,9 +230,15 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
 
   await t.test("rejects canonical continuity guidance drift", async () => {
     const relative = ".agents/skills/aili-delivery-flow/references/formal-task-board.md";
-    const mutated = pristineFormalSources.get(relative)
-      .replace("Missing or arbitrary content never blocks", "Missing notes block")
-      .replace("Never parse or format-validate it", "Validate it before dispatch");
+    const pristine = pristineFormalSources.get(relative);
+    const targets = [
+      "Missing files or non-typical free text do not reject runtime work",
+      "Never parse or format-validate them",
+    ];
+    for (const target of targets) assert.ok(pristine.includes(target), `Missing mutation target: ${target}`);
+    const mutated = pristine
+      .replace(targets[0], "Missing notes block")
+      .replace(targets[1], "Validate them before dispatch");
     await writeFile(path.join(root, relative), mutated, "utf8");
     const result = runWorkflow(root, "scaffold");
     assert.equal(result.status, 5);
