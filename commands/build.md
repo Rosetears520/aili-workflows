@@ -4,7 +4,7 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/build.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 1ba390a4c37ff28a42145cf83bea2b26805539e795d4284f88771cf5657ac0c7; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/build.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: a2b9dd7b843132739b581e980785b3a0800115a5f4bf4e816dc87f608a1981c2; do not edit directly -->
 
 # /build
 
@@ -14,7 +14,7 @@ User input:
 Invoke `aili-delivery-flow` in BUILD mode.
 
 Required behavior:
-- Derive and execute the complete accepted scoped queue with progress-ledger savepoints, then let ROSE run one minimal changed-scope completion check and stop at `IMPLEMENTED_TARGETED_VERIFIED`.
+- Derive and execute the complete accepted scoped queue, keep concise free-form continuity in orchestrator-owned `progress.txt` without Markdown parsing or replay gates, then let ROSE run one minimal changed-scope completion check and stop at `IMPLEMENTED_TARGETED_VERIFIED`.
 
 Hard stops:
 - Do not edit without one accepted ready target and required gates; emit `BUILD_MATERIAL_DISCOVERY` and stop before work whose scope, architecture, dependency, public contract, permissions, acceptance, or verification strategy changed.

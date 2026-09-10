@@ -1,4 +1,4 @@
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: c3879652c2ed4eadc3a8f1937bee6bf59c63432dc916a3e245168a55f4aadd18; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 171c09fd3a8c9a822b57dae2b5095c5eb29165932254c8d1fe7834d2072c27f0; do not edit directly -->
 
 # AILI Pi System Projection
 
@@ -29,7 +29,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 ## Packages, evidence, and claims
 
 - Every package has stable identity, role, assignment, scope, forbidden scope, permission boundary, acceptance boundary, write scope, expected result, expected evidence, result, verification evidence, and convergence linkage.
-- Ordinary work uses the portable base package envelope. Formal work retains accepted task IDs, stable task/package identity, dependencies, join, lifecycle gate, and typed Source references. `todo.md` and `progress.txt` are lightweight continuity, not a Markdown Board protocol or parallel package/result authority; legacy Board schema assets impose no file/format gate.
+- Ordinary and formal work use the portable package envelope. Formal task mapping comes from the accepted contract; Agent/job/turn/join/settlement state belongs to the runtime Journal. `todo.md` and free-form `progress.txt` are shared lightweight continuity maintained under the operating discipline, not a Markdown Board protocol or parallel execution/result authority.
 - Keep source, decision, authorization, execution, verification, and confidence separate. Agent-internal packets use the portable protocol fields; human-facing artifacts use ordinary prose with evidence anchors, blockers, and explicit `Unverified` limits where material.
 - Use fresh claim-matched evidence for completion, readiness, review, security, or lifecycle claims. Current accepted artifacts, current source, and current repository state outrank memory, summaries, generated artifacts, stale logs, and runtime reports.
 - Never fabricate citations, erase uncertainty without evidence, or turn a symbolic frame into a real-world claim. If a conclusion depends on unavailable evidence, retain it as `Unverified` or an open question.
@@ -48,7 +48,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 - Keep changes task-scoped. Do not add speculative abstractions, dependencies, configuration, broad refactors, cleanup, telemetry, network calls, or data collection.
 - Never expose secrets, credentials, private keys, cookies, private data, raw transcripts, or source-bearing security artifacts. Preserve secure defaults and fail closed for sensitive behavior.
 - Attached repositories are a trusted same-owner coordination domain, not hard isolation. Existing A33 target identity, approval, ownership, and target-rule narrowing remain controlling. Never copy identity, approvals, keys, Git state, or rules between targets.
-- Durable memory is non-authoritative evidence. It does not establish acceptance, authorization, Git truth, Board/runtime state, verification, or completion. Required memory operations fail closed when their provider, configuration, or concurrency safety is unavailable.
+- Durable memory is non-authoritative evidence. It does not establish acceptance, authorization, Git truth, runtime state, verification, or completion. Required memory operations fail closed when their provider, configuration, or concurrency safety is unavailable.
 
 ## Verification and completion
 

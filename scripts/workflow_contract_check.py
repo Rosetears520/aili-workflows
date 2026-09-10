@@ -753,35 +753,6 @@ CANONICAL_AGENT_ROLE_IDS = (
     "agent-evaluator",
     "opensource-sanitizer",
 )
-FORMAL_BOARD_PACKAGE_FIELDS = (
-    "Phase",
-    "Package kind",
-    "Source refs",
-    "Accepted task IDs",
-    "Status",
-    "Owner",
-    "Dispatch",
-    "Dispatch reason",
-    "No-dispatch reason",
-    "Execution",
-    "Join",
-    "Depends on",
-    "Decision gate",
-    "Final test-plan gate",
-    "Implementation authorization",
-    "Operation permissions",
-    "Scope",
-    "Forbidden scope",
-    "Expected result",
-    "Expected evidence",
-    "Acceptance",
-    "Dispatch evidence",
-    "Result evidence",
-    "Evidence",
-    "ROSE disposition",
-    "Blocker",
-    "Next action",
-)
 TASK_PACKET_FIELDS = (
     "Package ID",
     "Role ID",
@@ -824,28 +795,44 @@ FORMAL_AGENT_ORCHESTRATION_CASES = [
     {"id": "same-turn-explicit-accept-and-implement", "expected": "two-separate-states"},
     {"id": "document-authored-authority", "expected": "invalid"},
     {"id": "human-artifact-output", "expected": "ordinary-prose"},
+    {"id": "free-form-progress", "expected": "accepted-without-markdown-validation"},
+    {"id": "missing-formal-task-board", "expected": "non-blocking"},
+    {"id": "arbitrary-formal-task-board", "expected": "non-blocking-unparsed-notes"},
+    {"id": "code-only-completion", "expected": "no-openspec-validation"},
+    {"id": "changed-openspec-native-artifact", "expected": "one-targeted-strict-validation"},
 ]
 FORMAL_AGENT_ORCHESTRATION_CONTRACT = {
     "schema_version": "1.0",
     "protocols": {
+        "package": "package-envelope/v1",
         "selection": "aili-agent-selection/v1",
-        "board": "aili-task-board/v1",
     },
     "paths": {
         "selection": ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md",
-        "board": ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
-        "openspec_board": "openspec/changes/<change-id>/formal-task-board.md",
+        "formal_notes": ".agents/skills/aili-delivery-flow/references/formal-task-board.md",
+        "openspec_formal_notes": "openspec/changes/<change-id>/formal-task-board.md",
+        "openspec_progress": "openspec/changes/<change-id>/progress.txt",
     },
     "protocol_sources": {
         "base": "core/protocols/package-envelope.schema.json",
         "selection": "core/protocols/aili-agent-selection.v1.schema.json",
-        "board": "core/protocols/aili-task-board.v1.schema.json",
     },
-    "board_creation": {
-        "requires_stable_identity": True,
-        "non_openspec": "adapter-mapped repository-local path or one explicit repository-local placement decision",
-        "one_board_across_phases": True,
-        "retained_package_phase": True,
+    "continuity": {
+        "progress_required_for_multi_step_or_formal": True,
+        "progress_format": "free-form ordinary prose",
+        "progress_validation": "none",
+        "progress_writer": "ROSE-only",
+        "worker_progress_write": False,
+        "formal_task_board": "optional arbitrary unparsed notes",
+        "markdown_is_gate": False,
+        "runtime_state_owner": "Journal",
+    },
+    "openspec_validation": {
+        "native_artifacts": ["proposal.md", "design.md", "tasks.md", "specs/**/spec.md"],
+        "triggers": ["native-artifact-changed", "explicit-acceptance-gate", "explicit-archive-gate"],
+        "code_only": "skip",
+        "sidecar_only": "skip",
+        "invocations_per_targeted_gate": 1,
     },
     "canonical_roles": list(CANONICAL_AGENT_ROLE_IDS),
     "phase_affinity": {
@@ -863,7 +850,6 @@ FORMAL_AGENT_ORCHESTRATION_CONTRACT = {
     "pre_readiness_split": ["different canonical owners", "independent joins", "independently completable scopes"],
     "agent_states": ["pending", "ready", "running", "returned", "done"],
     "rose_states": ["pending", "ready", "running", "done"],
-    "progress_events": ["BOARD_CREATED", "READY", "DISPATCHED", "WAIVED", "RETURNED", "INSPECTED", "JOINED", "DONE", "BLOCKED", "UNBLOCKED", "CANCELLED", "RECONCILED"],
     "decision_states": ["proposed", "direction-recorded", "conditional", "awaiting-confirmation", "accepted", "rejected", "superseded"],
     "implementation_authorization": ["absent", "granted", "expired", "revoked"],
     "package_acceptance_creates_lifecycle_authority": False,
@@ -1678,28 +1664,13 @@ def validate_formal_agent_orchestration(
     project: Path, fixture: dict[str, Any], errors: list[str]
 ) -> dict[str, Any]:
     declared = fixture.get("formal_agent_orchestration")
-
-    def package_contract_only(value: Any) -> Any:
-        # Historical fixtures may retain Board metadata. It is not an active
-        # Markdown creation, placement, or Progress-format requirement.
-        if not isinstance(value, dict):
-            return value
-        result = dict(value)
-        for key in ("board_creation", "progress_events"):
-            result.pop(key, None)
-        for key, retired in (("protocols", ("board",)), ("paths", ("openspec_board",)), ("protocol_sources", ("board",))):
-            if isinstance(result.get(key), dict):
-                result[key] = {name: entry for name, entry in result[key].items() if name not in retired}
-        return result
-
-    if package_contract_only(declared) != package_contract_only(FORMAL_AGENT_ORCHESTRATION_CONTRACT):
-        errors.append("formal_agent_orchestration must preserve the shared selection/package contract")
+    if declared != FORMAL_AGENT_ORCHESTRATION_CONTRACT:
+        errors.append("formal_agent_orchestration must equal the exact shared package/selection/continuity contract")
 
     protocol_sources = FORMAL_AGENT_ORCHESTRATION_CONTRACT["protocol_sources"]
     try:
         base_schema = json.loads((project / protocol_sources["base"]).read_text(encoding="utf-8"))
         selection_schema = json.loads((project / protocol_sources["selection"]).read_text(encoding="utf-8"))
-        board_schema = json.loads((project / protocol_sources["board"]).read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         errors.append(f"cannot read core formal protocol sources: {exc}")
     else:
@@ -1711,17 +1682,17 @@ def validate_formal_agent_orchestration(
         if base_schema.get("$id") != "aili://protocols/package-envelope/v1" or base_schema.get("required") != base_required:
             errors.append("core package envelope base identity or required fields drifted")
         if "source_refs" in base_properties or not {"result", "verification_evidence", "convergence"}.issubset(base_properties):
-            errors.append("core package envelope must keep source refs formal-only and retain result/evidence/convergence links")
+            errors.append("core package envelope must retain the shared result/evidence/convergence links")
         if selection_schema.get("$id") != "aili://protocols/aili-agent-selection/v1" or selection_schema.get("properties", {}).get("package", {}).get("$ref") != "package-envelope.schema.json":
             errors.append("core agent-selection protocol must preserve v1 identity and shared base reference")
-        board_properties = board_schema.get("properties", {}) if isinstance(board_schema, dict) else {}
-        formal_fields = {"accepted_task_ids", "board_identity", "depends_on", "join", "lifecycle_gate", "source_refs"}
-        if board_schema.get("$id") != "aili://protocols/aili-task-board/v1" or not formal_fields.issubset(board_properties):
-            errors.append("core task-board protocol must preserve v1 identity and formal-only extensions")
+
+    retired_schema = project / "core/protocols/aili-task-board.v1.schema.json"
+    if retired_schema.exists():
+        errors.append("retired core task-board protocol schema must be absent")
 
     paths = FORMAL_AGENT_ORCHESTRATION_CONTRACT["paths"]
     source_text: dict[str, str] = {}
-    for name in ("selection", "board"):
+    for name in ("selection", "formal_notes"):
         relative = paths[name]
         target, resolution_error = resolve_repo_field_target(
             project, relative, f"formal_agent_orchestration.paths.{name}", allow_missing=False
@@ -1764,33 +1735,33 @@ def validate_formal_agent_orchestration(
         if marker not in matrix_text:
             errors.append(f"agent selection matrix missing marker: {marker}")
 
-    board_text = source_text["board"]
-    board_markers = [
+    notes_text = source_text["formal_notes"]
+    notes_markers = [
         "# Lightweight TODO and Progress",
         "ordinary and formal work without requiring OpenSpec",
         "Maintenance is model discipline, not a Markdown file/format gate",
+        "must create and maintain `todo.md` and `progress.txt`",
         "before substantive execution",
         "in-conversation TODO",
         "No timestamps, event vocabulary, or fixed fields are mandatory",
-        "Every accepted task ID belongs to exactly one current task-execution package",
-        "split the task into separate accepted `tasks.md` rows during DEFINE before readiness",
-        "Record a non-applicable gate as `N/A`; never represent it as granted.",
-        "`Acceptance` means package-level completion criteria only",
-        "returned → done distinction requires ROSE inspection",
-        "A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation",
-        "waiver is recorded before execution",
-        "Every async package declares a stable join ID",
+        "Missing files or non-typical free text do not reject runtime work",
+        "runtime Journal",
+        "do not parse, repair, replay, or validate them",
+        "Never parse or format-validate them",
+        "ROSE alone maintains the main task's two files",
         "Workers return package-bound evidence. They do not edit `todo.md` or `progress.txt`",
         "Old evidence does not become fresh and historical authorization does not renew",
         "Existing free-text progress remains valid",
         "preserve the original `formal-task-board.md` as history",
         "An unchanged read adds no entry",
         "no silent deletion, false checks",
-        "Journal owns Agent/job/turn/settlement state",
+        "valid waiver recorded before work",
+        "explicit join plan",
+        "A Worker return is evidence, not completion",
     ]
-    for marker in board_markers:
-        if marker not in board_text:
-            errors.append(f"formal task Board reference missing marker: {marker}")
+    for marker in notes_markers:
+        if marker not in notes_text:
+            errors.append(f"formal continuity reference missing marker: {marker}")
     # Static prose regression only: TODO/Progress are not parsed or format-gated.
     # These checks establish source/projection presence, never model behavior or installation.
     for relative in (
@@ -1809,7 +1780,7 @@ def validate_formal_agent_orchestration(
             if marker not in continuity_text:
                 errors.append(f"shared continuity prose missing: {relative}: {marker}")
     for marker in ("## Board header", "## State machines", "BOARD_CREATED", "The checkbox is checked if and only if"):
-        if marker in board_text:
+        if marker in notes_text:
             errors.append(f"lightweight continuity guide restores a Markdown Board gate: {marker}")
 
     packet_path = project / ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md"
@@ -1831,9 +1802,11 @@ def validate_formal_agent_orchestration(
 
     integration_markers = {
         ".agents/skills/aili-delivery-flow/SKILL.md": [
-            "Formal work retains its separate exact-owner package lane without a Markdown Board gate",
+            "free-form `progress.txt` never determine readiness or completion",
+            "the main model must maintain `todo.md` and `progress.txt`",
             "`general` cannot own a formal package",
             "Phase role lists are advisory",
+            "never parse or format-validate them",
             "current final-test-plan gate",
         ],
         ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md": [
@@ -1842,7 +1815,7 @@ def validate_formal_agent_orchestration(
             "valid waiver recorded before work",
         ],
         ".agents/skills/aili-delivery-flow/references/implementation-packages.md": [
-            "Every accepted task ID belongs to exactly one current task-execution package",
+            "Map accepted task IDs to current execution packages",
             "One-shot and persistent adapters implement the same package identity",
             "They do not write `todo.md` or `progress.txt`",
         ],

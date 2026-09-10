@@ -225,7 +225,7 @@ test('T14 final one-repair budget is not a whole-BUILD adjustment cap', () => {
     /bounded recheck uses exactly `review_repair.limit: 1`/,
     /Resume preserves every counter, status, overshoot, and stop condition without reset or evasion/,
   ]);
-  contract(loop, '## Queue contract and lightweight savepoints', [
+  contract(loop, '## Queue contract and free-form continuity', [
     /remaining blocker after it stops the loop without a second repair/,
     /Ordinary in-scope implementation feedback before this inspection is governed by package budgets/,
     /stops BUILD.*without.*SHIP transition/,

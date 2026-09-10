@@ -12,5 +12,6 @@
   },
   "commands": ["ideate", "define", "build", "ship", "local-review", "handoff", "agents-md", "harness-audit", "retro", "security-review"],
   "agents": ["agent-evaluator", "ai-regression-scout", "browser-qa-runner", "code-reviewer", "code-scout", "convergence-reviewer", "doc-researcher", "e2e-artifact-runner", "implementer", "opensource-sanitizer", "plan-auditor", "pr-test-analyzer", "rose", "security-auditor", "silent-failure-reviewer", "solution-architect", "spec-miner", "test-coverage-reviewer", "test-engineer", "web-performance-auditor", "web-researcher"],
-  "protocols": ["package-envelope.schema.json", "aili-agent-selection.v1.schema.json", "aili-task-board.v1.schema.json"]
+  "protocols": ["package-envelope.schema.json", "aili-agent-selection.v1.schema.json"],
+  "retiredGeneratedOutputs": ["generated/pi/protocols/aili-task-board.v1.schema.json"]
 }

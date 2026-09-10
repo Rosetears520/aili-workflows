@@ -307,10 +307,11 @@
   },
   "formal_agent_orchestration": {
     "schema_version": "1.0",
-    "protocols": {"selection": "aili-agent-selection/v1", "board": "aili-task-board/v1"},
-    "paths": {"selection": ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md", "board": ".agents/skills/aili-delivery-flow/references/formal-task-board.md", "openspec_board": "openspec/changes/<change-id>/formal-task-board.md"},
-    "protocol_sources": {"base": "core/protocols/package-envelope.schema.json", "selection": "core/protocols/aili-agent-selection.v1.schema.json", "board": "core/protocols/aili-task-board.v1.schema.json"},
-    "board_creation": {"requires_stable_identity": true, "non_openspec": "adapter-mapped repository-local path or one explicit repository-local placement decision", "one_board_across_phases": true, "retained_package_phase": true},
+    "protocols": {"package": "package-envelope/v1", "selection": "aili-agent-selection/v1"},
+    "paths": {"selection": ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md", "formal_notes": ".agents/skills/aili-delivery-flow/references/formal-task-board.md", "openspec_formal_notes": "openspec/changes/<change-id>/formal-task-board.md", "openspec_progress": "openspec/changes/<change-id>/progress.txt"},
+    "protocol_sources": {"base": "core/protocols/package-envelope.schema.json", "selection": "core/protocols/aili-agent-selection.v1.schema.json"},
+    "continuity": {"progress_required_for_multi_step_or_formal": true, "progress_format": "free-form ordinary prose", "progress_validation": "none", "progress_writer": "ROSE-only", "worker_progress_write": false, "formal_task_board": "optional arbitrary unparsed notes", "markdown_is_gate": false, "runtime_state_owner": "Journal"},
+    "openspec_validation": {"native_artifacts": ["proposal.md", "design.md", "tasks.md", "specs/**/spec.md"], "triggers": ["native-artifact-changed", "explicit-acceptance-gate", "explicit-archive-gate"], "code_only": "skip", "sidecar_only": "skip", "invocations_per_targeted_gate": 1},
     "canonical_roles": ["code-scout", "doc-researcher", "web-researcher", "spec-miner", "plan-auditor", "solution-architect", "implementer", "test-engineer", "test-coverage-reviewer", "pr-test-analyzer", "code-reviewer", "security-auditor", "silent-failure-reviewer", "convergence-reviewer", "browser-qa-runner", "e2e-artifact-runner", "web-performance-auditor", "ai-regression-scout", "agent-evaluator", "opensource-sanitizer"],
     "phase_affinity": {"IDEATE": ["code-scout", "doc-researcher", "web-researcher", "spec-miner", "agent-evaluator"], "DEFINE": ["code-scout", "spec-miner", "plan-auditor", "solution-architect", "test-coverage-reviewer", "security-auditor", "ai-regression-scout"], "BUILD": ["implementer", "test-engineer", "browser-qa-runner", "e2e-artifact-runner"], "SHIP": ["code-reviewer", "security-auditor", "silent-failure-reviewer", "test-coverage-reviewer", "pr-test-analyzer", "convergence-reviewer", "opensource-sanitizer"]},
     "phase_affinity_is_allowlist": false,
@@ -322,7 +323,6 @@
     "pre_readiness_split": ["different canonical owners", "independent joins", "independently completable scopes"],
     "agent_states": ["pending", "ready", "running", "returned", "done"],
     "rose_states": ["pending", "ready", "running", "done"],
-    "progress_events": ["BOARD_CREATED", "READY", "DISPATCHED", "WAIVED", "RETURNED", "INSPECTED", "JOINED", "DONE", "BLOCKED", "UNBLOCKED", "CANCELLED", "RECONCILED"],
     "decision_states": ["proposed", "direction-recorded", "conditional", "awaiting-confirmation", "accepted", "rejected", "superseded"],
     "implementation_authorization": ["absent", "granted", "expired", "revoked"],
     "package_acceptance_creates_lifecycle_authority": false,
@@ -356,7 +356,12 @@
       {"id": "accepted-plan-no-implementation-intent", "expected": "BUILD-blocked"},
       {"id": "same-turn-explicit-accept-and-implement", "expected": "two-separate-states"},
       {"id": "document-authored-authority", "expected": "invalid"},
-      {"id": "human-artifact-output", "expected": "ordinary-prose"}
+      {"id": "human-artifact-output", "expected": "ordinary-prose"},
+      {"id": "free-form-progress", "expected": "accepted-without-markdown-validation"},
+      {"id": "missing-formal-task-board", "expected": "non-blocking"},
+      {"id": "arbitrary-formal-task-board", "expected": "non-blocking-unparsed-notes"},
+      {"id": "code-only-completion", "expected": "no-openspec-validation"},
+      {"id": "changed-openspec-native-artifact", "expected": "one-targeted-strict-validation"}
     ]
   },
   "residual": {

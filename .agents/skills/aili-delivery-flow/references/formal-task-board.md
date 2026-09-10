@@ -2,7 +2,15 @@
 
 This shared guide covers ordinary and formal work without requiring OpenSpec. The retained reference filename is not an instruction to create a Board. Maintenance is model discipline, not a Markdown file/format gate: no parser/schema, dispatch hook, state-transition validator, or retry loop is required. Missing files or non-typical free text do not reject runtime work. File contents never prove acceptance, permission, completion, or publication.
 
-## Creation and placement
+## Authority boundaries
+
+- Accepted scope and task definitions remain in the owning contract and `tasks.md`.
+- Package identity and Worker evidence use `core/protocols/package-envelope.schema.json` and the compact task/result packets.
+- Agent identity, job identity, turn history, continuation, joins, and settlement belong to the runtime Journal. Do not duplicate or reconstruct that state in Markdown.
+- ROSE owns decisions, dispatch, result inspection, evidence disposition, integration, verification selection, write-back, and lifecycle verdicts.
+- Notes and runtime state record no user acceptance, implementation authorization, operation permission, completion, or release authority.
+
+## Triggers and placement
 
 The main model (ROSE) must create and maintain `todo.md` and `progress.txt` for multiple actions needing tracking, delegation, dependencies, blockers, cross-turn work, or an explicit user request. Once the task and allowed directory are resolved, list observable actions before substantive execution. Simple Q&A and a single step with no follow-up need neither file unless explicitly requested.
 
@@ -24,7 +32,9 @@ Append briefly only for substantive progress, important trade-offs, verification
 
 An unchanged read adds no entry. Before pause with no new information, inspect the TODO without mechanically appending “continuing”. Resume reads the selected task's TODO first, then recent or referenced Progress only as needed. Old evidence does not become fresh and historical authorization does not renew. Full-history rereads are unnecessary.
 
-Existing free-text progress remains valid. Do not automatically compress, delete, rewrite, or archive history; introduce no line/token thresholds. On legacy Board resume, extract only a few relevant current actions based on current evidence into `todo.md`; preserve the original `formal-task-board.md` as history without renaming or deleting it.
+Existing free-text progress remains valid. Do not automatically compress, delete, rewrite, or archive history; introduce no line/token thresholds. On legacy Board resume, extract only a few relevant current actions based on current evidence into `todo.md`; preserve the original `formal-task-board.md` as history without renaming or deleting it. Legacy Boards are non-authoritative notes: do not parse, repair, replay, or validate them.
+
+Neither file has required grammar, field order, transition pairs, or replay rules. Never parse or format-validate them, and never make dispatch, settlement, package completion, BUILD completion, SHIP completion, acceptance, or archive depend on their content. Existing arbitrary text is valid continuity text.
 
 ## Illustrative example, not a format protocol
 
@@ -47,31 +57,17 @@ T2: Adjusted the display path; regression not run, fix remains unverified.
 T4: Real CLI verification awaits permission; continuing authorized T3.
 ```
 
-## Formal package boundaries retained
+## Formal package dispatch
 
-`core/protocols/package-envelope.schema.json` and the portable packet/result references own package semantics, not TODO formatting. Formal packages retain stable identity, phase, evidence or task-execution kind, typed portable Source refs (requirement, decision, risk, artifact, verification, task), accepted task IDs or none, dependencies, exact owner, joins, applicable lifecycle gates, expected result/evidence, inspection, disposition, and verification links. Legacy Board schema assets are not a Markdown maintenance requirement.
+Formal package ownership remains an orchestrator decision derived from the accepted contract and shared package envelope, not TODO formatting:
 
-Every accepted task ID belongs to exactly one current task-execution package. Aggregate only when owner, dependency, join, independently completable scope, acceptance, and evidence boundaries align; otherwise split the task into separate accepted `tasks.md` rows during DEFINE before readiness. Missing or duplicate ownership blocks the affected package, not TODO validity. Evidence packages may inform an unresolved decision and claim no accepted task ownership. Task-execution packages cannot widen accepted scope.
+- A ready Agent-owned package dispatches to its exact canonical role. `general` is not a formal owner.
+- A ROSE-owned package is executed directly.
+- Direct ROSE execution of an Agent-owned package requires a valid waiver recorded before work; a post-hoc waiver is invalid. The bounded waiver reasons are redundant Agent work given complete verifiable user evidence, exact-role unavailability with equivalent ROSE capability/tools/permission for the unchanged package, or concrete dispatch-cost evidence showing no material evidence benefit. An ordinary negative-benefit judgment cannot override a ready formal owner; missing readiness or permission is not a waiver.
+- Use synchronous execution when a later package depends on the result. Independent asynchronous work needs an explicit join plan, but the runtime Journal—not these files—owns Agent/job/turn/join/settlement state.
+- A Worker return is evidence, not completion. ROSE must inspect and disposition it, integrate accepted portions, and select fresh claim-matched verification.
 
-Readiness requires dependencies, bounded scope, input evidence, prerequisite decisions, the exact owner, and applicable permissions. BUILD task execution additionally requires accepted scope, current accepted final test plan, explicit implementation authorization, and operation permissions. Record a non-applicable gate as `N/A`; never represent it as granted. `Acceptance` means package-level completion criteria only, not user acceptance or authorization. `general` cannot own a formal package; phase affinities remain advisory.
-
-### Ownership, dispatch, and waiver
-
-Ordinary delegation keeps its specialist-preferred decision and named direct-work exceptions. A ready `Owner: agent:<canonical-role-id>` package creates an exact-owner dispatch obligation. A later ordinary negative-benefit judgment cannot change its role or make it direct. `Owner: ROSE` uses `Dispatch: forbidden` and `Execution: direct`. Split material ROSE decisions from bounded Agent execution.
-
-Direct ROSE execution of an Agent-owned package is legal only when a waiver is recorded before execution and names one of these reasons:
-
-1. complete, bounded, verifiable user-supplied evidence makes Agent work redundant;
-2. the exact role is unavailable and ROSE has equivalent capability, tools, and permission for the unchanged package;
-3. concrete dispatch-cost evidence shows delegation would add no material evidence.
-
-Not-ready dependencies, scope overlap, changed scope, invalid role, missing specialist-only capability, cancellation, or supersession are not waivers. A post-hoc waiver is invalid.
-
-Use sync for an immediately needed result; async requires independent inputs and non-overlapping scope. Every async package declares a stable join ID. Required joined results must be terminal, read, inspected, dispositioned, and connected to portable evidence before dependent work or phase verdicts. Dispatch without result consumption is incomplete work.
-
-A readable return is not completion. The package's returned → done distinction requires ROSE inspection, explicit disposition, integration of accepted portions, and fresh claim-matched verification. Evidence packages satisfy expected evidence and package acceptance; task-execution packages satisfy every owned task's accepted behavior and evidence. Worker PASS, runtime status, progress, and checkboxes cannot establish completion. Terminal packages do not reopen; changed scope uses a new package identity. These are package obligations, not parsed TODO states.
-
-### Single writer and adapter boundary
+## Single writer and adapter boundary
 
 Workers return package-bound evidence. They do not edit `todo.md` or `progress.txt`, accept user decisions, widen permissions, integrate other packages, dispatch nested workers, or publish final verdicts. ROSE alone maintains the main task's two files and owns inspection, disposition, integration, verification selection, and lifecycle verdicts. Adapter Journal owns Agent/job/turn/settlement state; do not mirror it into Markdown.
 

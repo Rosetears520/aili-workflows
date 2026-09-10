@@ -174,13 +174,19 @@ def parse_catalog_output(text: str) -> list[dict[str, str]]:
 
 def collect_catalog(command: list[str], cwd: Path, env: dict[str, str], skill_root: Path, workspace: Path, batch_size: int = 1) -> list[dict[str, str]]:
     def invoke() -> tuple[list[dict[str, str]] | None, bool]:
-        proc = subprocess.run(command, cwd=cwd, env=env, text=True, capture_output=True, timeout=120, check=False)
-        if proc.returncode != 0:
-            raise ValueError(f"catalog command unavailable: {proc.stderr.strip()[-300:] or f'exited {proc.returncode}'}")
+        # A regular file avoids losing buffered stdout when the catalog CLI exits immediately.
+        with tempfile.TemporaryFile(dir=workspace) as stdout:
+            proc = subprocess.run(command, cwd=cwd, env=env, text=True, stdout=stdout, stderr=subprocess.PIPE, timeout=120, check=False)
+            if proc.returncode != 0:
+                raise ValueError(f"catalog command unavailable: {proc.stderr.strip()[-300:] or f'exited {proc.returncode}'}")
+            stdout.seek(0)
+            output = stdout.read(1024 * 1024 + 1)
+        if len(output) > 1024 * 1024:
+            raise ValueError("catalog output is empty or too large")
         try:
-            return parse_catalog_output(proc.stdout), False
+            return parse_catalog_output(output.decode("utf-8")), False
         except ValueError:
-            if len(proc.stdout.encode("utf-8")) == 65536:
+            if len(output) == 65536:
                 return None, True
             raise
 
