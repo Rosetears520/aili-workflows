@@ -1,4 +1,4 @@
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 171c09fd3a8c9a822b57dae2b5095c5eb29165932254c8d1fe7834d2072c27f0; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 121ac9ad51c3371a4aa0919bf894283bd3f443ac6ef47b2a99af01cccf7a48c7; do not edit directly -->
 
 # AILI Pi System Projection
 
@@ -29,6 +29,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 ## Packages, evidence, and claims
 
 - Every package has stable identity, role, assignment, scope, forbidden scope, permission boundary, acceptance boundary, write scope, expected result, expected evidence, result, verification evidence, and convergence linkage.
+- Designated Worker reports follow `core/protocols/README.md#bounded-worker-report-delivery`: ROSE checks actual parent/role/backend/path permissions before dispatch and actually reads current report evidence before disposition. A report and compact receipt remain package evidence, not acceptance or a grant of write authority; unsupported required file delivery is blocked.
 - Ordinary and formal work use the portable package envelope. Formal task mapping comes from the accepted contract; Agent/job/turn/join/settlement state belongs to the runtime Journal. `todo.md` and free-form `progress.txt` are shared lightweight continuity maintained under the operating discipline, not a Markdown Board protocol or parallel execution/result authority.
 - Keep source, decision, authorization, execution, verification, and confidence separate. Agent-internal packets use the portable protocol fields; human-facing artifacts use ordinary prose with evidence anchors, blockers, and explicit `Unverified` limits where material.
 - Use fresh claim-matched evidence for completion, readiness, review, security, or lifecycle claims. Current accepted artifacts, current source, and current repository state outrank memory, summaries, generated artifacts, stale logs, and runtime reports.
@@ -99,6 +100,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 
 - Hydrate formal artifacts only when the active mode, dependency, resume point, write, correction, conflict, or freshness-sensitive event needs them. Current disk artifacts outrank chat summaries, stale logs, generated summaries, and memory.
 - Re-read each file written by the active agent before using it as durable evidence. Refresh only invalidated files and direct dependents.
+- For designated Worker reports, follow `core/protocols/README.md#bounded-worker-report-delivery`: Workers reread their authorized report and preserve the required result structure in a compact receipt, including failures and limits; ROSE reads the evidence needed for disposition. This never permits Worker edits to TODO/Progress, legacy Boards, or acceptance state.
 - Handoffs require an explicit accepted trigger, remain repository-local, redacted, reference-first, and non-authoritative, and never replace a new exact approval.
 - For ordinary and formal work with multiple trackable actions, delegation, dependencies, blockers, cross-turn work, or an explicit user request, the main model must maintain same-root `todo.md` (current actions) and `progress.txt` (useful history). Resolve the task and allowed directory, then list observable actions before substantive execution; simple Q&A or one step without follow-up needs neither unless requested. Prefer the explicit user target, then project task conventions, otherwise propose repository-local `tasks/<task-slug>/`, respecting placement approval and reusing the selected root.
 - Update TODO in place on start, completion, blocking, scope change, and before pause/closeout; preserve unfinished work, explain blockers/next decisions and cancellations, and never count failed or uninspected Worker returns as done. Highlight one main action normally, or honest independent parallel actions. Reference accepted-plan task IDs without mirroring its full tree/status.
@@ -122,9 +124,9 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 ## Canonical roles
 
 - `rose` — ROSE - shipping-oriented semantic router and primary coding agent.
-- `solution-architect` — Repository-grounded solution-design Worker for bounded technical options, interfaces, impact analysis, and implementation-package candidates.
+- `solution-architect` — Repository-grounded solution-design Worker for bounded technical options, interfaces, impact analysis, and implementation-package candidates. Keep the researched project read-only; default to direct return. Only an explicitly authorized package may permit writing its one exact report within the approved task root, and only when effective parent, role/backend, and path permissions all allow it; no tool grants or denial bypass.
 - `implementer` — One bounded, single-use implementation Worker for a scoped code-change package.
-- `code-scout` — Read-only code scouting Worker for files, symbols, tests, callers, configuration, patterns, and constraints.
+- `code-scout` — Code scouting Worker for files, symbols, tests, callers, configuration, patterns, and constraints. Keep the researched project read-only; default to direct return. Only an explicitly authorized package may permit writing its one exact report within the approved task root, and only when effective parent, role/backend, and path permissions all allow it; no tool grants or denial bypass.
 - `doc-researcher` — Read-only local documentation researcher for project rules, specifications, decisions, and documentation.
 - `web-researcher` — Read-only public web researcher for explicitly scoped official documentation, releases, and package evidence.
 - `plan-auditor` — Read-only plan auditor for specifications, plans, tasks, acceptance criteria, and verification gaps.

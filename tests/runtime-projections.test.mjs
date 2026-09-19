@@ -47,6 +47,7 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   ]);
 
   assert.equal(runGenerator(workspace).status, 0);
+  await assertReportContractProjections(workspace);
   const firstSnapshot = await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]);
   const check = runGenerator(workspace, "--check");
   assert.equal(check.status, 0, check.stderr);
@@ -138,6 +139,52 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   await writeFile(path.join(workspace, "agents/extra.md"), "extra\n", "utf8");
   assert.match(runGenerator(workspace, "--check").stderr, /unexpected-compatibility: agents\/extra\.md/);
 });
+
+// Contract serialization and configured ceilings only, not runtime path enforcement.
+async function assertReportContractProjections(root) {
+  const json = async (relative) => JSON.parse(await readFile(path.join(root, relative), "utf8"));
+  const { roles } = await json("core/roles/roles.json");
+  const adapter = await json("adapters/opencode/adapter.json");
+  const metadata = await json("generated/pi/role-metadata.json");
+  const piSystem = await readFile(path.join(root, "generated/pi/system.md"), "utf8");
+  for (const id of ["code-scout", "solution-architect"]) {
+    const role = roles.find((entry) => entry.id === id);
+    assert.ok(role, id);
+    assert.match(role.description, /researched project read-only; default to direct return/);
+    assert.match(role.description, /explicitly authorized package.*one exact report within the approved task root/);
+    assert.match(role.description, /effective parent, role\/backend, and path permissions all allow it; no tool grants or denial bypass/);
+    assert.match(role.output, /preserving all (?:required fields|fields required by the active result contract)/);
+    assert.match(role.output, /package explicitly authorizes one exact report.*AND effective parent, role\/backend, and path permissions permit its create\/update scope/);
+    assert.match(role.output, /reread it.*compact conclusion, exact path\/section anchors, actual checks and limitations/);
+    assert.match(role.output, /serious findings.*conflicts without update permission.*denied\/failed writes, known partial state, and failed rereads/);
+    assert.match(role.output, /Failed required-file delivery is blocked, not successful inline fallback/);
+    assert.match(role.output, /ROSE actually reads report evidence and owns disposition, continuity write-back, and final acceptance/);
+
+    const projected = metadata.roles.find((entry) => entry.id === id);
+    assert.deepEqual(projected, Object.fromEntries(
+      ["id", "title", "mode", "description", "goal", "output"].map((key) => [key, role[key]])
+    ));
+    assert.ok(piSystem.includes(`- \`${id}\` — ${role.description}`));
+    assert.equal(adapter.roles[id], "readonly");
+    assert.equal(adapter.frontmatterOverrides?.[id], undefined);
+    for (const relative of [`generated/opencode/agents/${id}.md`, `agents/${id}.md`]) {
+      const output = await readFile(path.join(root, relative), "utf8");
+      assert.ok(output.includes(`## Role\n\n${role.description}\n`), relative);
+      assert.ok(output.includes(`## Output\n\n${role.output}\n`), relative);
+      const frontmatter = output.split("---\n")[1];
+      for (const capability of ["edit", "bash", "apply_patch", "task", "external_directory"]) {
+        assert.equal(adapter.roleProfiles.readonly.permission[capability], "deny");
+        assert.match(frontmatter, new RegExp(`^  ${capability}: deny$`, "m"), relative);
+      }
+      assert.equal(adapter.roleProfiles.readonly.permission["*"], "deny");
+      assert.match(frontmatter, /^  "\*": deny$/m, relative);
+    }
+  }
+  const canonical = await json("core/protocols/package-envelope.schema.json");
+  const projected = await json("generated/pi/protocols/package-envelope.schema.json");
+  assert.deepEqual(canonical.$defs.result.required, ["status", "evidence", "blockers", "confidence"]);
+  assert.deepEqual(projected.$defs.result, canonical.$defs.result);
+}
 
 function runGenerator(root, ...args) {
   return spawnSync(process.execPath, [generator, "--root", root, ...args], { encoding: "utf8" });

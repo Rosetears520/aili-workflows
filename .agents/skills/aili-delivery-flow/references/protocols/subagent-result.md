@@ -58,6 +58,9 @@ P6 compatibility markers remain aliases, not a second envelope: `STATUS: complet
 - `evidence`, `changed_files`, and `verification` use portable references that ROSE can inspect; an opaque runtime ID cannot be the only completion evidence.
 - `continuation_recommendation` is advisory. `same-package` is valid only when all package-defining fields remain unchanged; `new-package` identifies a boundary and does not authorize dispatch or scope expansion.
 - Keep raw logs, broad dumps, and full files out of the result.
+- For designated reports, follow `core/protocols/README.md#bounded-worker-report-delivery`. Keep every required result field above; a compact receipt is not a bare-path replacement. Use `summary` for the conclusion and serious findings, `artifact_destination`/`evidence` for the exact report path and relevant sections, `changed_files` for actual report writes, `checks`/`verification` for actual checks and the Worker reread, and `blockers`/`unverified` for limits. Do not duplicate the full report.
+- Existing-file conflicts, denied or failed writes, partial files, and failed rereads remain visible in the receipt with known partial state (or unknown state), never claimed as complete delivery. Inline text does not substitute for a required report file, authorize bypass, or trigger retry.
+- ROSE checks the current package/path association and actually reads report sections needed for disposition; an empty, stale, unreadable, or non-responsive artifact cannot be accepted merely because its path exists. Worker report delivery grants no continuity or final-acceptance authority.
 - Mark unsupported claims `Unverified`.
 - A no-finding result uses `findings: []` and still reports inspected scope, checks, freshness, skipped checks, blockers, and `Unverified` items.
 - Do not issue the final PASS, acceptance, release, or integration decision.

@@ -34,6 +34,74 @@ function contract(path, heading, required, forbidden = []) {
   for (const pattern of forbidden) assert.doesNotMatch(text, pattern, `${path} ${heading}: conflict ${pattern}`);
 }
 
+test('bounded report prose preserves dispatch, failure, and ROSE inspection boundaries', () => {
+  const protocol = 'core/protocols/README.md';
+  contract(protocol, '## Bounded Worker report delivery', [
+    /Direct return is the default for short investigations and when no report is requested/,
+    /no mandatory length threshold/,
+    /do not prove runtime exact-path enforcement or successful end-to-end report delivery.*remain `Unverified`/,
+  ]);
+  contract(protocol, '### Dispatch and permission intersection', [
+    /one unique exact report file within the approved task root.*explicitly allow creation, update, or both/,
+    /directory, glob, or Worker-selected filename is not a report target/,
+    /excludes product code, other reports.*`todo.md` and `progress.txt`, legacy Boards, and acceptance state/,
+    /explicit package authorization AND effective parent permissions, role\/backend capabilities, and target-path permissions/,
+    /Only `code-scout` and `solution-architect` have this conditional exception/,
+    /packet cannot supply missing write tools or override a read-only parent or backend/,
+    /Do not use Shell or another tool to bypass denial/,
+    /file is optional, explicitly select direct return before dispatch; if the file is required, report delivery is blocked/,
+    /Do not silently convert a failed report assignment into successful inline delivery/,
+    /Parallel packages must use different exact report files; ROSE owns synthesis/,
+    /Changing the target or write scope requires a new package.*not an automatic retry/,
+  ]);
+  contract(protocol, '### Worker delivery and failures', [
+    /existing target without authorized update is a conflict: stop.*do not overwrite, rename, choose another path, or expand the scope/,
+    /reread the report to confirm completeness and current-package content/,
+    /Preserve status, evidence, blockers, confidence, and every other field required by the active result contract/,
+    /Serious findings must remain visible in the message/,
+    /writing is denied, fails, or leaves a partial file.*known partial state \(or that it is unknown\)/,
+    /failed reread leaves completeness unverified/,
+    /Do not claim complete delivery, bypass denial, or automatically retry/,
+    /Inline evidence.*does not satisfy a required file deliverable/,
+  ]);
+  contract(protocol, '### ROSE inspection and disposition', [
+    /association with the current package and approved path, actually reads the portions relied upon for acceptance/,
+    /checks question coverage and material evidence/,
+    /path's existence, an empty file, a same-name old report, or Worker self-assessment is not completion evidence/,
+    /Unreadable reports remain blocked; stale, incomplete, or unsupported content remains incomplete or `Unverified`/,
+    /Workers do not own final acceptance or continuity\/lifecycle state/,
+  ]);
+});
+
+test('report receipt retains the existing result rendering and packet authority', () => {
+  const result = skill('aili-delivery-flow', 'references/protocols/subagent-result.md');
+  const packet = skill('aili-delivery-flow', 'references/protocols/subagent-task-packet.md');
+  const text = readFileSync(new URL(result, root), 'utf8');
+  const fields = text.match(/```text\nCANONICAL RESULT:\n([\s\S]*?)```/);
+  assert.ok(fields, 'canonical result rendering remains present');
+  assert.deepEqual([...fields[1].matchAll(/^(\w+):/gm)].map((match) => match[1]), [
+    'result_id', 'trace_id', 'lane', 'owner', 'package_id', 'role_id', 'status',
+    'confidence', 'worktree_context_ref', 'declared_repository', 'cwd', 'target_rules_ref',
+    'artifact_destination', 'inspected_scope', 'summary', 'evidence', 'changed_files',
+    'verification', 'checks', 'freshness', 'skipped_checks', 'soft_boundary_limitations',
+    'blockers', 'risks', 'unverified', 'continuation_recommendation', 'findings',
+    'convergence_links', 'review_arbitration_ref',
+  ]);
+  contract(result, '## Rules', [
+    /core\/protocols\/README.md#bounded-worker-report-delivery/,
+    /Keep every required result field above; a compact receipt is not a bare-path replacement/,
+    /partial files, and failed rereads remain visible.*known partial state \(or unknown state\)/,
+    /Inline text does not substitute for a required report file, authorize bypass, or trigger retry/,
+    /actually reads report sections needed for disposition/,
+  ]);
+  contract(packet, '## Rules', [
+    /core\/protocols\/README.md#bounded-worker-report-delivery/,
+    /No new packet fields or capabilities are introduced/,
+    /different files to parallel packages.*direct return only when a file is not required/,
+    /packet narrows runtime authority; it never grants a tool, path, edit, command, network call, or delegation permission/,
+  ]);
+});
+
 test('T01 bounded restoration is ordinary only outside formal/material gates', () => {
   contract(lifecycle, '## Ordinary / Formal / Material Classifier', [
     /bounded repair solely restoring established required behavior outside a selected or executing formal change/,

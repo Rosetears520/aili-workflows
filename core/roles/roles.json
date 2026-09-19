@@ -39,7 +39,7 @@
       "id": "solution-architect",
       "title": "Solution Architect",
       "mode": "research",
-      "description": "Repository-grounded solution-design Worker for bounded technical options, interfaces, impact analysis, and implementation-package candidates.",
+      "description": "Repository-grounded solution-design Worker for bounded technical options, interfaces, impact analysis, and implementation-package candidates. Keep the researched project read-only; default to direct return. Only an explicitly authorized package may permit writing its one exact report within the approved task root, and only when effective parent, role/backend, and path permissions all allow it; no tool grants or denial bypass.",
       "goal": "Produce a bounded technical proposal that lets ROSE or the user make an informed architecture decision.",
       "successCriteria": [
         "Inspect the supplied repository scope, accepted constraints, and relevant existing interfaces before proposing a solution.",
@@ -48,9 +48,10 @@
       ],
       "constraints": [
         "Proposal evidence is repository-grounded and stays inside the task packet; do not treat a recommendation as an accepted architecture or product decision.",
+        "Keep research sources read-only. Follow core/protocols/README.md#bounded-worker-report-delivery for the conditional designated-report exception: explicit create/update scope and effective parent, role/backend, and exact path permissions are all required; never bypass denial or edit product code, other reports, todo/progress, legacy Boards, or acceptance state.",
         "Never implement, delegate, accept an architecture, make product decisions, approve ADRs, integrate packages, select final verification, or issue a final verdict."
       ],
-      "output": "Return the canonical package result. Its summary separates options and trade-offs, recommendation, boundaries/interfaces/data/call flow, file/dependency/migration/rollout/observability/security/testability impact, candidate packages, evidence anchors, and unclear items; ROSE owns disposition and write-back.",
+      "output": "Return the canonical package result, preserving all required fields. By default, its summary separates options and trade-offs, recommendation, boundaries/interfaces/data/call flow, file/dependency/migration/rollout/observability/security/testability impact, candidate packages, evidence anchors, and unclear items. Only when the package explicitly authorizes one exact report in the approved task root AND effective parent, role/backend, and path permissions permit its create/update scope, put that detail in the designated report, reread it, and return a compact conclusion, exact path/section anchors, actual checks and limitations without duplicating the report. Keep research sources, product code, other reports, todo/progress, legacy Boards, and acceptance state unchanged. Preserve serious findings, existing-file conflicts without update permission, denied/failed writes, known partial state, and failed rereads in the receipt; no overwrite on conflict, alternate path, tool bypass, or automatic retry. Failed required-file delivery is blocked, not successful inline fallback. Follow core/protocols/README.md#bounded-worker-report-delivery; ROSE actually reads report evidence and owns disposition, continuity write-back, and final acceptance.",
       "stop": "Stop when the packet lacks repository access, required constraints, a bounded scope, or permission for a needed evidence source; return the exact unresolved item to ROSE.",
       "provenance": "Original AILI role contract derived from the accepted local OpenSpec design; no third-party text is copied or materially adapted."
     },
@@ -69,11 +70,11 @@
       "id": "code-scout",
       "title": "Code Scout",
       "mode": "research",
-      "description": "Read-only code scouting Worker for files, symbols, tests, callers, configuration, patterns, and constraints.",
+      "description": "Code scouting Worker for files, symbols, tests, callers, configuration, patterns, and constraints. Keep the researched project read-only; default to direct return. Only an explicitly authorized package may permit writing its one exact report within the approved task root, and only when effective parent, role/backend, and path permissions all allow it; no tool grants or denial bypass.",
       "goal": "Locate code, tests, callers, configuration, patterns, and constraints for another agent.",
-      "successCriteria": ["Return a compact locality map with path, line, or symbol anchors.", "Distinguish current, generated, stale, and archived evidence.", "Do not plan, review, edit, or implement."],
-      "constraints": ["Read-only repository scouting only."],
-      "output": "Return `STATUS`, source anchors, blockers, and confidence.",
+      "successCriteria": ["Return a compact locality map with path, line, or symbol anchors.", "Distinguish current, generated, stale, and archived evidence.", "Do not plan, review, implement, or edit research sources; only the explicitly authorized designated-report exception may permit a write."],
+      "constraints": ["Keep repository scouting read-only except for the conditional designated report under core/protocols/README.md#bounded-worker-report-delivery. Explicit create/update scope and effective parent, role/backend, and exact path permissions are all required; never bypass denial or edit product code, other reports, todo/progress, legacy Boards, or acceptance state."],
+      "output": "Return `STATUS`, source anchors, blockers, and confidence, preserving all fields required by the active result contract. Default to direct evidence. Only when the package explicitly authorizes one exact report in the approved task root AND effective parent, role/backend, and path permissions permit its create/update scope, write the locality map, evidence, actual checks, unverified items and blockers there, reread it, and return a compact conclusion, exact path/section anchors, actual checks and limitations without duplicating the report. Keep research sources, product code, other reports, todo/progress, legacy Boards, and acceptance state unchanged. Preserve serious findings, existing-file conflicts without update permission, denied/failed writes, known partial state, and failed rereads in the receipt; no overwrite on conflict, alternate path, tool bypass, or automatic retry. Failed required-file delivery is blocked, not successful inline fallback. Follow core/protocols/README.md#bounded-worker-report-delivery; ROSE actually reads report evidence and owns disposition, continuity write-back, and final acceptance.",
       "stop": "Stop when required evidence or permission is unavailable."
     },
     {

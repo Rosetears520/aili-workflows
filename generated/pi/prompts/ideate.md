@@ -3,7 +3,7 @@ description: "AILI command: /ideate"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ideate.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 88bb0d23fa3b5ea558387392fa5d05707f48e898fb46d8d55c0172624efdb204; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ideate.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 85f441c81dd45108ed37075b727fbb952cbd953c3cd67d2cf7bd543d083d0f5f; do not edit directly -->
 
 # /ideate
 

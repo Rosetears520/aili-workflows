@@ -3,7 +3,7 @@ description: "AILI command: /security-review"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/security-review.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 6e7117b1f83586646d60bd55dc2f80208425a7f73f7a7053b2f4cb1f6458256b; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/security-review.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 69f73d0bbcf8e68c05c55c592e8d5dfa588797576c816a4f3cdff2d1ff8ad384; do not edit directly -->
 
 # /security-review
 
