@@ -8,7 +8,13 @@
   "prompt": {
     "descriptionPrefix": "AILI command:",
     "argumentHint": "[request]",
-    "argumentPlaceholder": "$ARGUMENTS"
+    "argumentPlaceholder": "$ARGUMENTS",
+    "frontmatterOverrides": {
+      "eli5": {
+        "description": "Explain something in simple plain language, optionally with a visual HTML explainer",
+        "argumentHint": "[--html] <topic>"
+      }
+    }
   },
   "installation": {
     "globalContext": {

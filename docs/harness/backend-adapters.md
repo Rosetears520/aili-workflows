@@ -27,7 +27,7 @@ grant a runtime capability or operation permission.
 
 ## OpenSpec Direct-Adapter Boundary
 
-AILI canonical command source is `core/commands/` for four Delivery Commands and six Utility Commands. Versioned package and Agent-selection schemas live in `core/protocols/`; lifecycle prose remains with `.agents/skills/aili-delivery-flow` and its references. Root `commands/` are downstream generated compatibility projections. Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` files are OpenSpec-owned direct adapters and remain unchanged.
+AILI canonical command source is `core/commands/` for four Delivery Commands and seven Utility Commands. Versioned package and Agent-selection schemas live in `core/protocols/`; lifecycle prose remains with `.agents/skills/aili-delivery-flow` and its references. Root `commands/` are downstream generated compatibility projections. Current generated `.opencode/commands/opsx-*` and `.opencode/skills/openspec-*` files are OpenSpec-owned direct adapters and remain unchanged.
 
 Direct OpenSpec adapters may be callable outside AILI. AILI does not route to, recommend, wrap, suppress, prevent, or control those adapters, and direct output is not AILI acceptance, readiness, verification, completion, or Graphify-selection evidence. The four AILI routes must establish their own classifier, lifecycle gates, permissions, artifact freshness, and evidence even when OpenSpec is the selected storage backend.
 

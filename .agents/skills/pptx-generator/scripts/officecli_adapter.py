@@ -4,10 +4,13 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import platform
 import re
 import subprocess
+import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -22,7 +25,7 @@ COMMAND_TABLES: dict[str, dict[str, tuple[str, ...]]] = {
     "1.0.143": {
         "validate": ("validate",),
         "view": ("view",),
-        "screenshot": ("screenshot",),
+        "screenshot": ("view",),
         "batch": ("batch",),
     }
 }
@@ -168,6 +171,51 @@ def officecli_help_argv(binary: str, family: str, *, version: str = PINNED_VERSI
     return [binary, *table[family], "--help"]
 
 
+def contact_sheet_geometry(document: str | os.PathLike[str]) -> dict[str, int]:
+    """Read the actual deck, not an outline/proof selection, and bound its viewport.
+
+    Keep a fixed readable thumbnail width; budget additional space for grid
+    gutters/page labels, and fail closed rather than clamp a large image.
+    This is a render plan, not proof that the resulting PNG is visually complete.
+    """
+    try:
+        with zipfile.ZipFile(document) as archive:
+            presentation = ET.fromstring(archive.read("ppt/presentation.xml"))
+        namespace = presentation.tag.removesuffix("presentation")
+        if namespace not in (
+            "{http://schemas.openxmlformats.org/presentationml/2006/main}",
+            "{http://purl.oclc.org/ooxml/presentationml/main}",
+        ):
+            raise ValueError("Unsupported presentation namespace")
+        size = presentation.find(f"{namespace}sldSz")
+        slide_list = presentation.find(f"{namespace}sldIdLst")
+        if size is None or slide_list is None:
+            raise ValueError("Missing slide size or slide list")
+        cx, cy = int(size.attrib["cx"]), int(size.attrib["cy"])
+        count = len(slide_list.findall(f"{namespace}sldId"))
+        if min(cx, cy, count) <= 0:
+            raise ValueError("Slide dimensions and count must be positive")
+    except (OSError, zipfile.BadZipFile, KeyError, ValueError, ET.ParseError) as error:
+        raise OfficeCLIAdapterError(
+            "CONTACT_SHEET_GEOMETRY_INVALID", f"Cannot read PPTX contact-sheet geometry: {error}"
+        ) from error
+
+    columns = math.isqrt(count - 1) + 1
+    rows = (count + columns - 1) // columns
+    # The installed screenshot backend caps large viewport widths without
+    # reflowing the grid. Keep the proven 1600px width and size its rows instead.
+    width = 1600
+    scaled_height = (width * cy + columns * cx - 1) // (columns * cx)
+    height = max(1200, rows * (scaled_height + 96) + 96)
+    if max(width, height) > 8192 or width * height > 32_000_000:
+        raise OfficeCLIAdapterError(
+            "CONTACT_SHEET_VIEWPORT_TOO_LARGE",
+            f"Full-deck viewport {width}x{height} exceeds 8192px/32MP limits; refusing a cropped fallback",
+        )
+    return {"slide_count": count, "slide_width_emu": cx, "slide_height_emu": cy,
+            "columns": columns, "rows": rows, "width": width, "height": height}
+
+
 def officecli_command_argv(
     binary: str,
     family: str,
@@ -192,12 +240,17 @@ def officecli_command_argv(
         return [binary, *table["batch"], document, "--input", batch_input]
     if not output:
         raise OfficeCLIAdapterError("OFFICECLI_COMMAND_INVALID", "screenshot requires an output path")
-    argv = [binary, *table["screenshot"], document]
+    argv = [binary, *table["screenshot"], document, "screenshot"]
     if contact_sheet:
-        argv.append("--contact-sheet")
+        if slide is not None:
+            raise OfficeCLIAdapterError("OFFICECLI_COMMAND_INVALID", "A full-deck contact sheet cannot select one page")
+        geometry = contact_sheet_geometry(document)
+        argv.extend(["--grid", str(geometry["columns"]),
+                     "--screenshot-width", str(geometry["width"]),
+                     "--screenshot-height", str(geometry["height"])])
     if slide is not None:
-        argv.extend(["--slide", str(slide)])
-    argv.extend(["--output", output])
+        argv.extend(["--page", str(slide)])
+    argv.extend(["--out", output])
     return argv
 
 
@@ -319,6 +372,14 @@ def probe_officecli(
             }
             result["queries"].append(entry)
             query_success[name] = completed.returncode == 0
+            if name == "help:screenshot":
+                # Screenshot is a view mode, so generic view help success is
+                # insufficient: require the syntax used by both render paths.
+                help_text = completed.stdout + "\n" + completed.stderr
+                query_success[name] = query_success[name] and all(
+                    re.search(r"(?<![\w-])" + re.escape(token) + r"(?![\w-])", help_text)
+                    for token in ("screenshot", "--page", "--out", "--grid", "--screenshot-width", "--screenshot-height")
+                )
             if name == "version" and completed.returncode == 0:
                 result["version"] = parse_version(completed.stdout + "\n" + completed.stderr)
         except (OSError, subprocess.TimeoutExpired) as exc:

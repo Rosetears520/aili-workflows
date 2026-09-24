@@ -2,6 +2,8 @@
 
 [FRAME] Use these five roles as a navigation layer, not as a complete layout taxonomy. Give each slide one base role, then choose a content relationship such as parallel, comparison, process, timeline, hierarchy, matrix, cycle, data, table, or image-led composition. The translated practical notes in [`human-design-playbook.md`](human-design-playbook.md) provide additional formulas and examples.
 
+The size tables and ratios below are illustrative, not universal projection defaults or overrides of a controlling template. Select a scale for live presentation versus standalone reading under the existing font/design contracts, preserving template run-level exceptions. In particular, the 11–14pt body and 8–10pt source examples are not automatic live-talk choices: required data and conditions must be readable in the intended setting. These examples introduce no new minimum font size.
+
 ## 1. Cover Page
 
 - **Use for**: Opening + tone setting
@@ -254,7 +256,7 @@ Pick one primary subtype based on the content relationship. A slide may contain 
 |                   Source: xxx          |
 ```
 
-**Comparison** — Side-by-side columns or cards (A vs B, pros/cons)
+**Comparison** — Side-by-side columns or cards (A vs B, pros/cons), aligned on shared comparison dimensions
 ```
 |  SLIDE TITLE                          |
 |  ┌─ Option A ─┐  ┌─ Option B ─┐      |
@@ -262,7 +264,7 @@ Pick one primary subtype based on the content relationship. A slide may contain 
 |  └────────────┘  └────────────┘      |
 ```
 
-**Timeline / Process** — Steps with arrows, journey, phases
+**Timeline / Process** — Steps with arrows, journey, phases; use a timeline only for a time relationship and a process only for actual ordered steps, not independent categories
 ```
 |  SLIDE TITLE                          |
 |  [1] ──→ [2] ──→ [3] ──→ [4]         |
@@ -305,9 +307,9 @@ Pick one primary subtype based on the content relationship. A slide may contain 
 ### Design Decisions
 
 1. **Subtype**: Determine first — drives the entire layout
-2. **Content Volume**: Dense → multi-column or smaller font; Light → larger elements with more whitespace
+2. **Content Volume**: Dense → apply the redundancy, organization, and capacity sequence in [`content-planning.md`](content-planning.md#6-organize-delete-and-layer), not automatic font reduction; Light → larger elements with more whitespace
 3. **Data vs Narrative**: Data-heavy → charts + stat callouts; Story-driven → images + quotes
-4. **Variety**: Avoid accidental repetition, but reuse a layout when the information relationship is intentionally the same
+4. **Variety**: Reuse a layout when the information relationship is intentionally the same; do not force every page into three cards or change layouts merely for novelty
 5. **Consistency**: Typography, colors, and spacing must match the rest of the presentation
 
 ### Workflow

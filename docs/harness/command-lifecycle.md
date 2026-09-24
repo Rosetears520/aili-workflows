@@ -1,6 +1,6 @@
 # Command Lifecycle
 
-Exactly four Delivery Commands and six Utility Commands are provided by this harness. Equivalent natural-language IDEATE, DEFINE, BUILD, and SHIP intent uses the same classifier, gates, permissions, and evidence contract; a shortcut grants no extra authority. Utility Commands are explicit operations, not lifecycle modes or independent acceptance/verdict owners.
+Exactly four Delivery Commands and seven Utility Commands are provided by this harness. Equivalent natural-language IDEATE, DEFINE, BUILD, and SHIP intent uses the same classifier, gates, permissions, and evidence contract; a shortcut grants no extra authority. Utility Commands are explicit operations, not lifecycle modes or independent acceptance/verdict owners.
 
 Treat natural language as a first-class lifecycle entry, not as a hint that the user must type a shortcut. When the requested outcome is unambiguous, enter the same canonical loop without asking the user to restate `/ideate`, `/define`, `/build`, or `/ship`. Classify “先帮我想几种方案，暂时不要实现” as IDEATE, “把这个需求定义成可实施方案和测试计划” as DEFINE, “按已经接受的方案开始实现” as BUILD, and “把已实现的改动收尾并准备交付” as SHIP. Explanation, comparison, translation, and status questions about those names remain ordinary near misses; genuine mode/target ambiguity asks one focused question.
 
@@ -16,6 +16,7 @@ Treat natural language as a first-class lifecycle entry, not as a hint that the 
 | `/harness-audit` | Utility | Return a bounded report-first audit of a named harness concern and candidate follow-up; it does not edit harness controls or select a lifecycle state. |
 | `/retro` | Utility | Analyze explicitly supplied or approved sanitized evidence and return a bounded retrospective; it does not claim global history or authorize changes. |
 | `/security-review` | Utility | Preview a report-only independent security review with exact source-transmission/scan gates; it does not repair, accept risk, or claim completion. |
+| `/eli5` | Utility | Explain a topic plainly in chat without Markdown; `--html` additionally creates a self-contained visual HTML at an approved repository-local location, without entering PPTX or lifecycle work. |
 
 ## Non-Commands
 

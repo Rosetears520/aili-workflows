@@ -10,6 +10,7 @@
     "core/commands/agents-md.md",
     "core/commands/build.md",
     "core/commands/define.md",
+    "core/commands/eli5.md",
     "core/commands/handoff.md",
     "core/commands/harness-audit.md",
     "core/commands/ideate.md",
@@ -27,7 +28,7 @@
     "core/roles/roles.json",
     "manifests/runtime-projections.json"
   ],
-  "inputSha256": "306f3a323ff2bc2544c4323dadf6a2f088b2892ef8673e280bf41a43c32d71cb",
+  "inputSha256": "48bfce2001bbb7056d156ff8dd396062fddd6a935096588ad49a187b532caa9e",
   "outputs": [
     {
       "path": "agents/agent-evaluator.md",
@@ -39,8 +40,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "75d1548879e250b998ed0c189ed1c186d103915367be428acf60250247deebb0"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "b1a12cf1d4703ba9f3726f3f0de629bb9b378d0e14a2f4e98f186628e8ac43fa"
     },
     {
       "path": "agents/ai-regression-scout.md",
@@ -52,8 +53,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "eb0b86a5d9e822f4d611212709bd0ef1b699fb14ccf082ad6e2b2cdb9facd3b0"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "5c9bdcf8460f3b9730c9ca40a6543a1caa57434e1163bc84004c5a2dabf980a5"
     },
     {
       "path": "agents/browser-qa-runner.md",
@@ -65,8 +66,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "79dcb023a8452c2ef156f671c6546b391788801f2f6bf352d9f7bf5a13f209de"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "dfe9b3b8acbfb7c85462ae0a6dc771a46fa42321b52c59fd6950210c72c1ae84"
     },
     {
       "path": "agents/code-reviewer.md",
@@ -78,8 +79,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "c302ba3d447af49b76becdb947912ced91a6e1801a88417bd42e251ad270733f"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "176ebbb69b16e228cb99232cc11ea0ea91fb6b4cbe03708c624f1fad9b56700e"
     },
     {
       "path": "agents/code-scout.md",
@@ -91,8 +92,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "bab6c9d9b071b436f4dc46f802bdc8732beb2e6687dbfdccdcc195bcee40cefe"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "eae2e87bb1dfb3a11141dd684a48c39c07ab2ff435a81f852201d6058b4274f2"
     },
     {
       "path": "agents/convergence-reviewer.md",
@@ -104,8 +105,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b2a73700cddb546306fa4000038b98f658a5086f54c87e8399cd13634801ec1a"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "c37f06869934e66c64cc96451343202e2227e7692025c5cec1e85f8f9c9d467d"
     },
     {
       "path": "agents/doc-researcher.md",
@@ -117,8 +118,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "47d6903f434db093bbf63615a5a0de32e4e427a9e1754a61b5b2f018d18b7519"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7c04e6174e9830b9d7ce2d80c1ff887413bf27943e7fad2bde57c550c4882cf1"
     },
     {
       "path": "agents/e2e-artifact-runner.md",
@@ -130,8 +131,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "1b380abaad0fbb27bd6860cfde9832b68ca28945192645af76182c805a6b0310"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "af86bf85302656e246900eb036f85ae65c07311fac27b81771c5158363259ee5"
     },
     {
       "path": "agents/implementer.md",
@@ -143,8 +144,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "8841789e51f75d5a5f335633e06cf7190f7c9eb7fa5eabe81af76f1b09016194"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "15dcef9aa1d6a04f4696ff0bd7dedddcb10cc7385e8f68fa9371643b232be4ef"
     },
     {
       "path": "agents/opensource-sanitizer.md",
@@ -156,8 +157,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "2a39d569c21f180daf1ef8adb2c57092e28f5bb854d8f5b9f8d0bc803562c78b"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "85ca18ca651ba02ba8cbcc0d5aa32aa5fde6e3cbe166776875a95bc0081b13d2"
     },
     {
       "path": "agents/plan-auditor.md",
@@ -169,8 +170,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b14715637020c91ddd276a6cd33b2ac9527c123ad2f1fe06c0aa5eb04e164f36"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "e8914010ec74ff516e97ddcce562b1bf103ff562060e43e67fe679bfb05eacaf"
     },
     {
       "path": "agents/pr-test-analyzer.md",
@@ -182,8 +183,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "0be7ee2cd50ec6fe2681430609c9212d07e26fb5b72326e473779ed538796603"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "c4a12da2fa8ae9db40efe51fec1d15ea7f450969bfc857ca6728d69a22110cd6"
     },
     {
       "path": "agents/rose.md",
@@ -195,8 +196,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "895f3f65783c0fbbe707b32382f82042510b0bf1ee4c4a825c4fae297b14690f"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "b50433fe0a01c4dc49693d62cb1edab05c9b0f131f8e662bca0215051056af7e"
     },
     {
       "path": "agents/security-auditor.md",
@@ -208,8 +209,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "ec2ede5ed21ccc2890b53d9a603f8fdbec5e20abfbe1266376c5d94895620b17"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "968ea7e613b12afbbc53cf36a5b1cab8afe70b020ebff3d00a47b820836c7083"
     },
     {
       "path": "agents/silent-failure-reviewer.md",
@@ -221,8 +222,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "2df5864827f0f8f7b2bb7401ce7fe0d16d6522c1658e6ab949910aa1bbe6b85b"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "14fa29cc03c6e0b9eda3c3759947138012518534005c1b4e4874e7e3397f4b95"
     },
     {
       "path": "agents/solution-architect.md",
@@ -234,8 +235,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "3e2f70703878123b8f02a74abcc3c3754c711a59c3d1fd495eacc0605b6c19eb"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7ac9db0c34fd5ed65ee0dc2260acb303ec9b0b8a8d767bb768c7d5f008506dff"
     },
     {
       "path": "agents/spec-miner.md",
@@ -247,8 +248,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "e0060b79a05faeb6e533f7561d07d16862f085cf2f6240ac253e2120e40b6eaf"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "5f9df53e83c0dcbf25b7f3036e2aee5c0febe9e04827d890b48315ae3fc9ddca"
     },
     {
       "path": "agents/test-coverage-reviewer.md",
@@ -260,8 +261,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "f4bbb4ff4ab87c29be9f91d8a0ef95b71f86aa3e0c64773f13b08b08fe24ff44"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "3c88cbaf02204e6eac02bd48926c4ce8414afaf0ccd056b68e332b51fe837991"
     },
     {
       "path": "agents/test-engineer.md",
@@ -273,8 +274,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "e12dcbb7f5e41d2c4ec4dc25d644455f7f0b418a437a46543d8bd9165af7f842"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7ddef8e657e2e7c102ce45534c7e45b657aede4143eae8d7ac2b5e4ba7035be5"
     },
     {
       "path": "agents/web-performance-auditor.md",
@@ -286,8 +287,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b9896694889e6e0ffdc48b72c8386c78c3c3a0b0873a9ebf973f960892041cf6"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "f56543038e787f2c9ff5b208970cceee75c153c33d42a2a3b0ef63abc7a6e4ff"
     },
     {
       "path": "agents/web-researcher.md",
@@ -299,8 +300,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "125a5d582b372485d24fee4c0ea8964cd63f483b55673d3da941585a8b1f1e03"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "832da7745ac860dfab755fdeb1cdebb47033741d271be74f4a56de6e7d8ffc25"
     },
     {
       "path": "commands/agents-md.md",
@@ -313,8 +314,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "e7107d3ca01d07ec70b951fe7d17c13a36eb6cb542654eba8999a5f6608c3c21",
-      "outputSha256": "e6d121dff3f9b9cce000c9d00de7ab234f5a50a79b83b921fefac1ea1196c61c"
+      "inputSha256": "c232ad13a6eb332d854785e14935c7f3546e6e9ed0273af2312ad92f36d49faf",
+      "outputSha256": "85940be2a47fc7c427d9b1f648cdbfae2e196de98a7affecf4f0a4be1de1ad30"
     },
     {
       "path": "commands/build.md",
@@ -327,8 +328,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "a588886718d699c55a30f94b52907eef0da936b641a4aa29a4c53daea9752edf",
-      "outputSha256": "bf3667adbed62ba6fc1cf03189e92379f837d7778ea039812307e0a013902b72"
+      "inputSha256": "9c99138619f64897c35e6a62a11dfcfe1e18eb272a6a0663a9545c4da45bc28a",
+      "outputSha256": "5dbe1fd57198c6f6afd8c454bb5b97d0882f6f9519564c31d97cfa11447a28bf"
     },
     {
       "path": "commands/define.md",
@@ -341,8 +342,22 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "1d32a0e4b7b1b7d4b6624598d0142e19d2ea64d827f8f5885f49e75b7c9eaeae",
-      "outputSha256": "3ddbcb90b6419784ed12a51c7d50b6a88f06f654ca60a6df4fe724fb6db49120"
+      "inputSha256": "72895a4e856fb2b93a3ecd22c4ba54c4c10e58398a6d4d915b4187af3ccdbd13",
+      "outputSha256": "0f90095a743178e9729dce81c0013b13cd960c76571623cfc313d1c363e0d02a"
+    },
+    {
+      "path": "commands/eli5.md",
+      "canonicalInputs": [
+        "adapters/opencode/adapter.json",
+        "adapters/pi/adapter.json",
+        "core/commands/eli5.md",
+        "core/governance/decision-core.md",
+        "core/governance/operating-discipline.md",
+        "core/roles/roles.json",
+        "manifests/runtime-projections.json"
+      ],
+      "inputSha256": "70e9ce59c1a0c0a014e77035fbf824b8a8388187d45689e9f78a0f5494a48952",
+      "outputSha256": "6b2ee9e4770bacbf4ad6caa3fab1462a7283e081d52bff8681218fe162c44f85"
     },
     {
       "path": "commands/handoff.md",
@@ -355,8 +370,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "ae52e92331d1a3eeb1307da61397f5587d362fbdda14ce103e18b5e8681d8a3f",
-      "outputSha256": "3586e6b0e3d6ccf2721851ac93028f5ed41a89d97638c07fffc9dc102062565f"
+      "inputSha256": "03a9e6b9ad40cef1e657a06ff86f8e81b4429c674f974ce1c6fa0b66bf425390",
+      "outputSha256": "df174fec597dd2534527d6e6609987194dec076101cdcb1bf515e63b5a2f50c9"
     },
     {
       "path": "commands/harness-audit.md",
@@ -369,8 +384,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "023f8675eab754f31bcc8f8d6087e7a78d9e92bc0e5c968de1fd9d02c3875d15",
-      "outputSha256": "1b415845075d30be92f456da173cedb98be9517ab11fa4cd75e94fee5fb89729"
+      "inputSha256": "a8fb879e016e2d226c943e88e56ec0ce13920159362ee192e56118e21c8c764e",
+      "outputSha256": "bf0e70cd81f6f0cafb679a4db0d5cee191cd51f0da3cf0ec140f5b38a0c1be7e"
     },
     {
       "path": "commands/ideate.md",
@@ -383,8 +398,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "85f441c81dd45108ed37075b727fbb952cbd953c3cd67d2cf7bd543d083d0f5f",
-      "outputSha256": "adaff9b27c25daf4527ef71c2442b3217334d6cee774d0b97803b7d803495c8f"
+      "inputSha256": "322a5c96c82d3b8f82da04f31e6e6a275f7ab80d866a0d9097378f585ea1e679",
+      "outputSha256": "2e20d96ad1dd9e8e0b33301374a920e565c971cd7a3bc7f802b6dbae73564f31"
     },
     {
       "path": "commands/local-review.md",
@@ -397,8 +412,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "28175f00012c04f3b4ae06e261f9756a5cf2b57965f7b717c3e637bb41353acb",
-      "outputSha256": "9a8728b1b632ca0dbeaa14a01c6877f4891b69811e91d0777ca5aa326c04d656"
+      "inputSha256": "28ca5453c22f3ec7af4f5c533c0b9f5e4f99ef747117cdd83e7ec192431de7d3",
+      "outputSha256": "ddc820a2a72106ab3551517037769de873663ada9c2a57f575bca63c91fbb966"
     },
     {
       "path": "commands/retro.md",
@@ -411,8 +426,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "336320dc76790fb8bb0234d4c6657b8b96699700da8aa00a20355fe32fb437b7",
-      "outputSha256": "a8c91618d0fc9a9b29dd7b29fbcae1da7036e88e43adf315c48787443cbd4114"
+      "inputSha256": "dd71c670a0df20941240d9a8237e57d3b14dcc2eabda24cabfd20b68a076b8bc",
+      "outputSha256": "c885d04d9eb5fd9192732b5741a8d78d67b21590c2a6ef6e5abef56c2eb20afc"
     },
     {
       "path": "commands/security-review.md",
@@ -425,8 +440,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "69f73d0bbcf8e68c05c55c592e8d5dfa588797576c816a4f3cdff2d1ff8ad384",
-      "outputSha256": "7752b0ec06c2e870b5906ae7c28d5b27a8096eebaceb7a567b316dafa1e3d087"
+      "inputSha256": "0df502823b248cbf4fc295c98ebfd3ea58349b0fcbb4c400b37335b110b11b64",
+      "outputSha256": "b720908778b748973de11fdd33a605de3916ba35b4d7829649956e3cea159d4f"
     },
     {
       "path": "commands/ship.md",
@@ -439,8 +454,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "1c81631c82398b22fdf4505f410a73bf2d50c3bfd233ebdba8a4547afc7db423",
-      "outputSha256": "685baafc5ecf0bd0fa07285b9a946f58c1743eb4b70d9747775a0e789203ee99"
+      "inputSha256": "448bc7b73d8ce18f55b25d3eccc6d29a3b44fcf37beddc9693dc1b4027daa9d1",
+      "outputSha256": "346533d09d9808eb7f816676dcd7d75accdb1722765a4310ded496ced04b6f71"
     },
     {
       "path": "generated/opencode/AGENTS.md",
@@ -451,8 +466,8 @@
         "core/governance/operating-discipline.md",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "671bc879248258aaf11ae443fb498f2c292d04580b3f64bb5ad6cc2608c11814",
-      "outputSha256": "cba5a35a10bd6d2a5004be06ae826f9bad83103713226e3e36923fe7da0e6809"
+      "inputSha256": "f2af37355ec4e1d476b1b01ba6889715f1ad76b4f5b68c460af9ee1df31f421d",
+      "outputSha256": "285cb9f4b79b57c9c0c137aab319c0544d09b7f45e277b36da1ff8af7ee27080"
     },
     {
       "path": "generated/opencode/agents/agent-evaluator.md",
@@ -464,8 +479,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "75d1548879e250b998ed0c189ed1c186d103915367be428acf60250247deebb0"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "b1a12cf1d4703ba9f3726f3f0de629bb9b378d0e14a2f4e98f186628e8ac43fa"
     },
     {
       "path": "generated/opencode/agents/ai-regression-scout.md",
@@ -477,8 +492,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "eb0b86a5d9e822f4d611212709bd0ef1b699fb14ccf082ad6e2b2cdb9facd3b0"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "5c9bdcf8460f3b9730c9ca40a6543a1caa57434e1163bc84004c5a2dabf980a5"
     },
     {
       "path": "generated/opencode/agents/browser-qa-runner.md",
@@ -490,8 +505,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "79dcb023a8452c2ef156f671c6546b391788801f2f6bf352d9f7bf5a13f209de"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "dfe9b3b8acbfb7c85462ae0a6dc771a46fa42321b52c59fd6950210c72c1ae84"
     },
     {
       "path": "generated/opencode/agents/code-reviewer.md",
@@ -503,8 +518,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "c302ba3d447af49b76becdb947912ced91a6e1801a88417bd42e251ad270733f"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "176ebbb69b16e228cb99232cc11ea0ea91fb6b4cbe03708c624f1fad9b56700e"
     },
     {
       "path": "generated/opencode/agents/code-scout.md",
@@ -516,8 +531,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "bab6c9d9b071b436f4dc46f802bdc8732beb2e6687dbfdccdcc195bcee40cefe"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "eae2e87bb1dfb3a11141dd684a48c39c07ab2ff435a81f852201d6058b4274f2"
     },
     {
       "path": "generated/opencode/agents/convergence-reviewer.md",
@@ -529,8 +544,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b2a73700cddb546306fa4000038b98f658a5086f54c87e8399cd13634801ec1a"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "c37f06869934e66c64cc96451343202e2227e7692025c5cec1e85f8f9c9d467d"
     },
     {
       "path": "generated/opencode/agents/doc-researcher.md",
@@ -542,8 +557,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "47d6903f434db093bbf63615a5a0de32e4e427a9e1754a61b5b2f018d18b7519"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7c04e6174e9830b9d7ce2d80c1ff887413bf27943e7fad2bde57c550c4882cf1"
     },
     {
       "path": "generated/opencode/agents/e2e-artifact-runner.md",
@@ -555,8 +570,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "1b380abaad0fbb27bd6860cfde9832b68ca28945192645af76182c805a6b0310"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "af86bf85302656e246900eb036f85ae65c07311fac27b81771c5158363259ee5"
     },
     {
       "path": "generated/opencode/agents/implementer.md",
@@ -568,8 +583,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "8841789e51f75d5a5f335633e06cf7190f7c9eb7fa5eabe81af76f1b09016194"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "15dcef9aa1d6a04f4696ff0bd7dedddcb10cc7385e8f68fa9371643b232be4ef"
     },
     {
       "path": "generated/opencode/agents/opensource-sanitizer.md",
@@ -581,8 +596,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "2a39d569c21f180daf1ef8adb2c57092e28f5bb854d8f5b9f8d0bc803562c78b"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "85ca18ca651ba02ba8cbcc0d5aa32aa5fde6e3cbe166776875a95bc0081b13d2"
     },
     {
       "path": "generated/opencode/agents/plan-auditor.md",
@@ -594,8 +609,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b14715637020c91ddd276a6cd33b2ac9527c123ad2f1fe06c0aa5eb04e164f36"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "e8914010ec74ff516e97ddcce562b1bf103ff562060e43e67fe679bfb05eacaf"
     },
     {
       "path": "generated/opencode/agents/pr-test-analyzer.md",
@@ -607,8 +622,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "0be7ee2cd50ec6fe2681430609c9212d07e26fb5b72326e473779ed538796603"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "c4a12da2fa8ae9db40efe51fec1d15ea7f450969bfc857ca6728d69a22110cd6"
     },
     {
       "path": "generated/opencode/agents/rose.md",
@@ -620,8 +635,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "895f3f65783c0fbbe707b32382f82042510b0bf1ee4c4a825c4fae297b14690f"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "b50433fe0a01c4dc49693d62cb1edab05c9b0f131f8e662bca0215051056af7e"
     },
     {
       "path": "generated/opencode/agents/security-auditor.md",
@@ -633,8 +648,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "ec2ede5ed21ccc2890b53d9a603f8fdbec5e20abfbe1266376c5d94895620b17"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "968ea7e613b12afbbc53cf36a5b1cab8afe70b020ebff3d00a47b820836c7083"
     },
     {
       "path": "generated/opencode/agents/silent-failure-reviewer.md",
@@ -646,8 +661,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "2df5864827f0f8f7b2bb7401ce7fe0d16d6522c1658e6ab949910aa1bbe6b85b"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "14fa29cc03c6e0b9eda3c3759947138012518534005c1b4e4874e7e3397f4b95"
     },
     {
       "path": "generated/opencode/agents/solution-architect.md",
@@ -659,8 +674,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "3e2f70703878123b8f02a74abcc3c3754c711a59c3d1fd495eacc0605b6c19eb"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7ac9db0c34fd5ed65ee0dc2260acb303ec9b0b8a8d767bb768c7d5f008506dff"
     },
     {
       "path": "generated/opencode/agents/spec-miner.md",
@@ -672,8 +687,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "e0060b79a05faeb6e533f7561d07d16862f085cf2f6240ac253e2120e40b6eaf"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "5f9df53e83c0dcbf25b7f3036e2aee5c0febe9e04827d890b48315ae3fc9ddca"
     },
     {
       "path": "generated/opencode/agents/test-coverage-reviewer.md",
@@ -685,8 +700,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "f4bbb4ff4ab87c29be9f91d8a0ef95b71f86aa3e0c64773f13b08b08fe24ff44"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "3c88cbaf02204e6eac02bd48926c4ce8414afaf0ccd056b68e332b51fe837991"
     },
     {
       "path": "generated/opencode/agents/test-engineer.md",
@@ -698,8 +713,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "e12dcbb7f5e41d2c4ec4dc25d644455f7f0b418a437a46543d8bd9165af7f842"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "7ddef8e657e2e7c102ce45534c7e45b657aede4143eae8d7ac2b5e4ba7035be5"
     },
     {
       "path": "generated/opencode/agents/web-performance-auditor.md",
@@ -711,8 +726,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "b9896694889e6e0ffdc48b72c8386c78c3c3a0b0873a9ebf973f960892041cf6"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "f56543038e787f2c9ff5b208970cceee75c153c33d42a2a3b0ef63abc7a6e4ff"
     },
     {
       "path": "generated/opencode/agents/web-researcher.md",
@@ -724,8 +739,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046",
-      "outputSha256": "125a5d582b372485d24fee4c0ea8964cd63f483b55673d3da941585a8b1f1e03"
+      "inputSha256": "b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6",
+      "outputSha256": "832da7745ac860dfab755fdeb1cdebb47033741d271be74f4a56de6e7d8ffc25"
     },
     {
       "path": "generated/opencode/commands/agents-md.md",
@@ -738,8 +753,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "e7107d3ca01d07ec70b951fe7d17c13a36eb6cb542654eba8999a5f6608c3c21",
-      "outputSha256": "e6d121dff3f9b9cce000c9d00de7ab234f5a50a79b83b921fefac1ea1196c61c"
+      "inputSha256": "c232ad13a6eb332d854785e14935c7f3546e6e9ed0273af2312ad92f36d49faf",
+      "outputSha256": "85940be2a47fc7c427d9b1f648cdbfae2e196de98a7affecf4f0a4be1de1ad30"
     },
     {
       "path": "generated/opencode/commands/build.md",
@@ -752,8 +767,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "a588886718d699c55a30f94b52907eef0da936b641a4aa29a4c53daea9752edf",
-      "outputSha256": "bf3667adbed62ba6fc1cf03189e92379f837d7778ea039812307e0a013902b72"
+      "inputSha256": "9c99138619f64897c35e6a62a11dfcfe1e18eb272a6a0663a9545c4da45bc28a",
+      "outputSha256": "5dbe1fd57198c6f6afd8c454bb5b97d0882f6f9519564c31d97cfa11447a28bf"
     },
     {
       "path": "generated/opencode/commands/define.md",
@@ -766,8 +781,22 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "1d32a0e4b7b1b7d4b6624598d0142e19d2ea64d827f8f5885f49e75b7c9eaeae",
-      "outputSha256": "3ddbcb90b6419784ed12a51c7d50b6a88f06f654ca60a6df4fe724fb6db49120"
+      "inputSha256": "72895a4e856fb2b93a3ecd22c4ba54c4c10e58398a6d4d915b4187af3ccdbd13",
+      "outputSha256": "0f90095a743178e9729dce81c0013b13cd960c76571623cfc313d1c363e0d02a"
+    },
+    {
+      "path": "generated/opencode/commands/eli5.md",
+      "canonicalInputs": [
+        "adapters/opencode/adapter.json",
+        "adapters/pi/adapter.json",
+        "core/commands/eli5.md",
+        "core/governance/decision-core.md",
+        "core/governance/operating-discipline.md",
+        "core/roles/roles.json",
+        "manifests/runtime-projections.json"
+      ],
+      "inputSha256": "70e9ce59c1a0c0a014e77035fbf824b8a8388187d45689e9f78a0f5494a48952",
+      "outputSha256": "6b2ee9e4770bacbf4ad6caa3fab1462a7283e081d52bff8681218fe162c44f85"
     },
     {
       "path": "generated/opencode/commands/handoff.md",
@@ -780,8 +809,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "ae52e92331d1a3eeb1307da61397f5587d362fbdda14ce103e18b5e8681d8a3f",
-      "outputSha256": "3586e6b0e3d6ccf2721851ac93028f5ed41a89d97638c07fffc9dc102062565f"
+      "inputSha256": "03a9e6b9ad40cef1e657a06ff86f8e81b4429c674f974ce1c6fa0b66bf425390",
+      "outputSha256": "df174fec597dd2534527d6e6609987194dec076101cdcb1bf515e63b5a2f50c9"
     },
     {
       "path": "generated/opencode/commands/harness-audit.md",
@@ -794,8 +823,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "023f8675eab754f31bcc8f8d6087e7a78d9e92bc0e5c968de1fd9d02c3875d15",
-      "outputSha256": "1b415845075d30be92f456da173cedb98be9517ab11fa4cd75e94fee5fb89729"
+      "inputSha256": "a8fb879e016e2d226c943e88e56ec0ce13920159362ee192e56118e21c8c764e",
+      "outputSha256": "bf0e70cd81f6f0cafb679a4db0d5cee191cd51f0da3cf0ec140f5b38a0c1be7e"
     },
     {
       "path": "generated/opencode/commands/ideate.md",
@@ -808,8 +837,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "85f441c81dd45108ed37075b727fbb952cbd953c3cd67d2cf7bd543d083d0f5f",
-      "outputSha256": "adaff9b27c25daf4527ef71c2442b3217334d6cee774d0b97803b7d803495c8f"
+      "inputSha256": "322a5c96c82d3b8f82da04f31e6e6a275f7ab80d866a0d9097378f585ea1e679",
+      "outputSha256": "2e20d96ad1dd9e8e0b33301374a920e565c971cd7a3bc7f802b6dbae73564f31"
     },
     {
       "path": "generated/opencode/commands/local-review.md",
@@ -822,8 +851,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "28175f00012c04f3b4ae06e261f9756a5cf2b57965f7b717c3e637bb41353acb",
-      "outputSha256": "9a8728b1b632ca0dbeaa14a01c6877f4891b69811e91d0777ca5aa326c04d656"
+      "inputSha256": "28ca5453c22f3ec7af4f5c533c0b9f5e4f99ef747117cdd83e7ec192431de7d3",
+      "outputSha256": "ddc820a2a72106ab3551517037769de873663ada9c2a57f575bca63c91fbb966"
     },
     {
       "path": "generated/opencode/commands/retro.md",
@@ -836,8 +865,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "336320dc76790fb8bb0234d4c6657b8b96699700da8aa00a20355fe32fb437b7",
-      "outputSha256": "a8c91618d0fc9a9b29dd7b29fbcae1da7036e88e43adf315c48787443cbd4114"
+      "inputSha256": "dd71c670a0df20941240d9a8237e57d3b14dcc2eabda24cabfd20b68a076b8bc",
+      "outputSha256": "c885d04d9eb5fd9192732b5741a8d78d67b21590c2a6ef6e5abef56c2eb20afc"
     },
     {
       "path": "generated/opencode/commands/security-review.md",
@@ -850,8 +879,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "69f73d0bbcf8e68c05c55c592e8d5dfa588797576c816a4f3cdff2d1ff8ad384",
-      "outputSha256": "7752b0ec06c2e870b5906ae7c28d5b27a8096eebaceb7a567b316dafa1e3d087"
+      "inputSha256": "0df502823b248cbf4fc295c98ebfd3ea58349b0fcbb4c400b37335b110b11b64",
+      "outputSha256": "b720908778b748973de11fdd33a605de3916ba35b4d7829649956e3cea159d4f"
     },
     {
       "path": "generated/opencode/commands/ship.md",
@@ -864,8 +893,8 @@
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "1c81631c82398b22fdf4505f410a73bf2d50c3bfd233ebdba8a4547afc7db423",
-      "outputSha256": "685baafc5ecf0bd0fa07285b9a946f58c1743eb4b70d9747775a0e789203ee99"
+      "inputSha256": "448bc7b73d8ce18f55b25d3eccc6d29a3b44fcf37beddc9693dc1b4027daa9d1",
+      "outputSha256": "346533d09d9808eb7f816676dcd7d75accdb1722765a4310ded496ced04b6f71"
     },
     {
       "path": "templates/opencode-global-AGENTS.md",
@@ -876,8 +905,8 @@
         "core/governance/operating-discipline.md",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "671bc879248258aaf11ae443fb498f2c292d04580b3f64bb5ad6cc2608c11814",
-      "outputSha256": "cba5a35a10bd6d2a5004be06ae826f9bad83103713226e3e36923fe7da0e6809"
+      "inputSha256": "f2af37355ec4e1d476b1b01ba6889715f1ad76b4f5b68c460af9ee1df31f421d",
+      "outputSha256": "285cb9f4b79b57c9c0c137aab319c0544d09b7f45e277b36da1ff8af7ee27080"
     }
   ]
 }

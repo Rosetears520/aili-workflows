@@ -3,7 +3,7 @@ description: "AILI command: /define"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/define.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 1d32a0e4b7b1b7d4b6624598d0142e19d2ea64d827f8f5885f49e75b7c9eaeae; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/define.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 72895a4e856fb2b93a3ecd22c4ba54c4c10e58398a6d4d915b4187af3ccdbd13; do not edit directly -->
 
 # /define
 

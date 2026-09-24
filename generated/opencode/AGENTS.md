@@ -2,7 +2,7 @@
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates/opencode-global-AGENTS.md -->
 <!-- AILI_GLOBAL_AGENTS_TEMPLATE_MODE: installer-owned-global-file -->
 <!-- Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md. -->
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: 671bc879248258aaf11ae443fb498f2c292d04580b3f64bb5ad6cc2608c11814; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, core/governance/decision-core.md, core/governance/hero-scope-limits.md, core/governance/operating-discipline.md, manifests/runtime-projections.json; input_sha256: f2af37355ec4e1d476b1b01ba6889715f1ad76b4f5b68c460af9ee1df31f421d; do not edit directly -->
 
 # AGENTS.md
 
@@ -20,7 +20,7 @@ This is the canonical backend-neutral governance source. Runtime adapters may ma
 
 - Select one primary process, domain, or artifact loop for one intent and at most one auxiliary capability for a concrete gap. A keyword or broad match alone does not select a Skill or Worker.
 - `/ideate`, `/define`, `/build`, and `/ship` are the only Delivery Commands and lifecycle selectors. Equivalent unambiguous natural-language intents are first-class lifecycle entries: follow the same canonical lifecycle body and gates; do not ask the user to restate a slash command.
-- `/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, and `/security-review` are Utility Commands. They are bounded explicit entrypoints, not lifecycle phases, acceptance owners, BUILD or SHIP authorization, or independent final-verdict owners.
+- `/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, `/security-review`, and `/eli5` are Utility Commands. They are bounded explicit entrypoints, not lifecycle phases, acceptance owners, BUILD or SHIP authorization, or independent final-verdict owners.
 - A selected Skill is a bounded adapter, not another workflow owner. It may return one concrete need to ROSE, but it does not recurse, change lifecycle mode, start a process cascade, or dispatch a Worker.
 - Run a proactive delegation scan for every non-trivial intent. For a clear bounded non-trivial package with a matching available Worker and current effective permissions/capabilities, prefer specialist dispatch. Work directly only for trivial work, contract clarification or splitting, no matching specialist, permission/capability failure, overlapping ownership, or concrete negative benefit. Multi-file shape alone is not sufficient. Record no fictitious Worker evidence.
 - Default concurrent specialist work is at most two, but this is not a hard cap. A larger bounded fan-out requires independent non-overlapping packages, concrete benefit, suitable owners, and an explicit join plan.

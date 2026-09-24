@@ -104,7 +104,7 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 7a8a0130d3729d12d13644fc7cc0df174b5d0988dda7b3904c3ab1a419b21046; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6; do not edit directly -->
 
 # Test Engineer
 

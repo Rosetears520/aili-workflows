@@ -176,7 +176,8 @@ function validateCommandCatalog(manifest: ComponentManifest): void {
     "agents-md",
     "harness-audit",
     "retro",
-    "security-review"
+    "security-review",
+    "eli5"
   ].sort();
   const actual = manifest.components.commands.map((command) => command.name).sort();
   if (actual.join("\u0000") !== expected.join("\u0000")) {
@@ -209,8 +210,8 @@ function validateSkillTiers(manifest: ComponentManifest): void {
     "evidence-scoped-retrospective",
     "rose-memory"
   ];
-  if (skills.length !== 58) throw new Error(`Expected exactly 58 retained Skills, found ${skills.length}.`);
-  if (skills.filter((skill) => skill.defaultInstalled).length !== 49) throw new Error("Expected exactly 49 default-installed Core Skills.");
+  if (skills.length !== 59) throw new Error(`Expected exactly 59 retained Skills, found ${skills.length}.`);
+  if (skills.filter((skill) => skill.defaultInstalled).length !== 50) throw new Error("Expected exactly 50 default-installed Core Skills.");
   const optionalNames = skills.filter((skill) => !skill.defaultInstalled).map((skill) => skill.name).sort();
   if (optionalNames.join("\u0000") !== optional.slice().sort().join("\u0000")) {
     throw new Error(`Optional Skill inventory must be exactly: ${optional.join(", ")}`);

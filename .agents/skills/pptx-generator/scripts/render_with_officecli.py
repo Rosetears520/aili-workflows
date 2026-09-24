@@ -14,6 +14,7 @@ from typing import Any, Mapping, Sequence
 from officecli_adapter import (
     OfficeCLIAdapterError,
     PINNED_VERSION,
+    contact_sheet_geometry,
     officecli_environment,
     officecli_command_argv,
     officecli_help_argv,
@@ -142,6 +143,7 @@ def prepare_render_packet(
             actions.append(_help_action(binary, family, help_family))
         actions.append(_command_action(family, argv, capture_path=capture_path))
 
+    geometry = contact_sheet_geometry(pptx_path)
     contact_path = contained_path(root, evidence_paths["contact_sheet"])
     actions.append(_help_action(binary, "contact-sheet", "screenshot"))
     actions.append(
@@ -191,7 +193,7 @@ def prepare_render_packet(
         "pptx": {"path": relative_workspace_path(root, pptx_path), "sha256": sha256_file(pptx_path)},
         "slide_ids": [slide["slide_id"] for slide in slides],
         "artifacts": artifacts,
-        "contact_sheet": {"path": evidence_paths["contact_sheet"]},
+        "contact_sheet": {"path": evidence_paths["contact_sheet"], "geometry": geometry},
         "manifest_path": relative_workspace_path(root, manifest_path),
         "evidence_paths": evidence_paths,
         "actions": actions,

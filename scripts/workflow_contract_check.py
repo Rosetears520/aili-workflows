@@ -518,6 +518,7 @@ EXPECTED_PUBLIC_COMMANDS = {
     "retro",
     "security-review",
     "ship",
+    "eli5",
 }
 WORKFLOW_PROFILE_CONTRACT = {
     "scaffold": {
@@ -1604,7 +1605,7 @@ def validate_a33_scaffold_and_rejections(
             row.get("name") for row in command_rows if isinstance(row, dict) and isinstance(row.get("name"), str)
         )
         if set(command_names) != EXPECTED_PUBLIC_COMMANDS:
-            errors.append("public command inventory differs from the exact four Delivery Commands and six Utility Commands")
+            errors.append("public command inventory differs from the exact four Delivery Commands and seven Utility Commands")
 
     observed_rejections = dict(rejection_contract) if isinstance(rejection_contract, dict) else {}
     observed_rejections["repository_inspection"] = {

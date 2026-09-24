@@ -147,7 +147,7 @@ async function buildExpected(projectRoot) {
 }
 
 function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, piAdapter, projectRoot) {
-  const expectedCommands = ["ideate", "define", "build", "ship", "local-review", "handoff", "agents-md", "harness-audit", "retro", "security-review"];
+  const expectedCommands = ["ideate", "define", "build", "ship", "local-review", "handoff", "agents-md", "harness-audit", "retro", "security-review", "eli5"];
   assertExactList("command projection inventory", projection.commands, expectedCommands);
   assertExactList("agent projection inventory", projection.agents, rolesDocument.roles.map((role) => role.id).sort());
   assertExactList("canonical role registry", rolesDocument.roles.map((role) => role.id).sort(), projection.agents);
@@ -184,13 +184,17 @@ function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, pi
 }
 
 function renderOpenCodeCommand(name, body, adapter, inputs, projectRoot) {
-  const description = `AILI ${name} command generated from the backend-neutral canonical body.`;
-  return `---\ndescription: ${yamlScalar(description)}\nagent: ${adapter.command.agent}\nsubtask: ${adapter.command.subtask}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
+  const override = adapter.command.frontmatterOverrides?.[name];
+  const description = override?.description ?? `AILI ${name} command generated from the backend-neutral canonical body.`;
+  const argumentHint = override?.argumentHint === undefined ? "" : `argument-hint: ${yamlScalar(override.argumentHint)}\n`;
+  return `---\ndescription: ${yamlScalar(description)}\n${argumentHint}agent: ${adapter.command.agent}\nsubtask: ${adapter.command.subtask}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
 }
 
 function renderPiPrompt(name, body, adapter, inputs, projectRoot) {
-  const description = `${adapter.prompt.descriptionPrefix} /${name}`;
-  return `---\ndescription: ${yamlScalar(description)}\nargument-hint: ${yamlScalar(adapter.prompt.argumentHint)}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
+  const override = adapter.prompt.frontmatterOverrides?.[name];
+  const description = override?.description ?? `${adapter.prompt.descriptionPrefix} /${name}`;
+  const argumentHint = override?.argumentHint ?? adapter.prompt.argumentHint;
+  return `---\ndescription: ${yamlScalar(description)}\nargument-hint: ${yamlScalar(argumentHint)}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
 }
 
 function renderOpenCodeAgent(role, sharedWorkerBoundary, adapter, inputs, projectRoot) {

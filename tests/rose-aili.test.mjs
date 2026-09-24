@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { applyPromptDecisions } from "../dist/cli.js";
 import { mergeOpenCodeConfig } from "../dist/config.js";
-import { loadManifest, repoInstallTargets, repoSourcePaths } from "../dist/manifest.js";
+import { loadManifest, repoInstallTargets, repoSourcePaths, resolveSkillSelection } from "../dist/manifest.js";
 
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, "dist", "cli.js");
@@ -1988,10 +1988,11 @@ test("manifest declares the exact Core and Optional Skill tiers", async () => {
   const skill = manifest.components.skills.find((entry) => entry.name === "aili-delivery-flow");
   assert.ok(skill, "expected aili-delivery-flow skill manifest entry");
 
-  assert.equal(manifest.components.skills.length, 58);
-  assert.equal(manifest.components.skills.filter((entry) => entry.defaultInstalled).length, 49);
+  assert.equal(manifest.components.skills.length, 59);
+  assert.equal(manifest.components.skills.filter((entry) => entry.defaultInstalled).length, 50);
+  assert.equal(resolveSkillSelection(manifest).length, 50);
   assert.deepEqual(manifest.components.commands.map((entry) => entry.name).sort(), [
-    "agents-md", "build", "define", "handoff", "harness-audit", "ideate", "local-review", "retro", "security-review", "ship"
+    "agents-md", "build", "define", "eli5", "handoff", "harness-audit", "ideate", "local-review", "retro", "security-review", "ship"
   ]);
   assert.equal(skill.path, ".agents/skills/aili-delivery-flow");
   assert.deepEqual(repoSourcePaths(skill), [".agents/skills/aili-delivery-flow"]);
@@ -1999,6 +2000,16 @@ test("manifest declares the exact Core and Optional Skill tiers", async () => {
     { kind: "shared", path: ".agents/skills/aili-delivery-flow" }
   ]);
   await stat(path.join(repoRoot, ".agents", "skills", "aili-delivery-flow", "SKILL.md"));
+});
+
+test("manifest registers eli5 command as an independent utility", async () => {
+  const manifest = await loadManifest(repoRoot);
+  const command = manifest.components.commands.find((entry) => entry.name === "eli5");
+  assert.ok(command, "expected manifest command eli5");
+  assert.equal(command.path, "commands/eli5.md");
+  assert.deepEqual(repoSourcePaths(command), ["generated/opencode/commands/eli5.md", "commands/eli5.md"]);
+  assert.deepEqual(repoInstallTargets(command), [{ kind: "opencode", path: "commands/eli5.md" }]);
+  assert.match(await readFile(path.join(repoRoot, "commands", "eli5.md"), "utf8"), /# \/eli5/);
 });
 
 test("manifest registers local-review command", async () => {

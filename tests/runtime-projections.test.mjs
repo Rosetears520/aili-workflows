@@ -140,6 +140,42 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.match(runGenerator(workspace, "--check").stderr, /unexpected-compatibility: agents\/extra\.md/);
 });
 
+test("ELI5 projects a standalone command with its own hint without changing legacy frontmatter", async (t) => {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "aili-eli5-projections-"));
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+  await Promise.all([
+    cp(path.join(repositoryRoot, "core"), path.join(workspace, "core"), { recursive: true }),
+    cp(path.join(repositoryRoot, "adapters"), path.join(workspace, "adapters"), { recursive: true }),
+    cp(path.join(repositoryRoot, "manifests"), path.join(workspace, "manifests"), { recursive: true })
+  ]);
+
+  const generated = runGenerator(workspace);
+  assert.equal(generated.status, 0, generated.stderr);
+  const canonical = (await readFile(path.join(workspace, "core/commands/eli5.md"), "utf8")).trimEnd();
+  const openCode = await readFile(path.join(workspace, "generated/opencode/commands/eli5.md"), "utf8");
+  const compatibility = await readFile(path.join(workspace, "commands/eli5.md"), "utf8");
+  const pi = await readFile(path.join(workspace, "generated/pi/prompts/eli5.md"), "utf8");
+  const description = "Explain something in simple plain language, optionally with a visual HTML explainer";
+  assert.equal(compatibility, openCode);
+  assert.ok(openCode.endsWith(`${canonical}\n`));
+  assert.ok(pi.endsWith(`${canonical}\n`));
+  assert.equal(frontmatter(openCode), `description: ${JSON.stringify(description)}\nargument-hint: "[--html] <topic>"\nagent: rose\nsubtask: false\n`);
+  assert.equal(frontmatter(pi), `description: ${JSON.stringify(description)}\nargument-hint: "[--html] <topic>"\n`);
+  assert.equal(runGenerator(workspace, "--check").status, 0);
+
+  const projection = JSON.parse(await readFile(path.join(workspace, "manifests/runtime-projections.json"), "utf8"));
+  for (const name of projection.commands.filter((command) => command !== "eli5")) {
+    const legacyOpenCode = await readFile(path.join(workspace, `generated/opencode/commands/${name}.md`), "utf8");
+    const legacyPi = await readFile(path.join(workspace, `generated/pi/prompts/${name}.md`), "utf8");
+    assert.equal(frontmatter(legacyOpenCode), `description: "AILI ${name} command generated from the backend-neutral canonical body."\nagent: rose\nsubtask: false\n`, name);
+    assert.equal(frontmatter(legacyPi), `description: "AILI command: /${name}"\nargument-hint: "[request]"\n`, name);
+  }
+});
+
+function frontmatter(projection) {
+  return projection.split("---\n")[1];
+}
+
 // Contract serialization and configured ceilings only, not runtime path enforcement.
 async function assertReportContractProjections(root) {
   const json = async (relative) => JSON.parse(await readFile(path.join(root, relative), "utf8"));

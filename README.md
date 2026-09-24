@@ -39,6 +39,7 @@ aili-workflows/
 │       ├── github-evidence-triage/
 │       ├── harness-evolution/
 │       ├── harness-issue-triage/
+│       ├── humanizer-zh/
 │       ├── idea-refine/
 │       ├── incremental-implementation/
 │       ├── ios-application-dev/
@@ -87,7 +88,7 @@ aili-workflows/
 │   ├── spec-miner.md            # 只读 spec mining subagent
 │   ├── agent-evaluator.md       # 只读 agent 输出评估 subagent
 │   └── opensource-sanitizer.md  # 只读 OSS/public exposure 审查 subagent
-├── core/commands/                  # 十个 Command 的 canonical source
+├── core/commands/                  # 十一个 Command 的 canonical source
 ├── commands/                       # 生成的 OpenCode compatibility projections
 │   ├── ideate.md                # /ideate：进入 aili-delivery-flow IDEATE
 │   ├── define.md                # /define：进入 aili-delivery-flow DEFINE
@@ -98,7 +99,8 @@ aili-workflows/
 │   ├── agents-md.md             # /agents-md：项目 AGENTS.md utility
 │   ├── harness-audit.md         # /harness-audit：report-first harness audit
 │   ├── retro.md                 # /retro：evidence-scoped retrospective
-│   └── security-review.md       # /security-review：preview-first report-only security review
+│   ├── security-review.md       # /security-review：preview-first report-only security review
+│   └── eli5.md                  # /eli5：独立的简明解释，可选自包含 HTML 图解
 ├── docs/
 │   └── opencode-setup.md        # 给 AI agent 阅读的 OpenCode 安装说明
 ├── manifests/
@@ -161,6 +163,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `coverage-review` | 覆盖率充分性、未测路径和验证证据的只读 QA review 路由 |
 | `e2e-artifact-handling` | E2E trace、video、screenshot、report、failure bundle 的仓库内 artifact 落点与证据处理路由 |
 | `explain-by-allegory` | 用寓言、故事、类比或隐喻解释复杂概念，并映射回正式概念、边界和误区 |
+| `humanizer-zh` | 明确要求时自然化改写已有中文，分论文正文与邮件/报告/说明/PPT 文案语体；保留事实、术语和立场，不负责检测保证、从零论文、事实核查或文件生成 |
 | `github-evidence-triage` | 对 GitHub issue / PR 做只读证据分流，输出带 URL、commit、文件行号或 `[UNVERIFIED]` 标记的报告 |
 | `harness-issue-triage` | 对用户反馈的 harness / workflow 行为问题做只读定位，判断问题属于 command、skill、protocol、docs、installer、memory、subagent packet 或 agent prompt 哪一层，并说明怎么改 |
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
@@ -176,6 +179,8 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `test-document-generator` | 在显式 test-plan/QA/acceptance-matrix intent 或正式 DEFINE 的具体 testability gap 下生成紧凑测试文档；不为普通 implementation、TDD、review 或 completion 自动建流程 |
 
 `requirements-grilling` 和 `test-document-generator` 的输出规则是：OpenSpec change 直接写入 change 目录；`requirements-grilling` 继续写 `interview.md`，不写 `grill.md` 或 `requirements-grilling.md`；所有非 OpenSpec 输入都先询问生成位置，包括单个普通文档、目录、多文档、粘贴文本或落点不明确的情况。可选落点包括同级文件、同级文件夹、追加到现有文档或只在聊天中输出。
+
+`humanizer-zh` 只在明确的中文改写需求下触发，不自动润色所有回答；纯概念问题直接解释，PPTX 文件仍由 `pptx-generator` 独占负责。它不上传原文、不调用检测器、不保证过检，也不要求为粘贴文本创建文件。思想参考为用户提供的本地 `aigc-paper-rewrite` 方法；规则与示例独立编写，通用语体分支为本地扩展，不导入外部同名 Skill。参考包的公共 URL、固定 revision 与再分发许可未确认，不分发原文或个人路径；详见 [provenance](.agents/skills/humanizer-zh/references/provenance.md)。实际模型路由、写作效果与跨适配器等价性须另有证据，注册不代表已验证。
 
 ### 全局 Agent 行为参考
 
@@ -231,6 +236,8 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 未纳入 `vision-analysis`、`gif-sticker-maker`、`minimax-multimodal-toolkit`、`minimax-music-gen`、`minimax-music-playlist`、`buddy-sings`，因为它们更偏 MiniMax API key 驱动的视觉、多模态或音乐娱乐工作流，不属于当前默认个人 OpenCode 工作流范围。
 
+`pptx-generator` 的表达指导区分演讲与阅读场景，保留事实条件并按真实关系组织版式；非专家幻灯片保留“直接解释 → 必要例子 → 术语与限制”；独立解释入口是 `/eli5`，PPT Skill 不拥有该命令。文案修改回到逐页 Markdown，不能代替原有渲染与视觉验证；明确的寓言/类比需求仍由 ROSE 选择 `explain-by-allegory`。已知限制（0.4.15）：本次三页 PPTX 验证小样在 Microsoft PowerPoint 中打开时仍提示修复内容；修复后可查看，但未通过无提示直接打开的验收。AutoFit 几何重算及模板保真验证也未完成。OfficeCLI 校验和截图不能替代 PowerPoint 原生兼容性验证。
+
 [已知|外部] `pptx-generator` 的 source hierarchy、fingerprint、readiness、render QA 与 delivery-audit 机制以 clean-room 方式选择性参考 [siril9/presentation-skill](https://github.com/siril9/presentation-skill/tree/3a22eed290fa2205b6a1e2de5549b4429c5fffd0) 固定提交 `3a22eed290fa2205b6a1e2de5549b4429c5fffd0`（MIT License，Copyright (c) 2026 Siril Sengolraj）。来源：该固定 GitHub revision。[框架内] 本仓库不复制其文件字节、不 vendoring 或注册其 Skill/plugin/model/subagent/lifecycle runtime，因此不制造 upstream byte mapping 或第二个 PPT 路由入口。
 
 [已知|外部] OfficeCLI adapter 固定 `@officecli/officecli@1.0.143`，其许可为 Apache-2.0。来源：[OfficeCLI v1.0.143](https://github.com/iOfficeAI/OfficeCLI/releases/tag/v1.0.143) 与 installer-owned `manifests/officecli-tool.json`。[框架内] OfficeCLI 是 DOCX/XLSX/PPTX 三个现有 artifact Skills 共用的 non-routable external tool；安装所有权属于 AILI installer，默认 managed target 为 `$HOME/.agents/tools/officecli`。仓库不提交 OfficeCLI binary/node_modules，不注册 OfficeCLI Skill/MCP/public command，不修改 PATH/shell 配置，也不调用 package full installer。[未验证] 本仓库的 fake/temp 检查不证明真实 npm/native install、三格式复杂 round-trip、目标 viewer fidelity 或非 OpenCode Harness 等价性。
@@ -281,7 +288,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ## 使用说明
 
-这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；提供四个 Delivery Commands：`/ideate`、`/define`、`/build`、`/ship`，分别对应由 `core/commands/` 生成的 `commands/{ideate,define,build,ship}.md`，并由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供六个 Utility Commands：`/local-review`、`/handoff`、`/agents-md`、`/harness-audit`、`/retro` 和 `/security-review`。它们保留各自的 action-specific gates、repository-local artifact placement 和非权威结果，且不创建第五个 lifecycle phase 或独立 acceptance/verdict owner。DEFINE 必须先关闭 decision-shaping research / material blockers、保证 artifacts coherent 且 strict-valid，并取得最终 `test-plan.md` acceptance。BUILD 只执行 active contract 导出的 accepted queue 和 progress savepoints，再做一次最小 changed-scope completion check，记录 `IMPLEMENTED_TARGETED_VERIFIED` 后停在 SHIP 之前；不自动增加 package-local tests/reviews/security fanout、commit 或 approval。SHIP 需要新的显式 intent 和当前 implementation evidence，复用仍覆盖 exact content/target/config/toolchain 的 BUILD evidence，只选择 stale、affected、risk、integration、packaging、release、merge-result 或 target-specific checks。仓库不提供 `/aili-doctor`、`/simplify`、`/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/grill`、`/grill-me`、`/batch-grill-me`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册隐藏或未请求的 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime；显式 product/repository automation 仍须通过正常 formal/high-risk gates。
+这个仓库面向 OpenCode 使用，核心约定是通过自然语言任务触发 agent 和 skill；提供四个 Delivery Commands：`/ideate`、`/define`、`/build`、`/ship`，分别对应由 `core/commands/` 生成的 `commands/{ideate,define,build,ship}.md`，并由 `.agents/skills/aili-delivery-flow` 承接。自然语言中的等价 IDEATE、DEFINE、BUILD、SHIP 意图使用同一分类器、门禁和证据契约；shortcut 不获得额外权限。另提供七个 Utility Commands：`/local-review`、`/handoff`、`/agents-md`、`/harness-audit`、`/retro`、`/security-review` 和 `/eli5`。`/eli5 <topic>` 默认在聊天中给简短纯文本解释；`/eli5 --html <topic>` 在有效的仓库内落点获准后另外创建自包含图解，不属于 PPTX 生成。它们保留各自的 action-specific gates、repository-local artifact placement 和非权威结果，且不创建第五个 lifecycle phase 或独立 acceptance/verdict owner。DEFINE 必须先关闭 decision-shaping research / material blockers、保证 artifacts coherent 且 strict-valid，并取得最终 `test-plan.md` acceptance。BUILD 只执行 active contract 导出的 accepted queue 和 progress savepoints，再做一次最小 changed-scope completion check，记录 `IMPLEMENTED_TARGETED_VERIFIED` 后停在 SHIP 之前；不自动增加 package-local tests/reviews/security fanout、commit 或 approval。SHIP 需要新的显式 intent 和当前 implementation evidence，复用仍覆盖 exact content/target/config/toolchain 的 BUILD evidence，只选择 stale、affected、risk、integration、packaging、release、merge-result 或 target-specific checks。仓库不提供 `/aili-doctor`、`/simplify`、`/loop`、`/schedule`、`/goal`、`/proactive`、`/cycle`、`/watch`、`/objective`、worktree-maintenance 或 Graphify command，也不提供 `/research`、`/questionnaire`、`/grill`、`/grill-me`、`/batch-grill-me`、`/test-plan`、`/implement`、`/fix`、`/debug`、`/review`、`/release-blocker-audit`、`/evolve` 等内部阶段命令。AILI 不注册隐藏或未请求的 cron、scheduler、watcher、webhook、listener、daemon、persistent queue、hook 或 auto-retry runtime；显式 product/repository automation 仍须通过正常 formal/high-risk gates。
 
 已请求且在范围内的安全本地读取、编辑、确定性诊断和 claim-matched 检查不需要逐步微审批；外部/破坏性、依赖/lockfile、schema/auth/security、Git/release 和 A33 ADD/REMOVE 仍使用各自的 exact gate。每个 subagent Task context 都是 single-use terminal session，subagent 不得委派、恢复旧 context 或取得 lifecycle/integration/verdict ownership。
 
@@ -293,9 +300,9 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ### 安装 profiles 与 OpenCode 设置
 
-推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 49 个 Core Skills；`pi` 在 Core Skills 上增加生成的 Pi 全局 context 与 `generated/pi/prompts/*.md` 顶层 prompts；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、10 个 Commands 和可选 OpenCode config integration。
+推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 50 个 Core Skills；`pi` 在 Core Skills 上增加生成的 Pi 全局 context 与 `generated/pi/prompts/*.md` 顶层 prompts；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、11 个 Commands 和可选 OpenCode config integration。
 
-58 个 retained Skills 由 49 个 Core 与 9 个 Optional 组成。`--skill <name>` 和 `--skill-group <research|specialized-dev>` 可重复使用、组合并去重；单个 Skill 不会展开所属 group，未知 profile、Skill 或 group 会在 mutation 前失败。`--opencode` 是 `--profile opencode` 的兼容别名，不能与另一 profile 组合。
+59 个 retained Skills 由 50 个 Core 与 9 个 Optional 组成。`--skill <name>` 和 `--skill-group <research|specialized-dev>` 可重复使用、组合并去重；单个 Skill 不会展开所属 group，未知 profile、Skill 或 group 会在 mutation 前失败。`--opencode` 是 `--profile opencode` 的兼容别名，不能与另一 profile 组合。
 
 Pi profile 只安装生成的全局 context 与顶层 prompt 文件。Pi system projection、role metadata、selection map、installation contract 和 task/result/evidence schema 是 package artifacts，不安装也不运行 Pi session/runtime。AILI 向 official Pi persistent Agent runtime 的 package/session/result 交接边界见 `docs/harness/aili-pi-runtime-handoff.md`；persistent identity 不替代 accepted contract、approval、fresh evidence 或 ROSE verdict，共享轻量 `todo.md`、free-form `progress.txt` 与历史 Board 备注也不承担 runtime authority。OfficeCLI 和 MemPalace 是 default-selected 的独立外部操作：安装或更新先报告计划，只有各自的 fresh exact approval 和显式 `--enable-officecli` 或 `--enable-mempalace` 才会执行。拒绝、跳过或不可用不会撤销 Core Skill 安装。OpenCode profile 中的 Playwright、CodeGraph、Graphify 和 OpenSpec 同样保持独立 operation gate；AILI 不安装、检测、配置、迁移或删除 DCP。
 
@@ -375,7 +382,7 @@ Graphify 注册验证要求常规 `SKILL.md`、`.graphify_version`、可选 pack
 
 ### 分发与来源边界
 
-`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、十个 canonical Command bodies 及其 generated compatibility projections、`.agents/` 下的 canonical skills/protocols/helpers、`manifests/`、两个 AGENTS 模板、`agents_md.py`、兼容安装脚本、两个明确列出的 Graphify/upstream contract fixtures 以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime。root `.worktrees/`、visible `worktrees/` 和 historical `.tmp/worktrees/` 都不在 package allowlist 中。
+`package.json#files` 的 npm 分发面包含构建后的 CLI、全部 canonical agents、十一个 canonical Command bodies 及其 generated compatibility projections、`.agents/` 下的 canonical skills/protocols/helpers、`manifests/`、两个 AGENTS 模板、`agents_md.py`、兼容安装脚本、两个明确列出的 Graphify/upstream contract fixtures 以及 README/setup 文档。其他仓库级 checker、测试和 harness fixtures 不属于已安装 runtime。root `.worktrees/`、visible `worktrees/` 和 historical `.tmp/worktrees/` 都不在 package allowlist 中。
 
 固定上游材料位于现有 canonical skills 的 `references/upstream/` 中，并由 `manifests/upstream-references.json` 记录精确 pin、blob/hash、license/notice、`0644` mode 和 source→local mapping。上游 `SKILL.md` 以 `SKILL.upstream.md` 保存，脚本必须作为 non-executable data；这些文件随 `.agents/` 作为 inert reference data 打包，但不出现在 component manifest 的 skills 列表中，不获得 routing、approval、permission 或 execution authority。canonical AILI adapters 仍是各 skill 顶层唯一的 `SKILL.md`。
 
@@ -397,7 +404,7 @@ Graphify 的 CLI 安装、全局 agents-skill 注册和任何项目操作互不�
 
 ```text
 1. 将本仓库作为个人 OpenCode 工作流配置来源。
-2. 默认运行 `rose-aili install`，同步 49 个 Core Skills 并报告 OfficeCLI/MemPalace 的独立 operation plan；不需要它们时显式传对应 `--skip-*` flag。
+2. 默认运行 `rose-aili install`，同步 50 个 Core Skills 并报告 OfficeCLI/MemPalace 的独立 operation plan；不需要它们时显式传对应 `--skip-*` flag。
 3. 需要 Pi 全局 context 与 prompts 时运行 `rose-aili install --profile pi`；需要 ROSE agents、Commands 或 OpenCode config integration 时运行 `rose-aili install --profile opencode`。
 4. OpenCode 从共享 `$HOME/.agents/skills/` 发现 `.agents/skills/`，并从自己的 `skills/` 发现 manifest 声明的 `.opencode/skills/`。
 5. `opencode` profile 安装后可使用 ROSE primary agent、subagents 和 Delivery/Utility Commands。

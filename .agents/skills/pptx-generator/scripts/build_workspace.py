@@ -6,11 +6,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import posixpath
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import zipfile
+from xml.dom import minidom
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from urllib.parse import unquote, urlsplit
 
 from officecli_adapter import (
     OfficeCLIAdapterError,
@@ -284,6 +290,191 @@ def _run_argv(
     )
 
 
+def normalize_notes_master_order(package: Path) -> bool:
+    """Repair only CT_Presentation notesMasterIdLst placement, not validity.
+
+    Missing presentation parts (including minimal test fixtures) are left alone;
+    OfficeCLI remains responsible for package/schema validation. Keep XML namespace
+    prefixes, relationship IDs, comments and other nodes via DOM rather than an
+    ElementTree namespace rewrite. Already ordered packages are byte-for-byte no-ops.
+    """
+    part = "ppt/presentation.xml"
+    namespace = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    with zipfile.ZipFile(package, "r") as source:
+        if part not in source.namelist():
+            return False
+        document = minidom.parseString(source.read(part))
+        try:
+            root = document.documentElement
+            if root.namespaceURI != namespace or root.localName != "presentation":
+                return False
+            children = [node for node in root.childNodes if node.nodeType == node.ELEMENT_NODE]
+            notes = [node for node in children if node.namespaceURI == namespace and node.localName == "notesMasterIdLst"]
+            # Do not disguise duplicate-list/schema errors as a successful repair.
+            if len(notes) != 1:
+                return False
+            note = notes[0]
+            others = [node for node in children if node is not note]
+            insertion = 0
+            while insertion < len(others) and others[insertion].namespaceURI == namespace and others[insertion].localName == "sldMasterIdLst":
+                insertion += 1
+            if children.index(note) == insertion:
+                return False
+            root.removeChild(note)
+            root.insertBefore(note, others[insertion] if insertion < len(others) else None)
+            payload = document.toxml(encoding="utf-8", standalone=document.standalone)
+        finally:
+            document.unlink()
+        # Stage beside the derived package for atomic replacement; raw base stays intact.
+        with tempfile.TemporaryDirectory(dir=package.parent) as temporary:
+            staged = Path(temporary) / "normalized.pptx"
+            with zipfile.ZipFile(staged, "w") as target:
+                target.comment = source.comment
+                for info in source.infolist():
+                    target.writestr(info, payload if info.filename == part else source.read(info))
+            # Close the input before replacing, including on Windows.
+            source.close()
+            os.replace(staged, package)
+    return True
+
+
+def normalize_orphan_slide_master_overrides(package: Path) -> bool:
+    """Drop only unreferenced, absent numbered slide-master declarations.
+
+    Referenced missing masters remain declared for package validation to reject;
+    this is not a general missing-part repair. Other ZIP members are untouched.
+    """
+    part = "[Content_Types].xml"
+    namespace = "http://schemas.openxmlformats.org/package/2006/content-types"
+    relationship_namespace = "http://schemas.openxmlformats.org/package/2006/relationships"
+    content_type = "application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"
+    with zipfile.ZipFile(package, "r") as source:
+        names = set(source.namelist())
+        if part not in names:
+            return False
+        document = minidom.parseString(source.read(part))
+        try:
+            root = document.documentElement
+            if root.namespaceURI != namespace or root.localName != "Types":
+                return False
+            candidates = [
+                node for node in root.childNodes
+                if node.nodeType == node.ELEMENT_NODE
+                and node.namespaceURI == namespace and node.localName == "Override"
+                and node.getAttribute("ContentType") == content_type
+                and re.fullmatch(r"/ppt/slideMasters/slideMaster[0-9]+\.xml", node.getAttribute("PartName"))
+                and node.getAttribute("PartName")[1:] not in names
+            ]
+            if not candidates:
+                return False
+            referenced: set[str] = set()
+            for name in names:
+                if name == "_rels/.rels":
+                    owner_directory = ""
+                elif name.endswith(".rels") and posixpath.basename(posixpath.dirname(name)) == "_rels":
+                    owner_directory = posixpath.dirname(posixpath.dirname(name))
+                else:
+                    continue
+                relationships = minidom.parseString(source.read(name))
+                try:
+                    for relationship in relationships.getElementsByTagNameNS(relationship_namespace, "Relationship"):
+                        if relationship.getAttribute("TargetMode") == "External":
+                            continue
+                        target = unquote(urlsplit(relationship.getAttribute("Target")).path)
+                        referenced.add(posixpath.normpath(posixpath.join("/", owner_directory, target)).lstrip("/"))
+                finally:
+                    relationships.unlink()
+            removable = [node for node in candidates if node.getAttribute("PartName")[1:] not in referenced]
+            if not removable:
+                return False
+            for node in removable:
+                root.removeChild(node)
+                node.unlink()
+            payload = document.toxml(encoding="utf-8", standalone=document.standalone)
+        finally:
+            document.unlink()
+        with tempfile.TemporaryDirectory(dir=package.parent) as temporary:
+            staged = Path(temporary) / "normalized.pptx"
+            with zipfile.ZipFile(staged, "w") as target:
+                target.comment = source.comment
+                for info in source.infolist():
+                    target.writestr(info, payload if info.filename == part else source.read(info))
+            source.close()
+            os.replace(staged, package)
+    return True
+
+
+def normalize_slide_shape_and_background_xml(package: Path) -> bool:
+    """Fill only missing slide shape text bodies and solid background effect lists.
+
+    Work on the derived package, leave unchanged slides byte-identical, and retain
+    other ZIP members and metadata. This does not claim to repair other OOXML faults.
+    """
+    presentation_ns = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    drawing_ns = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+    def direct_child(parent: Any, namespace: str, local_name: str) -> Any:
+        return next(
+            (child for child in parent.childNodes
+             if child.nodeType == child.ELEMENT_NODE
+             and child.namespaceURI == namespace and child.localName == local_name),
+            None,
+        )
+
+    replacements: dict[int, bytes] = {}
+    with zipfile.ZipFile(package, "r") as source:
+        for index, info in enumerate(source.infolist()):
+            if not re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", info.filename):
+                continue
+            document = minidom.parseString(source.read(info))
+            try:
+                root = document.documentElement
+                if root.namespaceURI != presentation_ns or root.localName != "sld":
+                    continue
+                changed = False
+                for shape in root.getElementsByTagNameNS(presentation_ns, "sp"):
+                    if direct_child(shape, presentation_ns, "txBody") is not None:
+                        continue
+                    prefix = f"{shape.prefix}:" if shape.prefix else ""
+                    body = document.createElementNS(presentation_ns, f"{prefix}txBody")
+                    # Declare the new DrawingML children locally; do not rely on a
+                    # particular prefix being bound in the renderer's slide XML.
+                    body.setAttribute("xmlns:a", drawing_ns)
+                    for name in ("bodyPr", "lstStyle"):
+                        body.appendChild(document.createElementNS(drawing_ns, f"a:{name}"))
+                    paragraph = document.createElementNS(drawing_ns, "a:p")
+                    paragraph_end = document.createElementNS(drawing_ns, "a:endParaRPr")
+                    paragraph_end.setAttribute("lang", "en-US")
+                    paragraph.appendChild(paragraph_end)
+                    body.appendChild(paragraph)
+                    shape.insertBefore(body, direct_child(shape, presentation_ns, "extLst"))
+                    changed = True
+                for background in root.getElementsByTagNameNS(presentation_ns, "bgPr"):
+                    if (direct_child(background, drawing_ns, "solidFill") is None
+                            or direct_child(background, drawing_ns, "effectLst") is not None
+                            or direct_child(background, drawing_ns, "effectDag") is not None):
+                        continue
+                    effects = document.createElementNS(drawing_ns, "a:effectLst")
+                    effects.setAttribute("xmlns:a", drawing_ns)
+                    background.insertBefore(effects, direct_child(background, drawing_ns, "extLst"))
+                    changed = True
+                if changed:
+                    replacements[index] = document.toxml(encoding="utf-8", standalone=document.standalone)
+            finally:
+                document.unlink()
+        if not replacements:
+            return False
+        with tempfile.TemporaryDirectory(dir=package.parent) as temporary:
+            staged = Path(temporary) / "normalized.pptx"
+            with zipfile.ZipFile(staged, "w") as target:
+                target.comment = source.comment
+                for index, info in enumerate(source.infolist()):
+                    target.writestr(info, replacements[index] if index in replacements else source.read(info))
+            source.close()
+            os.replace(staged, package)
+    return True
+
+
 def execute_build_plan(
     plan: Mapping[str, Any],
     *,
@@ -340,6 +531,11 @@ def execute_build_plan(
     else:
         final.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(base, final)
+
+    derived = draft if plan["postbuild"]["enabled"] else final
+    normalize_notes_master_order(derived)
+    normalize_orphan_slide_master_overrides(derived)
+    normalize_slide_shape_and_background_xml(derived)
 
     command_results: list[dict[str, Any]] = []
     autofit_result: dict[str, Any] | None = None

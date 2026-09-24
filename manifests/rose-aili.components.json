@@ -44,7 +44,8 @@
       { "name": "agents-md", "path": "commands/agents-md.md", "sourcePath": "generated/opencode/commands/agents-md.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true },
       { "name": "harness-audit", "path": "commands/harness-audit.md", "sourcePath": "generated/opencode/commands/harness-audit.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true },
       { "name": "retro", "path": "commands/retro.md", "sourcePath": "generated/opencode/commands/retro.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true },
-      { "name": "security-review", "path": "commands/security-review.md", "sourcePath": "generated/opencode/commands/security-review.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true }
+      { "name": "security-review", "path": "commands/security-review.md", "sourcePath": "generated/opencode/commands/security-review.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true },
+      { "name": "eli5", "path": "commands/eli5.md", "sourcePath": "generated/opencode/commands/eli5.md", "projection": "generated-compatibility", "required": true, "defaultInstalled": false, "repositoryManaged": true }
     ],
     "skills": [
       { "name": "academic-paper-review", "path": ".agents/skills/academic-paper-review", "installTargets": [{ "kind": "shared", "path": ".agents/skills/academic-paper-review" }], "required": true, "defaultInstalled": false, "groups": ["research"], "repositoryManaged": true },
@@ -78,6 +79,7 @@
       { "name": "github-evidence-triage", "path": ".agents/skills/github-evidence-triage", "installTargets": [{ "kind": "shared", "path": ".agents/skills/github-evidence-triage" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "harness-evolution", "path": ".agents/skills/harness-evolution", "installTargets": [{ "kind": "shared", "path": ".agents/skills/harness-evolution" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "harness-issue-triage", "path": ".agents/skills/harness-issue-triage", "installTargets": [{ "kind": "shared", "path": ".agents/skills/harness-issue-triage" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
+      { "name": "humanizer-zh", "path": ".agents/skills/humanizer-zh", "installTargets": [{ "kind": "shared", "path": ".agents/skills/humanizer-zh" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "idea-refine", "path": ".agents/skills/idea-refine", "installTargets": [{ "kind": "shared", "path": ".agents/skills/idea-refine" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "incremental-implementation", "path": ".agents/skills/incremental-implementation", "installTargets": [{ "kind": "shared", "path": ".agents/skills/incremental-implementation" }], "required": true, "defaultInstalled": true, "repositoryManaged": true },
       { "name": "ios-application-dev", "path": ".agents/skills/ios-application-dev", "installTargets": [{ "kind": "shared", "path": ".agents/skills/ios-application-dev" }], "required": true, "defaultInstalled": false, "groups": ["specialized-dev"], "repositoryManaged": true },

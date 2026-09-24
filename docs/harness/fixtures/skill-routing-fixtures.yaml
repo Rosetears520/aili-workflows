@@ -1,6 +1,6 @@
 {
   "fixture": "skill-routing",
-  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "minimax-docx", "minimax-xlsx", "pptx-generator", "OfficeCLI", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
+  "required_markers": ["aili-delivery-flow", "harness-issue-triage", "harness-evolution", "mature-project-pattern-research", "source-driven-development", "git-workflow-and-versioning", "ci-cd-and-automation", "parallel-subagent-dispatch", "spec-driven-development", "planning-and-task-breakdown", "browser-testing-with-devtools", "minimax-docx", "minimax-xlsx", "pptx-generator", "humanizer-zh", "OfficeCLI", "official/API docs", "cleanup package", "approval-gated cleanup", "trigger", "non-trigger"],
   "cases": [
     {"id": "delivery-flow-build", "skill": "aili-delivery-flow", "input": "build approved implementation package", "expected": "trigger"},
     {"id": "delivery-flow-ship", "skill": "aili-delivery-flow", "input": "ship after verification", "expected": "trigger"},
@@ -38,6 +38,15 @@
     {"id": "pptx-generic-owner", "skill": "pptx-generator", "input": "Create an editable PowerPoint deck and verify the rendered slides", "expected": "trigger"},
     {"id": "pptx-officecli-internal-adapter", "skill": "pptx-generator", "input": "Use OfficeCLI to inspect and render this PPTX inside the canonical presentation workflow", "expected": "trigger", "expected_handoff": "OfficeCLI remains an internal non-routable adapter; do not install officecli-pptx or a second PPT Skill"},
     {"id": "pptx-duplicate-skill-denied", "skill": "pptx-generator", "input": "Install officecli-pptx as a second presentation Skill", "expected": "trigger", "expected_handoff": "deny duplicate presentation routing and retain pptx-generator as sole owner"},
+    {"id": "humanizer-academic-rewrite", "skill": "humanizer-zh", "input": "请将这段已有中文论文结果改得自然，保留统计术语和引用：表2显示，两组差异显著（p<0.05）[3]。", "expected": "trigger"},
+    {"id": "humanizer-email-rewrite", "skill": "humanizer-zh", "input": "把这封中文邮件改得自然，保持礼貌，不补期限：您好，烦请确认附件是否收到，谢谢。", "expected": "trigger"},
+    {"id": "humanizer-ppt-wording-only", "skill": "humanizer-zh", "input": "只把这句已有中文PPT文案改得自然，不创建或编辑文件：通过整理历史工单，为客服检索赋能。", "expected": "trigger", "expected_handoff": "provide text only; no PPTX artifact workflow"},
+    {"id": "pptx-wording-only-no-artifact", "skill": "pptx-generator", "input": "只把这句已有中文PPT文案改得自然，不创建或编辑文件：通过整理历史工单，为客服检索赋能。", "expected": "non-trigger"},
+    {"id": "pptx-humanized-deck-owner", "skill": "pptx-generator", "input": "编辑这份PPTX，把中文文案改得自然并交付可编辑文件，验证渲染效果。", "expected": "trigger", "expected_handoff": "pptx-generator remains sole PPTX owner; wording changes return to the canonical per-slide Markdown plan and retain existing artifact verification"},
+    {"id": "humanizer-concept-only", "skill": "humanizer-zh", "input": "用说人话的方式解释什么是缓存，没有要改写的原文，也不需要文件。", "expected": "non-trigger", "expected_handoff": "ROSE provides a direct explanation; do not manufacture a rewriting task"},
+    {"id": "humanizer-english-rewrite", "skill": "humanizer-zh", "input": "Rewrite this English email naturally in English: Please confirm receipt of the attachment.", "expected": "non-trigger"},
+    {"id": "humanizer-paper-from-scratch", "skill": "humanizer-zh", "input": "没有原文，请从零写一篇完整中文研究论文。", "expected": "non-trigger"},
+    {"id": "humanizer-fact-check-only", "skill": "humanizer-zh", "input": "只核查这篇中文论文的事实和引用是否真实，不改写表达。", "expected": "non-trigger"},
     {"id": "pptx-non-artifact-advice", "skill": "pptx-generator", "input": "Give me three speaking tips; do not create or edit a PPTX", "expected": "non-trigger"}
   ]
 }

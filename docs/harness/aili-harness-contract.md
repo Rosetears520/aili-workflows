@@ -7,7 +7,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 ## Roles
 
 - **ROSE runtime charter**: final responsibility, instruction precedence, safety, git, memory, subagent, and completion-claim gates.
-- **Commands**: four Delivery Commands (`/ideate`, `/define`, `/build`, `/ship`) and six Utility Commands (`/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, `/security-review`). Utilities are explicit non-lifecycle operations and do not own acceptance or final verdicts.
+- **Commands**: four Delivery Commands (`/ideate`, `/define`, `/build`, `/ship`) and seven Utility Commands (`/local-review`, `/handoff`, `/agents-md`, `/harness-audit`, `/retro`, `/security-review`, `/eli5`). Utilities are explicit non-lifecycle operations and do not own acceptance or final verdicts.
 - **Delivery flow skill**: one semantic router/control plane for first-class natural-language and shortcut lifecycle/ordinary loops, approvals, directed hydration, proactive delegation scans, and verification ownership.
 - **Harness issue triage skill**: read-only localization for user-reported harness behavior problems.
 - **Harness evolution skill**: report-first governance for approved harness changes.
@@ -32,7 +32,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 | BUILD | Derive the accepted queue from the active contract, execute each implementation package, keep concise free-form continuity in orchestrator-owned `progress.txt`, then run one minimal changed-scope completion check | No Markdown parsing/replay gate and no automatic package test/commit/approval; success records `IMPLEMENTED_TARGETED_VERIFIED` and stops before SHIP. This umbrella alone names Packages 1–11 plus Package 12. |
 | SHIP | Reuse still-covering BUILD evidence, run the delegation scan, and refresh only evidence required by the affected closeout claim | Fresh explicit SHIP intent is required; direct inspection is the no-trigger/blocked fallback, no broad matrix/lane fanout exists without a concrete gap, and CI failure returns without automatic repair/Git action. |
 | LOCAL_REVIEW | Resolve local changes, base branch, commit, PR, or OpenSpec change target and produce a categorized local review report before optional repair | Do not override OpenCode's `/review`, do not mutate remote state, do not repair before a categorized report and explicit approval, and do not claim release or archive readiness. |
-| Utility Commands | Run the explicitly requested local-review, handoff, AGENTS, harness-audit, retrospective, or security-review operation | Do not create a lifecycle phase, grant acceptance/verification authority, or bypass the action-specific placement, external-operation, destructive-operation, or privacy gate. |
+| Utility Commands | Run the explicitly requested local-review, handoff, AGENTS, harness-audit, retrospective, security-review, or plain-language `/eli5` operation | Do not create a lifecycle phase, grant acceptance/verification authority, or bypass the action-specific placement, external-operation, destructive-operation, or privacy gate. |
 
 ## Artifact Authority
 
@@ -50,7 +50,7 @@ P0 architecture contract for the `add-aili-delivery-harness` umbrella. It define
 
 ## Source and Runtime Boundary
 
-- Canonical AILI behavior lives in `core/commands/` for all ten Commands, `core/protocols/` for versioned shared schemas, top-level canonical skills, agents, templates/generators, manifests, TypeScript, and installer sources. Root `commands/` are generated compatibility projections, not independent semantic owners.
+- Canonical AILI behavior lives in `core/commands/` for all eleven Commands, `core/protocols/` for versioned shared schemas, top-level canonical skills, agents, templates/generators, manifests, TypeScript, and installer sources. Root `commands/` are generated compatibility projections, not independent semantic owners.
 - Root `AGENTS.md`, `dist/`, installed OpenCode/shared-skill copies, and current generated `.opencode` OpenSpec direct adapters are downstream generated/installed surfaces. Current direct adapters stay unchanged and callable outside AILI guarantees; AILI does not route to, recommend, wrap, suppress, prevent, or control them, and their output is not AILI evidence.
 - Pinned `references/upstream/` closures are licensed inert data. `SKILL.upstream.md` and non-executable upstream scripts never become component-manifest entries, public commands, runnable skills, hooks, or runtime authority.
 - External OpenCode, OpenSpec, CodeGraph, and Graphify behavior is upstream runtime behavior. An AILI claim requires an AILI-owned route to apply and freshly record its own gates.

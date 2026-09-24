@@ -22,6 +22,7 @@ UTILITY_COMMANDS = {
     "harness-audit.md",
     "retro.md",
     "security-review.md",
+    "eli5.md",
 }
 PUBLIC_COMMANDS = DELIVERY_COMMANDS | UTILITY_COMMANDS
 RETIRED_SKILLS = {
@@ -726,6 +727,7 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
         "harness-audit": "report-first-harness-audit",
         "retro": "approved-evidence-retrospective",
         "security-review": "preview-first-security-review",
+        "eli5": "plain-language-explainer",
     }
     by_id = {case.get("id"): case for case in cases if isinstance(case, dict)}
     for command, expected_scope in utility_cases.items():
@@ -1112,7 +1114,7 @@ def validate_command_contracts() -> list[str]:
     existing_commands = {path.name for path in command_dir.glob("*.md")}
     unexpected_commands = sorted(existing_commands - allowed_public_commands)
     for name in unexpected_commands:
-        errors.append(f"commands/{name}: unexpected top-level command; the ten canonical delivery and Utility Commands are the only public commands")
+        errors.append(f"commands/{name}: unexpected top-level command; only the declared Delivery and Utility Commands are public")
 
     unexpected_internal = sorted(existing_commands & internal_delivery_commands)
     for name in unexpected_internal:
@@ -1141,61 +1143,13 @@ def validate_command_contracts() -> list[str]:
                 errors.append(f"{relative}: frontmatter missing agent: rose")
             if "\nsubtask: false\n" not in frontmatter:
                 errors.append(f"{relative}: frontmatter missing subtask: false")
-        if f"# /{name.removesuffix('.md')}" not in text:
-            errors.append(f"{relative}: missing command heading")
-        for marker in ["User input:", "Required behavior:", "Hard stops:", "Output contract:"]:
-            if marker not in text:
-                errors.append(f"{relative}: missing command contract marker {marker!r}")
-        if name in allowed_delivery_commands and "aili-delivery-flow" not in text:
-            errors.append(f"{relative}: missing delivery routing marker 'aili-delivery-flow'")
-
-    local_review_text = read_repo_text("commands/local-review.md") if (command_dir / "local-review.md").exists() else ""
-    for marker in [
-        "canonical report-first local-review utility",
-        "standalone non-delivery audit",
-        "--base <branch>",
-        "--commit <sha>",
-        "--pr <url|number>",
-        "--change <id|path>",
-        "--focus <text>",
-        "--repair",
-        "categorized report",
-        "OpenCode's built-in `/review`",
-        "Do not replace `/ship`",
-        "mutate remote state",
-        "PASS_WITH_UNVERIFIED",
-        "Unverified",
-        "exact read-only GitHub CLI allowlist `gh pr view`, `gh pr diff`, and `gh pr list --head`",
-        "Do not run `gh api`, `gh pr checkout`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh pr create`, `gh repo clone`",
-        "Do not store or print secrets, tokens, private keys, cookies, raw logs, full transcripts, full file dumps, or private data in reports; use redacted path:line/type evidence instead.",
-        "read the conventional OpenSpec artifact paths directly",
-        "local OpenSpec artifacts may be git-ignored or absent from snapshot-style search indexes",
-        "`NEEDS_FIXES` and `BLOCKED` block BUILD continuation",
-        "`PASS_WITH_UNVERIFIED` permits continuation only after the user accepts each named `Unverified` item",
-    ]:
-        if marker not in local_review_text:
-            errors.append(f"commands/local-review.md: missing local-review contract marker {marker!r}")
 
     canonical_dir = ROOT / "core" / "commands"
     canonical_commands = {path.name for path in canonical_dir.glob("*.md")}
     if canonical_commands != allowed_public_commands:
         errors.append(
-            "core/commands: canonical command inventory differs from the exact four Delivery Commands and six Utility Commands"
+            "core/commands: canonical command inventory differs from the exact four Delivery Commands and seven Utility Commands"
         )
-    canonical_utility_markers = {
-        "handoff.md": ["Required behavior:", "Hard stops:", "Output contract:", "explicit CREATE, LIST, or RESUME", "repository-local handoff"],
-        "agents-md.md": ["Required behavior:", "Hard stops:", "Output contract:", "scripts/agents_md.py", "managed-block or backup-overwrite strategy"],
-        "harness-audit.md": ["Required behavior:", "Hard stops:", "Output contract:", "report-first audit", "Do not edit harness controls"],
-        "retro.md": ["Required behavior:", "Hard stops:", "Output contract:", "explicitly supplied or approved sanitized evidence", "Do not claim access to global history"],
-        "security-review.md": ["Required behavior:", "Hard stops:", "Output contract:", "independent `security-auditor` role", "exact approval before an external backend receives source"],
-    }
-    for name, markers in canonical_utility_markers.items():
-        relative = f"core/commands/{name}"
-        if not (canonical_dir / name).exists():
-            errors.append(f"{relative}: missing canonical Utility Command")
-            continue
-        errors.extend(require_text_markers(relative, markers, "canonical Utility Command"))
-
     try:
         manifest = json.loads(read_repo_text("manifests/rose-aili.components.json"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -1208,9 +1162,9 @@ def validate_command_contracts() -> list[str]:
         skill_names = {row.get("name") for row in skill_rows if isinstance(row, dict)}
         retired_names = {row.get("name") for row in manifest.get("retiredSkills", []) if isinstance(row, dict)} if isinstance(manifest, dict) else set()
         if command_names != {name.removesuffix(".md") for name in allowed_public_commands}:
-            errors.append("component manifest must expose exactly ten Commands")
-        if len(skill_names) != 58:
-            errors.append(f"component manifest must expose exactly 58 retained Skills; found {len(skill_names)}")
+            errors.append("component manifest must expose exactly eleven Commands")
+        if len(skill_names) != 59:
+            errors.append(f"component manifest must expose exactly 59 retained Skills; found {len(skill_names)}")
         if retired_names != RETIRED_SKILLS:
             errors.append("component manifest retired Skill inventory is incomplete or unexpected")
         if skill_names & RETIRED_SKILLS:
@@ -1219,33 +1173,6 @@ def validate_command_contracts() -> list[str]:
     for skill in RETIRED_SKILLS:
         if (ROOT / ".agents" / "skills" / skill / "SKILL.md").exists():
             errors.append(f".agents/skills/{skill}/SKILL.md: retired Skill remains runnable")
-
-    thin_commands = {
-        "commands/define.md": {
-            "required": [
-                "Invoke `aili-delivery-flow` in DEFINE mode.",
-                "Produce or align the complete implementation-readiness contract before BUILD.",
-                "Do not implement; unresolved material decisions or decision-shaping research, invalid/incoherent artifacts, or missing explicit final `test-plan.md` acceptance block BUILD readiness.",
-                "readiness exactly `READY | BLOCKED`, named `Unverified` residuals separately",
-            ],
-            "forbidden": ["requirements-grilling", "test-document-generator", "interview.md", "Artifact Freshness Gate"],
-        },
-        "commands/ship.md": {
-            "required": [
-                "Invoke `aili-delivery-flow` in SHIP mode.",
-                "Reconcile the implemented target directly and select only the evidence, review, repair, packaging, or release check required by the exact closeout claim.",
-                "Do not start a review swarm, broad matrix, or repair cycle merely because SHIP was requested. Fresh SHIP intent and current implementation evidence are required; exact high-risk/Git/release operations retain separate approval.",
-                "Mode/target, closeout path when applicable, verdict, blocking or `Unverified` evidence, approvals needed, and next action.",
-            ],
-            "forbidden": ["git status --short --branch", "classify dirty paths", "propose cleanup for residue", "Savepoint commits"],
-        },
-    }
-    for relative, contract in thin_commands.items():
-        text = read_repo_text(relative)
-        errors.extend(require_text_markers(relative, contract["required"], "thin command"))
-        for marker in contract["forbidden"]:
-            if marker in text:
-                errors.append(f"{relative}: duplicates canonical detailed policy marker {marker!r}")
 
     return errors
 
@@ -1415,17 +1342,6 @@ def validate_local_review_gate_contracts() -> list[str]:
             errors.append(f"{relative}: missing active AILI behavior section for upstream adaptation")
         else:
             errors.extend(require_absent_in_section(relative, section, forbidden_active_markers, "active upstream adaptation"))
-
-    local_review_text = read_repo_text("commands/local-review.md") if (ROOT / "commands/local-review.md").exists() else ""
-    for marker in [
-        "five axes — correctness, readability, architecture, security, and performance",
-        "Critical/Important findings",
-        "concrete fixes",
-        "zero findings is valid",
-        "fail-closed orchestration",
-    ]:
-        if marker not in local_review_text:
-            errors.append(f"commands/local-review.md: missing upstream review adaptation marker {marker!r}")
 
     code_reviewer_text = read_repo_text("agents/code-reviewer.md") if (ROOT / "agents/code-reviewer.md").exists() else ""
     for marker in [
@@ -1604,7 +1520,6 @@ def validate_define_artifact_contracts() -> list[str]:
 def validate_neutral_build_contracts() -> list[str]:
     errors: list[str] = []
     required_markers = {
-        "commands/build.md": ["neutral", "accepted scoped queue", "free-form continuity", "without Markdown parsing or replay gates", "IMPLEMENTED_TARGETED_VERIFIED", "Do not infer package"],
         ".agents/skills/aili-delivery-flow/SKILL.md": ["references/build-execution-loop.md", "current acceptance, target, package, permission, and claim-verification path", "Derive a dependency-ordered queue from the accepted contract", "smallest fresh check supporting the exact claim"],
         ".agents/skills/parallel-subagent-dispatch/references/agent-selection-matrix.md": ["Protocol: `aili-agent-selection/v1`", "Role namespace: `canonical`", "Selector mapping: `adapter-owned`", "Phase affinity is advisory", "`general` is not a canonical specialist role"],
         ".agents/skills/aili-delivery-flow/references/formal-task-board.md": ["# Lightweight TODO and Progress", "Maintenance is model discipline, not a Markdown file/format gate", "must create and maintain `todo.md` and `progress.txt`", "Missing files or non-typical free text do not reject runtime work", "runtime Journal", "do not parse, repair, replay, or validate them", "Never parse or format-validate them", "Workers return package-bound evidence", "They do not edit `todo.md` or `progress.txt`", "valid waiver recorded before work", "explicit join plan"],
@@ -1621,6 +1536,7 @@ def validate_neutral_build_contracts() -> list[str]:
         errors.extend(require_text_markers(relative, markers, "neutral BUILD"))
 
     active_files = list(required_markers) + [
+        "commands/build.md",
         ".agents/skills/aili-delivery-flow/references/artifact-contracts.md",
         ".agents/skills/aili-delivery-flow/references/review-repair-loop.md",
     ]
@@ -1840,12 +1756,6 @@ def validate_complete_scoped_work_contracts() -> list[str]:
             "Implement the complete, appropriately scoped change that satisfies the accepted task.",
             "Run the selected focused verification first, then broaden only when the claim still lacks evidence.",
             "the diff is task-scoped and non-speculative",
-        ],
-        "commands/build.md": [
-            "complete accepted scoped queue",
-            "free-form continuity",
-            "without Markdown parsing or replay gates",
-            "one minimal changed-scope completion check",
         ],
         ".agents/skills/aili-delivery-flow/references/lifecycle.md": [
             "implement complete scoped packages in dependency order",

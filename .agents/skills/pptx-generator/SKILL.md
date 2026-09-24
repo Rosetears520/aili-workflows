@@ -22,7 +22,7 @@ Use one of three branches:
 Near misses:
 
 - Return HTML/SVG design generation, PDF-only output, and document/spreadsheet artifacts to ROSE for the appropriate artifact owner.
-- For outline coaching or slide critique with no PPTX artifact, provide bounded advice directly rather than manufacturing a file workflow.
+- For outline coaching, slide critique, wording-only edits, or concept explanations with no PPTX artifact, provide bounded text directly rather than manufacturing a file workflow. `/eli5` is an independent plain-language Utility Command, not a PPTX workflow or this Skill's entrypoint; ROSE owns its routing. ROSE selects any independent rewriting or allegory Skill; text assistance does not replace the PPTX owner.
 - Do not silently convert a browser-rendered deck into a PPTX; editable-slide output is a distinct deliverable.
 
 ## Capability Boundary
@@ -45,7 +45,7 @@ Near misses:
 
 [KNOWN|USER] `<deck-name>-per-slide-content-plan.md` is the sole semantic source for slide count, order, title, Layout, and Content. Source: accepted change `pptx-workspace-officecli-integration`, decision `m0020`.
 
-[FRAME] Follow [`references/content-planning.md`](references/content-planning.md). Every slide uses exact `## Slide NN:`, one stable `<!-- slide-id: lower-kebab -->`, exactly one `### 1. Layout`, and exactly one `### 2. Content`. Keep page takeaways and source/status annotations inside Content.
+[FRAME] Follow [`references/content-planning.md`](references/content-planning.md) for audience, live-talk versus standalone-reading choices, source-bounded wording, and plain explanations. Use [`references/communication-examples.md`](references/communication-examples.md) when diagnosing vague copy, misleading relationships, or explanation limits. Apply revisions to the canonical plan, not a separate rewrite report. Every slide uses exact `## Slide NN:`, one stable `<!-- slide-id: lower-kebab -->`, exactly one `### 1. Layout`, and exactly one `### 2. Content`. Keep page takeaways and source/status annotations inside Content.
 
 [FRAME] Compile with `scripts/compile_plan.py`; `outline.json` is generated-only. Normal compilation never edits Markdown. Use `--initialize-ids` only for an explicit migration that inserts missing IDs without changing semantic text.
 
@@ -109,6 +109,7 @@ Near misses:
 | Intake fields, typed blockers, and next actions | [`intake-and-blockers.md`](references/intake-and-blockers.md) |
 | Source distillation and a reusable per-slide Markdown content plan | [`content-planning.md`](references/content-planning.md) |
 | Complete English translation of the curated learning notes, including natural-language descriptions of source visuals | [`human-design-playbook.md`](references/human-design-playbook.md) |
+| Original wording, relationship, capacity, and bounded-explanation examples | [`communication-examples.md`](references/communication-examples.md) |
 | Base slide roles and relationship-led layouts | [`slide-types.md`](references/slide-types.md) |
 | Palette, typography, spacing, and shape recipes | [`design-system.md`](references/design-system.md) |
 | Design brief/contract and Style Proof lock | [`design-contract.md`](references/design-contract.md) |

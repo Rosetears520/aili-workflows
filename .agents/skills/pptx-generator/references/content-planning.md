@@ -28,7 +28,7 @@ Completion criterion: the plan is required only where it prevents content loss, 
 
 Capture:
 
-- audience and presentation setting;
+- audience, subject knowledge, and presentation setting (live talk or standalone reading);
 - purpose and expected audience takeaway;
 - language;
 - duration and approximate slide count;
@@ -38,7 +38,9 @@ Capture:
 
 Do not infer a missing duration, required section, identity field, or template constraint when the choice would materially change the deck.
 
-Completion criterion: the source boundary and delivery constraints are explicit.
+For a live talk, keep the main conclusion and the evidence and conditions needed to interpret it on screen. Extra explanation becomes a delivered speaker script only when requested; never hide necessary conditions in assumed notes. For standalone reading, retain the context, definitions, and sources needed without a presenter. Shorter is not automatically better.
+
+Completion criterion: the source boundary, audience knowledge, reading mode, and delivery constraints are explicit.
 
 ### 2. Inventory Source Information
 
@@ -50,7 +52,7 @@ Separate the source into:
 4. required names, labels, acknowledgements, or metadata;
 5. uncertain, conflicting, missing, or unsupported items.
 
-Preserve qualifiers, denominators, units, comparison bases, and attribution. Do not turn a source hypothesis, correlation, or model output into a stronger causal claim.
+Preserve numbers, units, denominators, comparison bases, attribution, scope, conditions, and negation, including limits such as “at most.” Do not turn a source hypothesis, correlation, model output, or local result into a stronger causal or universal claim.
 
 Completion criterion: every candidate slide claim can be traced to source material or is visibly marked as unresolved.
 
@@ -88,19 +90,23 @@ Completion criterion: the selected structure explains why items belong together 
 4. When natural, compress labels into `verb + adjective + noun`, such as “reduce unclear decision costs” or “build smooth visitor journeys.”
 5. Retain the strongest evidence needed to support the conclusion; remove detail that does not change audience understanding.
 
-Prefer conclusion-style titles over topic labels. “Convenience drives trial; reliability drives continued use” is stronger than “Survey Results.”
+Prefer source-supported conclusion-style titles over topic labels. “Convenience drives trial; reliability drives continued use” is appropriate only if the source supports those drivers; a correlation alone cannot support that title. Use the source's concrete objects and actions instead of abstract slogans, without inventing actors, deadlines, or outcomes.
 
 Completion criterion: every retained point states a distinct takeaway and has sufficient evidence.
 
 ### 5. Make Abstract Content Understandable
 
+For non-expert slide audiences, start with a direct explanation, add one example only if needed, then connect back to the accurate term and its limits. Accessible does not mean childish or automatically story-shaped. For expert audiences, retain requested terminology and technical detail; do not invent implementation details to complete an explanation. This is slide-writing guidance, not ownership of the independent `/eli5` command.
+
 Choose the lightest method that clarifies the idea:
 
 - **Concrete:** extract defining characteristics, connect them to a user scenario, and rephrase from the user's point of view.
-- **Analogy:** extract defining characteristics, find a familiar element with the same relevant properties, and state only that bounded similarity.
+- **Analogy:** extract defining characteristics, find a familiar element with the same relevant properties, map it back to the actual concept, and state where that similarity fails. It explains a relationship, not evidence for a mechanism; retain real data and constraints.
 - **Comparison:** expose a meaningful contrast such as before/after, expected/actual, resource/experience, driver/barrier, or group A/group B.
 
 Sentence patterns such as “the … of its field,” “an online version of …,” or “equivalent to …” are rhetorical devices, not evidence. Use them only when the analogy clarifies rather than exaggerates.
+
+For original before/after examples and explanation limits, see [`communication-examples.md`](communication-examples.md). An explicit allegory request may be returned to ROSE to select the existing `explain-by-allegory` capability; this Skill does not invoke it. Any checked contribution returns to the same per-slide plan.
 
 Completion criterion: an abstract idea becomes easier to grasp without changing its factual strength.
 
@@ -112,7 +118,7 @@ Divide information by dimension, category, and relationship. Keep parallel items
 
 #### Delete
 
-Remove connectors, repeated subjects, duplicated qualifiers, and prose that merely joins sentences. Convert linear paragraphs into concise points without deleting required meaning.
+Remove empty connectors, repeated subjects, and prose that merely joins sentences. Consolidate repeated qualifiers only where their scope remains explicit. Convert linear paragraphs into concise points without deleting required meaning. Avoid repeating the title's slogan in the body or adding a grand closing claim to every page; bold, bullets, and short labels remain useful PPT hierarchy tools, not defects to remove.
 
 #### Layer
 
@@ -124,6 +130,8 @@ Establish a scan order:
 4. one page takeaway when it adds value.
 
 Increase contrast between levels through wording and structure before relying on visual decoration.
+
+When content exceeds capacity, first remove redundancy, then regroup it. Split pages when the agreed page count permits; with a controlling template, try a suitable native layout. If required content still cannot fit the existing font/layout contract, return the specific capacity conflict and the constraint requiring a decision. Do not default to smaller body text, hide evidence, or drop conditions to force a fit.
 
 Completion criterion: a reader can identify the conclusion, grouping logic, and evidence without reading a paragraph wall.
 
@@ -208,7 +216,7 @@ When the user supplies candidate pages or a controlling template:
 5. compress wording or choose another native layout before adding unplanned helper text;
 6. revise only the affected plan entry when the user corrects a label, layout, or content boundary.
 
-Do not add small explanatory copy merely because a template has empty space. Do not recommend a timeline for a non-temporal relationship or a process graphic for independent categories.
+Do not add small explanatory copy merely because a template has empty space. Do not recommend a timeline for a non-temporal relationship or a process graphic for independent categories. Compare alternatives on shared dimensions; use arrows only for supported steps or dependencies. Reuse layouts for repeated relationships, not three cards for every page merely because it has three items.
 
 Completion criterion: the selected template structure matches the information relationship without flattening the template or distorting the content.
 
@@ -218,7 +226,7 @@ Completion criterion: the selected template structure matches the information re
 2. Apply user corrections to the output contract globally. If the user says “only Layout and Content,” remove other sections from every page rather than correcting one page at a time.
 3. Preserve newly stated requirements such as a mandatory contents page or original-template rhythm.
 4. When the user supplies a template screenshot or candidate layout, select by semantic fit and return exact replacement copy for its existing slots.
-5. If a correction changes the argument, evidence, duration, or slide count, update the deck-wide spine and all affected pages.
+5. If a correction changes the argument, evidence, duration, slide count, or order, update the deck-wide spine and all affected pages. Keep the original semantic slide's stable ID when rewriting or moving it; assign new IDs to additional pages created by a split. Recompile and refresh downstream evidence through the existing invalidation rules.
 
 Do not preserve a previous suggestion merely for consistency after the user supplies better evidence or a clearer constraint.
 

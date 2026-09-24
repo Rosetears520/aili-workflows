@@ -3,7 +3,7 @@ description: "AILI command: /handoff"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/handoff.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: ae52e92331d1a3eeb1307da61397f5587d362fbdda14ce103e18b5e8681d8a3f; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/handoff.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 03a9e6b9ad40cef1e657a06ff86f8e81b4429c674f974ce1c6fa0b66bf425390; do not edit directly -->
 
 # /handoff
 
