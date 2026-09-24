@@ -74,7 +74,7 @@ test("profiles and repeatable Skill selectors resolve the accepted additive inve
   const defaultResult = await runCli(["install", "--dry-run", "--profile", "default", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
   const defaultSummary = JSON.parse(defaultResult.stdout);
   assert.equal(defaultSummary.profile, "default");
-  assert.equal(defaultSummary.selectedSkills.length, 49);
+  assert.equal(defaultSummary.selectedSkills.length, 50);
   assert.equal(defaultSummary.componentInstall.scope, "skills");
   assert.equal(defaultSummary.externalToolOperations.find((entry) => entry.name === "MemPalace").status, "planned");
 
@@ -82,11 +82,11 @@ test("profiles and repeatable Skill selectors resolve the accepted additive inve
   const piSummary = JSON.parse(piResult.stdout);
   assert.equal(piSummary.profile, "pi");
   assert.equal(piSummary.componentInstall.scope, "pi");
-  assert.equal(piSummary.selectedSkills.length, 49);
+  assert.equal(piSummary.selectedSkills.length, 50);
 
   const selectedResult = await runCli(["install", "--dry-run", "--skill", "shader-dev", "--skill", "shader-dev", "--skill-group", "research", "--skill-group", "research", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
   const selectedSummary = JSON.parse(selectedResult.stdout);
-  assert.equal(selectedSummary.selectedSkills.length, 54);
+  assert.equal(selectedSummary.selectedSkills.length, 55);
   assert.ok(selectedSummary.selectedSkills.includes("shader-dev"));
   assert.equal(selectedSummary.selectedSkills.filter((name) => name === "shader-dev").length, 1);
   assert.equal(selectedSummary.selectedSkills.includes("android-native-dev"), false);
