@@ -49,6 +49,19 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.equal(runGenerator(workspace).status, 0);
   await assertReportContractProjections(workspace);
   const firstSnapshot = await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]);
+  for (const [relative, content] of Object.entries(firstSnapshot)) {
+    if (!relative.endsWith(".md")) continue;
+    const body = content.replace(/^---\n[\s\S]*?\n---\n\s*/, "");
+    assert.doesNotMatch(body, /^\s*<!--/, `${relative} has no leading HTML header`);
+    assert.doesNotMatch(content, /<!--\s*(?:GENERATED:|AILI_(?:GLOBAL_AGENTS_TEMPLATE|PI_GLOBAL_CONTEXT))/, relative);
+  }
+  const aboutUser = (await readFile(path.join(workspace, "core/governance/about-user.md"), "utf8")).trimEnd();
+  for (const relative of ["generated/opencode/AGENTS.md", "templates/opencode-global-AGENTS.md", "generated/pi/AGENTS.md", "generated/pi/system.md"]) {
+    const content = firstSnapshot[relative];
+    assert.ok(content.includes(`# AGENTS.md\n\n${aboutUser}\n`), relative);
+    assert.equal(content.split(aboutUser).length - 1, 1, relative);
+    assert.ok(content.indexOf("## About the user") < content.indexOf("## Authority and scope"), relative);
+  }
   const check = runGenerator(workspace, "--check");
   assert.equal(check.status, 0, check.stderr);
   assert.match(await readFile(path.join(workspace, "generated/opencode/provenance.json"), "utf8"), /core\/commands\/build\.md/);
@@ -65,7 +78,7 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   const discipline = (await readFile(path.join(workspace, "core/governance/operating-discipline.md"), "utf8")).trimEnd();
   const hero = (await readFile(path.join(workspace, "core/governance/hero-scope-limits.md"), "utf8")).trimEnd();
   for (const heading of [
-    "## Communication and state anchoring",
+    "## Communication and execution",
     "## Evidence Before Edits",
     "## Runtime and repository safety",
     "## Expression and document writing",
@@ -88,11 +101,20 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   const piSystem = await readFile(path.join(workspace, "generated/pi/system.md"), "utf8");
   assert.equal(piSystem.split(discipline).length - 1, 1, "Pi system projection receives the same complete discipline");
   const piGlobal = await readFile(path.join(workspace, "generated/pi/AGENTS.md"), "utf8");
-  assert.match(piGlobal, /AILI_PI_GLOBAL_CONTEXT: ~\/\.pi\/agent\/AGENTS\.md/);
+  assert.ok(piGlobal.startsWith("# AGENTS.md\n"));
   assert.doesNotMatch(piGlobal, /AILI Pi System Projection|Canonical roles|AgentSession/);
   const piProvenance = JSON.parse(await readFile(path.join(workspace, "generated/pi/provenance.json"), "utf8"));
   assert.ok(piProvenance.outputs.some((output) => output.path === "generated/pi/AGENTS.md"));
   assert.ok(piProvenance.canonicalInputs.includes("core/governance/hero-scope-limits.md"));
+  for (const adapter of ["pi", "opencode"]) {
+    const provenance = JSON.parse(firstSnapshot[`generated/${adapter}/provenance.json`]);
+    assert.ok(provenance.canonicalInputs.includes("core/governance/about-user.md"));
+    for (const output of provenance.outputs.filter((entry) => /(?:AGENTS|system)\.md$/.test(entry.path))) {
+      assert.ok(output.canonicalInputs.includes("core/governance/about-user.md"), output.path);
+      assert.match(output.inputSha256, /^[a-f0-9]{64}$/);
+      assert.match(output.outputSha256, /^[a-f0-9]{64}$/);
+    }
+  }
   for (const relativePath of [
     "generated/opencode/agents/implementer.md",
     "generated/opencode/commands/build.md",
@@ -102,6 +124,16 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
     assert.doesNotMatch(await readFile(path.join(workspace, relativePath), "utf8"), /SCOPE LIMITS|hero-scope-limits/);
   }
 
+  assert.equal(runGenerator(workspace).status, 0);
+  assert.deepEqual(await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]), firstSnapshot);
+
+  const aboutUserPath = path.join(workspace, "core/governance/about-user.md");
+  const originalAboutUser = await readFile(aboutUserPath, "utf8");
+  await writeFile(aboutUserPath, `${originalAboutUser}\nUpdated user-context fixture.\n`, "utf8");
+  assert.match(runGenerator(workspace, "--check").stderr, /stale: generated\/pi\/AGENTS\.md/);
+  assert.equal(runGenerator(workspace).status, 0);
+  assert.match(await readFile(path.join(workspace, "generated/pi/AGENTS.md"), "utf8"), /Updated user-context fixture/);
+  await writeFile(aboutUserPath, originalAboutUser, "utf8");
   assert.equal(runGenerator(workspace).status, 0);
   assert.deepEqual(await snapshot(workspace, ["generated", "agents", "commands", "templates/opencode-global-AGENTS.md"]), firstSnapshot);
 

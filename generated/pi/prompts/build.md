@@ -3,8 +3,6 @@ description: "AILI command: /build"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/build.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 34197233c2f05116c45c77b5abde29929c8a7cfcc98b802a8ebaaaa70ee26cca; do not edit directly -->
-
 # /build
 
 User input:

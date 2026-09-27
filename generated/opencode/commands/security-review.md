@@ -4,8 +4,6 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/security-review.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: f649045773d9cee175a0031aaa81b295308f8e9761542ca9f56c13ec03b803c5; do not edit directly -->
-
 # /security-review
 
 User input: `$ARGUMENTS`

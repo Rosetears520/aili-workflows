@@ -101,7 +101,7 @@ REQUIRED = {
         "min_cases": 6,
     },
     "subagent-dispatch-fixtures.yaml": {
-        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "free-form progress continuity", "worker-progress-write-forbidden", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-specialist-preferred", "default-two-not-hard-cap", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
+        "markers": ["trace_id", "work_package_type", "artifact_target", "coverage_expectation", "known_exclusions", "evidence_anchors", "active-contract-queue", "implementer", "allowed_scope", "forbidden_scope", "edit_permission", "commit_allowance", "complete, appropriately scoped, verified", "not artificially tiny", "free-form progress continuity", "worker-progress-write-forbidden", "classify dirty paths", "approval-gated cleanup", "cleanup package", "parallelism analysis", "join completeness", "package/lane preservation", "no-parallel reason", "proactive-delegation-scan", "dispatch-when-specialist-preferred", "no-fixed-default-count", "model-selected-bounded-fan-out", "same-message-parallel", "join-plan"],
         "case_key": "packet_cases",
         "min_cases": 3,
     },
@@ -520,7 +520,7 @@ def validate_package_fixture(name: str, data: dict, cases: list) -> list[str]:
         if reviewer_case.get("input", {}).get("candidate_lanes") != ["AI-regression", "code-review", "product decision"] or "ROSE/user" not in reviewer_case.get("expected", ""):
             errors.append(f"{name}: AI-vs-product reviewer routing collision differs from the exact contract")
         routing_case = next((case for case in cases if isinstance(case, dict) and case.get("id") == "review-ai-regression-vs-test-engineer-routing"), {})
-        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout when a specialist is needed", "ordinary_test_surface": "test-engineer when a specialist is needed", "overlap": "ROSE selects only concrete missing capabilities; default concurrency two is not a hard cap and larger fan-out requires independent scopes, suitable owners, concrete benefit, and a join plan"}:
+        if routing_case.get("expected") != {"ai_surface": "ai-regression-scout when a specialist is needed", "ordinary_test_surface": "test-engineer when a specialist is needed", "overlap": "ROSE selects only concrete missing capabilities. Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count."}:
             errors.append(f"{name}: optional AI-regression-scout vs test-engineer routing differs from the lean contract")
         runtime_enforcement = data.get("runtime_enforcement", {})
         expected_policy = "an optional Package 12 or SHIP specialist uses a read-only edit-deny/task-deny overlay only when a concrete gap selects it"
@@ -801,8 +801,9 @@ def validate_command_routing(cases: list, name: str) -> list[str]:
     explicit = by_id.get("natural-build-explicit-subagents", {})
     if explicit.get("input") != "Use subagents to implement two independent accepted packages" or explicit.get("expected_mode") != "BUILD" or explicit.get("same_contract_as") != "/build" or explicit.get("task_trigger_evidence") != ["explicit-user-request", "two-independent-units"] or explicit.get("expected_delegation") != ["implementer", "implementer"] or explicit.get("join_plan") != "required":
         errors.append(f"{name}: explicit natural-language BUILD subagent request must dispatch two eligible implementer lanes with a join plan")
-    for relative in ["agents/rose.md", "templates/opencode-global-AGENTS.md", ".agents/skills/aili-delivery-flow/SKILL.md"]:
+    for relative in ["agents/rose.md", ".agents/skills/aili-delivery-flow/SKILL.md"]:
         errors.extend(require_text_markers(relative, ["first-class lifecycle entr", "do not ask the user to restate"], "natural-language routing"))
+    errors.extend(require_text_markers("templates/opencode-global-AGENTS.md", ["Clear natural-language requests are valid", "do not ask the user to restate", "Invoking a command does not expand permissions"], "natural-language routing"))
     return errors
 
 
@@ -951,8 +952,8 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
     ):
         errors.append(f"{name}: solution-architect must remain a bounded non-implementing, non-delegating proposal Worker")
     fanout = by_id.get("packet-model-selected-fanout", {})
-    if fanout.get("default_policy") != "default-two-not-hard-cap" or fanout.get("hard_cap", "missing") is not None:
-        errors.append(f"{name}: concurrency must default to two without a hard cap")
+    if fanout.get("default_policy") != "no-fixed-default-count" or fanout.get("hard_cap", "missing") is not None:
+        errors.append(f"{name}: concurrency must have no fixed default count or hard cap")
     allowed_owners = {path.stem for path in (ROOT / "agents").glob("*.md")} - {"rose"}
     allowed_owners.update({"explore", "general"})
 
@@ -1014,7 +1015,7 @@ def validate_subagent_dispatch(cases: list, name: str, data: dict) -> list[str]:
     if direct.get("eligible_trigger") is not False or direct.get("reason_required") is not True or direct.get("reason") not in {"trivial", "contract-clarification-or-splitting", "no-matching-specialist", "permission-or-capability-failure", "overlapping-ownership", "concrete-negative-benefit"}:
         errors.append(f"{name}: ineligible direct work must retain a concrete no-dispatch reason")
     for relative in ["agents/rose.md", ".agents/skills/aili-delivery-flow/references/direct-vs-delegated-work.md", ".agents/skills/parallel-subagent-dispatch/SKILL.md"]:
-        errors.extend(require_text_markers(relative, ["proactive delegation scan", "not a hard cap", "join plan"], "proactive delegation"))
+        errors.extend(require_text_markers(relative, ["proactive delegation scan", "no fixed default count", "join plan"], "proactive delegation"))
 
     result_cases = data.get("result_cases")
     if not isinstance(result_cases, list):
@@ -1286,7 +1287,7 @@ def validate_local_review_gate_contracts() -> list[str]:
         ".agents/skills/review-pipeline/SKILL.md": [
             "proactive delegation scan",
             "Choose at most one auxiliary specialist capability",
-            "Default concurrency is at most two but is not a hard cap",
+            "no fixed default count",
             "suitable owners",
             "explicit join plan",
             "one targeted recheck",
@@ -1294,8 +1295,8 @@ def validate_local_review_gate_contracts() -> list[str]:
         ],
         ".agents/skills/parallel-subagent-dispatch/SKILL.md": [
             "proactive delegation scan",
-            "Default to at most two concurrent subagents",
-            "not a hard cap",
+            "no fixed default count",
+            "independent non-overlapping units",
             "## Canonical packet protocol",
             ".agents/skills/aili-delivery-flow/references/protocols/subagent-task-packet.md",
             "## Canonical result protocol",
@@ -1317,8 +1318,8 @@ def validate_local_review_gate_contracts() -> list[str]:
         "agents/rose.md": [
             '"convergence-reviewer": allow',
             "Run a proactive delegation scan",
-            "Default concurrency is at most two",
-            "not a hard cap",
+            "no fixed default count",
+            "independent non-overlapping units",
         ],
         ".agents/skills/aili-delivery-flow/SKILL.md": [
             "Only four top-level delivery commands are valid",
@@ -1449,14 +1450,14 @@ def validate_define_artifact_contracts() -> list[str]:
             "Do not register or invoke a second `batch-grill-me` skill",
         ],
         "agents/rose.md": [
-            "explicitly user-invoked `requirements-grilling` Frontier Batch Mode",
-            "never infer batch mode from blocker count",
-            "a batch never grants or implies authority",
+            "Resolve questions from available evidence first",
+            "Group related material questions the user can answer now",
+            "Answers do not authorize unrelated operations",
         ],
         "templates/opencode-global-AGENTS.md": [
-            "explicitly user-invoked `requirements-grilling` Frontier Batch Mode",
-            "never infer batch mode from blocker count",
-            "a batch never grants or implies authority",
+            "First resolve questions from available code, files, and documentation",
+            "Group related questions the user can answer now",
+            "they do not authorize unrelated operations",
         ],
         ".agents/skills/requirements-grilling/references/INTERVIEW-PACKET-FORMAT.md": [
             "# 需求拷问包：<change-name>",
@@ -1577,8 +1578,8 @@ def validate_package5_loop_fixtures() -> list[str]:
         errors.append("command-routing-fixtures.yaml: DEF-E2 compatibility must forbid per-package mandatory gates")
     final_case = by_id.get("def-e9-lean-final-inspection", {})
     expected_fanout_requirements = ["independent non-overlapping units", "concrete benefit", "suitable owners", "explicit join plan"]
-    if final_case.get("change") != "complete-aili-workflow-orchestration" or final_case.get("generic_template") is not False or final_case.get("task_coverage") != "applicable-current-scope" or final_case.get("automatic_review_swarm") is not False or final_case.get("default_concurrency") != 2 or final_case.get("hard_cap", "missing") is not None or final_case.get("larger_fanout_requires") != expected_fanout_requirements or "specialist_limit" in final_case or final_case.get("targeted_recheck_limit") != 1:
-        errors.append("command-routing-fixtures.yaml: DEF-E9 final inspection must use default-two uncapped eligible fan-out without an automatic swarm and retain one targeted recheck")
+    if final_case.get("change") != "complete-aili-workflow-orchestration" or final_case.get("generic_template") is not False or final_case.get("task_coverage") != "applicable-current-scope" or final_case.get("automatic_review_swarm") is not False or final_case.get("default_concurrency", "missing") is not None or final_case.get("hard_cap", "missing") is not None or final_case.get("larger_fanout_requires") != expected_fanout_requirements or "specialist_limit" in final_case or final_case.get("targeted_recheck_limit") != 1:
+        errors.append("command-routing-fixtures.yaml: DEF-E9 final inspection must select eligible fan-out without a fixed default count without an automatic swarm and retain one targeted recheck")
     over_limit = by_id.get("budget-consumed-over-limit-terminal", {})
     if over_limit.get("counter") != {"limit": 3, "consumed": 4, "remaining": 0} or over_limit.get("stop_reason") != "budget-exhausted" or over_limit.get("outcome") != "budget-exhausted" or over_limit.get("resume") != "blocked":
         errors.append("command-routing-fixtures.yaml: consumed>limit must preserve consumed, clamp remaining, and remain terminal")
@@ -1789,7 +1790,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
         errors.append(".agents/skills/aili-delivery-flow/references/build-execution-loop.md: packaging flow must use most relevant focused tests/checks wording")
 
     active_agents_markers = [
-        "<!-- AILI_AGENTS_TEMPLATE_VERSION: 2 -->",
+        "# AGENTS.md",
         "It contains project facts, local commands, local artifact placement, and repository-specific exceptions.",
         "## Project-Specific Testing and Artifact Placement",
         "CLI tests: use repository scripts under `scripts/` and harness fixtures under `docs/harness/fixtures/`.",
@@ -1811,7 +1812,7 @@ def validate_complete_scoped_work_contracts() -> list[str]:
                 errors.append(f"AGENTS.md: v2 local AGENTS must not retain global rule section {marker!r}")
 
     agents_checker_markers = [
-        "template version mismatch",
+        "missing required section:",
         "stale managed block not present in template",
         "## Project-Specific Testing and Artifact Placement",
         "## Local Overrides",

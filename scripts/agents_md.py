@@ -11,9 +11,6 @@ import sys
 from pathlib import Path
 
 
-VERSION_RE = re.compile(r"<!--\s*AILI_AGENTS_TEMPLATE_VERSION:\s*(\d+)\s*-->")
-SOURCE_MARKER = "<!-- AILI_AGENTS_TEMPLATE_SOURCE: templates/AGENTS.md -->"
-MODE_MARKER = "<!-- AILI_AGENTS_TEMPLATE_MODE: generated-project-local-file -->"
 BLOCK_RE = re.compile(
     r"<!-- AILI_MANAGED_BLOCK_BEGIN: (?P<name>[a-z0-9-]+) -->.*?"
     r"<!-- AILI_MANAGED_BLOCK_END: (?P=name) -->",
@@ -61,11 +58,6 @@ def backup(path: Path) -> Path:
 
 def managed_blocks(text: str) -> dict[str, str]:
     return {match.group("name"): match.group(0) for match in BLOCK_RE.finditer(text)}
-
-
-def template_version(text: str) -> str | None:
-    match = VERSION_RE.search(text)
-    return match.group(1) if match else None
 
 
 def replace_managed_blocks(target_text: str, template_text: str) -> tuple[str, list[str]]:
@@ -138,20 +130,6 @@ def command_check(args: argparse.Namespace) -> int:
     template = read_text(template_path())
     template_blocks = managed_blocks(template)
     target_blocks = managed_blocks(text)
-    current_version = template_version(text)
-    expected_version = template_version(template)
-
-    if current_version is None:
-        errors.append("missing AILI_AGENTS_TEMPLATE_VERSION marker")
-    elif expected_version is None:
-        errors.append("template missing AILI_AGENTS_TEMPLATE_VERSION marker")
-    elif current_version != expected_version:
-        errors.append(f"template version mismatch: AGENTS.md has {current_version}, template has {expected_version}")
-    if SOURCE_MARKER not in text:
-        errors.append("missing AILI_AGENTS_TEMPLATE_SOURCE marker")
-    if MODE_MARKER not in text:
-        errors.append("missing AILI_AGENTS_TEMPLATE_MODE marker")
-
     for section in REQUIRED_SECTIONS:
         if section not in text:
             errors.append(f"missing required section: {section}")
@@ -194,7 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     update_parser.add_argument("--project", default=".", help="project root directory")
     update_parser.set_defaults(func=command_update)
 
-    check_parser = subparsers.add_parser("check", help="validate AGENTS.md template markers and managed blocks")
+    check_parser = subparsers.add_parser("check", help="validate AGENTS.md required sections and managed blocks")
     check_parser.add_argument("--project", default=".", help="project root directory")
     check_parser.add_argument(
         "--allow-placeholders",

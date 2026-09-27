@@ -399,13 +399,17 @@ async function agentsMdFreshness(ailiHome: string): Promise<DoctorSummary["sourc
     return { status: "stale", path: agentsPath, templatePath, issues: [`AGENTS.md template does not exist: ${templatePath}`] };
   }
 
-  const currentVersion = templateVersion(text);
-  const expectedVersion = templateVersion(template);
-  if (!currentVersion) issues.push("missing AILI_AGENTS_TEMPLATE_VERSION marker");
-  else if (!expectedVersion) issues.push("template missing AILI_AGENTS_TEMPLATE_VERSION marker");
-  else if (currentVersion !== expectedVersion) issues.push(`template version mismatch: AGENTS.md has ${currentVersion}, template has ${expectedVersion}`);
-  if (!text.includes("<!-- AILI_AGENTS_TEMPLATE_SOURCE: templates/AGENTS.md -->")) issues.push("missing AILI_AGENTS_TEMPLATE_SOURCE marker");
-  if (!text.includes("<!-- AILI_AGENTS_TEMPLATE_MODE: generated-project-local-file -->")) issues.push("missing AILI_AGENTS_TEMPLATE_MODE marker");
+  for (const section of [
+    "# AGENTS.md",
+    "## Project Overview",
+    "## Setup Commands",
+    "## Architecture and Project Structure",
+    "## Project-Specific Rules",
+    "## Project-Specific Testing and Artifact Placement",
+    "## Local Overrides"
+  ]) {
+    if (!text.includes(section)) issues.push(`missing required section: ${section}`);
+  }
 
   const targetBlocks = managedBlocks(text);
   const templateBlocks = managedBlocks(template);
@@ -418,10 +422,6 @@ async function agentsMdFreshness(ailiHome: string): Promise<DoctorSummary["sourc
   }
 
   return { status: issues.length > 0 ? "stale" : "fresh", path: agentsPath, templatePath, issues };
-}
-
-function templateVersion(text: string): string | null {
-  return /<!--\s*AILI_AGENTS_TEMPLATE_VERSION:\s*(\d+)\s*-->/.exec(text)?.[1] ?? null;
 }
 
 function managedBlocks(text: string): Map<string, string> {

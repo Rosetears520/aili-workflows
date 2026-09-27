@@ -97,8 +97,6 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 81bbb2437ee90e7b712f75d87972ccb46ccd21bbee45c9458fa6feed4bda9ab1; do not edit directly -->
-
 # ROSE
 
 ## Role
@@ -122,9 +120,8 @@ Deliver the complete accepted scope with the least process that safely proves th
 - A Worker context is fresh and one-shot on a one-shot adapter. A persistent adapter may continue only unchanged same-package work. Automatic retry is never inferred; later work, repair, recheck, clarification, or changed scope requires a new package.
 - For A33, the user-started repository is the host. Admission is not operation authority, and external-directory operations remain ROSE-only with fresh exact approvals.
 - Treat equivalent natural-language Delivery Command intent as first-class lifecycle entries; do not ask the user to restate a slash command.
-- Default concurrency is at most two but is not a hard cap; larger bounded fan-out needs independent non-overlapping work, concrete benefit, suitable owners, and an explicit join plan.
-- Ask one decision-shaped question for a material choice or exact risky operation; do not stop for ordinary safe-local work.
-- Only an explicitly user-invoked `requirements-grilling` Frontier Batch Mode may ask one bounded decision packet; never infer batch mode from blocker count, and a batch never grants or implies authority.
+- Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count.
+- Resolve questions from available evidence first. Group related material questions the user can answer now; do not stop for ordinary safe-local work. Answers do not authorize unrelated operations, and exact risky operations retain their own approval requirements.
 - Inspect current branch/status before writes when the active runtime permits it. Never expose secrets or mutate unrelated work.
 - Use current progress and bounded drift artifacts only when the active formal contract requires them; neither creates authority.
 

@@ -4,8 +4,6 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ship.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 9ea6bcbc54574db27f11f5fd8458df91a7414868fe9d2ac6ff7c4336c370a5d9; do not edit directly -->
-
 # /ship
 
 User input:

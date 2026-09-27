@@ -811,10 +811,12 @@ test("install copies global AGENTS rules into OpenCode home", async () => {
 
   assert.equal((await lstat(target)).isSymbolicLink(), false);
   assert.equal(text, source);
-  assert.match(text, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates\/opencode-global-AGENTS\.md/);
+  assert.match(text, /^# AGENTS\.md\n\n## About the user/);
+  assert.doesNotMatch(text, /<!--/);
   assert.match(text, /canonical backend-neutral governance source/);
-  assert.match(text, /ROSE is the Decision Core/);
-  assert.match(text, /only Delivery Commands and lifecycle selectors/);
+  assert.match(text, /The main agent understands the request/);
+  assert.match(text, /Clear natural-language requests are valid/);
+  assert.match(text, /\[VERIFIED\].*\[查证\]/);
   assert.match(text, /smallest fresh check that supports the exact claim/);
   await fixture.cleanup();
 });
@@ -1562,7 +1564,7 @@ test("doctor reports repo source drift without failing core OpenCode install", a
   await writeFile(path.join(fixture.ailiHome, "agents", "unmanifested-agent.md"), "# extra\n", "utf8");
   await rm(path.join(fixture.ailiHome, ".agents", "skills", "aili-delivery-flow", "SKILL.md"));
   const templateAgents = await readFile(path.join(fixture.ailiHome, "templates", "AGENTS.md"), "utf8");
-  await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents.replace(/AILI_AGENTS_TEMPLATE_VERSION:\s*\d+/, "AILI_AGENTS_TEMPLATE_VERSION: 0"), "utf8");
+  await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents.replace("## Project Overview", "## Removed Overview"), "utf8");
   await writeManagedOfficeCli(fixture);
 
   const result = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
@@ -1575,7 +1577,10 @@ test("doctor reports repo source drift without failing core OpenCode install", a
   assert.deepEqual(summary.source.manifestDrift.agents.unmanifested, ["unmanifested-agent"]);
   assert.ok(summary.source.manifestDrift.skills.missing.includes("aili-delivery-flow"));
   assert.equal(summary.source.agentsMd.status, "stale");
-  assert.match(summary.source.agentsMd.issues.join("\n"), /template version mismatch/);
+  assert.match(summary.source.agentsMd.issues.join("\n"), /missing required section: ## Project Overview/);
+  await writeFile(path.join(fixture.ailiHome, "AGENTS.md"), templateAgents, "utf8");
+  const fresh = await runCli(["doctor", "--profile", "opencode", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--json"]);
+  assert.equal(JSON.parse(fresh.stdout).source.agentsMd.status, "fresh");
   await fixture.cleanup();
 });
 
@@ -1650,7 +1655,7 @@ test("packaged non-git install copies files instead of symlinking transient sour
   await rm(fixture.ailiHome, { recursive: true, force: true });
   assert.match(await readFile(roseTarget, "utf8"), /# ROSE\n[\s\S]*## Role\n[\s\S]*## Goal\n[\s\S]*## Success criteria/);
   assert.match(await readFile(skillTarget, "utf8"), /aili-delivery-flow/);
-  assert.match(await readFile(globalAgentsTarget, "utf8"), /installer-owned-global-file/);
+  assert.match(await readFile(globalAgentsTarget, "utf8"), /^# AGENTS\.md\n/);
   await fixture.cleanup();
 });
 
@@ -1921,7 +1926,7 @@ test("Bash installer canonicalizes OpenCode home before unsafe path validation",
       "--mode", "selective",
       "--opencode",
       "--aili-home", fixture.ailiHome,
-      "--opencode-home", path.join(os.tmpdir(), "subdir", ".."),
+      "--opencode-home", "/tmp/subdir/..",
       "--dry-run"
     ], { env: installerEnv(fixture.root) });
     assert.fail("expected unsafe OpenCode home to be rejected");
@@ -1960,10 +1965,10 @@ test("Bash installer rejects tmp HOME before shared skill mutation", async () =>
       "--aili-home", fixture.ailiHome,
       "--opencode-home", opencodeHome,
       "--dry-run"
-    ], { env: installerEnv(os.tmpdir()) });
+    ], { env: installerEnv("/tmp") });
     assert.fail("expected unsafe tmp HOME to be rejected");
   } catch (error) {
-    assert.match(error.stderr, new RegExp(`Refusing unsafe HOME for shared skill install root: ${escapeRegExp(os.tmpdir())}`));
+    assert.match(error.stderr, /Refusing unsafe HOME for shared skill install root: \/tmp/);
   }
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
@@ -2035,7 +2040,10 @@ test("manifest registers local-review command", async () => {
   assert.equal(command.defaultInstalled, false);
   assert.deepEqual(repoSourcePaths(command), ["generated/opencode/commands/local-review.md", "commands/local-review.md"]);
   assert.deepEqual(repoInstallTargets(command), [{ kind: "opencode", path: "commands/local-review.md" }]);
-  assert.match(await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8"), /GENERATED: aili-runtime-projections/);
+  const projection = await readFile(path.join(repoRoot, "commands", "local-review.md"), "utf8");
+  assert.equal(projection, await readFile(path.join(repoRoot, "generated/opencode/commands/local-review.md"), "utf8"));
+  assert.ok(projection.endsWith(`${(await readFile(path.join(repoRoot, "core/commands/local-review.md"), "utf8")).trimEnd()}\n`));
+  assert.doesNotMatch(projection, /<!-- GENERATED:/);
 });
 
 test("manifest registers specialized QA agents and skills", async () => {
@@ -2055,8 +2063,9 @@ test("manifest registers specialized QA agents and skills", async () => {
   }
 
   assert.ok(reviewPipelineText.includes("Choose at most one auxiliary specialist capability"));
-  assert.ok(reviewPipelineText.includes("Default concurrency is at most two but is not a hard cap"));
-  assert.ok(reviewPipelineText.includes("larger bounded fan-out requires independent non-overlapping contexts, concrete benefit, suitable owners, and an explicit join plan"));
+  assert.ok(reviewPipelineText.includes("no fixed default count"));
+  assert.ok(reviewPipelineText.includes("Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan"));
+  assert.doesNotMatch(reviewPipelineText, /Default concurrency is at most two/);
   assert.ok(reviewPipelineText.includes("Do not automatically fan out"));
 
   for (const { agent, skill: name, nearMiss } of SPECIALIZED_QA_LANES) {
@@ -2305,7 +2314,8 @@ test("packed package keeps CLI bin executable", async () => {
   const packedEntries = (await execFileP("tar", ["-tzf", tarball])).stdout.split(/\r?\n/).filter(Boolean);
 
   assert.match(packedText, /^#!\/usr\/bin\/env node/);
-  assert.match(packedGlobalAgentsText, /AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE/);
+  assert.match(packedGlobalAgentsText, /^# AGENTS\.md\n\n## About the user/);
+  assert.doesNotMatch(packedGlobalAgentsText, /<!--/);
   assert.equal(packedGlobalAgentsText, sourceGlobalAgentsText);
   assert.ok((packedStat.mode & 0o111) !== 0, `expected ${packedCli} to be executable`);
   assert.ok(packedEntries.includes("package/manifests/rose-aili.components.json"));

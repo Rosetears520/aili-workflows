@@ -93,11 +93,12 @@
     "generator": "aili-runtime-projections/v1",
     "canonicalInputs": [
       "adapters/pi/adapter.json",
+      "core/governance/about-user.md",
       "core/governance/decision-core.md",
       "core/governance/operating-discipline.md",
       "core/roles/roles.json",
       "manifests/runtime-projections.json"
     ],
-    "inputSha256": "9326112457487d06febb3bce712614ec083f8f1e29167715dee933c493bb8cc8"
+    "inputSha256": "1ccacb2020027eca2ebcaad27b5ee2367803ea3b5072fc2db6d38c519c117c83"
   }
 }

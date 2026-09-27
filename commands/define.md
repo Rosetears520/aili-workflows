@@ -4,8 +4,6 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/define.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 93597d6d9d2ba7e82630cd533d10d7130f7a3d2ded70db350dc75efac9bf223d; do not edit directly -->
-
 # /define
 
 User input:

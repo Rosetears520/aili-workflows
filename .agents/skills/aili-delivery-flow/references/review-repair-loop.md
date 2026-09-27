@@ -4,7 +4,7 @@ This loop triggers only on explicit review/repair intent or one concrete blockin
 
 1. Resolve the accepted scope, final diff, applicable task rows, one repository/cwd, owning artifact destination, and checks already run. For A33, require one current WT-001 reference, re-read target rules, disclose the soft boundary, and do not scan the host broadly.
 2. ROSE inspects the diff/task coverage and runs the smallest check that proves each required claim.
-3. Select at most one auxiliary review capability when the user requests it or a concrete gap cannot be covered directly. Dispatch eligible contexts promptly. Default concurrency is at most two but is not a hard cap; larger bounded read-only fan-out requires independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan. Every context must use the canonical result envelope.
+3. Select at most one auxiliary review capability when the user requests it or a concrete gap cannot be covered directly. Dispatch eligible contexts promptly. Choose read-only concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count. Every context must use the canonical result envelope.
 4. Reconcile their evidence without voting; subagents never own the final verdict or duplicate/rebind WT identity, keys, approvals, Git state, rules, or command/cwd.
 5. If one blocking issue is found, apply one targeted repair and rerun only the affected check. Report any remaining blocker instead of starting another cycle.
 6. Keep uncovered requirements, skipped checks, stale evidence, and unsupported readiness claims `Open Question` or `Unverified`.

@@ -4,8 +4,6 @@ agent: rose
 subtask: false
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/ideate.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 651475f2066312725ad627d9b94f47c156ff4505af5474a1d7ea3472c03fb3ba; do not edit directly -->
-
 # /ideate
 
 User input:

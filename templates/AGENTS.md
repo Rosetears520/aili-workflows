@@ -1,7 +1,3 @@
-<!-- AILI_AGENTS_TEMPLATE_VERSION: 2 -->
-<!-- AILI_AGENTS_TEMPLATE_SOURCE: templates/AGENTS.md -->
-<!-- AILI_AGENTS_TEMPLATE_MODE: generated-project-local-file -->
-
 # AGENTS.md
 
 This file is the project-level instruction contract for AI coding agents working in this repository.

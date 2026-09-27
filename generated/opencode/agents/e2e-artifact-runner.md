@@ -56,8 +56,6 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 81bbb2437ee90e7b712f75d87972ccb46ccd21bbee45c9458fa6feed4bda9ab1; do not edit directly -->
-
 # E2E Artifact Runner
 
 ## Role

@@ -3,8 +3,6 @@ description: "AILI command: /agents-md"
 argument-hint: "[request]"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/agents-md.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: cc009e33993ab99f166210589ab1a7812f799d7cedf9921adbbd3ab7a79ef33d; do not edit directly -->
-
 # /agents-md
 
 User input: `$ARGUMENTS`

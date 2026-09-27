@@ -257,7 +257,7 @@ SOFTWARE.
 - Revision consulted: `b837bf132b9d05765c5deed5b30935f562abba86`
 - Copyright (c) 2026 Ayoub Ghriss
 - License: MIT License
-- Changes: the ADHD reader premise, reading-friction rationale, response rules, exception cases, and pre-send checks were substantially incorporated into the AILI global Agent contract. Skill routing, Hooks, session persistence, unsupported mandatory estimates, hard five-item truncation, and unconditional full-state restatement were omitted or replaced by harness-compatible global rules.
+- Changes: `core/governance/about-user.md` incorporates the complete Rules, When to break the rules, and Pre-send check text supplied by the user from this Skill, with Markdown heading/list formatting and an explicit user premise (ADHD and no technical background). The shared generator includes this chapter in global Agent contracts. Skill routing, Hooks, and session persistence are not incorporated. Existing execution, approval, evidence, and defensible-estimate constraints remain in force.
 
 ### MIT License
 

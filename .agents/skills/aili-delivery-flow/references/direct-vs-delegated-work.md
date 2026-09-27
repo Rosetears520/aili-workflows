@@ -29,7 +29,7 @@ Otherwise ROSE works directly only for a named direct exception: trivial work, c
 
 ## Dispatch shape
 
-- One current intent has at most one auxiliary capability. Default dispatch concurrency is at most two, but this is not a hard cap. ROSE may choose a larger bounded fan-out when it can name every independent non-overlapping unit, concrete benefit, specialist owner, and join plan.
+- One current intent has at most one auxiliary capability. Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count.
 - When multiple independent units are ready, launch them together rather than serializing avoidably.
 - Parallel units must have independent inputs and non-overlapping writes.
 - If units overlap or depend on one another, run them sequentially or keep the work direct.

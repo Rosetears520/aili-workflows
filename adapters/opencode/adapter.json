@@ -17,12 +17,7 @@
   },
   "globalProjection": {
     "compatibilityPath": "templates/opencode-global-AGENTS.md",
-    "preamble": [
-      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_VERSION: 2 -->",
-      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_SOURCE: templates/opencode-global-AGENTS.md -->",
-      "<!-- AILI_GLOBAL_AGENTS_TEMPLATE_MODE: installer-owned-global-file -->",
-      "<!-- Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md. -->"
-    ]
+    "notice": "Contains selected, modified third-party excerpts; see THIRD_PARTY_NOTICES.md."
   },
   "roleProfiles": {
     "primary": {

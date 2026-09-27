@@ -24,7 +24,7 @@ For ordinary work, first classify the assignment shape and required capability, 
 
 ## Parallelism
 
-- Default to at most two concurrent subagents; this is not a hard cap. ROSE may select a larger bounded fan-out when every lane is independent and non-overlapping, has concrete benefit and a suitable owner, and participates in an explicit join plan.
+- Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count.
 - Launch ready independent lanes together in the same Task message when the current adapter maps `subagent.dispatch` to Task; otherwise use its equivalent single dispatch batch rather than serializing them.
 - Parallel units must not edit the same files or depend on each other's output.
 - If work overlaps or has a dependency, run it sequentially or keep it direct.

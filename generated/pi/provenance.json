@@ -18,6 +18,7 @@
     "core/commands/retro.md",
     "core/commands/security-review.md",
     "core/commands/ship.md",
+    "core/governance/about-user.md",
     "core/governance/decision-core.md",
     "core/governance/hero-scope-limits.md",
     "core/governance/mempalace.md",
@@ -28,19 +29,20 @@
     "core/roles/roles.json",
     "manifests/runtime-projections.json"
   ],
-  "inputSha256": "b9a0b1ccd5be789b4698d22643cf78fdcb8c3809d7b90963c8327cb8864cd4a1",
+  "inputSha256": "2dcf4c0a90fe77c42b3794bbd686d04008d6dcbc884c794e2e1320941c3d0e92",
   "outputs": [
     {
       "path": "generated/pi/AGENTS.md",
       "canonicalInputs": [
         "adapters/pi/adapter.json",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/hero-scope-limits.md",
         "core/governance/operating-discipline.md",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "76908dfecc51fabfd07054604b3eb203079bbed3806c3a5f4788081c1b04399c",
-      "outputSha256": "81fe2efdb875a9cdadf73f6b6835e74bc320ee0822991197a9ac240004ba6c88"
+      "inputSha256": "f339bd0b3965710071467c8557a58665429577b8edf65f09be65dbb146df9652",
+      "outputSha256": "9b66e4ae382703d0f17400964283a9ecae18c494f31033c02db0d8b7f7ac58e8"
     },
     {
       "path": "generated/pi/installation-contract.json",
@@ -57,13 +59,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/agents-md.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "cc009e33993ab99f166210589ab1a7812f799d7cedf9921adbbd3ab7a79ef33d",
-      "outputSha256": "249ba05f0296dcd6f37080a34796a5d7c9327ea06510c6e839d94a21dca5fae0"
+      "inputSha256": "5c9a05c4a10f819026b3c3a27f4b2dbb06f3aaeb17ecca09ac7ec0c4683b5ac6",
+      "outputSha256": "2ad9b01b1ed5cc123946e19a46829c33556200046feb3e08c7b014f0d45f3536"
     },
     {
       "path": "generated/pi/prompts/build.md",
@@ -71,13 +74,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/build.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "34197233c2f05116c45c77b5abde29929c8a7cfcc98b802a8ebaaaa70ee26cca",
-      "outputSha256": "9b0c63fdc5f61742f0952dba359e58d06ed221defe699035fc1a469e1666d366"
+      "inputSha256": "8cb299728db761f47861dbc464946396186a82a3ddca481510cd787a2e0f9c12",
+      "outputSha256": "6568ac79d5113373ac398289ed6b3d44d4b01ae7a72c4f778524e3e87a2dede7"
     },
     {
       "path": "generated/pi/prompts/define.md",
@@ -85,13 +89,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/define.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "93597d6d9d2ba7e82630cd533d10d7130f7a3d2ded70db350dc75efac9bf223d",
-      "outputSha256": "6db5ce0aee3bfccbbba5ae7829045de250b9a99f051c859bdf428e6477602094"
+      "inputSha256": "0eecb35e5843d2bfbd48a71d7408dff64b0b6957c1c47d5a19bcefdf444ff335",
+      "outputSha256": "7bc033d2edb908686aab368a11aef7a593f031465f992ef41e334f67cc29442c"
     },
     {
       "path": "generated/pi/prompts/eli5.md",
@@ -99,13 +104,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/eli5.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "25134e1d167dfde93353ef9e2e70baf633dd8959333e22d441c3d3f56ca23c0a",
-      "outputSha256": "cc884a863c0219f1720b62fcc9c83af3ac3c08066fc935e3b23f74aae06ee285"
+      "inputSha256": "cc7db8bcc29ff60bd5b2e74bfcc5634226eef90d77bd8353f43d8770b82c3907",
+      "outputSha256": "52062e69ef7a29a82f240a8d01e2ed6ce295c07f3035404838ff8cc187f01aa9"
     },
     {
       "path": "generated/pi/prompts/handoff.md",
@@ -113,13 +119,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/handoff.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "47566ee1c7a099366ec272740a839f8fdca2db60750135c90353f8c49224cb83",
-      "outputSha256": "730b412ee6a70707eb679bcc14f2316c06bb7cd442379d1c07f3805734283547"
+      "inputSha256": "c0a7eb863fa9f61ffeef351d0d6751b7099c6faa5c68351c2a2fd44430fc6e22",
+      "outputSha256": "70b7ab73e0f783dca6bdd57ebbce7dbd703dc8af726af282ead3e8bc24fc7329"
     },
     {
       "path": "generated/pi/prompts/harness-audit.md",
@@ -127,13 +134,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/harness-audit.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "ebf009d09b0ee90e1b308b4bcdc19f862e0f4bb32862895902ba3395b14bbf7a",
-      "outputSha256": "f4c7790c719141fd10398802558bc77dbca00c6ffca60b2a660ea8afa5e91b97"
+      "inputSha256": "c2030a6133b583a25df6a729c896d5c6cecb416c5ab9fd5546bfbb0581a0b26b",
+      "outputSha256": "ac3cba1cf618c1ed75127af6c59eae43b7ca12e728f8a457c1b585f2e3a1480a"
     },
     {
       "path": "generated/pi/prompts/ideate.md",
@@ -141,13 +149,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/ideate.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "651475f2066312725ad627d9b94f47c156ff4505af5474a1d7ea3472c03fb3ba",
-      "outputSha256": "4ff99601e57685ea5d9dccf086d90d13dca424ece037ac1d24bf8e3945f5c4ec"
+      "inputSha256": "730f35450fdf826805d7c5869a9bd06a0ce6e175ebae34ffca49004984d3c8dd",
+      "outputSha256": "a1a28c4f0ac42f371b711c6621fa133833427ec6ecb5f5ade1ed75077dc2ae53"
     },
     {
       "path": "generated/pi/prompts/local-review.md",
@@ -155,13 +164,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/local-review.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "8a8fa45a051df68f524b5c3d62ffd3526ce7201740135f9bf5a7cbefbb5ea98e",
-      "outputSha256": "721a21c8b13ddd988fa32edab6c79a08c0506184b82e6cdb33769255c417838e"
+      "inputSha256": "b0684a8299118666ef3fcf9ad5e54a9cdf1c5133da719d2a90e743246762037d",
+      "outputSha256": "0682df3e117357a9071ec6b23f1b108ebcf6da946532abbe4fb6b5eee8ebff29"
     },
     {
       "path": "generated/pi/prompts/retro.md",
@@ -169,13 +179,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/retro.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "0d0d3e877b67b966cc8ec18357977db61b70cd8db562b9c3f09551f1e4b80253",
-      "outputSha256": "207dfe674d9752569733610cacee14b64f9288dabee89fb463ee2db6e325734d"
+      "inputSha256": "b19a296cd529e4d5b6f0a1cdeb054c7dfe3ccbf4b2c57d545064d64cf10d9ad3",
+      "outputSha256": "b6f30bf1bd6819f9868cb8cb2f14189498cb1553f8bfae24113b1f61002af31d"
     },
     {
       "path": "generated/pi/prompts/security-review.md",
@@ -183,13 +194,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/security-review.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "f649045773d9cee175a0031aaa81b295308f8e9761542ca9f56c13ec03b803c5",
-      "outputSha256": "cd8a5b9ae0289cf2c47f116e84a46f85dacfe3fcef2b240fca33347db6591ede"
+      "inputSha256": "96a830267aa737f13e454566c65fd7a1603e5971d70539cdf4142e0b6ece1146",
+      "outputSha256": "4a9b66af63485d61483b0deac7c0d0aaaa7324943ea41a87b7612c5130a85ef3"
     },
     {
       "path": "generated/pi/prompts/ship.md",
@@ -197,13 +209,14 @@
         "adapters/opencode/adapter.json",
         "adapters/pi/adapter.json",
         "core/commands/ship.md",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "9ea6bcbc54574db27f11f5fd8458df91a7414868fe9d2ac6ff7c4336c370a5d9",
-      "outputSha256": "f9ea9d0d56aab3d73c17f8f17b072dee7be65deb6f69f6d512741a6bc5cbe1cb"
+      "inputSha256": "1777ab13b15dc0e2de26955106fad7507b4760a7fef1add5ef9bec243e268958",
+      "outputSha256": "bdd8915a0c24c6e6db5ea9b94f731734ef6c811d1e91b83d9c7c82aa28cfbfc8"
     },
     {
       "path": "generated/pi/protocols/aili-agent-selection.v1.schema.json",
@@ -229,37 +242,40 @@
       "path": "generated/pi/role-metadata.json",
       "canonicalInputs": [
         "adapters/pi/adapter.json",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "9326112457487d06febb3bce712614ec083f8f1e29167715dee933c493bb8cc8",
-      "outputSha256": "802ef6026deb57ebf616167fff37a8f3501fd42b25e336af8a9c803c35dcbf43"
+      "inputSha256": "1ccacb2020027eca2ebcaad27b5ee2367803ea3b5072fc2db6d38c519c117c83",
+      "outputSha256": "006fc4679b30dc8bcb0061723fe4dcfdbff29ad372c7c32a9ab7300cffabf142"
     },
     {
       "path": "generated/pi/selection-map.json",
       "canonicalInputs": [
         "adapters/pi/adapter.json",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "9326112457487d06febb3bce712614ec083f8f1e29167715dee933c493bb8cc8",
-      "outputSha256": "278854c5ff63a83c37f1fdc6c5395a0b3e252d0d0a241c0da2ac3e484cdaff6b"
+      "inputSha256": "1ccacb2020027eca2ebcaad27b5ee2367803ea3b5072fc2db6d38c519c117c83",
+      "outputSha256": "b031381c82a03a83e30d6998bc059421a39e495bcb95860e91c35a78f45e1f39"
     },
     {
       "path": "generated/pi/system.md",
       "canonicalInputs": [
         "adapters/pi/adapter.json",
+        "core/governance/about-user.md",
         "core/governance/decision-core.md",
         "core/governance/operating-discipline.md",
         "core/roles/roles.json",
         "manifests/runtime-projections.json"
       ],
-      "inputSha256": "9326112457487d06febb3bce712614ec083f8f1e29167715dee933c493bb8cc8",
-      "outputSha256": "af01ce4547efa6b304693866bf1ad17a7dbb5133a9e6c2624524fb64b1e5cbf4"
+      "inputSha256": "1ccacb2020027eca2ebcaad27b5ee2367803ea3b5072fc2db6d38c519c117c83",
+      "outputSha256": "589cfc8c758d02cc1ffe356b62a9982810557a68a4a1899249082fceb9207723"
     }
   ]
 }

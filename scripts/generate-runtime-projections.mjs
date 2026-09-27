@@ -52,7 +52,7 @@ async function buildExpected(projectRoot) {
   if (projection.schemaVersion !== 1 || projection.generator?.id !== GENERATOR_ID) {
     throw new Error("Unsupported runtime projection manifest.");
   }
-  const governanceInputs = ["core/governance/decision-core.md", "core/governance/operating-discipline.md"];
+  const governanceInputs = ["core/governance/decision-core.md", "core/governance/about-user.md", "core/governance/operating-discipline.md"];
   const globalGovernanceInputs = ["core/governance/hero-scope-limits.md"];
   const [rolesDocument, openCodeAdapter, piAdapter, governanceParts, globalGovernanceParts] = await Promise.all([
     readJson(projectRoot, "core/roles/roles.json"),
@@ -61,7 +61,11 @@ async function buildExpected(projectRoot) {
     Promise.all(governanceInputs.map((relativePath) => readText(projectRoot, relativePath))),
     Promise.all(globalGovernanceInputs.map((relativePath) => readText(projectRoot, relativePath)))
   ]);
-  const governance = governanceParts.join("\n\n");
+  const [decisionCore, aboutUser, operatingDiscipline] = governanceParts;
+  if (!decisionCore.startsWith("# AGENTS.md\n") || !aboutUser.startsWith("## About the user\n")) {
+    throw new Error("Shared governance requires # AGENTS.md and a separate ## About the user source.");
+  }
+  const governance = decisionCore.replace("# AGENTS.md\n", `# AGENTS.md\n\n${aboutUser.trimEnd()}\n`) + `\n\n${operatingDiscipline}`;
   const globalGovernanceContent = globalGovernanceParts.join("\n\n");
   validateProjectionInputs(projection, rolesDocument, openCodeAdapter, piAdapter, projectRoot);
 
@@ -166,7 +170,7 @@ function validateProjectionInputs(projection, rolesDocument, openCodeAdapter, pi
   if (!Array.isArray(piAdapter.installation?.packageOnly) || requiredPiPackageOnly.some((path) => !piAdapter.installation.packageOnly.includes(path))) {
     throw new Error("Pi adapter installation contract must keep runtime metadata package-only.");
   }
-  if (!Array.isArray(openCodeAdapter.globalProjection?.preamble) || openCodeAdapter.globalProjection.preamble.length < 3 || openCodeAdapter.globalProjection.compatibilityPath !== "templates/opencode-global-AGENTS.md") {
+  if (typeof openCodeAdapter.globalProjection?.notice !== "string" || openCodeAdapter.globalProjection.compatibilityPath !== "templates/opencode-global-AGENTS.md") {
     throw new Error("OpenCode adapter must declare the generated global compatibility projection.");
   }
   if (!Array.isArray(rolesDocument.sharedWorkerBoundary) || rolesDocument.sharedWorkerBoundary.length === 0) {
@@ -187,14 +191,14 @@ function renderOpenCodeCommand(name, body, adapter, inputs, projectRoot) {
   const override = adapter.command.frontmatterOverrides?.[name];
   const description = override?.description ?? `AILI ${name} command generated from the backend-neutral canonical body.`;
   const argumentHint = override?.argumentHint === undefined ? "" : `argument-hint: ${yamlScalar(override.argumentHint)}\n`;
-  return `---\ndescription: ${yamlScalar(description)}\n${argumentHint}agent: ${adapter.command.agent}\nsubtask: ${adapter.command.subtask}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
+  return `---\ndescription: ${yamlScalar(description)}\n${argumentHint}agent: ${adapter.command.agent}\nsubtask: ${adapter.command.subtask}\n---\n\n${body.trimEnd()}\n`;
 }
 
 function renderPiPrompt(name, body, adapter, inputs, projectRoot) {
   const override = adapter.prompt.frontmatterOverrides?.[name];
   const description = override?.description ?? `${adapter.prompt.descriptionPrefix} /${name}`;
   const argumentHint = override?.argumentHint ?? adapter.prompt.argumentHint;
-  return `---\ndescription: ${yamlScalar(description)}\nargument-hint: ${yamlScalar(argumentHint)}\n---\n\n${provenanceComment(inputs, projectRoot)}\n\n${body.trimEnd()}\n`;
+  return `---\ndescription: ${yamlScalar(description)}\nargument-hint: ${yamlScalar(argumentHint)}\n---\n\n${body.trimEnd()}\n`;
 }
 
 function renderOpenCodeAgent(role, sharedWorkerBoundary, adapter, inputs, projectRoot) {
@@ -203,20 +207,20 @@ function renderOpenCodeAgent(role, sharedWorkerBoundary, adapter, inputs, projec
   if (!profile) throw new Error(`No OpenCode profile for canonical role: ${role.id}`);
   const frontmatter = { description: role.description, ...profile, ...(adapter.frontmatterOverrides?.[role.id] ?? {}) };
   const sharedBoundary = role.mode === "decision-core" ? [] : sharedWorkerBoundary;
-  return `---\n${yamlObject(frontmatter)}---\n\n${provenanceComment(inputs, projectRoot)}\n\n# ${role.title}\n\n## Role\n\n${role.description}\n\n## Goal\n\n${role.goal}\n\n## Success criteria\n\n${markdownList(role.successCriteria)}\n\n## Constraints\n\n${markdownList([...(role.constraints ?? []), ...sharedBoundary])}\n\n## Tools\n\nUse only the capabilities exposed by the active runtime and only when needed for the assigned result. A task packet may narrow but never broaden them.\n\n## Output\n\n${role.output}\n\n## Stop\n\n${role.stop}\n`;
+  return `---\n${yamlObject(frontmatter)}---\n\n# ${role.title}\n\n## Role\n\n${role.description}\n\n## Goal\n\n${role.goal}\n\n## Success criteria\n\n${markdownList(role.successCriteria)}\n\n## Constraints\n\n${markdownList([...(role.constraints ?? []), ...sharedBoundary])}\n\n## Tools\n\nUse only the capabilities exposed by the active runtime and only when needed for the assigned result. A task packet may narrow but never broaden them.\n\n## Output\n\n${role.output}\n\n## Stop\n\n${role.stop}\n`;
 }
 
 function renderOpenCodeGlobal(governance, adapter, inputs, projectRoot) {
-  return `${adapter.globalProjection.preamble.join("\n")}\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n`;
+  return `${governance.trimEnd()}\n\n${adapter.globalProjection.notice}\n`;
 }
 
 function renderPiGlobal(governance, inputs, projectRoot) {
-  return `<!-- AILI_PI_GLOBAL_CONTEXT: ~/.pi/agent/AGENTS.md -->\n${provenanceComment(inputs, projectRoot)}\n\n${governance.trimEnd()}\n`;
+  return `${governance.trimEnd()}\n`;
 }
 
 function renderPiSystem(governance, roles, inputs, projectRoot) {
   const roleList = roles.map((role) => `- \`${role.id}\` — ${role.description}`).join("\n");
-  return `${provenanceComment(inputs, projectRoot)}\n\n# AILI Pi System Projection\n\nThis package artifact is for the separately owned Pi runtime. It does not install or run Pi sessions, scheduler, daemon, park/revive, or retry behavior.\n\n${governance.trimEnd()}\n\n## Canonical roles\n\n${roleList}\n`;
+  return `# AILI Pi System Projection\n\nThis package artifact is for the separately owned Pi runtime. It does not install or run Pi sessions, scheduler, daemon, park/revive, or retry behavior.\n\n${governance.trimEnd()}\n\n## Canonical roles\n\n${roleList}\n`;
 }
 
 function renderProtocolProjection(schema, inputs, projectRoot) {
@@ -259,10 +263,6 @@ function addOutput(target, relativePath, content, inputs, records, projectRoot) 
     inputSha256: inputHash(inputs, projectRoot),
     outputSha256: sha256(content)
   });
-}
-
-function provenanceComment(inputs, projectRoot) {
-  return `<!-- GENERATED: ${GENERATOR_ID}; canonical_inputs: ${inputs.slice().sort().join(", ")}; input_sha256: ${inputHash(inputs, projectRoot)}; do not edit directly -->`;
 }
 
 function yamlObject(value, indent = "") {

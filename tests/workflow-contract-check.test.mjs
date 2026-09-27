@@ -280,10 +280,12 @@ test("Package 11 aggregate checkers derive canonical evidence and reject mutated
 
   await t.test("rejects human-artifact claim prefixes in shared formal references", async () => {
     const relative = ".agents/skills/aili-delivery-flow/references/formal-task-board.md";
-    await writeFile(path.join(root, relative), `${pristineFormalSources.get(relative)}\n[KNOWN] runtime-only completion proof\n`, "utf8");
-    const result = runWorkflow(root, "scaffold");
-    assert.equal(result.status, 5);
-    assert.match(result.payload.errors.join("\n"), /human-artifact claim prefix/i);
+    for (const label of ["KNOWN", "VERIFIED", "已知", "查证", "待确认"]) {
+      await writeFile(path.join(root, relative), `${pristineFormalSources.get(relative)}\n[${label}] runtime-only completion proof\n`, "utf8");
+      const result = runWorkflow(root, "scaffold");
+      assert.equal(result.status, 5, label);
+      assert.match(result.payload.errors.join("\n"), /human-artifact claim prefix/i);
+    }
   });
 
   await t.test("rejects decision and implementation-authorization vocabulary drift", async () => {

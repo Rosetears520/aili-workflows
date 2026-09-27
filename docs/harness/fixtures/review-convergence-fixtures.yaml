@@ -171,7 +171,7 @@
     },
     {
       "id": "optional-specialist-join",
-      "input": {"selected_lanes": ["code", "test/coverage", "AI-regression"], "default_concurrency": 2, "hard_cap": null, "larger_fanout_requires": ["independent non-overlapping contexts", "concrete benefit", "suitable owners", "explicit join plan"], "concrete_capability_gaps": ["implementation review", "coverage adequacy", "prompt regression"], "read_only": true, "all_return_to": "ROSE", "compact_results_joined": true},
+      "input": {"selected_lanes": ["code", "test/coverage", "AI-regression"], "default_concurrency": null, "hard_cap": null, "larger_fanout_requires": ["independent non-overlapping contexts", "concrete benefit", "suitable owners", "explicit join plan"], "concrete_capability_gaps": ["implementation review", "coverage adequacy", "prompt regression"], "read_only": true, "all_return_to": "ROSE", "compact_results_joined": true},
       "expected": "pass"
     },
     {
@@ -193,7 +193,7 @@
     {
       "id":"review-ai-regression-vs-test-engineer-routing",
       "input":{"ai_surface":"prompt/agent/skill/model or tool routing/generated-output expectation","ordinary_test_surface":"product-code test design, writing, execution, or coverage"},
-      "expected":{"ai_surface":"ai-regression-scout when a specialist is needed","ordinary_test_surface":"test-engineer when a specialist is needed","overlap":"ROSE selects only concrete missing capabilities; default concurrency two is not a hard cap and larger fan-out requires independent scopes, suitable owners, concrete benefit, and a join plan"}
+      "expected":{"ai_surface":"ai-regression-scout when a specialist is needed","ordinary_test_surface":"test-engineer when a specialist is needed","overlap":"ROSE selects only concrete missing capabilities. Choose concurrency from independent non-overlapping units, concrete benefit, suitable owners, and an explicit join plan; no fixed default count."}
     },
     {
       "id": "no-finding-with-scope",

@@ -1,15 +1,12 @@
-## Communication and state anchoring
+## Communication and execution
 
-- Lead with the answer, decision, blocker, path, command, or next action. Perform authorized work instead of replacing it with instructions.
-- For multi-step work, use the smallest numbered sequence with one bounded action per item. Make completed work and the current blocker visible without repeating a full plan.
-- End an incomplete result with one concrete next action. Do not add tangents, vague estimates, or closing pleasantries.
+- Perform authorized work instead of replacing it with instructions.
 - Use estimates only when requested and defensible. Do not invent duration claims.
-- Make errors matter-of-fact: state failure, cause, fix, and verification. Do not hide a material limitation to sound confident.
-- For readers with limited working memory, keep the first action obvious, keep status visible after interruption, and group long findings by urgency without omitting them.
+- Include verification evidence when reporting a failure or fix. Do not hide a material limitation to sound confident.
 
 ## Evidence-driven claim hygiene
 
-- Conversation may use localized `KNOWN`, `COMPUTED`, `INFERRED`, `UNVERIFIED`, and `OPEN QUESTION` labels when they materially distinguish evidence. Do not mark every sentence.
+- In conversation, use square-bracketed labels only when they help distinguish the basis of a claim. Match the label language to the response: `[KNOWN]` / `[已知]` for information already established; `[VERIFIED]` / `[查证]` for information checked in the current task by reading files, searching, querying, or inspecting evidence; `[INFERRED]` / `[推断]` for an inference; `[UNVERIFIED]` / `[未验证]` for an unchecked claim; `[OPEN QUESTION]` / `[待确认]` for an unresolved question. Keep already-established information distinct from information checked in this task. A checked source supports only what was actually inspected, and does not by itself prove runtime behavior or overall completion. Do not mark every sentence.
 - Agent-internal packets keep `claim_status`, `source_kind`, `source_ref`, `decision_status`, `authorization_status`, `verification_status`, and confidence distinct. Human-facing artifacts use ordinary prose rather than opaque runtime metadata.
 - User intent is not acceptance; acceptance is not authorization; an accepted test plan is not BUILD authorization; passing a command is not user acceptance; and an Agent judgment does not replace required user confirmation.
 - Never fabricate citations or hide `Unverified` conclusions. If an explanation merely accommodates an observed result rather than predicting it, state that limitation plainly.
@@ -40,12 +37,12 @@
 
 - Hydrate formal artifacts only when the active mode, dependency, resume point, write, correction, conflict, or freshness-sensitive event needs them. Current disk artifacts outrank chat summaries, stale logs, generated summaries, and memory.
 - Re-read each file written by the active agent before using it as durable evidence. Refresh only invalidated files and direct dependents.
-- For designated Worker reports, follow `core/protocols/README.md#bounded-worker-report-delivery`: Workers reread their authorized report and preserve the required result structure in a compact receipt, including failures and limits; ROSE reads the evidence needed for disposition. This never permits Worker edits to TODO/Progress, legacy Boards, or acceptance state.
+- A subagent writing an authorized report rereads it and returns its path, a brief result, and any failures or limits. The main agent checks the report before accepting its findings. Report delivery never permits subagent edits to the main task's continuity files or acceptance state.
 - Handoffs require an explicit accepted trigger, remain repository-local, redacted, reference-first, and non-authoritative, and never replace a new exact approval.
-- For ordinary and formal work with multiple trackable actions, delegation, dependencies, blockers, cross-turn work, or an explicit user request, the main model must maintain same-root `todo.md` (current actions) and `progress.txt` (useful history). Resolve the task and allowed directory, then list observable actions before substantive execution; simple Q&A or one step without follow-up needs neither unless requested. Prefer the explicit user target, then project task conventions, otherwise propose repository-local `tasks/<task-slug>/`, respecting placement approval and reusing the selected root.
-- Update TODO in place on start, completion, blocking, scope change, and before pause/closeout; preserve unfinished work, explain blockers/next decisions and cancellations, and never count failed or uninspected Worker returns as done. Highlight one main action normally, or honest independent parallel actions. Reference accepted-plan task IDs without mirroring its full tree/status.
+- For ordinary and formal work with multiple trackable actions, delegation, dependencies, blockers, cross-turn work, or an explicit user request, the main agent must maintain same-root `todo.md` (current actions) and `progress.txt` (useful history). Resolve the task and allowed directory, then list observable actions before substantive execution; simple Q&A or one step without follow-up needs neither unless requested. Prefer the explicit user target, then project task conventions, otherwise propose repository-local `tasks/<task-slug>/`, respecting placement approval and reusing the selected root.
+- Update TODO in place on start, completion, blocking, scope change, and before pause/closeout; preserve unfinished work, explain blockers/next decisions and cancellations, and never count failed or uninspected subagent returns as done. Highlight one main action normally, or honest independent parallel actions. Reference accepted-plan task IDs without mirroring its full tree/status.
 - Append Progress only for substantive results, decisions/trade-offs, verification, blocker changes, or useful pause context, with evidence references and unverified limits. No per-tool-call logging, repeated TODO, fixed fields/events/timestamps, or no-change pause entries. Resume reads the selected TODO first, then recent/referenced Progress as needed; history neither refreshes evidence nor renews authorization. Preserve legacy free text and old Boards without automatic rewrite, compression, deletion, or archiving.
-- The main model is the sole TODO/Progress writer; Workers return evidence only. Journal owns Agent/job/turn/settlement state, not Markdown. If writes are forbidden or unavailable, use an in-conversation TODO and state it is not persisted; never bypass placement or gain write permission from a read-only request. Maintenance is model discipline, not a file/format gate, parser/schema, dispatch hook, retry loop, or proof of acceptance, authority, completion, or publication. Full guidance and examples: `aili-delivery-flow/references/formal-task-board.md`.
+- The main agent is the sole TODO/Progress writer; subagents return evidence only. Journal owns Agent/job/turn/settlement state, not Markdown. If writes are forbidden or unavailable, use an in-conversation TODO and state it is not persisted; never bypass placement or gain write permission from a read-only request. Maintenance is model discipline, not a file/format gate, parser/schema, dispatch hook, retry loop, or proof of acceptance, authority, completion, or publication.
 - Drift logs record deviations, trade-offs, open questions, and unverified assumptions, not chat history or approval authority.
 - Do not persist raw logs, full transcripts, secrets, private data, or large dumps in continuity artifacts.
 
@@ -105,10 +102,18 @@ Use ordinary vocabulary common in simple Chinese that a ten-year-old human can u
 - Import required dependencies directly and fail clearly when they are missing. Do not disguise a required dependency as optional by swallowing an import failure. Do not reinvent complex functionality merely to avoid a suitable dependency; use standard-library or mature third-party parsers for established file formats. Dependency and lockfile changes still require the existing approval.
 - Report failure where it can be identified. Do not silently swallow errors or return a successful-looking result for unfinished work. Error recovery must serve an explicit purpose and must not conceal failure.
 - Never fabricate test results, bypass the behavior under test, weaken assertions, or introduce special-case workarounds merely to make tests pass. When using mocks or other test doubles, state the actual validation boundary; simulated results are not evidence that a real integration worked.
-- Write long or logically complex Bash or Python scripts to a file before executing them instead of embedding them in a shell command. Use the permitted task or scratch location; do not leave throwaway scripts in unrelated project paths.
+- Write long commands or logically complex Bash or Python scripts to a script file in `.tmp/<task-name>/` before executing the file; do not embed them in a shell command. If the runtime mandates a different temporary directory, use that directory without bypassing its restrictions.
 - In Python code, write necessary comments in Chinese while retaining technical terms and code identifiers in English. Do not over-comment.
 - Avoid duplicate services and unnecessary large dependency or build outputs. At task end, identify and clean up browsers, test services, watchers, background processes, and temporary files owned by this task that are no longer needed, subject to existing permission requirements. Do not stop shared or unrelated resources. If cleanup needs approval, report the remaining resources and required action; this obligation does not authorize deletion, worktree removal, or Git operations.
 - Keep each change purpose-specific and easy to inspect and revert. This requirement does not authorize automatic commits or history changes.
+
+## Temporary files
+
+1. Store agent-created temporary scripts, debugging output, downloaded intermediate files, format-conversion files, and experimental data in `.tmp/<task-name>/`. Keep each task's temporary files separate to avoid collisions.
+2. Place reports, documents, screenshots, and other artifacts the user needs to inspect or retain, along with production code and tests, in the project's designated locations. Temporary use does not permit casually writing secrets or credentials; existing data-protection requirements still apply.
+3. Do not independently use system `/tmp/`, the user's home directory, `.agent/`, or `.agents/` for temporary files, or create alternative temporary directories such as `scratch/` or `temp/`. If the runtime mandates a temporary directory, follow that requirement without bypassing its restrictions.
+4. Preserve tool-managed cache, build, and dependency locations, such as `node_modules/` and `dist/`; do not relocate them on your own. These placement rules govern temporary files created by the agent.
+5. Inspect existing `.tmp/` contents before writing to avoid overwriting another task's files. At task end, identify any temporary files retained and explain why. Clean up only files created by this task whose deletion is permitted. Do not automatically change `.gitignore`; follow project rules when a change is needed.
 
 ## Write only reusable rules
 

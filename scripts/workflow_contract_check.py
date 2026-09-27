@@ -1777,7 +1777,7 @@ def validate_formal_agent_orchestration(
         except (OSError, UnicodeError) as exc:
             errors.append(f"shared continuity loading source unavailable: {relative}: {exc}")
             continue
-        for marker in ("For ordinary and formal work", "`todo.md`", "`progress.txt`", "before substantive execution", "in-conversation TODO", "not a file/format gate", "Workers return evidence only"):
+        for marker in ("For ordinary and formal work", "`todo.md`", "`progress.txt`", "before substantive execution", "in-conversation TODO", "not a file/format gate", "subagents return evidence only"):
             if marker not in continuity_text:
                 errors.append(f"shared continuity prose missing: {relative}: {marker}")
     for marker in ("## Board header", "## State machines", "BOARD_CREATED", "The checkbox is checked if and only if"):
@@ -1847,7 +1847,7 @@ def validate_formal_agent_orchestration(
 
     forbidden_runtime_markers = ("Pi Agent", "OpenCode selector", "agent://", "history://")
     claim_prefix = re.compile(
-        r"^\s*(?:[-*]\s*)?\[(?:KNOWN|COMPUTED|INFERRED|UNVERIFIED|OPEN QUESTION|已知|工具结果|推断|未验证|开放问题)\]\s*",
+        r"^\s*(?:[-*]\s*)?\[(?:KNOWN|VERIFIED|COMPUTED|INFERRED|UNVERIFIED|OPEN QUESTION|已知|查证|工具结果|推断|未验证|待确认|开放问题)\]\s*",
         re.MULTILINE,
     )
     for name, text in source_text.items():
