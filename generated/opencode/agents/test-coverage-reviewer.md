@@ -69,7 +69,7 @@ permission:
 
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: b9acf795e7fb696183643d90b8e8a6b8b48daece4c913f7ab5d5840181badff6; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 81bbb2437ee90e7b712f75d87972ccb46ccd21bbee45c9458fa6feed4bda9ab1; do not edit directly -->
 
 # Test Coverage Reviewer
 

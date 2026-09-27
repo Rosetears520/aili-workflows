@@ -1163,8 +1163,8 @@ def validate_command_contracts() -> list[str]:
         retired_names = {row.get("name") for row in manifest.get("retiredSkills", []) if isinstance(row, dict)} if isinstance(manifest, dict) else set()
         if command_names != {name.removesuffix(".md") for name in allowed_public_commands}:
             errors.append("component manifest must expose exactly eleven Commands")
-        if len(skill_names) != 59:
-            errors.append(f"component manifest must expose exactly 59 retained Skills; found {len(skill_names)}")
+        if len(skill_names) != 60:
+            errors.append(f"component manifest must expose exactly 60 retained Skills; found {len(skill_names)}")
         if retired_names != RETIRED_SKILLS:
             errors.append("component manifest retired Skill inventory is incomplete or unexpected")
         if skill_names & RETIRED_SKILLS:

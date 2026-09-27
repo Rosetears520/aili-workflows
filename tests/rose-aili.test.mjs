@@ -62,6 +62,12 @@ test("install defaults to shared skills without reading or mutating OpenCode hom
   assertDecision(summary, "OpenCode integration", "rose-aili install --opencode");
   assert.equal(summary.optionalDecisions.some((entry) => entry.name === "Graphify"), false);
   await stat(path.join(sharedSkillsHome(fixture), "aili-delivery-flow", "SKILL.md"));
+  for (const relative of ["SKILL.md", "references/output-and-editing.md", "references/types/flowchart.md"]) {
+    const installed = await readFile(path.join(sharedSkillsHome(fixture), "mermaid-diagrams", relative), "utf8");
+    const source = await readFile(path.join(repoRoot, ".agents/skills/mermaid-diagrams", relative), "utf8");
+    assert.equal(installed, source, `shared Mermaid install preserves ${relative}`);
+  }
+  await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "mermaid-diagrams", "references", "provenance.md")));
   await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
   await assert.rejects(stat(opencodeHome));
   await fixture.cleanup();
@@ -74,7 +80,8 @@ test("profiles and repeatable Skill selectors resolve the accepted additive inve
   const defaultResult = await runCli(["install", "--dry-run", "--profile", "default", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
   const defaultSummary = JSON.parse(defaultResult.stdout);
   assert.equal(defaultSummary.profile, "default");
-  assert.equal(defaultSummary.selectedSkills.length, 50);
+  assert.equal(defaultSummary.selectedSkills.length, 51);
+  assert.ok(defaultSummary.selectedSkills.includes("mermaid-diagrams"));
   assert.equal(defaultSummary.componentInstall.scope, "skills");
   assert.equal(defaultSummary.externalToolOperations.find((entry) => entry.name === "MemPalace").status, "planned");
 
@@ -82,11 +89,12 @@ test("profiles and repeatable Skill selectors resolve the accepted additive inve
   const piSummary = JSON.parse(piResult.stdout);
   assert.equal(piSummary.profile, "pi");
   assert.equal(piSummary.componentInstall.scope, "pi");
-  assert.equal(piSummary.selectedSkills.length, 50);
+  assert.equal(piSummary.selectedSkills.length, 51);
+  assert.ok(piSummary.selectedSkills.includes("mermaid-diagrams"));
 
   const selectedResult = await runCli(["install", "--dry-run", "--skill", "shader-dev", "--skill", "shader-dev", "--skill-group", "research", "--skill-group", "research", "--aili-home", fixture.ailiHome, "--opencode-home", opencodeHome, "--skip-officecli", "--json"]);
   const selectedSummary = JSON.parse(selectedResult.stdout);
-  assert.equal(selectedSummary.selectedSkills.length, 55);
+  assert.equal(selectedSummary.selectedSkills.length, 56);
   assert.ok(selectedSummary.selectedSkills.includes("shader-dev"));
   assert.equal(selectedSummary.selectedSkills.filter((name) => name === "shader-dev").length, 1);
   assert.equal(selectedSummary.selectedSkills.includes("android-native-dev"), false);
@@ -1667,6 +1675,10 @@ test("skills-only Bash install links shared skills and preserves OpenCode-owned 
   assert.equal(await readFile(preserved, "utf8"), "keep\n");
   assert.equal((await lstat(skillTarget)).isSymbolicLink(), true);
   assert.equal(await readlink(skillTarget), path.join(fixture.ailiHome, ".agents", "skills", "aili-delivery-flow"));
+  const mermaidTarget = path.join(sharedSkillsHome(fixture), "mermaid-diagrams");
+  assert.equal((await lstat(mermaidTarget)).isSymbolicLink(), true);
+  assert.equal(await readFile(path.join(mermaidTarget, "references", "types", "flowchart.md"), "utf8"),
+    await readFile(path.join(fixture.ailiHome, ".agents", "skills", "mermaid-diagrams", "references", "types", "flowchart.md"), "utf8"));
   await assert.rejects(stat(path.join(sharedSkillsHome(fixture), "i-have-adhd")));
   await assert.rejects(stat(path.join(opencodeHome, "skills", "aili-delivery-flow")));
   await assert.rejects(stat(path.join(opencodeHome, "AGENTS.md")));
@@ -1988,9 +2000,10 @@ test("manifest declares the exact Core and Optional Skill tiers", async () => {
   const skill = manifest.components.skills.find((entry) => entry.name === "aili-delivery-flow");
   assert.ok(skill, "expected aili-delivery-flow skill manifest entry");
 
-  assert.equal(manifest.components.skills.length, 59);
-  assert.equal(manifest.components.skills.filter((entry) => entry.defaultInstalled).length, 50);
-  assert.equal(resolveSkillSelection(manifest).length, 50);
+  assert.equal(manifest.components.skills.length, 60);
+  assert.equal(manifest.components.skills.filter((entry) => entry.defaultInstalled).length, 51);
+  assert.equal(resolveSkillSelection(manifest).length, 51);
+  assert.ok(resolveSkillSelection(manifest).some((entry) => entry.name === "mermaid-diagrams"));
   assert.deepEqual(manifest.components.commands.map((entry) => entry.name).sort(), [
     "agents-md", "build", "define", "eli5", "handoff", "harness-audit", "ideate", "local-review", "retro", "security-review", "ship"
   ]);

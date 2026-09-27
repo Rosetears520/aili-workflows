@@ -3,7 +3,7 @@ description: "Explain something in simple plain language, optionally with a visu
 argument-hint: "[--html] <topic>"
 ---
 
-<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/eli5.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 70e9ce59c1a0c0a014e77035fbf824b8a8388187d45689e9f78a0f5494a48952; do not edit directly -->
+<!-- GENERATED: aili-runtime-projections/v1; canonical_inputs: adapters/opencode/adapter.json, adapters/pi/adapter.json, core/commands/eli5.md, core/governance/decision-core.md, core/governance/operating-discipline.md, core/roles/roles.json, manifests/runtime-projections.json; input_sha256: 25134e1d167dfde93353ef9e2e70baf633dd8959333e22d441c3d3f56ca23c0a; do not edit directly -->
 
 # /eli5
 

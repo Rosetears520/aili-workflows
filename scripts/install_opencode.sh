@@ -773,8 +773,8 @@ optional = {
     "react-native-dev",
     "shader-dev",
 }
-if len(skills) != 59 or sum(bool(entry.get("defaultInstalled")) for entry in skills) != 50:
-    fail("Component manifest must contain exactly 59 Skills with 50 default-installed Core Skills")
+if len(skills) != 60 or sum(bool(entry.get("defaultInstalled")) for entry in skills) != 51:
+    fail("Component manifest must contain exactly 60 Skills with 51 default-installed Core Skills")
 if {entry.get("name") for entry in skills if not entry.get("defaultInstalled")} != optional:
     fail("Component manifest Optional Skill inventory is invalid")
 expected_groups = {

@@ -26,3 +26,10 @@ is not dismissed by resembling one:
 Before running any check, answer: what specific failure would this detect, and
 what would I do differently if it occurred? No answer means do not run it.
 Say plainly when something is correct. Do not manufacture findings.
+
+Two superficially similar cases must not be dismissed:
+- Comparing digests to skip rereading a large file already available to you,
+  when the digest replaces a materially more expensive operation and changes
+  what happens next, as required above.
+- An input that sounds rare but is produced by this project's own documented
+  examples. Report the real problem; do not use these scope limits to hide it.

@@ -62,10 +62,31 @@ test("runtime projections are provenanced, byte-stable, and reject generated or 
   assert.match(piInstallationContract.contract, /global context.*non-recursive Pi prompts/);
   assert.equal(await hasNestedPrompt(workspace), false);
 
+  const discipline = (await readFile(path.join(workspace, "core/governance/operating-discipline.md"), "utf8")).trimEnd();
+  const hero = (await readFile(path.join(workspace, "core/governance/hero-scope-limits.md"), "utf8")).trimEnd();
+  for (const heading of [
+    "## Communication and state anchoring",
+    "## Evidence Before Edits",
+    "## Runtime and repository safety",
+    "## Expression and document writing",
+    "### Intended readers and accessible references",
+    "### Mermaid in conversations and documents",
+    "## Practical engineering behavior",
+    "## Write only reusable rules"
+  ]) assert.ok(discipline.includes(heading), `canonical discipline retains ${heading}`);
+  assert.ok(discipline.includes("from “Log in” to “Sign in”"));
+  assert.ok(discipline.includes("Do not turn the codebase into a museum of past mistakes."));
+  assert.ok(hero.startsWith(heroScopeLimits), "the original HERO rules are preserved before the additions");
+  assert.ok(hero.includes("Comparing digests to skip rereading a large file"));
+  assert.ok(hero.includes("produced by this project's own documented"));
   for (const relativePath of ["generated/opencode/AGENTS.md", "templates/opencode-global-AGENTS.md", "generated/pi/AGENTS.md"]) {
     const output = await readFile(path.join(workspace, relativePath), "utf8");
     assert.equal(output.split(heroScopeLimits).length - 1, 1, `${relativePath} must contain the exact HERO block once`);
+    assert.equal(output.split(discipline).length - 1, 1, `${relativePath} must preserve the complete discipline, including the additions, once`);
+    assert.equal(output.split(hero).length - 1, 1, `${relativePath} must include both HERO positive examples with the existing rules`);
   }
+  const piSystem = await readFile(path.join(workspace, "generated/pi/system.md"), "utf8");
+  assert.equal(piSystem.split(discipline).length - 1, 1, "Pi system projection receives the same complete discipline");
   const piGlobal = await readFile(path.join(workspace, "generated/pi/AGENTS.md"), "utf8");
   assert.match(piGlobal, /AILI_PI_GLOBAL_CONTEXT: ~\/\.pi\/agent\/AGENTS\.md/);
   assert.doesNotMatch(piGlobal, /AILI Pi System Projection|Canonical roles|AgentSession/);

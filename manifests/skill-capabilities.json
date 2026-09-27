@@ -40,6 +40,12 @@
       "sideEffectClass": "external-provider-state",
       "missingBehavior": "BLOCKED; do not create an alternate store, SQLite fallback, or rose-memory route"
     },
+    "mermaid-source": {
+      "requiredCapabilities": [],
+      "optionalCapabilities": ["repo.read", "repo.write", "artifact.transform", "web.fetch"],
+      "sideEffectClass": "none-by-default; operation-gated local-file or rendering work",
+      "missingBehavior": "BLOCKED for a requested file operation without its required read/write capability or permission; WARN and Unverified for unavailable parser/rendering or syntax-fetch checks; conversational source delivery remains available"
+    },
     "artifact-runtime": {
       "requiredCapabilities": ["artifact.transform"],
       "optionalCapabilities": ["artifact.store", "repo.read"],
@@ -48,6 +54,10 @@
     }
   },
   "assignments": [
+    {
+      "profile": "mermaid-source",
+      "skills": ["mermaid-diagrams"]
+    },
     {
       "profile": "web-research",
       "skills": ["academic-paper-review", "github-evidence-triage", "mature-project-pattern-research", "newsletter-generation", "source-driven-development", "systematic-literature-review"]

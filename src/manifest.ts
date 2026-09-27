@@ -210,8 +210,8 @@ function validateSkillTiers(manifest: ComponentManifest): void {
     "evidence-scoped-retrospective",
     "rose-memory"
   ];
-  if (skills.length !== 59) throw new Error(`Expected exactly 59 retained Skills, found ${skills.length}.`);
-  if (skills.filter((skill) => skill.defaultInstalled).length !== 50) throw new Error("Expected exactly 50 default-installed Core Skills.");
+  if (skills.length !== 60) throw new Error(`Expected exactly 60 retained Skills, found ${skills.length}.`);
+  if (skills.filter((skill) => skill.defaultInstalled).length !== 51) throw new Error("Expected exactly 51 default-installed Core Skills.");
   const optionalNames = skills.filter((skill) => !skill.defaultInstalled).map((skill) => skill.name).sort();
   if (optionalNames.join("\u0000") !== optional.slice().sort().join("\u0000")) {
     throw new Error(`Optional Skill inventory must be exactly: ${optional.join(", ")}`);

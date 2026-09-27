@@ -44,6 +44,7 @@ aili-workflows/
 │       ├── incremental-implementation/
 │       ├── ios-application-dev/
 │       ├── mature-project-pattern-research/
+│       ├── mermaid-diagrams/
 │       ├── minimax-docx/
 │       ├── minimax-pdf/
 │       ├── minimax-xlsx/
@@ -112,7 +113,7 @@ aili-workflows/
 ├── src/                          # rose-aili CLI source
 ├── templates/
 │   ├── AGENTS.md                # 项目 AGENTS.md 的瘦模板源：只放项目事实/本地例外
-│   └── opencode-global-AGENTS.md # rose-aili 安装到 OpenCode home 的全局规则源
+│   └── opencode-global-AGENTS.md # 由 core/governance/ 生成的兼容副本
 ├── tests/
 └── README.md
 ```
@@ -169,6 +170,7 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 | `harness-evolution` | 对 ROSE、skills、commands、subagents、memory、install、harness docs 等流程变更执行 report-first 治理 |
 | `parallel-subagent-dispatch` | `aili-agent-selection/v1` canonical role matrix 与 ordinary proactive trigger scan；formal ready package 使用 exact owner；共享合同支持 one-shot/persistent adapter，当前 OpenCode Task context 仍为单 assignment、terminal、不可 resume 或自动重试 |
 | `mature-project-pattern-research` | 仅在用户明确要求 prior art，或 ROSE 指出一个会改变决定的成熟项目证据缺口时，研究一个有界问题并返回来源、模式、风险和不确定性 |
+| `mermaid-diagrams` | 创建、修改、修复或解释 Mermaid；对话直接给图，Markdown 只编辑指定图块，独立源码按需创建；事实、解析与视觉验证分别说明 |
 | `oss-release-readiness` | OSS、npm 或 public release readiness 非破坏性检查，覆盖 package metadata、dry-run evidence、license/provenance、内部 artifact 暴露和消费端说明 |
 | `pr-test-analysis` | PR / diff 测试影响、CI 日志、changed-test 审查和最小测试矩阵路由 |
 | `review-pipeline` | 仅在显式 specialist-review intent 或一个直接检查无法覆盖的具体 review 缺口下，路由最多一个 auxiliary capability；不自动 fan-out，也不是最终 PASS gate |
@@ -182,9 +184,17 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 `humanizer-zh` 只在明确的中文改写需求下触发，不自动润色所有回答；纯概念问题直接解释，PPTX 文件仍由 `pptx-generator` 独占负责。它不上传原文、不调用检测器、不保证过检，也不要求为粘贴文本创建文件。思想参考为用户提供的本地 `aigc-paper-rewrite` 方法；规则与示例独立编写，通用语体分支为本地扩展，不导入外部同名 Skill。参考包的公共 URL、固定 revision 与再分发许可未确认，不分发原文或个人路径；详见 [provenance](.agents/skills/humanizer-zh/references/provenance.md)。实际模型路由、写作效果与跨适配器等价性须另有证据，注册不代表已验证。
 
+### Mermaid 方法参考与本地维护
+
+`mermaid-diagrams` 是 AILI 自有维护的共享 Skill，默认随 Core Skills 安装。规则与虚构示例独立编写，语法参考 [Mermaid 官方文档](https://mermaid.js.org/intro/)。安装目录只包含实际使用的入口和参考资料，不包含上游归档、来源报告、渲染脚本或依赖。
+
+采用范围依据已接受的研究提案：参考 [arjunprabhulal/agent-skills 的 diagramming](https://github.com/arjunprabhulal/agent-skills/tree/main/skills/docs/diagramming) 的文档内图示方法、[mgranberry/mermaid-diagram-skill](https://github.com/mgranberry/mermaid-diagram-skill) 的按图型组织参考资料思路、[mermaid2img/mermaid-skills](https://github.com/mermaid2img/mermaid-skills) 的事实与验证区分，以及 [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) 的关系先于图型、单一问题、语义一致、分支标签和总览/细节拆分方法。没有复制这些项目的正文、示例、脚本、字体、品牌素材或手工 SVG 布局，也没有安装原 diagram-design。
+
+这些链接是方法来源线索，不是固定版本的内容导入记录。本次未确认这些参考项目的完整不可变许可链，也不据 frontmatter 或公开可读性声称再分发授权；mgranberry 来源未发现许可证。因为未导入其受许可材料，不新增上游文件映射或许可证声明；未来如需复制，先核对固定提交、完整许可和素材归属。Skill 注册不证明真实模型路由、目标宿主渲染或跨适配器等价性。
+
 ### 全局 Agent 行为参考
 
-`templates/opencode-global-AGENTS.md` 是这些通用行为规则的唯一运行时来源。它直接采用并筛选了 [aarnphm/aarnphm.github.io](https://github.com/aarnphm/aarnphm.github.io) `AGENTS.md`（提交 `30bc525c7235828c628a4e59bb19741e3ea00b0d`）和 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) `skills/i-have-adhd/SKILL.md`（提交 `b837bf132b9d05765c5deed5b30935f562abba86`）中的原文规则。
+通用规则源位于 `core/governance/`，由 `scripts/generate-runtime-projections.mjs` 生成 OpenCode/Pi 的运行时投影；`templates/opencode-global-AGENTS.md` 是生成的兼容副本。源规则直接采用并筛选了 [aarnphm/aarnphm.github.io](https://github.com/aarnphm/aarnphm.github.io) `AGENTS.md`（提交 `30bc525c7235828c628a4e59bb19741e3ea00b0d`）和 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) `skills/i-have-adhd/SKILL.md`（提交 `b837bf132b9d05765c5deed5b30935f562abba86`）中的原文规则。
 
 未引入 aarnphm 仓库专属的工具链、Quartz 目录、Cloudflare、样式、禁止注释、禁止 build、兼容策略和运行时日志约束。i-have-adhd 的 ADHD 读者前提、阅读摩擦说明、十条响应规则、破例条件和发送前检查已较大化吸收到全局合同；仅排除 Skill 路由、Hook、session 开关、无依据的强制时长估算、硬性五项截断和每轮完整状态复述。许可证和修改说明集中保存在 `THIRD_PARTY_NOTICES.md`，不另建运行时 Skill 或重复行为正文。
 
@@ -300,9 +310,9 @@ Canonical agent inventory 是 primary `ROSE` 加 19 个 repository-managed subag
 
 ### 安装 profiles 与 OpenCode 设置
 
-推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 50 个 Core Skills；`pi` 在 Core Skills 上增加生成的 Pi 全局 context 与 `generated/pi/prompts/*.md` 顶层 prompts；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、11 个 Commands 和可选 OpenCode config integration。
+推荐安装入口是 `rose-aili` Node/TypeScript CLI；Bash 脚本保留为兼容 fallback。`default`（省略 `--profile` 时的默认值）安装 51 个 Core Skills；`pi` 在 Core Skills 上增加生成的 Pi 全局 context 与 `generated/pi/prompts/*.md` 顶层 prompts；`opencode` 在 Core Skills 上增加生成的全局 OpenCode `AGENTS.md`、Agents、11 个 Commands 和可选 OpenCode config integration。
 
-59 个 retained Skills 由 50 个 Core 与 9 个 Optional 组成。`--skill <name>` 和 `--skill-group <research|specialized-dev>` 可重复使用、组合并去重；单个 Skill 不会展开所属 group，未知 profile、Skill 或 group 会在 mutation 前失败。`--opencode` 是 `--profile opencode` 的兼容别名，不能与另一 profile 组合。
+60 个 retained Skills 由 51 个 Core 与 9 个 Optional 组成。`--skill <name>` 和 `--skill-group <research|specialized-dev>` 可重复使用、组合并去重；单个 Skill 不会展开所属 group，未知 profile、Skill 或 group 会在 mutation 前失败。`--opencode` 是 `--profile opencode` 的兼容别名，不能与另一 profile 组合。
 
 Pi profile 只安装生成的全局 context 与顶层 prompt 文件。Pi system projection、role metadata、selection map、installation contract 和 task/result/evidence schema 是 package artifacts，不安装也不运行 Pi session/runtime。AILI 向 official Pi persistent Agent runtime 的 package/session/result 交接边界见 `docs/harness/aili-pi-runtime-handoff.md`；persistent identity 不替代 accepted contract、approval、fresh evidence 或 ROSE verdict，共享轻量 `todo.md`、free-form `progress.txt` 与历史 Board 备注也不承担 runtime authority。OfficeCLI 和 MemPalace 是 default-selected 的独立外部操作：安装或更新先报告计划，只有各自的 fresh exact approval 和显式 `--enable-officecli` 或 `--enable-mempalace` 才会执行。拒绝、跳过或不可用不会撤销 Core Skill 安装。OpenCode profile 中的 Playwright、CodeGraph、Graphify 和 OpenSpec 同样保持独立 operation gate；AILI 不安装、检测、配置、迁移或删除 DCP。
 
